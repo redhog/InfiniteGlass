@@ -20,6 +20,12 @@ typedef void (*t_glx_release)(Display *, GLXDrawable, int);
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
 
+const int pixmap_attribs[] = {
+ GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
+ GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
+ None
+};
+
 int OnWMDetected(Display* display, XErrorEvent* e) {
  wm_detected = True;
  return 0;
@@ -105,34 +111,11 @@ int main() {
             &top_level_windows,
             &num_top_level_windows);
 
- Picture *pictures = (Picture *) malloc(sizeof(Picture) * num_top_level_windows);
-  
- for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-  XWindowAttributes attr;
-  XGetWindowAttributes(display, top_level_windows[i], &attr);
-  
-  XRenderPictFormat *format = XRenderFindVisualFormat(display, attr.visual);
-  Bool hasAlpha             = (format->type == PictTypeDirect && format->direct.alphaMask);
-  int x                     = attr.x;
-  int y                     = attr.y;
-  int width                 = attr.width;
-  int height                = attr.height;
-  
-  fprintf(stderr, "%u: %i,%i(%i,%i)\n", (uint) top_level_windows[i], x, y, width, height); fflush(stderr);
-
-  XRenderPictureAttributes pa;
-  pa.subwindow_mode = IncludeInferiors;
-  pictures[i] = XRenderCreatePicture(display, top_level_windows[i], format, CPSubwindowMode, &pa);
- }
- XFree(top_level_windows);
- XUngrabServer(display);
-
 
  int elements;
  GLXFBConfig *configs = glXChooseFBConfig(display, 0, NULL, &elements);
  GLXContext context = glXCreateNewContext(display, configs[0], GLX_RGBA_TYPE, NULL, True);
  glXMakeCurrent(display, overlay, context);
-
 
  glShadeModel(GL_FLAT);
  glClearColor(0.5, 0.5, 0.5, 1.0);
@@ -149,24 +132,44 @@ int main() {
  for (unsigned int i = 0; i < num_top_level_windows; ++i) {
   XWindowAttributes attr;
   XGetWindowAttributes(display, top_level_windows[i], &attr);
+  
+  XRenderPictFormat *format = XRenderFindVisualFormat(display, attr.visual);
+  Bool hasAlpha             = (format->type == PictTypeDirect && format->direct.alphaMask);
+  int x                     = attr.x;
+  int y                     = attr.y;
+  int width                 = attr.width;
+  int height                = attr.height;
+  
+  fprintf(stderr, "%u: %i,%i(%i,%i)\n", (uint) top_level_windows[i], x, y, width, height); fflush(stderr);
  
-GLXPixmap glxpixmap = 0;
-GLuint                  texture_id;
+  GLXPixmap glxpixmap = 0;
+  GLuint texture_id;
 
-Pixmap pixmap = XCompositeNameWindowPixmap(display, window);
+  Pixmap pixmap = XCompositeNameWindowPixmap(display, top_level_windows[i]);
+  glxpixmap = glXCreatePixmap(display, configs[0], pixmap, pixmap_attribs);
 
-    glxpixmap = glXCreatePixmap(display, configs[0], pixmap, pixmap_attribs);
+  glEnable(GL_TEXTURE_2D);
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  glXBindTexImageEXT(display, glxpixmap, GLX_FRONT_EXT, NULL);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-    glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glXBindTexImageEXT(display, glxpixmap, GLX_FRONT_EXT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); 
-
+  glBegin(GL_QUADS);
+  glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,  1.0, 0.0);
+  glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,  1.0, 0.0);
+  glTexCoord2f(1.0, 1.0); glVertex3f( 1.0, -1.0, 0.0);
+  glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, -1.0, 0.0);
+  glEnd();  
+ }
  
  glXSwapBuffers(display, overlay);
+
+ XFree(top_level_windows);
+ XUngrabServer(display);
+
+
 
  
  for (;;) {
