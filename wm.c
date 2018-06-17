@@ -26,7 +26,31 @@ int main() {
             &top_level_windows,
             &num_top_level_windows);
 
+if (1) {
+ for (unsigned int i = 0; i < num_top_level_windows; ++i) {
+  XWindowAttributes attr;
+  XGetWindowAttributes(display, top_level_windows[i], &attr);
 
+  XRenderPictureAttributes pa;
+  pa.subwindow_mode = IncludeInferiors; // Don't clip child widgets
+
+  XRenderPictFormat *format = XRenderFindVisualFormat(display, attr.visual );
+  Bool hasAlpha             = ( format->type == PictTypeDirect && format->direct.alphaMask );
+  int x                     = attr.x;
+  int y                     = attr.y;
+  int width                 = attr.width;
+  int height                = attr.height;
+  
+  Picture picture = XRenderCreatePicture(display, top_level_windows[i], format, CPSubwindowMode, &pa);
+  Picture out = XRenderCreatePicture(display, overlay, format, CPSubwindowMode, &pa);
+
+  XRenderComposite(display, PictOpSrc, picture, None, out, 0, 0, 0, 0, 50, 50, width, height );
+
+  
+ }
+
+} else {
+ 
  int elements;
  GLXFBConfig *configs = glXChooseFBConfig(display, 0, NULL, &elements);
  GLXContext context = glXCreateNewContext(display, configs[0], GLX_RGBA_TYPE, NULL, True);
@@ -88,7 +112,9 @@ int main() {
   glTexCoord2f(1.0, 0.0); glVertex3f(right, top,    0.0);
   glTexCoord2f(1.0, 1.0); glVertex3f(right, bottom, 0.0);
   glTexCoord2f(0.0, 1.0); glVertex3f(left,  bottom, 0.0);
-  glEnd();  
+  glEnd();
+
+  XFreePixmap(display, pixmap);
  }
  
  glXSwapBuffers(display, overlay);
@@ -96,7 +122,7 @@ int main() {
  XFree(top_level_windows);
  XUngrabServer(display);
 
-
+}
 
  
  for (;;) {
