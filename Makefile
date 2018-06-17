@@ -1,10 +1,20 @@
+CC=gcc
+CFLAGS=
+
+
 all: run
 
-wm: wm.c
-	gcc -o wm wm.c -lX11 -lGL -lGLU -lXrender -l Xcomposite
+%.o : %.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
-bindtex: bindtex.c
-	gcc -o bindtex bindtex.c -lX11 -lGL -lGLU -lXrender -l Xcomposite
+wm: wm.o
+	gcc -o $@ $< -lX11 -lGL -lGLU -lXrender -l Xcomposite
+
+bindtex: bindtex.o
+	gcc -o $@ $< -lX11 -lGL -lGLU -lXrender -l Xcomposite
 
 run: wm
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 800x600 -host-cursor
+
+clean:
+	rm -f wm bindtex *.o
