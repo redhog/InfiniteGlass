@@ -14,4 +14,4 @@ run: wm
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 800x600 -host-cursor
 
 clean:
-	rm -f wm bindtex *.o
+	rm -f wm *.o *~
