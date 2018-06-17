@@ -42,7 +42,7 @@ int main() {
 
  glClear(GL_COLOR_BUFFER_BIT);
  glColor3f(1.0, 1.0, 0.0);
- glRectf(-0.8, -0.8, 0.8, 0.8);
+ glRectf(-1., -1., 1., 1.);
 
  for (unsigned int i = 0; i < num_top_level_windows; ++i) {
   XWindowAttributes attr;
@@ -52,6 +52,15 @@ int main() {
   int y                     = attr.y;
   int width                 = attr.width;
   int height                = attr.height;
+  float left = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
+  float right = left + (float) width / (float) overlay_attr.width;
+  float top = ((float) y - overlay_attr.y) / (float) overlay_attr.height;
+  float bottom = top + (float) height / (float) overlay_attr.height;
+
+  left = 2. * left - 1.; 
+  right = 2. * right - 1.; 
+  top = 1 - 2. * top; 
+  bottom = 1. - 2. * bottom; 
   
   fprintf(stderr, "%u: %i,%i(%i,%i)\n", (uint) top_level_windows[i], x, y, width, height); fflush(stderr);
  
@@ -75,10 +84,10 @@ int main() {
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
   glBegin(GL_QUADS);
-  glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,  1.0, 0.0);
-  glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,  1.0, 0.0);
-  glTexCoord2f(1.0, 1.0); glVertex3f( 1.0, -1.0, 0.0);
-  glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, -1.0, 0.0);
+  glTexCoord2f(0.0, 0.0); glVertex3f(left,  top,    0.0);
+  glTexCoord2f(1.0, 0.0); glVertex3f(right, top,    0.0);
+  glTexCoord2f(1.0, 1.0); glVertex3f(right, bottom, 0.0);
+  glTexCoord2f(0.0, 1.0); glVertex3f(left,  bottom, 0.0);
   glEnd();  
  }
  
