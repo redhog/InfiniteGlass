@@ -1,6 +1,6 @@
-xclock &
-xeyes &
+#xlock -inwindow -mode atunnels &
 xterm &
+xclock &
 
 sleep 2
 
