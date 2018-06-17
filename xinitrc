@@ -1,6 +1,6 @@
 #xlock -inwindow -mode atunnels &
 xterm &
-xclock &
+xclock -digital  -fg red -bg blue &
 
 sleep 2
 
