@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include "xapi.h"
 
-
-
 int main() {
  int res = xinit();
  if (res != 0) return res;
@@ -37,7 +35,7 @@ int main() {
  glShadeModel(GL_FLAT);
  glClearColor(0.5, 0.5, 0.5, 1.0);
 
- glViewport(0, 0, 200, 200);
+ glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
  glMatrixMode(GL_PROJECTION);
  glLoadIdentity();
  glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
@@ -50,8 +48,6 @@ int main() {
   XWindowAttributes attr;
   XGetWindowAttributes(display, top_level_windows[i], &attr);
   
-  XRenderPictFormat *format = XRenderFindVisualFormat(display, attr.visual);
-  Bool hasAlpha             = (format->type == PictTypeDirect && format->direct.alphaMask);
   int x                     = attr.x;
   int y                     = attr.y;
   int width                 = attr.width;
@@ -63,6 +59,11 @@ int main() {
   GLuint texture_id;
 
   Pixmap pixmap = XCompositeNameWindowPixmap(display, top_level_windows[i]);
+  const int pixmap_attribs[] = {
+   GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
+   GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
+   None
+  };
   glxpixmap = glXCreatePixmap(display, configs[0], pixmap, pixmap_attribs);
 
   glEnable(GL_TEXTURE_2D);

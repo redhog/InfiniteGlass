@@ -3,12 +3,6 @@
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
 
-const int pixmap_attribs[] = {
- GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
- GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
- None
-};
-
 int OnWMDetected(Display* display, XErrorEvent* e) {
  wm_detected = True;
  return 0;
@@ -77,6 +71,7 @@ int xinit() {
  }
  
  overlay = XCompositeGetOverlayWindow(display, root);
-
+ XGetWindowAttributes(display, overlay, &overlay_attr);
+ 
  return 0;
 }

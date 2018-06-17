@@ -13,13 +13,12 @@ Atom WM_DELETE_WINDOW;
 Display* display;
 Window root;
 Window overlay;
+XWindowAttributes overlay_attr;
 Bool wm_detected;
 const char *extensions;
 typedef void (*t_glx_bind)(Display *, GLXDrawable, int , const int *);
 typedef void (*t_glx_release)(Display *, GLXDrawable, int);
 t_glx_bind glXBindTexImageEXT;
 t_glx_release glXReleaseTexImageEXT;
-
-const int *pixmap_attribs;
 
 extern int xinit();
