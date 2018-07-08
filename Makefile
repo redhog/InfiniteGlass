@@ -8,7 +8,7 @@ all: run
 	$(CC) -c $(CFLAGS) $< -o $@
 
 wm: wm.o xapi.o
-	gcc -o $@ $^ -lX11 -lGL -lGLU -lXrender -l Xcomposite
+	gcc -o $@ $^ -lX11 -lGL -lGLU -lXrender -lXcomposite -lXtst
 
 run: wm
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 800x600 -host-cursor

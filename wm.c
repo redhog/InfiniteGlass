@@ -1,6 +1,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
+#include <X11/extensions/XTest.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <stdio.h>
