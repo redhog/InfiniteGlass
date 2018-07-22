@@ -1,18 +1,27 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include <X11/Xutil.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/XTest.h>
+
+#include<GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+
 #include "xapi.h"
+#include "glapi.h"
+#include "shader.h"
+
 
 int main() {
- int res = xinit();
- if (res != 0) return res;
-
+ int res;
+ 
+ if ((res = xinit()) != 0) return res;
+ 
  XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
  XGrabServer(display);
@@ -26,37 +35,9 @@ int main() {
             &returned_parent,
             &top_level_windows,
             &num_top_level_windows);
-
-if (1) {
- for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-  XWindowAttributes attr;
-  XGetWindowAttributes(display, top_level_windows[i], &attr);
-
-  XRenderPictureAttributes pa;
-  pa.subwindow_mode = IncludeInferiors; // Don't clip child widgets
-
-  XRenderPictFormat *format = XRenderFindVisualFormat(display, attr.visual );
-  Bool hasAlpha             = ( format->type == PictTypeDirect && format->direct.alphaMask );
-  int x                     = attr.x;
-  int y                     = attr.y;
-  int width                 = attr.width;
-  int height                = attr.height;
-  
-  Picture picture = XRenderCreatePicture(display, top_level_windows[i], format, CPSubwindowMode, &pa);
-  Picture out = XRenderCreatePicture(display, overlay, format, CPSubwindowMode, &pa);
-
-  XRenderComposite(display, PictOpSrc, picture, None, out, 0, 0, 0, 0, 50, 50, width, height );
-
-  
- }
-
-} else {
  
- int elements;
- GLXFBConfig *configs = glXChooseFBConfig(display, 0, NULL, &elements);
- GLXContext context = glXCreateNewContext(display, configs[0], GLX_RGBA_TYPE, NULL, True);
- glXMakeCurrent(display, overlay, context);
-
+ if ((res = glinit(overlay)) != 0) return res;
+ 
  glShadeModel(GL_FLAT);
  glClearColor(0.5, 0.5, 0.5, 1.0);
 
@@ -108,6 +89,9 @@ if (1) {
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+
+
+  
   glBegin(GL_QUADS);
   glTexCoord2f(0.0, 0.0); glVertex3f(left,  top,    0.0);
   glTexCoord2f(1.0, 0.0); glVertex3f(right, top,    0.0);
@@ -122,8 +106,6 @@ if (1) {
 
  XFree(top_level_windows);
  XUngrabServer(display);
-
-}
 
  
  for (;;) {
