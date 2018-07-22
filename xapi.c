@@ -36,7 +36,7 @@ int xinit() {
  XSync(display, False);
  if (wm_detected) {
   fprintf(stderr, "Another window manager is already running"); fflush(stderr);
-  return 1;
+  return 0;
  }
 
  XSetErrorHandler(&OnXError);
@@ -44,14 +44,14 @@ int xinit() {
  int event_base, error_base;
  if (!XCompositeQueryExtension(display, &event_base, &error_base)) {
   fprintf(stderr, "X server does not support the Composite extension"); fflush(stderr);
-  return 1;
+  return 0;
  }
     
  int major = 0, minor = 3;
  XCompositeQueryVersion(display, &major, &minor);	
  if (major == 0 && minor < 3) {
   fprintf(stderr, "X server Composite extension is too old %i.%i < 0.3)", major, minor); fflush(stderr);
-  return 1;
+  return 0;
  }
 
  extensions = glXQueryExtensionsString(display, 0); fflush(stderr);
@@ -59,7 +59,7 @@ int xinit() {
  printf("Extensions: %s\n", extensions);
  if(! strstr(extensions, "GLX_EXT_texture_from_pixmap")) {
   fprintf(stderr, "GLX_EXT_texture_from_pixmap not supported!\n");
-  return 1;
+  return 0;
  }
 
  glXBindTexImageEXT = (t_glx_bind) glXGetProcAddress((const GLubyte *)"glXBindTexImageEXT");
@@ -67,11 +67,11 @@ int xinit() {
 
  if(!glXBindTexImageEXT || !glXReleaseTexImageEXT) {
   fprintf(stderr, "Some extension functions missing!"); fflush(stderr);
-  return 1;
+  return 0;
  }
  
  overlay = XCompositeGetOverlayWindow(display, root);
  XGetWindowAttributes(display, overlay, &overlay_attr);
  
- return 0;
+ return 1;
 }

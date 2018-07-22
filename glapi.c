@@ -10,8 +10,8 @@ int glinit(Window window) {
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     fprintf(stderr, "Error initializing GLEW: %s\n", glewGetErrorString(err));
-    return 1;
+    return 0;
   }
   fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-  return 0;
+  return 1;
 }
