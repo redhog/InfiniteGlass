@@ -38,7 +38,7 @@ void item_remove(Item *item) {
  memmove(items_all+idx, items_all+idx+1, items_all_size-idx-1);
 }
 
-void item_update_space_pos(Item *item) {
+void item_update_space_pos_from_window(Item *item) {
   XWindowAttributes attr;
   XGetWindowAttributes(display, item->window, &attr);
 
@@ -62,6 +62,14 @@ void item_update_space_pos(Item *item) {
   item->space_pos[1][0] = left; item->space_pos[1][1] = top;
   item->space_pos[2][0] = right; item->space_pos[2][1] = bottom;
   item->space_pos[3][0] = right; item->space_pos[3][1] = top;
+
+  item_update_space_pos(item);
+}
+
+void item_update_space_pos(Item *item) {  
+  glGenBuffers(1, &item->space_pos_vbo); 
+  glBindBuffer(GL_ARRAY_BUFFER, item->space_pos_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(item->space_pos), item->space_pos, GL_STATIC_DRAW);
 }
 
 void item_update_texture(Item *item) {

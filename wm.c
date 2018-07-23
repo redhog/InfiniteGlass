@@ -21,16 +21,7 @@
 
 Shader *shaderProgram;
 
-int main() {
-  if (!xinit()) return 1;
-  if (!glinit(overlay)) return 1;
-  if (!(shaderProgram = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
-  glUseProgram(shaderProgram->program);
- 
-  glClearColor(1.0, 1.0, 0.5, 1.0);
-  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
-  glClear(GL_COLOR_BUFFER_BIT);
-
+void initItems() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
   XGrabServer(display);
@@ -45,6 +36,29 @@ int main() {
              &top_level_windows,
              &num_top_level_windows);
 
+  for (unsigned int i = 0; i < num_top_level_windows; ++i) {
+    Item *item = item_get(top_level_windows[i]);
+    item_update_space_pos_from_window(item);
+    item_update_texture(item);
+  }
+
+  XFree(top_level_windows);
+  XUngrabServer(display);
+}
+
+int main() {
+  if (!xinit()) return 1;
+  if (!glinit(overlay)) return 1;
+  if (!(shaderProgram = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
+
+  initItems();
+
+  glUseProgram(shaderProgram->program);
+ 
+  glClearColor(1.0, 1.0, 0.5, 1.0);
+  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
+  glClear(GL_COLOR_BUFFER_BIT);
+    
   GLint samplerLoc = glGetUniformLocation(shaderProgram->program, "myTextureSampler");
   unsigned int space_pos_attr = glGetAttribLocation(shaderProgram->program, "space_pos");
   unsigned int win_pos_attr = glGetAttribLocation(shaderProgram->program, "win_pos");
@@ -63,16 +77,12 @@ int main() {
   glVertexAttribPointer(win_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(win_pos_attr);
 
-  for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    Item *item = item_get(top_level_windows[i]);
-    item_update_space_pos(item);
-    item_update_texture(item);
+  for (Item **itemp = items_all; *itemp; itemp++) {
+    Item *item = *itemp;
     
     GLuint space_pos_vbo;
     
-    glGenBuffers(1, &space_pos_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, space_pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(item->space_pos), item->space_pos, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, item->space_pos_vbo);
     glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(space_pos_attr);
     
@@ -87,8 +97,6 @@ int main() {
 
   glXSwapBuffers(display, overlay);
 
-  XFree(top_level_windows);
-  XUngrabServer(display);
 
   for (;;) {
     XEvent e;
