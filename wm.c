@@ -56,6 +56,12 @@ int main() {
     {1.0, 1.0}
   };
 
+  GLuint win_pos_vbo;
+  glGenBuffers(1, &win_pos_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, win_pos_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(win_pos), win_pos, GL_STATIC_DRAW);
+  glVertexAttribPointer(win_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(win_pos_attr);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
     Item *item = item_get(top_level_windows[i]);
@@ -69,15 +75,6 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(item->space_pos), item->space_pos, GL_STATIC_DRAW);
     glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(space_pos_attr);
-
-    GLuint win_pos_vbo;
-    
-    glGenBuffers(1, &win_pos_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, win_pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(win_pos), win_pos, GL_STATIC_DRAW);
-    glVertexAttribPointer(win_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(win_pos_attr);
-    
     
     glUniform1i(samplerLoc, 0);
     glActiveTexture(GL_TEXTURE0 + 0);
