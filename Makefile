@@ -10,7 +10,7 @@ all: run
 testgl: testgl.o shader.o
 	gcc -o $@ $^ -lglut -lGLEW -lX11 -lGL -lGLU -lXrender -lXcomposite -lXtst
 
-wm: wm.o xapi.o glapi.o shader.o
+wm: wm.o xapi.o glapi.o shader.o space.o
 	gcc -o $@ $^ -lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lSOIL
 
 run: wm

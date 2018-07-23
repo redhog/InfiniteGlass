@@ -1,3 +1,4 @@
+#include "glapi.h"
 #include "space.h"
 #include "xapi.h"
 
@@ -6,17 +7,21 @@ size_t items_all_size = 0;
 
 Item *item_get(Window window) {
  Item *item;
- size_t idx;
- 
- for (idx = 0; items_all[idx] && items_all[idx]->window != window; idx++);
- if (items_all[idx]) return items_all[idx];
+ size_t idx = 0;
 
+ if (items_all) {
+   for (; items_all[idx] && items_all[idx]->window != window; idx++);
+   if (items_all[idx]) return items_all[idx];
+ }
+   
  if (idx+1 > items_all_size) {
+  if (!items_all_size) items_all_size = 8;
   items_all_size *=2;
   items_all = realloc(items_all, sizeof(Item *) * items_all_size);
  }
 
  item = (Item *) malloc(sizeof(Item));
+ item->pixmap = 0;
  item->window = window;
  item_update_texture(item);
  items_all[idx] = item;
@@ -33,8 +38,37 @@ void item_remove(Item *item) {
  memmove(items_all+idx, items_all+idx+1, items_all_size-idx-1);
 }
 
+void item_update_space_pos(Item *item) {
+  XWindowAttributes attr;
+  XGetWindowAttributes(display, item->window, &attr);
+
+  int x                     = attr.x;
+  int y                     = attr.y;
+  int width                 = attr.width;
+  int height                = attr.height;
+  float left = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
+  float right = left + (float) width / (float) overlay_attr.width;
+  float top = ((float) y - overlay_attr.y) / (float) overlay_attr.height;
+  float bottom = top + (float) height / (float) overlay_attr.height;
+
+  left = 2. * left - 1.; 
+  right = 2. * right - 1.; 
+  top = 1 - 2. * top; 
+  bottom = 1. - 2. * bottom; 
+
+  fprintf(stderr, "%u: %i,%i(%i,%i)\n", (uint) item->window, x, y, width, height); fflush(stderr);
+    
+  item->space_pos[0][0] = left; item->space_pos[0][1] = bottom;
+  item->space_pos[1][0] = left; item->space_pos[1][1] = top;
+  item->space_pos[2][0] = right; item->space_pos[2][1] = bottom;
+  item->space_pos[3][0] = right; item->space_pos[3][1] = top;
+}
+
 void item_update_texture(Item *item) {
- item->pixmap = XCompositeNameWindowPixmap(display, window);
+ if (item->pixmap) XFreePixmap(display, item->pixmap);
+ // FIXME: free all other stuff if already created
+ 
+ item->pixmap = XCompositeNameWindowPixmap(display, item->window);
   const int pixmap_attribs[] = {
    GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
    GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
@@ -45,7 +79,7 @@ void item_update_texture(Item *item) {
  if (item->texture_id == -1) {
    glGenTextures(1, &item->texture_id);
  }
- glBindTexture(GL_TEXTURE_2D, texture_id);
+ glBindTexture(GL_TEXTURE_2D, item->texture_id);
  glXBindTexImageEXT(display, item->glxpixmap, GLX_FRONT_EXT, NULL);
  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

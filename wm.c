@@ -15,6 +15,7 @@
 #include "xapi.h"
 #include "glapi.h"
 #include "shader.h"
+#include "space.h"
 
 #include <SOIL/SOIL.h>
 
@@ -22,7 +23,14 @@ Shader *shaderProgram;
 
 int main() {
   if (!xinit()) return 1;
+  if (!glinit(overlay)) return 1;
+  if (!(shaderProgram = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
+  glUseProgram(shaderProgram->program);
  
+  glClearColor(1.0, 1.0, 0.5, 1.0);
+  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
+  glClear(GL_COLOR_BUFFER_BIT);
+
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
   XGrabServer(display);
@@ -37,84 +45,31 @@ int main() {
              &top_level_windows,
              &num_top_level_windows);
 
-  if (!glinit(overlay)) return 1;
+  GLint samplerLoc = glGetUniformLocation(shaderProgram->program, "myTextureSampler");
+  unsigned int space_pos_attr = glGetAttribLocation(shaderProgram->program, "space_pos");
+  unsigned int win_pos_attr = glGetAttribLocation(shaderProgram->program, "win_pos");
 
-  if (!(shaderProgram = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
+  float win_pos[4][2] = {
+    {0.0, 0.0},
+    {0.0, 1.0},
+    {1.0, 0.0},
+    {1.0, 1.0}
+  };
 
-  glUseProgram(shaderProgram->program);
-
-  glShadeModel(GL_FLAT);
-  glClearColor(1.0, 1.0, 0.5, 1.0);
-
-  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-
-  glClear(GL_COLOR_BUFFER_BIT);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    XWindowAttributes attr;
-    XGetWindowAttributes(display, top_level_windows[i], &attr);
-
-    int x                     = attr.x;
-    int y                     = attr.y;
-    int width                 = attr.width;
-    int height                = attr.height;
-    float left = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
-    float right = left + (float) width / (float) overlay_attr.width;
-    float top = ((float) y - overlay_attr.y) / (float) overlay_attr.height;
-    float bottom = top + (float) height / (float) overlay_attr.height;
-
-    left = 2. * left - 1.; 
-    right = 2. * right - 1.; 
-    top = 1 - 2. * top; 
-    bottom = 1. - 2. * bottom; 
-
-    fprintf(stderr, "%u: %i,%i(%i,%i)\n", (uint) top_level_windows[i], x, y, width, height); fflush(stderr);
-
-    GLXPixmap glxpixmap = 0;
-    GLuint texture_id;
-
-    Pixmap pixmap = XCompositeNameWindowPixmap(display, top_level_windows[i]);
-    const int pixmap_attribs[] = {
-      GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
-      GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
-      None
-    };
-    glxpixmap = glXCreatePixmap(display, configs[0], pixmap, pixmap_attribs);
-
-    glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glXBindTexImageEXT(display, glxpixmap, GLX_FRONT_EXT, NULL);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    Item *item = item_get(top_level_windows[i]);
+    item_update_space_pos(item);
+    item_update_texture(item);
     
-    float space_pos[4][2] = {
-      {left, bottom},
-      {left, top},
-      {right, bottom},
-      {right, top}
-    };
-    float win_pos[4][2] = {
-      {0.0, 0.0},
-      {0.0, 1.0},
-      {1.0, 0.0},
-      {1.0, 1.0}
-    };
-
-    unsigned int space_pos_attr = glGetAttribLocation(shaderProgram->program, "space_pos");
     GLuint space_pos_vbo;
     
     glGenBuffers(1, &space_pos_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, space_pos_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(space_pos), space_pos, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(item->space_pos), item->space_pos, GL_STATIC_DRAW);
     glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(space_pos_attr);
 
-    unsigned int win_pos_attr = glGetAttribLocation(shaderProgram->program, "win_pos");
     GLuint win_pos_vbo;
     
     glGenBuffers(1, &win_pos_vbo);
@@ -124,23 +79,19 @@ int main() {
     glEnableVertexAttribArray(win_pos_attr);
     
     
-    GLint samplerLoc = glGetUniformLocation(shaderProgram->program, "myTextureSampler");
     glUniform1i(samplerLoc, 0);
     glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glBindTexture(GL_TEXTURE_2D, item->texture_id);
     glBindSampler(0, 0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glFlush();
-
-    XFreePixmap(display, pixmap);
   }
 
   glXSwapBuffers(display, overlay);
 
   XFree(top_level_windows);
   XUngrabServer(display);
-
 
   for (;;) {
     XEvent e;
