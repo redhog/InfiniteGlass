@@ -19,7 +19,18 @@
 
 #include <SOIL/SOIL.h>
 
-Shader *shaderProgram;
+Shader *shader_program;
+GLint sampler_attr;
+unsigned int space_pos_attr;
+unsigned int win_pos_attr;
+
+float win_pos[4][2] = {
+  {0.0, 1.0},
+  {0.0, 0.0},
+  {1.0, 1.0},
+  {1.0, 0.0}
+};
+GLuint win_pos_vbo;
 
 void initItems() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
@@ -46,37 +57,8 @@ void initItems() {
   XUngrabServer(display);
 }
 
-int main() {
-  if (!xinit()) return 1;
-  if (!glinit(overlay)) return 1;
-  if (!(shaderProgram = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
-
-  initItems();
-
-  glUseProgram(shaderProgram->program);
- 
-  glClearColor(1.0, 1.0, 0.5, 1.0);
-  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
+void draw() {
   glClear(GL_COLOR_BUFFER_BIT);
-    
-  GLint samplerLoc = glGetUniformLocation(shaderProgram->program, "myTextureSampler");
-  unsigned int space_pos_attr = glGetAttribLocation(shaderProgram->program, "space_pos");
-  unsigned int win_pos_attr = glGetAttribLocation(shaderProgram->program, "win_pos");
-
-  float win_pos[4][2] = {
-    {0.0, 0.0},
-    {0.0, 1.0},
-    {1.0, 0.0},
-    {1.0, 1.0}
-  };
-
-  GLuint win_pos_vbo;
-  glGenBuffers(1, &win_pos_vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, win_pos_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(win_pos), win_pos, GL_STATIC_DRAW);
-  glVertexAttribPointer(win_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(win_pos_attr);
-
   for (Item **itemp = items_all; *itemp; itemp++) {
     Item *item = *itemp;
     
@@ -86,7 +68,7 @@ int main() {
     glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(space_pos_attr);
     
-    glUniform1i(samplerLoc, 0);
+    glUniform1i(sampler_attr, 0);
     glActiveTexture(GL_TEXTURE0 + 0);
     glBindTexture(GL_TEXTURE_2D, item->texture_id);
     glBindSampler(0, 0);
@@ -96,7 +78,31 @@ int main() {
   }
 
   glXSwapBuffers(display, overlay);
+}
 
+int main() {
+  if (!xinit()) return 1;
+  if (!glinit(overlay)) return 1;
+  if (!(shader_program = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
+
+  initItems();
+
+  glUseProgram(shader_program->program);
+ 
+  glClearColor(1.0, 1.0, 0.5, 1.0);
+  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
+    
+  sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
+  space_pos_attr = glGetAttribLocation(shader_program->program, "space_pos");
+  win_pos_attr = glGetAttribLocation(shader_program->program, "win_pos");
+
+  glGenBuffers(1, &win_pos_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, win_pos_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(win_pos), win_pos, GL_STATIC_DRAW);
+  glVertexAttribPointer(win_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(win_pos_attr);
+
+  draw();
 
   for (;;) {
     XEvent e;

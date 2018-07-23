@@ -22,6 +22,7 @@ Item *item_get(Window window) {
 
  item = (Item *) malloc(sizeof(Item));
  item->pixmap = 0;
+ item->texture_id = -1;
  item->window = window;
  item_update_texture(item);
  items_all[idx] = item;
