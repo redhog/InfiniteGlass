@@ -22,8 +22,10 @@ Item *item_get(Window window) {
 
  item = (Item *) malloc(sizeof(Item));
  item->pixmap = 0;
- item->texture_id = -1;
+ item->glxpixmap = 0;
+ item->texture_id = 0;
  item->window = window;
+ item->damage = XDamageCreate(display, window, XDamageReportNonEmpty);
  item_update_texture(item);
  items_all[idx] = item;
  items_all[idx+1] = NULL;
@@ -73,8 +75,10 @@ void item_update_space_pos(Item *item) {
   glBufferData(GL_ARRAY_BUFFER, sizeof(item->space_pos), item->space_pos, GL_STATIC_DRAW);
 }
 
-void item_update_texture(Item *item) {
+void item_update_pixmap(Item *item) {
  if (item->pixmap) XFreePixmap(display, item->pixmap);
+ if (item->glxpixmap) glXDestroyGLXPixmap(display, item->glxpixmap);
+ 
  // FIXME: free all other stuff if already created
  
  item->pixmap = XCompositeNameWindowPixmap(display, item->window);
@@ -84,8 +88,13 @@ void item_update_texture(Item *item) {
    None
   };
  item->glxpixmap = glXCreatePixmap(display, configs[0], item->pixmap, pixmap_attribs);
+ 
+ item_update_texture(item);
+}
+
+void item_update_texture(Item *item) {
  glEnable(GL_TEXTURE_2D);
- if (item->texture_id == -1) {
+ if (!item->texture_id) {
    glGenTextures(1, &item->texture_id);
  }
  glBindTexture(GL_TEXTURE_2D, item->texture_id);

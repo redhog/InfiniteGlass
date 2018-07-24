@@ -72,6 +72,9 @@ int xinit() {
  
  overlay = XCompositeGetOverlayWindow(display, root);
  XGetWindowAttributes(display, overlay, &overlay_attr);
+
+ XDamageQueryExtension(display, &damage_event, &damage_error);
+ XShapeQueryExtension(display, &shape_event, &shape_error);
  
  return 1;
 }

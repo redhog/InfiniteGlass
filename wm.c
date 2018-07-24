@@ -50,7 +50,7 @@ void initItems() {
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
     Item *item = item_get(top_level_windows[i]);
     item_update_space_pos_from_window(item);
-    item_update_texture(item);
+    item_update_pixmap(item);
   }
 
   XFree(top_level_windows);
@@ -61,6 +61,8 @@ void draw() {
   glClear(GL_COLOR_BUFFER_BIT);
   for (Item **itemp = items_all; *itemp; itemp++) {
     Item *item = *itemp;
+
+    item_update_texture(item);
     
     GLuint space_pos_vbo;
     
@@ -107,51 +109,52 @@ int main() {
   for (;;) {
     XEvent e;
     XNextEvent(display, &e);
-    fprintf(stderr, "Received event: %i", e.type);
+    fprintf(stderr, "Received event: %i\n", e.type);
 
-    switch (e.type) {
-      case CreateNotify:
-       //OnCreateNotify(e.xcreatewindow);
-       break;
-      case DestroyNotify:
-       //OnDestroyNotify(e.xdestroywindow);
-       break;
-      case ReparentNotify:
-       //OnReparentNotify(e.xreparent);
-       break;
-      case MapNotify:
-       //OnMapNotify(e.xmap);
-       break;
-      case UnmapNotify:
-       //OnUnmapNotify(e.xunmap);
-       break;
-      case ConfigureNotify:
-       //OnConfigureNotify(e.xconfigure);
-       break;
-      case MapRequest:
-       //OnMapRequest(e.xmaprequest);
-       break;
-      case ConfigureRequest:
-       //OnConfigureRequest(e.xconfigurerequest);
-       break;
-      case ButtonPress:
-       //OnButtonPress(e.xbutton);
-       break;
-      case ButtonRelease:
-       //OnButtonRelease(e.xbutton);
-       break;
-      case MotionNotify:
-       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
-       // OnMotionNotify(e.xmotion);
-       break;
-      case KeyPress:
-       //OnKeyPress(e.xkey);
-       break;
-      case KeyRelease:
-       //OnKeyRelease(e.xkey);
-       break;
-      default:
-       fprintf(stderr, "Ignored event\n"); fflush(stderr);
+    if (e.type == damage_event + XDamageNotify) {
+      fprintf(stderr, "Received XDamageNotify\n");
+      XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
+      // e->drawable is the window ID of the damaged window
+      // e->geometry is the geometry of the damaged window	
+      // e->area     is the bounding rect for the damaged area	
+      // e->damage   is the damage handle returned by XDamageCreate()
+
+      // Subtract all the damage, repairing the window.
+      draw();
+      XDamageSubtract(display, event->damage, None, None);
+    } else if (e.type == shape_event + ShapeNotify) {
+      fprintf(stderr, "Received ShapeNotify\n");
+      XShapeEvent *event = (XShapeEvent*) &e;
+    } else if (e.type == ConfigureNotify) {
+      fprintf(stderr, "Received ConfigureNotify\n");
+      XConfigureEvent *event = &e.xconfigure;
+    } else if (e.type == CreateNotify) {
+      //OnCreateNotify(e.xcreatewindow);
+    } else if (e.type == DestroyNotify) {
+      //OnDestroyNotify(e.xdestroywindow);
+    } else if (e.type == ReparentNotify) {
+      //OnReparentNotify(e.xreparent);
+    } else if (e.type == MapNotify) {
+      //OnMapNotify(e.xmap);
+    } else if (e.type == UnmapNotify) {
+      //OnUnmapNotify(e.xunmap);
+    } else if (e.type == MapRequest) {
+      //OnMapRequest(e.xmaprequest);
+    } else if (e.type == ConfigureRequest) {
+      //OnConfigureRequest(e.xconfigurerequest);
+    } else if (e.type == ButtonPress) {
+      //OnButtonPress(e.xbutton);
+    } else if (e.type == ButtonRelease) {
+      //OnButtonRelease(e.xbutton);
+    } else if (e.type == MotionNotify) {
+      while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
+      // OnMotionNotify(e.xmotion);
+    } else if (e.type == KeyPress) {
+      //OnKeyPress(e.xkey);
+    } else if (e.type == KeyRelease) {
+      //OnKeyRelease(e.xkey);
+    } else {
+      fprintf(stderr, "Ignored event\n"); fflush(stderr);
     }
   }
   return 0;
