@@ -21,6 +21,8 @@
 
 Shader *shader_program;
 GLint sampler_attr;
+GLint screen_attr;
+GLint zoom_pan_attr;
 unsigned int space_pos_attr;
 unsigned int win_pos_attr;
 
@@ -31,6 +33,20 @@ float win_pos[4][2] = {
   {1.0, 0.0}
 };
 GLuint win_pos_vbo;
+
+GLfloat zoom_pan[16] = {
+  1.0, 0.0, 0.0, 0.0,
+  0.0, 1.0, 0.0, 0.0,
+  0.0, 0.0, 1.0, 0.0,
+  0.0, 0.0, 0.0, 1.0,
+};
+GLfloat screen[16] = {
+  1.0, 0.0, 0.0, 0.0,
+  0.0, 1.0, 0.0, 0.0,
+  0.0, 0.0, 1.0, 0.0,
+  0.0, 0.0, 0.0, 1.0,
+};
+
 
 void initItems() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
@@ -93,7 +109,13 @@ int main() {
  
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
-    
+
+  zoom_pan_attr = glGetUniformLocation(shader_program->program, "zoom_pan");
+  screen_attr = glGetUniformLocation(shader_program->program, "screen");
+
+  glUniformMatrix4fvARB(zoom_pan_attr, 1, True, zoom_pan);
+  glUniformMatrix4fvARB(screen_attr, 1, True, screen);
+  
   sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
   space_pos_attr = glGetAttribLocation(shader_program->program, "space_pos");
   win_pos_attr = glGetAttribLocation(shader_program->program, "win_pos");
