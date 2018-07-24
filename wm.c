@@ -109,10 +109,10 @@ int main() {
   for (;;) {
     XEvent e;
     XNextEvent(display, &e);
-    fprintf(stderr, "Received event: %i\n", e.type);
+    //fprintf(stderr, "Received event: %i\n", e.type);
 
     if (e.type == damage_event + XDamageNotify) {
-      fprintf(stderr, "Received XDamageNotify\n");
+     //fprintf(stderr, "Received XDamageNotify\n");
       XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
       // e->drawable is the window ID of the damaged window
       // e->geometry is the geometry of the damaged window	
@@ -123,10 +123,10 @@ int main() {
       draw();
       XDamageSubtract(display, event->damage, None, None);
     } else if (e.type == shape_event + ShapeNotify) {
-      fprintf(stderr, "Received ShapeNotify\n");
+     //fprintf(stderr, "Received ShapeNotify\n");
       XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureNotify) {
-      fprintf(stderr, "Received ConfigureNotify\n");
+     //fprintf(stderr, "Received ConfigureNotify\n");
       XConfigureEvent *event = &e.xconfigure;
     } else if (e.type == CreateNotify) {
       //OnCreateNotify(e.xcreatewindow);
@@ -145,14 +145,46 @@ int main() {
     } else if (e.type == ButtonPress) {
       //OnButtonPress(e.xbutton);
     } else if (e.type == ButtonRelease) {
+     fprintf(stderr, "ButtonRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+             e.xbutton.button,
+             e.xbutton.x,
+             e.xbutton.y,
+             e.xbutton.state & Button1Mask ? "Button1, " : "",
+             e.xbutton.state & Button2Mask ? "Button2, " : "",
+             e.xbutton.state & Button3Mask ? "Button3, " : "",
+             e.xbutton.state & Button4Mask ? "Button4, " : "",
+             e.xbutton.state & Button5Mask ? "Button5, " : "",
+             e.xbutton.state & ShiftMask ? "Shift, " : "",
+             e.xbutton.state & LockMask ? "Lock, " : "",
+             e.xbutton.state & ControlMask ? "Control, " : "",
+             e.xbutton.state & Mod1Mask ? "Mod1, " : "",
+             e.xbutton.state & Mod2Mask ? "Mod2, " : "",
+             e.xbutton.state & Mod3Mask ? "Mod3, " : "",
+             e.xbutton.state & Mod4Mask ? "Mod4, " : "",
+             e.xbutton.state & Mod5Mask ? "Mod5, " : "");
       //OnButtonRelease(e.xbutton);
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
       // OnMotionNotify(e.xmotion);
     } else if (e.type == KeyPress) {
-      //OnKeyPress(e.xkey);
     } else if (e.type == KeyRelease) {
-      //OnKeyRelease(e.xkey);
+     fprintf(stderr, "KeyRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+             e.xkey.keycode,
+             e.xkey.x,
+             e.xkey.y,
+             e.xkey.state & Button1Mask ? "Button1, " : "",
+             e.xkey.state & Button2Mask ? "Button2, " : "",
+             e.xkey.state & Button3Mask ? "Button3, " : "",
+             e.xkey.state & Button4Mask ? "Button4, " : "",
+             e.xkey.state & Button5Mask ? "Button5, " : "",
+             e.xkey.state & ShiftMask ? "Shift, " : "",
+             e.xkey.state & LockMask ? "Lock, " : "",
+             e.xkey.state & ControlMask ? "Control, " : "",
+             e.xkey.state & Mod1Mask ? "Mod1, " : "",
+             e.xkey.state & Mod2Mask ? "Mod2, " : "",
+             e.xkey.state & Mod3Mask ? "Mod3, " : "",
+             e.xkey.state & Mod4Mask ? "Mod4, " : "",
+             e.xkey.state & Mod5Mask ? "Mod5, " : "");
     } else {
       fprintf(stderr, "Ignored event\n"); fflush(stderr);
     }

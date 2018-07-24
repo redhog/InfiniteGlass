@@ -32,7 +32,11 @@ int xinit() {
 
  wm_detected = False;
  XSetErrorHandler(&OnWMDetected);
- XSelectInput(display, root, SubstructureRedirectMask | SubstructureNotifyMask);
+ XSelectInput(display, root,
+              SubstructureRedirectMask |
+              SubstructureNotifyMask |
+              KeyReleaseMask |
+              ButtonReleaseMask);
  XSync(display, False);
  if (wm_detected) {
   fprintf(stderr, "Another window manager is already running"); fflush(stderr);
