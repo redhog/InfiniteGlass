@@ -1,9 +1,13 @@
+#ifndef XAPI
+#define XAPI
+
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/Xdamage.h>
 #include <X11/extensions/shape.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <stdio.h>
@@ -28,3 +32,5 @@ int damage_event, damage_error;
 int shape_event, shape_error;
 
 extern int xinit();
+
+#endif

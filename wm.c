@@ -16,6 +16,7 @@
 #include "glapi.h"
 #include "shader.h"
 #include "space.h"
+#include "input.h"
 
 #include <SOIL/SOIL.h>
 
@@ -75,7 +76,7 @@ void initItems() {
 
 void draw() {
   glClear(GL_COLOR_BUFFER_BIT);
-  for (Item **itemp = items_all; *itemp; itemp++) {
+  for (Item **itemp = items_all; itemp && *itemp; itemp++) {
     Item *item = *itemp;
 
     item_update_texture(item);
@@ -102,6 +103,8 @@ int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!(shader_program = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
+
+  push_input_mode(&base_input_mode.base);
 
   initItems();
 
@@ -149,11 +152,13 @@ int main() {
       XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureNotify) {
      //fprintf(stderr, "Received ConfigureNotify\n");
-      XConfigureEvent *event = &e.xconfigure;
+//      item_update_pixmap(item_get(e.xconfigure.window));
     } else if (e.type == CreateNotify) {
-      //OnCreateNotify(e.xcreatewindow);
+//      Item *item = item_get(e.xcreatewindow.window);
+//      item_update_space_pos_from_window(item);
+//      item_update_pixmap(item);
     } else if (e.type == DestroyNotify) {
-      //OnDestroyNotify(e.xdestroywindow);
+      item_remove(item_get(e.xdestroywindow.window));
     } else if (e.type == ReparentNotify) {
       //OnReparentNotify(e.xreparent);
     } else if (e.type == MapNotify) {
@@ -165,30 +170,31 @@ int main() {
     } else if (e.type == ConfigureRequest) {
       //OnConfigureRequest(e.xconfigurerequest);
     } else if (e.type == ButtonPress) {
-      //OnButtonPress(e.xbutton);
+      input_mode_stack_handle(e);
     } else if (e.type == ButtonRelease) {
-     fprintf(stderr, "ButtonRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
-             e.xbutton.button,
-             e.xbutton.x,
-             e.xbutton.y,
-             e.xbutton.state & Button1Mask ? "Button1, " : "",
-             e.xbutton.state & Button2Mask ? "Button2, " : "",
-             e.xbutton.state & Button3Mask ? "Button3, " : "",
-             e.xbutton.state & Button4Mask ? "Button4, " : "",
-             e.xbutton.state & Button5Mask ? "Button5, " : "",
-             e.xbutton.state & ShiftMask ? "Shift, " : "",
-             e.xbutton.state & LockMask ? "Lock, " : "",
-             e.xbutton.state & ControlMask ? "Control, " : "",
-             e.xbutton.state & Mod1Mask ? "Mod1, " : "",
-             e.xbutton.state & Mod2Mask ? "Mod2, " : "",
-             e.xbutton.state & Mod3Mask ? "Mod3, " : "",
-             e.xbutton.state & Mod4Mask ? "Mod4, " : "",
-             e.xbutton.state & Mod5Mask ? "Mod5, " : "");
-      //OnButtonRelease(e.xbutton);
+      fprintf(stderr, "ButtonRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+              e.xbutton.button,
+              e.xbutton.x,
+              e.xbutton.y,
+              e.xbutton.state & Button1Mask ? "Button1, " : "",
+              e.xbutton.state & Button2Mask ? "Button2, " : "",
+              e.xbutton.state & Button3Mask ? "Button3, " : "",
+              e.xbutton.state & Button4Mask ? "Button4, " : "",
+              e.xbutton.state & Button5Mask ? "Button5, " : "",
+              e.xbutton.state & ShiftMask ? "Shift, " : "",
+              e.xbutton.state & LockMask ? "Lock, " : "",
+              e.xbutton.state & ControlMask ? "Control, " : "",
+              e.xbutton.state & Mod1Mask ? "Mod1, " : "",
+              e.xbutton.state & Mod2Mask ? "Mod2, " : "",
+              e.xbutton.state & Mod3Mask ? "Mod3, " : "",
+              e.xbutton.state & Mod4Mask ? "Mod4, " : "",
+              e.xbutton.state & Mod5Mask ? "Mod5, " : "");
+      input_mode_stack_handle(e);
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
-      // OnMotionNotify(e.xmotion);
+      input_mode_stack_handle(e);
     } else if (e.type == KeyPress) {
+      input_mode_stack_handle(e);
     } else if (e.type == KeyRelease) {
      fprintf(stderr, "KeyRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
              e.xkey.keycode,
@@ -207,6 +213,7 @@ int main() {
              e.xkey.state & Mod3Mask ? "Mod3, " : "",
              e.xkey.state & Mod4Mask ? "Mod4, " : "",
              e.xkey.state & Mod5Mask ? "Mod5, " : "");
+      input_mode_stack_handle(e);
     } else {
       fprintf(stderr, "Ignored event\n"); fflush(stderr);
     }

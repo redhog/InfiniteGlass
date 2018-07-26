@@ -1,3 +1,6 @@
+#ifndef SHAPE
+#define SHAPE
+
 #include "xapi.h"
 #include "glapi.h"
 
@@ -22,3 +25,5 @@ void item_update_space_pos_from_window(Item *item);
 void item_update_space_pos(Item *item);
 void item_update_pixmap(Item *item);
 void item_update_texture(Item *item);
+
+#endif

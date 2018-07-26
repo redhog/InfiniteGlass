@@ -1,3 +1,6 @@
+#ifndef SHADER
+#define SHADER
+
 #include<GL/gl.h>
 
 typedef struct {
@@ -7,3 +10,5 @@ typedef struct {
 } Shader;
 
 Shader *loadShader(char *vertex_src, char *fragment_src);
+
+#endif

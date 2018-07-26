@@ -1,4 +1,3 @@
-#xlock -inwindow -mode atunnels &
 xterm &
 xclock -render -update 1 &
 
