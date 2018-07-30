@@ -1,8 +1,4 @@
-#xterm &
-#xclock -render -update 1 &
-
-#sleep 2
-
 ./wm &
 
+xclock -render -update 1 &
 xterm
