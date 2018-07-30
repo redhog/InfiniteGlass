@@ -15,6 +15,8 @@ typedef struct {
 
   float space_pos[4][2];
   GLuint space_pos_vbo;
+
+  uint is_mapped;
 } Item;
 
 Item **items_all;

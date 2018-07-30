@@ -21,6 +21,7 @@ int OnXError(Display* display, XErrorEvent* e) {
          e->error_code,
          error_text,
          (uint) e->resourceid);
+ *((char *) 0) = 0;
  return 0;
 }
 
@@ -79,6 +80,8 @@ int xinit() {
 
  XDamageQueryExtension(display, &damage_event, &damage_error);
  XShapeQueryExtension(display, &shape_event, &shape_error);
+
+ fprintf(stderr, "root=%ld, overlay=%ld\n", root, overlay);
  
  return 1;
 }

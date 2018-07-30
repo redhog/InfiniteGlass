@@ -50,6 +50,8 @@ GLfloat screen[16] = {
 
 
 void initItems() {
+  XWindowAttributes attr;
+
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
   XGrabServer(display);
@@ -66,6 +68,8 @@ void initItems() {
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
     Item *item = item_get(top_level_windows[i]);
+    XGetWindowAttributes(display, top_level_windows[i], &attr);
+    item->is_mapped = attr.map_state == IsViewable;
     item_update_space_pos_from_window(item);
     item_update_pixmap(item);
   }
@@ -79,21 +83,23 @@ void draw() {
   for (Item **itemp = items_all; itemp && *itemp; itemp++) {
     Item *item = *itemp;
 
-    item_update_texture(item);
-    
-    GLuint space_pos_vbo;
-    
-    glBindBuffer(GL_ARRAY_BUFFER, item->space_pos_vbo);
-    glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(space_pos_attr);
-    
-    glUniform1i(sampler_attr, 0);
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, item->texture_id);
-    glBindSampler(0, 0);
+    if (item->is_mapped) {
+      item_update_texture(item);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glFlush();
+      GLuint space_pos_vbo;
+
+      glBindBuffer(GL_ARRAY_BUFFER, item->space_pos_vbo);
+      glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(space_pos_attr);
+
+      glUniform1i(sampler_attr, 0);
+      glActiveTexture(GL_TEXTURE0 + 0);
+      glBindTexture(GL_TEXTURE_2D, item->texture_id);
+      glBindSampler(0, 0);
+
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+      glFlush();
+    }
   }
 
   glXSwapBuffers(display, overlay);
@@ -150,22 +156,52 @@ int main() {
     } else if (e.type == shape_event + ShapeNotify) {
      //fprintf(stderr, "Received ShapeNotify\n");
       XShapeEvent *event = (XShapeEvent*) &e;
+    } else if (e.type == ConfigureRequest) {
+      XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
+      XWindowChanges changes;
+      // Copy fields from e to changes.
+      changes.x = event->x;
+      changes.y = event->y;
+      changes.width = event->width;
+      changes.height = event->height;
+      changes.border_width = event->border_width;
+      changes.sibling = event->above;
+      changes.stack_mode = event->detail;
+      // Grant request by calling XConfigureWindow().
+      XConfigureWindow(display, event->window, event->value_mask, &changes);  
     } else if (e.type == ConfigureNotify) {
-     //fprintf(stderr, "Received ConfigureNotify\n");
-//      item_update_pixmap(item_get(e.xconfigure.window));
+     fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
+      Item *item = item_get(e.xconfigure.window);
+      item_update_space_pos_from_window(item);
+      item_update_pixmap(item);
+      draw();
     } else if (e.type == CreateNotify) {
-//      Item *item = item_get(e.xcreatewindow.window);
-//      item_update_space_pos_from_window(item);
-//      item_update_pixmap(item);
+      if (e.xcreatewindow.window != overlay) {
+        fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
+        Item *item = item_get(e.xcreatewindow.window);
+        XMapWindow(display, e.xmaprequest.window);
+        item_update_space_pos_from_window(item);
+        item_update_pixmap(item);
+      }
     } else if (e.type == DestroyNotify) {
-      item_remove(item_get(e.xdestroywindow.window));
+     item_remove(item_get(e.xdestroywindow.window));
     } else if (e.type == ReparentNotify) {
       //OnReparentNotify(e.xreparent);
     } else if (e.type == MapNotify) {
-      //OnMapNotify(e.xmap);
-    } else if (e.type == UnmapNotify) {
-      //OnUnmapNotify(e.xunmap);
+      if (e.xmap.window != overlay) {
+        fprintf(stderr, "MapNotify %ld\n", e.xmap.window);
+        Item *item = item_get(e.xmap.window);
+        item->is_mapped = True;
+        item_update_pixmap(item);
+        draw();
+      }
+   } else if (e.type == UnmapNotify) {
+      Item *item = item_get(e.xunmap.window);
+      item->is_mapped = False;
+      draw();
     } else if (e.type == MapRequest) {
+      XMapWindow(display, e.xmaprequest.window);
+      fprintf(stderr, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX: %ld\n", e.xmaprequest.window);
       //OnMapRequest(e.xmaprequest);
     } else if (e.type == ConfigureRequest) {
       //OnConfigureRequest(e.xconfigurerequest);
