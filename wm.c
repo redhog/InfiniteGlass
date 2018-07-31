@@ -23,31 +23,8 @@
 Shader *shader_program;
 GLint sampler_attr;
 GLint screen_attr;
-GLint zoom_pan_attr;
-unsigned int space_pos_attr;
-unsigned int win_pos_attr;
-
-float win_pos[4][2] = {
-  {0.0, 1.0},
-  {0.0, 0.0},
-  {1.0, 1.0},
-  {1.0, 0.0}
-};
-GLuint win_pos_vbo;
-
-GLfloat zoom_pan[16] = {
-  1.0, 0.0, 0.0, 0.0,
-  0.0, 1.0, 0.0, 0.0,
-  0.0, 0.0, 1.0, 0.0,
-  0.0, 0.0, 0.0, 1.0,
-};
-GLfloat screen[16] = {
-  1.0, 0.0, 0.0, 0.0,
-  0.0, 1.0, 0.0, 0.0,
-  0.0, 0.0, 1.0, 0.0,
-  0.0, 0.0, 0.0, 1.0,
-};
-
+unsigned int coords_attr;
+float screen[4];
 
 void initItems() {
   XWindowAttributes attr;
@@ -88,9 +65,9 @@ void draw() {
 
       GLuint space_pos_vbo;
 
-      glBindBuffer(GL_ARRAY_BUFFER, item->space_pos_vbo);
-      glVertexAttribPointer(space_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-      glEnableVertexAttribArray(space_pos_attr);
+      glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
+      glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
+      glEnableVertexAttribArray(coords_attr);
 
       glUniform1i(sampler_attr, 0);
       glActiveTexture(GL_TEXTURE0 + 0);
@@ -108,7 +85,7 @@ void draw() {
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
-  if (!(shader_program = loadShader("vertex_shader.glsl", "fragment_shader.glsl"))) return 1;
+  if (!(shader_program = loadShader("vertex_shader.glsl", "geometry_shader.glsl", "fragment_shader.glsl"))) return 1;
 
   push_input_mode(&base_input_mode.base);
 
@@ -119,21 +96,16 @@ int main() {
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
 
-  zoom_pan_attr = glGetUniformLocation(shader_program->program, "zoom_pan");
+  screen[0] = 0.;
+  screen[1] = 0.;
+  screen[2] = 1.;
+  screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
+  
   screen_attr = glGetUniformLocation(shader_program->program, "screen");
-
-  glUniformMatrix4fvARB(zoom_pan_attr, 1, True, zoom_pan);
-  glUniformMatrix4fvARB(screen_attr, 1, True, screen);
+  glUniform4fv(screen_attr, 1, screen);
   
   sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
-  space_pos_attr = glGetAttribLocation(shader_program->program, "space_pos");
-  win_pos_attr = glGetAttribLocation(shader_program->program, "win_pos");
-
-  glGenBuffers(1, &win_pos_vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, win_pos_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(win_pos), win_pos, GL_STATIC_DRAW);
-  glVertexAttribPointer(win_pos_attr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(win_pos_attr);
+  coords_attr = glGetAttribLocation(shader_program->program, "window");
 
   draw();
 

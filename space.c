@@ -51,30 +51,19 @@ void item_update_space_pos_from_window(Item *item) {
   int width                 = attr.width;
   int height                = attr.height;
   fprintf(stderr, "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, x, y, width, height);
-  float left = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
-  float right = left + (float) width / (float) overlay_attr.width;
-  float top = ((float) y - overlay_attr.y) / (float) overlay_attr.height;
-  float bottom = top + (float) height / (float) overlay_attr.height;
 
-  left = 2. * left - 1.; 
-  right = 2. * right - 1.; 
-  top = 1 - 2. * top; 
-  bottom = 1. - 2. * bottom; 
-
-  fprintf(stderr, "%u: %i,%i(%i,%i)\n", (uint) item->window, x, y, width, height); fflush(stderr);
-    
-  item->space_pos[0][0] = left; item->space_pos[0][1] = bottom;
-  item->space_pos[1][0] = left; item->space_pos[1][1] = top;
-  item->space_pos[2][0] = right; item->space_pos[2][1] = bottom;
-  item->space_pos[3][0] = right; item->space_pos[3][1] = top;
+  item->coords[0] = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
+  item->coords[1] = ((float) (y - overlay_attr.y)) / (float) overlay_attr.height;
+  item->coords[2] = ((float) (width)) / (float) overlay_attr.width;
+  item->coords[3] = ((float) (height)) / (float) overlay_attr.height;
 
   item_update_space_pos(item);
 }
 
 void item_update_space_pos(Item *item) {  
-  glGenBuffers(1, &item->space_pos_vbo); 
-  glBindBuffer(GL_ARRAY_BUFFER, item->space_pos_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(item->space_pos), item->space_pos, GL_STATIC_DRAW);
+  glGenBuffers(1, &item->coords_vbo); 
+  glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(item->coords), item->coords, GL_STATIC_DRAW);
 }
 
 void item_update_pixmap(Item *item) {

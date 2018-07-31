@@ -13,8 +13,8 @@ typedef struct {
   GLXPixmap glxpixmap;
   GLuint texture_id;
 
-  float space_pos[4][2];
-  GLuint space_pos_vbo;
+  float coords[4];
+  GLuint coords_vbo;
 
   uint is_mapped;
 } Item;

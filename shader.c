@@ -34,39 +34,46 @@ int checkError() {
   return 1;
 }
 
-int checkShaderError(GLuint shader) {
+int checkShaderError(char *name, char *src, GLuint shader) {
   GLint res;
   GLint len;
   GLchar *log;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &res);
   if (res == GL_TRUE) return 1;
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-  log = malloc(len);
+  log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
-  fprintf(stderr, "Shader compilation failed: %s\n", log);
+  fprintf(stderr, "%s shader compilation failed: %s [%d]\n", name, log, len);
+  //fwrite(log, len, 1, stderr);
   return 0;
 }
 
-Shader *loadShader(char *vertex_src, char *fragment_src) {
+Shader *loadShader(char *vertex_src, char *geometry_src, char *fragment_src) {
   Shader *res = (Shader *) malloc(sizeof(Shader));
  
   res->vertex_src = filetobuf(vertex_src);
-  res->fragment_src = filetobuf(fragment_src);
-
   res->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  res->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-
   glShaderSource(res->vertex_shader, 1, (const GLchar**)&(res->vertex_src), 0);
-  glShaderSource(res->fragment_shader, 1, (const GLchar**)&(res->fragment_src), 0);
-
   glCompileShader(res->vertex_shader);
-  if (!checkShaderError(res->vertex_shader)) { free(res); return NULL; }
+  if (!checkShaderError("vertex", res->vertex_src, res->vertex_shader)) { free(res); return NULL; }
+
+  res->geometry_src = filetobuf(geometry_src);
+  res->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
+  if (!checkError()) { free(res); return NULL; }
+  glShaderSource(res->geometry_shader, 1, (const GLchar**)&(res->geometry_src), 0);
+  glCompileShader(res->geometry_shader);
+  if (!checkShaderError("geometry", res->geometry_src, res->geometry_shader)) { free(res); return NULL; }
+
+  res->fragment_src = filetobuf(fragment_src);
+  res->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(res->fragment_shader, 1, (const GLchar**)&(res->fragment_src), 0);
   glCompileShader(res->fragment_shader);
-  if (!checkShaderError(res->fragment_shader)) { free(res); return NULL; }
+  if (!checkShaderError("fragment", res->fragment_src, res->fragment_shader)) { free(res); return NULL; }
 
   res->program = glCreateProgram();
 
   glAttachShader(res->program, res->vertex_shader);
+  glAttachShader(res->program, res->geometry_shader);
   glAttachShader(res->program, res->fragment_shader);
 
   // glBindAttribLocation(res->program, 1, "in_Position");

@@ -5,10 +5,10 @@
 
 typedef struct {
   GLuint program;
-  GLchar *vertex_src, *fragment_src;
-  GLuint vertex_shader, fragment_shader;
+  GLchar *vertex_src, *geometry_src, *fragment_src;
+  GLuint vertex_shader, geometry_shader, fragment_shader;
 } Shader;
 
-Shader *loadShader(char *vertex_src, char *fragment_src);
+Shader *loadShader(char *vertex_src, char *geometry_src, char *fragment_src);
 
 #endif
