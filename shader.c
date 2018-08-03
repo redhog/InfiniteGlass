@@ -13,9 +13,10 @@ char *filetobuf(char *filename) {
   fseek(f, 0, SEEK_END);
   length = ftell(f);
   fseek(f, 0, SEEK_SET);
-  buffer = malloc(length);
+  buffer = malloc(length + 1);
   if (buffer) {
     fread(buffer, 1, length, f);
+    buffer[length] = 0;
   }
   fclose(f);
 
@@ -43,8 +44,22 @@ int checkShaderError(char *name, char *src, GLuint shader) {
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
-  fprintf(stderr, "%s shader compilation failed: %s [%d]\n", name, log, len);
-  //fwrite(log, len, 1, stderr);
+  fprintf(stderr, "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
+  checkError();
+  return 0;
+}
+
+int checkProgramError(GLuint program) {
+  GLint res;
+  GLint len;
+  GLchar *log;
+  glGetProgramiv(program, GL_LINK_STATUS, &res);
+  if (res == GL_TRUE) return 1;
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
+  log = malloc(len + 1);
+  glGetProgramInfoLog(program, len, &len, log);
+  fprintf(stderr, "Program linkage failed: %s [%d]\n", log, len);
+  checkError();
   return 0;
 }
 
@@ -79,11 +94,7 @@ Shader *loadShader(char *vertex_src, char *geometry_src, char *fragment_src) {
   // glBindAttribLocation(res->program, 1, "in_Position");
 
   glLinkProgram(res->program);
-  if (!checkError()) {
-    free(res);
-    return NULL;
-  }
-
+  if (!checkProgramError(res->program)) { free(res); return NULL; }
   
   return res;
 }

@@ -74,7 +74,7 @@ void draw() {
       glBindTexture(GL_TEXTURE_2D, item->texture_id);
       glBindSampler(0, 0);
 
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+      glDrawArrays(GL_POINTS, 0, 1);
       glFlush();
     }
   }
