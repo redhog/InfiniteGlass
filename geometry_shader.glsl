@@ -1,4 +1,5 @@
 #version 330 // Specify which version of GLSL we are using.
+#extension GL_ARB_geometry_shader4 : enable
 
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
@@ -47,5 +48,18 @@ void main() {
     UV = vec2(1., 0.);
     EmitVertex();
   }
+    gl_Position = vec4(-.5, -.5, 0., 0.);
+    UV = vec2(0., 0.);
+    EmitVertex();
+    gl_Position = vec4(-.5, .5, 0., 0.);
+    UV = vec2(0., 1.);
+    EmitVertex();
+    gl_Position = vec4(.5, .5, 0., 0.);
+    UV = vec2(1., 1.);
+    EmitVertex();
+    gl_Position = vec4(.5, -.5, 0., 0.);
+    UV = vec2(1., 0.);
+    EmitVertex();
+
   EndPrimitive();
 }

@@ -1,4 +1,4 @@
-#version 130 // Specify which version of GLSL we are using.
+#version 330 // Specify which version of GLSL we are using.
 
 in vec4 coords; // x,y,w,h in space 
 out vec4 window; // x,y,w,h in space
