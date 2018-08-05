@@ -64,10 +64,13 @@ void draw() {
       item_update_texture(item);
 
       GLuint space_pos_vbo;
-
-      glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
-      glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
+      GLfloat coords[4] = {0.3, 0.4, 0.5, 0.6};
+      
+      //fprintf(stderr, "%f,%f[%f,%f]\n", item->coords[0], item->coords[1], item->coords[2], item->coords[3]);
       glEnableVertexAttribArray(coords_attr);
+      glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_STATIC_DRAW);
+      glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
       glUniform1i(sampler_attr, 0);
       glActiveTexture(GL_TEXTURE0 + 0);
@@ -96,6 +99,10 @@ int main() {
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
 
+  unsigned int VAO;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+  
   screen[0] = 0.;
   screen[1] = 0.;
   screen[2] = 1.;
@@ -105,7 +112,7 @@ int main() {
   glUniform4fv(screen_attr, 1, screen);
   
   sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
-  coords_attr = glGetAttribLocation(shader_program->program, "window");
+  coords_attr = glGetAttribLocation(shader_program->program, "coords");
 
   draw();
 

@@ -1,5 +1,4 @@
-#version 330 // Specify which version of GLSL we are using.
-#extension GL_ARB_geometry_shader4 : enable
+#version 330 core
 
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
@@ -36,30 +35,31 @@ void main() {
     UV = vec2(0., 1.);
     EmitVertex();
 
-    gl_Position = space2screen * vec4(p1.x, p1.y, 0., 0.);
+    gl_Position = space2screen * vec4(p1.x, p1.y, 0., 1.);
     UV = vec2(0., 0.);
     EmitVertex();
 
-    gl_Position = space2screen * vec4(p2.x, p2.y, 0., 0.);
+    gl_Position = space2screen * vec4(p2.x, p2.y, 0., 1.);
     UV = vec2(1., 1.);
     EmitVertex();
 
-    gl_Position = space2screen * vec4(p3.x, p3.y, 0., 0.);
+    gl_Position = space2screen * vec4(p3.x, p3.y, 0., 1.);
     UV = vec2(1., 0.);
     EmitVertex();
   }
-    gl_Position = vec4(-.5, -.5, 0., 0.);
+/*
+    gl_Position = vec4(-.5, -.5, 0., 1.);
     UV = vec2(0., 0.);
     EmitVertex();
-    gl_Position = vec4(-.5, .5, 0., 0.);
+    gl_Position = vec4(-.5, .5, 0., 1.);
     UV = vec2(0., 1.);
     EmitVertex();
-    gl_Position = vec4(.5, .5, 0., 0.);
+    gl_Position = vec4(.5, .5, 0., 1.);
     UV = vec2(1., 1.);
     EmitVertex();
-    gl_Position = vec4(.5, -.5, 0., 0.);
+    gl_Position = vec4(.5, -.5, 0., 1.);
     UV = vec2(1., 0.);
     EmitVertex();
-
+*/
   EndPrimitive();
 }
