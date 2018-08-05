@@ -83,7 +83,7 @@ void draw() {
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
-  if (!(shader_program = loadShader("vertex_shader.glsl", "geometry_shader.glsl", "fragment_shader.glsl"))) return 1;
+  if (!(shader_program = loadShader("shader_window_vertex.glsl", "shader_window_geometry.glsl", "shader_window_fragment.glsl"))) return 1;
 
   push_input_mode(&base_input_mode.base);
 
