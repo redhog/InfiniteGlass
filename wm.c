@@ -63,13 +63,8 @@ void draw() {
     if (item->is_mapped) {
       item_update_texture(item);
 
-      GLuint space_pos_vbo;
-      GLfloat coords[4] = {0.3, 0.4, 0.5, 0.6};
-      
-      //fprintf(stderr, "%f,%f[%f,%f]\n", item->coords[0], item->coords[1], item->coords[2], item->coords[3]);
       glEnableVertexAttribArray(coords_attr);
       glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_STATIC_DRAW);
       glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
       glUniform1i(sampler_attr, 0);
