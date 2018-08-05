@@ -16,7 +16,7 @@ mat4 screen2glscreen = transpose(mat4(
 ));
 
 void main() {
-  vec2 p0, p1, p2, p3;
+  float left, right, top, bottom;
 
   mat4 space2screen = screen2glscreen * transpose(mat4(
     1./screen[2], 0., 0., -screen.x/screen[2],
@@ -26,40 +26,27 @@ void main() {
   ));
 
   for(int i = 0; i < gl_in.length(); i++) {
-    p1 = vec2(window[i][0], window[i][1]); // l, t
-    p2 = p1 + vec2(window[i][2], window[i][3]); // r, b
-    p0 = vec2(p1.x, p2.y); // l, b
-    p3 = vec2(p2.x, p1.y); // r, t
 
-    gl_Position = space2screen * vec4(p0.x, p0.y, 0., 1.);
+    left = window[i][0];
+    bottom = window[i][1];
+    right = left + window[i][2];
+    top = bottom + window[i][3];
+    
+    gl_Position = space2screen * vec4(left, bottom, 0., 1.);
     UV = vec2(0., 1.);
     EmitVertex();
 
-    gl_Position = space2screen * vec4(p1.x, p1.y, 0., 1.);
+    gl_Position = space2screen * vec4(left, top, 0., 1.);
     UV = vec2(0., 0.);
     EmitVertex();
 
-    gl_Position = space2screen * vec4(p2.x, p2.y, 0., 1.);
+    gl_Position = space2screen * vec4(right, bottom, 0., 1.);
     UV = vec2(1., 1.);
     EmitVertex();
 
-    gl_Position = space2screen * vec4(p3.x, p3.y, 0., 1.);
+    gl_Position = space2screen * vec4(right, top, 0., 1.);
     UV = vec2(1., 0.);
     EmitVertex();
   }
-/*
-    gl_Position = vec4(-.5, -.5, 0., 1.);
-    UV = vec2(0., 0.);
-    EmitVertex();
-    gl_Position = vec4(-.5, .5, 0., 1.);
-    UV = vec2(0., 1.);
-    EmitVertex();
-    gl_Position = vec4(.5, .5, 0., 1.);
-    UV = vec2(1., 1.);
-    EmitVertex();
-    gl_Position = vec4(.5, -.5, 0., 1.);
-    UV = vec2(1., 0.);
-    EmitVertex();
-*/
   EndPrimitive();
 }
