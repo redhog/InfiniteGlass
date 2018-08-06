@@ -53,9 +53,9 @@ void item_update_space_pos_from_window(Item *item) {
   fprintf(stderr, "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, x, y, width, height);
 
   item->coords[0] = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
-  item->coords[1] = ((float) (y - overlay_attr.y)) / (float) overlay_attr.height;
+  item->coords[1] = ((float) (overlay_attr.height - y - overlay_attr.y)) / (float) overlay_attr.width;
   item->coords[2] = ((float) (width)) / (float) overlay_attr.width;
-  item->coords[3] = ((float) (height)) / (float) overlay_attr.height;
+  item->coords[3] = ((float) (height)) / (float) overlay_attr.width;
 
   item_update_space_pos(item);
 }

@@ -28,9 +28,9 @@ void main() {
   for(int i = 0; i < gl_in.length(); i++) {
 
     left = window[i][0];
-    bottom = window[i][1];
+    top = window[i][1];
     right = left + window[i][2];
-    top = bottom + window[i][3];
+    bottom = top - window[i][3];
     
     gl_Position = space2screen * vec4(left, bottom, 0., 1.);
     UV = vec2(0., 1.);

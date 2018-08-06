@@ -3,20 +3,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <X11/Xutil.h>
-#include <X11/extensions/Xcomposite.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/XTest.h>
-
-#include<GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-
 #include "xapi.h"
 #include "glapi.h"
 #include "shader.h"
 #include "space.h"
 #include "input.h"
+#include "wm.h"
 
 #include <SOIL/SOIL.h>
 
@@ -85,30 +77,29 @@ int main() {
   if (!glinit(overlay)) return 1;
   if (!(shader_program = loadShader("shader_window_vertex.glsl", "shader_window_geometry.glsl", "shader_window_fragment.glsl"))) return 1;
 
-  push_input_mode(&base_input_mode.base);
-
-  initItems();
-
   glUseProgram(shader_program->program);
- 
-  glClearColor(1.0, 1.0, 0.5, 1.0);
-  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);
 
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
-  
+
   screen[0] = 0.;
   screen[1] = 0.;
   screen[2] = 1.;
   screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
   
   screen_attr = glGetUniformLocation(shader_program->program, "screen");
-  glUniform4fv(screen_attr, 1, screen);
-  
   sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
   coords_attr = glGetAttribLocation(shader_program->program, "coords");
+  
+  push_input_mode(&base_input_mode.base);
 
+  initItems();
+ 
+  glClearColor(1.0, 1.0, 0.5, 1.0);
+  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);  
+  glUniform4fv(screen_attr, 1, screen);
+  
   draw();
 
   for (;;) {
