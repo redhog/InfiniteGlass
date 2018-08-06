@@ -78,6 +78,11 @@ int xinit() {
  overlay = XCompositeGetOverlayWindow(display, root);
  XGetWindowAttributes(display, overlay, &overlay_attr);
 
+ Cursor cursor;
+ cursor=XCreateFontCursor(display,XC_left_ptr);
+ XDefineCursor(display, overlay, cursor);
+ XFreeCursor(display, cursor);
+ 
  XDamageQueryExtension(display, &damage_event, &damage_error);
  XShapeQueryExtension(display, &shape_event, &shape_error);
 
