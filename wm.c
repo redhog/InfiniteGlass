@@ -49,6 +49,7 @@ void initItems() {
 
 void draw() {
   glClear(GL_COLOR_BUFFER_BIT);
+  glUniform4fv(screen_attr, 1, screen);
   for (Item **itemp = items_all; itemp && *itemp; itemp++) {
     Item *item = *itemp;
 
@@ -98,7 +99,6 @@ int main() {
  
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);  
-  glUniform4fv(screen_attr, 1, screen);
   
   draw();
 
