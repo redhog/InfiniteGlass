@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "xapi.h"
 #include "glapi.h"
@@ -15,7 +16,10 @@
 Shader *shader_program;
 GLint sampler_attr;
 GLint screen_attr;
-unsigned int coords_attr;
+GLint coords_attr;
+GLint picking_mode_attr;
+GLint window_id_attr;
+
 float screen[4];
 
 void initItems() {
@@ -47,13 +51,15 @@ void initItems() {
   XUngrabServer(display);
 }
 
-void draw() {
+void abstract_draw() {
   glClear(GL_COLOR_BUFFER_BIT);
   glUniform4fv(screen_attr, 1, screen);
   for (Item **itemp = items_all; itemp && *itemp; itemp++) {
     Item *item = *itemp;
 
     if (item->is_mapped) {
+      glUniform1f(window_id_attr, (float) item->window / (float) INT_MAX);
+     
       item_update_texture(item);
 
       glEnableVertexAttribArray(coords_attr);
@@ -73,10 +79,70 @@ void draw() {
   glXSwapBuffers(display, overlay);
 }
 
+void draw() {
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glUniform1i(picking_mode_attr, 1);
+  abstract_draw();
+}
+GLint picking_fb;
+
+void pick(int x, int y, float *winx, float *winy, Item **item) {
+  float data[4];
+  memset(data, 0, sizeof(data));
+  glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
+  glUniform1i(picking_mode_attr, 1);
+  abstract_draw();
+  glReadPixels(x, overlay_attr.height - y, 1, 1,
+               GL_RGBA, GL_FLOAT,
+               (GLvoid *) data);
+//  checkError();
+  fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
+  return;
+  if (data[2] == 0.0) {
+    *winx = 0;
+    *winy = 0;
+//    *item = NULL;
+  } else {
+    *winx = data[0];
+    *winy = data[1];
+//    *item = item_get((Window) (data[2] * (float) INT_MAX));
+  }
+//  fprintf(stderr, "Pick %d,%d -> %d,%f,%f\n", x, y, (int) (data[2] * (float) INT_MAX), *winx, *winy);
+}
+
+int init_picking() {
+  GLuint color_tex;
+  GLint depth_rb;
+  
+  glGenTextures(1, &color_tex);
+  glBindTexture(GL_TEXTURE_2D, color_tex);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, overlay_attr.width, overlay_attr.height, 0, GL_RGBA, GL_FLOAT, NULL);
+  glGenFramebuffers(1, &picking_fb);
+  glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_tex, 0);
+  glGenRenderbuffers(1, &depth_rb);
+  glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 256, 256);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+   fprintf(stderr, "Unable to create picking framebuffer.\n");
+    return 0;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
+  return 1;
+}
+
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!(shader_program = loadShader("shader_window_vertex.glsl", "shader_window_geometry.glsl", "shader_window_fragment.glsl"))) return 1;
+  if (!init_picking()) return 1;
+  
+  fprintf(stderr, "Initialized X and GL.\n");
 
   glUseProgram(shader_program->program);
 
@@ -92,6 +158,8 @@ int main() {
   screen_attr = glGetUniformLocation(shader_program->program, "screen");
   sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
   coords_attr = glGetAttribLocation(shader_program->program, "coords");
+  picking_mode_attr = glGetUniformLocation(shader_program->program, "pickingMode");
+  window_id_attr = glGetUniformLocation(shader_program->program, "windowId");
   
   push_input_mode(&base_input_mode.base);
 

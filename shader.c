@@ -1,7 +1,8 @@
-#include<GL/glew.h>
-#include<stdlib.h>
-#include<stdio.h>
+#include <GL/glew.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "shader.h"
+#include "glapi.h"
 
 char *filetobuf(char *filename) {
   char *buffer = 0;
@@ -21,18 +22,6 @@ char *filetobuf(char *filename) {
   fclose(f);
 
   return buffer;
-}
-
-int checkError() {
-  GLenum errCode;
-  const GLubyte *errString;
-
-  if ((errCode = glGetError()) != GL_NO_ERROR) {
-    errString = gluErrorString(errCode);
-    fprintf(stderr, "OpenGL error %s\n", errString);
-    return 0;
-  }
-  return 1;
 }
 
 int checkShaderError(char *name, char *src, GLuint shader) {

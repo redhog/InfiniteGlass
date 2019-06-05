@@ -5,6 +5,18 @@
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
+int checkError() {
+  GLenum errCode;
+  const GLubyte *errString;
+
+  if ((errCode = glGetError()) != GL_NO_ERROR) {
+    errString = gluErrorString(errCode);
+    fprintf(stderr, "OpenGL error %s\n", errString);
+    return 0;
+  }
+  return 1;
+}
+
 int glinit(Window window) { 
   int elements;
   configs = glXChooseFBConfig(display, 0, NULL, &elements);
