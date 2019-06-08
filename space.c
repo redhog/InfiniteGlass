@@ -70,6 +70,7 @@ void item_update_pixmap(Item *item) {
  if (!item->is_mapped) return;
  if (item->pixmap) XFreePixmap(display, item->pixmap);
  if (item->glxpixmap) glXDestroyGLXPixmap(display, item->glxpixmap);
+ checkError("item_update_pixmap0");
  
  // FIXME: free all other stuff if already created
  
@@ -79,20 +80,30 @@ void item_update_pixmap(Item *item) {
    GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
    None
   };
+ checkError("item_update_pixmap1");
  item->glxpixmap = glXCreatePixmap(display, configs[0], item->pixmap, pixmap_attribs);
+ checkError("item_update_pixmap2");
  
  item_update_texture(item);
+ checkError("item_update_pixmap3");
 }
 
 void item_update_texture(Item *item) {
  if (!item->is_mapped) return;
- glEnable(GL_TEXTURE_2D);
+ //glEnable(GL_TEXTURE_2D);
+ //checkError("item_update_texture1");
  if (!item->texture_id) {
    glGenTextures(1, &item->texture_id);
  }
+ checkError("item_update_texture2");
  glBindTexture(GL_TEXTURE_2D, item->texture_id);
+ checkError("item_update_texture3");
  glXBindTexImageEXT(display, item->glxpixmap, GLX_FRONT_EXT, NULL);
+ checkError("item_update_texture4");
  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+ checkError("item_update_texture5");
  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
- glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+ checkError("item_update_texture6");
+ // glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+ // checkError("item_update_texture7");
 }

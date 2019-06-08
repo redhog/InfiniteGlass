@@ -75,27 +75,29 @@ void abstract_draw() {
       glFlush();
     }
   }
-
-  glXSwapBuffers(display, overlay);
 }
 
 void draw() {
+  checkError("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glUniform1i(picking_mode_attr, 1);
+  checkError("draw1");
   abstract_draw();
+  checkError("draw2");
+  glXSwapBuffers(display, overlay);
+  checkError("draw3");
 }
 GLint picking_fb;
 
 void pick(int x, int y, float *winx, float *winy, Item **item) {
   float data[4];
   memset(data, 0, sizeof(data));
+  checkError("pick1");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glUniform1i(picking_mode_attr, 1);
   abstract_draw();
-  glReadPixels(x, overlay_attr.height - y, 1, 1,
-               GL_RGBA, GL_FLOAT,
-               (GLvoid *) data);
-//  checkError();
+  glReadPixels(x, overlay_attr.height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
+  checkError("pick2");
   fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   return;
   if (data[2] == 0.0) {
@@ -129,10 +131,9 @@ int init_picking() {
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 256, 256);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-   fprintf(stderr, "Unable to create picking framebuffer.\n");
+    fprintf(stderr, "Unable to create picking framebuffer.\n");
     return 0;
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   return 1;
 }
 
@@ -166,14 +167,20 @@ int main() {
   initItems();
  
   glClearColor(1.0, 1.0, 0.5, 1.0);
-  glViewport(overlay_attr.x, overlay_attr.y, overlay_attr.width, overlay_attr.height);  
-  
+  glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
+
+  checkError("start1");
+
   draw();
+
+  checkError("start2");
 
   for (;;) {
     XEvent e;
     XNextEvent(display, &e);
     //fprintf(stderr, "Received event: %i\n", e.type);
+
+    checkError("loop");
 
     if (e.type == damage_event + XDamageNotify) {
      //fprintf(stderr, "Received XDamageNotify\n");
@@ -206,7 +213,9 @@ int main() {
      fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       Item *item = item_get(e.xconfigure.window);
       item_update_space_pos_from_window(item);
+      checkError("item_update_space_pos_from_window");
       item_update_pixmap(item);
+      checkError("item_update_pixmap");
       draw();
     } else if (e.type == CreateNotify) {
       if (e.xcreatewindow.window != overlay) {
