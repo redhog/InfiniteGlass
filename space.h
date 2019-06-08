@@ -13,6 +13,9 @@ typedef struct {
   GLXPixmap glxpixmap;
   GLuint texture_id;
 
+  int width;
+  int height;
+ 
   float coords[4];
   GLuint coords_vbo;
 

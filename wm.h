@@ -13,6 +13,6 @@ extern GLint picking_mode_attr;
 extern GLint window_id_attr;
 extern float screen[4];
 extern void draw();
-extern void pick(int x, int y, float *winx, float *winy, Item **item);
+extern void pick(int x, int y, int *winx, int *winy, Item **item);
 
 #endif

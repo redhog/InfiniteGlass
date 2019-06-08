@@ -53,7 +53,7 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     screen[3] = screen[3] * 1.1;   
     draw();
   } else if (event.type == ButtonRelease & event.xbutton.button == 1) { //click
-    float winx, winy;
+    int winx, winy;
     Item *item;
     pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
 //    fprintf(stderr, "Pick %d,%d -> %d,%f,%f\n", event.xbutton.x, event.xbutton.y, (int) item->window, winx, winy);

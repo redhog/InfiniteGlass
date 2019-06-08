@@ -80,8 +80,9 @@ void abstract_draw() {
 void draw() {
   checkError("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glUniform1i(picking_mode_attr, 1);
+  glUniform1i(picking_mode_attr, 0);
   checkError("draw1");
+  glClearColor(1.0, 1.0, 0.5, 1.0);
   abstract_draw();
   checkError("draw2");
   glXSwapBuffers(display, overlay);
@@ -89,27 +90,32 @@ void draw() {
 }
 GLint picking_fb;
 
-void pick(int x, int y, float *winx, float *winy, Item **item) {
+void pick(int x, int y, int *winx, int *winy, Item **item) {
   float data[4];
   memset(data, 0, sizeof(data));
   checkError("pick1");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glUniform1i(picking_mode_attr, 1);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
   abstract_draw();
   glReadPixels(x, overlay_attr.height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   checkError("pick2");
   fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
-  return;
-  if (data[2] == 0.0) {
-    *winx = 0;
-    *winy = 0;
-//    *item = NULL;
-  } else {
-    *winx = data[0];
-    *winy = data[1];
-//    *item = item_get((Window) (data[2] * (float) INT_MAX));
+  *winx = 0;
+  *winy = 0;
+  *item = NULL;
+  if (data[2] != 0.0) {
+    *item = item_get((Window) (data[2] * (float) INT_MAX));
+    if (*item) {
+      *winx = (int) (data[0] * (*item)->width);
+      *winy = (int) (data[1] * (*item)->height);
+    }
   }
-//  fprintf(stderr, "Pick %d,%d -> %d,%f,%f\n", x, y, (int) (data[2] * (float) INT_MAX), *winx, *winy);
+  if (*item) {
+    fprintf(stderr, "Pick %d,%d -> %d,%d,%d\n", x, y, (*item)->window, *winx, *winy);
+  } else {
+    fprintf(stderr, "Pick %d,%d -> NULL\n", x, y);
+  }
 }
 
 int init_picking() {
@@ -128,7 +134,7 @@ int init_picking() {
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_tex, 0);
   glGenRenderbuffers(1, &depth_rb);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 256, 256);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, overlay_attr.width, overlay_attr.height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     fprintf(stderr, "Unable to create picking framebuffer.\n");
@@ -166,7 +172,6 @@ int main() {
 
   initItems();
  
-  glClearColor(1.0, 1.0, 0.5, 1.0);
   glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
 
   checkError("start1");
