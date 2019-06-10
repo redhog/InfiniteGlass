@@ -1,4 +1,5 @@
 ./bin/wm &
 
-xclock -render -update 1 &
+#xclock -render -update 1 &
+#xev &
 xterm

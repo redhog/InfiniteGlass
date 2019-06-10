@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "space.h"
 #include "input.h"
+#include "xevent.h"
 #include "wm.h"
 
 #include <SOIL/SOIL.h>
@@ -80,7 +81,7 @@ void abstract_draw() {
 void draw() {
   checkError("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glUniform1i(picking_mode_attr, 0);
+  glUniform1i(picking_mode_attr, 1);
   checkError("draw1");
   glClearColor(1.0, 1.0, 0.5, 1.0);
   abstract_draw();
@@ -229,6 +230,7 @@ int main() {
         XMapWindow(display, e.xmaprequest.window);
         item_update_space_pos_from_window(item);
         item_update_pixmap(item);
+        input_mode_stack_configure(e.xcreatewindow.window);
       }
     } else if (e.type == DestroyNotify) {
      item_remove(item_get(e.xdestroywindow.window));
@@ -248,30 +250,11 @@ int main() {
       draw();
     } else if (e.type == MapRequest) {
       XMapWindow(display, e.xmaprequest.window);
-      fprintf(stderr, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX: %ld\n", e.xmaprequest.window);
-      //OnMapRequest(e.xmaprequest);
     } else if (e.type == ConfigureRequest) {
       //OnConfigureRequest(e.xconfigurerequest);
     } else if (e.type == ButtonPress) {
       input_mode_stack_handle(e);
     } else if (e.type == ButtonRelease) {
-      fprintf(stderr, "ButtonRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
-              e.xbutton.button,
-              e.xbutton.x,
-              e.xbutton.y,
-              e.xbutton.state & Button1Mask ? "Button1, " : "",
-              e.xbutton.state & Button2Mask ? "Button2, " : "",
-              e.xbutton.state & Button3Mask ? "Button3, " : "",
-              e.xbutton.state & Button4Mask ? "Button4, " : "",
-              e.xbutton.state & Button5Mask ? "Button5, " : "",
-              e.xbutton.state & ShiftMask ? "Shift, " : "",
-              e.xbutton.state & LockMask ? "Lock, " : "",
-              e.xbutton.state & ControlMask ? "Control, " : "",
-              e.xbutton.state & Mod1Mask ? "Mod1, " : "",
-              e.xbutton.state & Mod2Mask ? "Mod2, " : "",
-              e.xbutton.state & Mod3Mask ? "Mod3, " : "",
-              e.xbutton.state & Mod4Mask ? "Mod4, " : "",
-              e.xbutton.state & Mod5Mask ? "Mod5, " : "");
       input_mode_stack_handle(e);
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
@@ -279,25 +262,9 @@ int main() {
     } else if (e.type == KeyPress) {
       input_mode_stack_handle(e);
     } else if (e.type == KeyRelease) {
-     fprintf(stderr, "KeyRelease of %i @ %d,%d with mask %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
-             e.xkey.keycode,
-             e.xkey.x,
-             e.xkey.y,
-             e.xkey.state & Button1Mask ? "Button1, " : "",
-             e.xkey.state & Button2Mask ? "Button2, " : "",
-             e.xkey.state & Button3Mask ? "Button3, " : "",
-             e.xkey.state & Button4Mask ? "Button4, " : "",
-             e.xkey.state & Button5Mask ? "Button5, " : "",
-             e.xkey.state & ShiftMask ? "Shift, " : "",
-             e.xkey.state & LockMask ? "Lock, " : "",
-             e.xkey.state & ControlMask ? "Control, " : "",
-             e.xkey.state & Mod1Mask ? "Mod1, " : "",
-             e.xkey.state & Mod2Mask ? "Mod2, " : "",
-             e.xkey.state & Mod3Mask ? "Mod3, " : "",
-             e.xkey.state & Mod4Mask ? "Mod4, " : "",
-             e.xkey.state & Mod5Mask ? "Mod5, " : "");
       input_mode_stack_handle(e);
     } else {
+       print_xevent(display, &e);
       fprintf(stderr, "Ignored event\n"); fflush(stderr);
     }
   }
