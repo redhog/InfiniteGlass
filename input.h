@@ -4,9 +4,13 @@
 #include "xapi.h"
 #include "space.h"
 
+typedef void EnterMode(size_t mode);
+typedef void ExitMode(size_t mode);
 typedef uint HandleEvent(size_t mode, XEvent event);
 
 typedef struct {
+  EnterMode *enter;
+  ExitMode *exit;
   HandleEvent *handle_event;
   XEvent first_event;
   XEvent last_event;
