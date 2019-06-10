@@ -1,6 +1,7 @@
 #include "input.h"
 #include "wm.h"
 #include "xapi.h"
+#include "xevent.h"
 
 InputMode **input_mode_stack = NULL;
 size_t input_mode_stack_len = 0;
@@ -34,7 +35,8 @@ InputMode *pop_input_mode() {
 
 
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
-  if (event.type == ButtonRelease & event.xbutton.button == 4) { // up -> zoom in
+  print_xevent(display, &event);
+  if (event.type == ButtonRelease && event.xbutton.button == 4) { // up -> zoom in
     float x = ((float) (event.xbutton.x - overlay_attr.x)) / (float) overlay_attr.width;
     float y = ((float) (overlay_attr.height - (event.xbutton.y - overlay_attr.y))) / (float) overlay_attr.width;
 
