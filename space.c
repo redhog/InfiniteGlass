@@ -6,7 +6,6 @@ Item **items_all = NULL;
 size_t items_all_size = 0;
 
 Item *item_get(Window window) {
- fprintf(stderr, "Adding window %ld\n", window);
  Item *item;
  size_t idx = 0;
 
@@ -14,7 +13,9 @@ Item *item_get(Window window) {
    for (; items_all[idx] && items_all[idx]->window != window; idx++);
    if (items_all[idx]) return items_all[idx];
  }
-   
+ 
+ fprintf(stderr, "Adding window %ld\n", window);
+ 
  if (idx+1 > items_all_size) {
   if (!items_all_size) items_all_size = 8;
   items_all_size *=2;

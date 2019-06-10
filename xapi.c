@@ -36,7 +36,9 @@ int xinit() {
  XSelectInput(display, root,
               SubstructureRedirectMask |
               SubstructureNotifyMask |
+              KeyPressMask |
               KeyReleaseMask |
+              ButtonPressMask |
               ButtonReleaseMask);
  XSync(display, False);
  if (wm_detected) {
@@ -78,6 +80,8 @@ int xinit() {
  overlay = XCompositeGetOverlayWindow(display, root);
  XGetWindowAttributes(display, overlay, &overlay_attr);
 
+ overlay_set_input(False);
+ 
  Cursor cursor;
  cursor=XCreateFontCursor(display,XC_left_ptr);
  XDefineCursor(display, overlay, cursor);
@@ -85,6 +89,8 @@ int xinit() {
  
  XDamageQueryExtension(display, &damage_event, &damage_error);
  XShapeQueryExtension(display, &shape_event, &shape_error);
+
+ XSync(display, False);
 
  fprintf(stderr, "root=%ld, overlay=%ld\n", root, overlay);
  
