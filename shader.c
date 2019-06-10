@@ -34,7 +34,7 @@ int checkShaderError(char *name, char *src, GLuint shader) {
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
   fprintf(stderr, "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
-  checkError();
+  checkError(name);
   return 0;
 }
 
@@ -48,7 +48,7 @@ int checkProgramError(GLuint program) {
   log = malloc(len + 1);
   glGetProgramInfoLog(program, len, &len, log);
   fprintf(stderr, "Program linkage failed: %s [%d]\n", log, len);
-  checkError();
+  checkError("checkProgramError");
   return 0;
 }
 
@@ -63,7 +63,7 @@ Shader *loadShader(char *vertex_src, char *geometry_src, char *fragment_src) {
 
   res->geometry_src = filetobuf(geometry_src);
   res->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
-  if (!checkError()) { free(res); return NULL; }
+  if (!checkError("loadShader")) { free(res); return NULL; }
   glShaderSource(res->geometry_shader, 1, (const GLchar**)&(res->geometry_src), 0);
   glCompileShader(res->geometry_shader);
   if (!checkShaderError("geometry", res->geometry_src, res->geometry_shader)) { free(res); return NULL; }
