@@ -10,6 +10,7 @@
 #include <X11/extensions/Xdamage.h>
 #include <X11/extensions/shape.h>
 #include <X11/extensions/XTest.h>
+#include <X11/extensions/Xfixes.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -35,5 +36,6 @@ int damage_event, damage_error;
 int shape_event, shape_error;
 
 extern int xinit();
+extern void overlay_set_input(Bool enabled);
 
 #endif

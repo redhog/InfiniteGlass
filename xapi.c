@@ -90,3 +90,19 @@ int xinit() {
  
  return 1;
 }
+
+void overlay_set_input(Bool enabled) {
+ XRectangle rect;
+ rect.x = 0;
+ rect.y = 0;
+ rect.width = 0;
+ rect.height = 0;
+ if (enabled) {
+  rect.width = overlay_attr.width;
+  rect.height = overlay_attr.height;
+ }
+ XserverRegion region = XFixesCreateRegion(display, &rect, 1);
+ XFixesSetWindowShapeRegion(display, overlay, ShapeInput, 0, 0, region);
+ XFixesDestroyRegion(display, region);
+}
+
