@@ -55,11 +55,6 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
   if (   ((event.type == KeyPress) && ((event.xkey.state & (ControlMask | Mod1Mask)) == (ControlMask | Mod1Mask)))
       || ((event.type == ButtonPress) && ((event.xbutton.state & (ControlMask | Mod1Mask)) == (ControlMask | Mod1Mask)))) {
     push_input_mode(&zoom_pan_input_mode);
-
-    printf("Grabbing");
-    
-    XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
-    XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
   } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
     int winx, winy;
     Item *item;
@@ -98,12 +93,12 @@ BaseInputMode base_input_mode = {
 
 
 void zoom_pan_input_mode_enter(size_t mode) {
-  printf("Grabbing");
+  printf("zoom_pan_input_mode_enter");
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 void zoom_pan_input_mode_exit(size_t mode) {
-  printf("Ungrabbing");
+  printf("zoom_pan_input_mode_exit");
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
@@ -131,6 +126,20 @@ uint zoom_pan_input_mode_handle_event(size_t mode, XEvent event) {
     screen[2] = screen[2] * 1.1;
     screen[3] = screen[3] * 1.1;   
     draw();
+  } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
+    int winx, winy;
+    Item *item;
+    pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
+    if (item) {
+      printf("Item input\n");
+
+      item_input_mode.x_root = event.xbutton.x_root
+      item_input_mode.y_root = event.xbutton.y_root;
+      item_input_mode.winx = winx;
+      item_input_mode.winy = winy;
+      item_input_mode.item = item;
+      push_input_mode(&item_input_mode);
+    }
   }
   return 0;
 };
@@ -144,5 +153,83 @@ ZoomPanInputMode zoom_pan_input_mode = {
     zoom_pan_input_mode_handle_event
   }
 };
+
+
+void item_input_mode_enter(size_t mode) {
+  printf("item_input_mode_enter");
+  XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
+  XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
+}
+void item_input_mode_exit(size_t mode) {
+  printf("item_input_mode_exit");
+  XUngrabPointer(display, CurrentTime);
+  XUngrabKeyboard(display, CurrentTime);
+}
+void item_input_mode_configure(size_t mode, Window window) {}
+void item_input_mode_unconfigure(size_t mode, Window window) {}
+
+void mat4mul(float *mat4, float *vec4, float *outvec4) {
+  for (int i = 0; i < 4; i++) {
+   float res = 0.0;
+    for (int j = 0; j < 4; j++) {
+      res += mat4[i*4 + j];
+    }
+    outvec4[i] = res;
+  }
+}
+
+void screen2space(float screenx, float screeny, float *spacex, float *spacey) {
+  float w = (float) overlay_attr.width;
+  float h = (float) overlay_attr.height;
+  float screen2space[4*4] = {screen[2]/w,0,0,screen[0],
+                             0,screen[3]/h,0,screen[1],
+                             0,0,1,0,
+                             0,0,0,1};
+  float space[4] = {screenx, screeny, 0., 1.};
+  float outvec[4];
+  mat4mul(screen2space, space, outvec);
+  *spacex = outvec[0];
+  *spacey = outvec[1];
+}
+void space2screen(float spacex, float spacey, float *screenx, float *screeny) {
+  float w = (float) overlay_attr.width;
+  float h = (float) overlay_attr.height;
+  float space2screen[4*4] = {w/screen[2], 0., 0., -w*screen[0]/screen[2],
+                             0., h/screen[3], 0., -h*screen[1]/screen[3],
+                             0., 0., 1., 0.,
+                             0., 0., 0., 1.};
+  float space[4] = {spacex, spacey, 0., 1.};
+  float outvec[4];
+  mat4mul(space2screen, space, outvec);
+  *screenx = outvec[0];
+  *screeny = outvec[1];
+}
+
+uint item_input_mode_handle_event(size_t mode, XEvent event) {
+  ItemInputMode *self = (ItemInputMode *) input_mode_stack[mode];
+  
+  print_xevent(display, &event);
+  if (event.type == KeyRelease) {
+    pop_input_mode();
+  } else if (event.type == MotionNotify) {
+    float spacex, spacey;
+    
+    screen2space(event.xmotion.x_root - self->x_root, event.xmotion.y_root - self->y_root, &spacex, &spacey);
+
+    item->coords[0]
+    item->coords[1]
+
+  
+  }
+  return 0;
+};
+
 ItemInputMode item_input_mode = {
+  {
+    item_input_mode_enter,
+    item_input_mode_exit,
+    item_input_mode_configure,
+    item_input_mode_unconfigure,
+    item_input_mode_handle_event
+  }
 };
