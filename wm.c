@@ -10,6 +10,7 @@
 #include "space.h"
 #include "input.h"
 #include "xevent.h"
+#include "screen.h"
 #include "wm.h"
 
 #include <SOIL/SOIL.h>
@@ -20,8 +21,6 @@ GLint screen_attr;
 GLint coords_attr;
 GLint picking_mode_attr;
 GLint window_id_attr;
-
-float screen[4];
 
 void initItems() {
   XWindowAttributes attr;
