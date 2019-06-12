@@ -80,7 +80,7 @@ void abstract_draw() {
 void draw() {
   checkError("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glUniform1i(picking_mode_attr, 1);
+  glUniform1i(picking_mode_attr, 0);
   checkError("draw1");
   glClearColor(1.0, 1.0, 0.5, 1.0);
   abstract_draw();

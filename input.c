@@ -66,9 +66,14 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       push_input_mode((InputMode *) &item_input_mode);
     }
   } else if (event.type == ButtonPress
+      && event.xbutton.button == 2) {
+    pan_input_mode.base.first_event = event;
+    pan_input_mode.base.last_event = event;
+    push_input_mode((InputMode *) &pan_input_mode);
+  } else if (event.type == ButtonPress
              && (   event.xbutton.button == 4
                  || event.xbutton.button == 5)) {
-   push_input_mode((InputMode *) &zoom_pan_input_mode);
+   push_input_mode((InputMode *) &zoom_input_mode);
 /*
  } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
     int winx, winy;
@@ -108,19 +113,19 @@ BaseInputMode base_input_mode = {
 };
 
 
-void zoom_pan_input_mode_enter(size_t mode) {
-  printf("zoom_pan_input_mode_enter\n"); fflush(stdout);
+void zoom_input_mode_enter(size_t mode) {
+  printf("zoom_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
-void zoom_pan_input_mode_exit(size_t mode) {
-  printf("zoom_pan_input_mode_exit\n"); fflush(stdout);
+void zoom_input_mode_exit(size_t mode) {
+  printf("zoom_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
-void zoom_pan_input_mode_configure(size_t mode, Window window) {}
-void zoom_pan_input_mode_unconfigure(size_t mode, Window window) {}
-uint zoom_pan_input_mode_handle_event(size_t mode, XEvent event) {
+void zoom_input_mode_configure(size_t mode, Window window) {}
+void zoom_input_mode_unconfigure(size_t mode, Window window) {}
+uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
  //print_xevent(display, &event);
   if (event.type == KeyRelease) {
     pop_input_mode();
@@ -146,13 +151,59 @@ uint zoom_pan_input_mode_handle_event(size_t mode, XEvent event) {
   return 0;
 };
 
-ZoomPanInputMode zoom_pan_input_mode = {
+ZoomInputMode zoom_input_mode = {
   {
-    zoom_pan_input_mode_enter,
-    zoom_pan_input_mode_exit,
-    zoom_pan_input_mode_configure,
-    zoom_pan_input_mode_unconfigure,
-    zoom_pan_input_mode_handle_event
+    zoom_input_mode_enter,
+    zoom_input_mode_exit,
+    zoom_input_mode_configure,
+    zoom_input_mode_unconfigure,
+    zoom_input_mode_handle_event
+  }
+};
+
+
+void pan_input_mode_enter(size_t mode) {
+  printf("pan_input_mode_enter\n"); fflush(stdout);
+  PanInputMode *self = (PanInputMode *) input_mode_stack[mode];
+  memcpy(self->screen_orig, screen, sizeof screen);
+  XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
+  XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
+}
+void pan_input_mode_exit(size_t mode) {
+  printf("pan_input_mode_exit\n"); fflush(stdout);
+  XUngrabPointer(display, CurrentTime);
+  XUngrabKeyboard(display, CurrentTime);
+}
+void pan_input_mode_configure(size_t mode, Window window) {}
+void pan_input_mode_unconfigure(size_t mode, Window window) {}
+uint pan_input_mode_handle_event(size_t mode, XEvent event) {
+  PanInputMode *self = (PanInputMode *) input_mode_stack[mode];
+
+  if (event.type == KeyRelease) {
+    pop_input_mode();
+  } else if (event.type == MotionNotify) {
+    float spacex, spacey;
+    
+    screen2space(event.xmotion.x_root - self->base.first_event.xmotion.x_root,
+                 event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+                 &spacex, &spacey);
+
+    screen[0] = self->screen_orig[0] + spacex;
+    screen[1] = self->screen_orig[1] + spacey;
+
+    draw();
+   
+  }
+  return 0;
+};
+
+PanInputMode pan_input_mode = {
+  {
+    pan_input_mode_enter,
+    pan_input_mode_exit,
+    pan_input_mode_configure,
+    pan_input_mode_unconfigure,
+    pan_input_mode_handle_event
   }
 };
 

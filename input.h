@@ -34,7 +34,11 @@ typedef struct {
 } BaseInputMode;
 typedef struct {
   InputMode base;
-} ZoomPanInputMode;
+} ZoomInputMode;
+typedef struct {
+  InputMode base;
+  float screen_orig[4];
+} PanInputMode;
 typedef struct {
   InputMode base;
   Item orig_item;
@@ -42,7 +46,8 @@ typedef struct {
 } ItemInputMode;
 
 BaseInputMode base_input_mode;
-ZoomPanInputMode zoom_pan_input_mode;
+ZoomInputMode zoom_input_mode;
+PanInputMode pan_input_mode;
 ItemInputMode item_input_mode;
 
 #endif
