@@ -179,7 +179,7 @@ void pan_input_mode_unconfigure(size_t mode, Window window) {}
 uint pan_input_mode_handle_event(size_t mode, XEvent event) {
   PanInputMode *self = (PanInputMode *) input_mode_stack[mode];
 
-  if (event.type == KeyRelease) {
+  if (event.type == KeyRelease || event.type == ButtonRelease) {
     pop_input_mode();
   } else if (event.type == MotionNotify) {
     float spacex_orig, spacey_orig;
@@ -235,7 +235,7 @@ uint item_input_mode_handle_event(size_t mode, XEvent event) {
   ItemInputMode *self = (ItemInputMode *) input_mode_stack[mode];
   
 //  print_xevent(display, &event);
-  if (event.type == KeyRelease) {
+  if (event.type == KeyRelease || event.type == ButtonRelease) {
     pop_input_mode();
   } else if (event.type == MotionNotify) {
    //print_xevent(display, &event);
