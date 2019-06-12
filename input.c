@@ -182,14 +182,24 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
   if (event.type == KeyRelease) {
     pop_input_mode();
   } else if (event.type == MotionNotify) {
+    float spacex_orig, spacey_orig;
     float spacex, spacey;
     
-    screen2space(event.xmotion.x_root - self->base.first_event.xmotion.x_root,
-                 event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+    screen2space(self->base.first_event.xmotion.x_root,
+                 self->base.first_event.xmotion.y_root,
+                 &spacex_orig, &spacey_orig);
+    screen2space(event.xmotion.x_root,
+                 event.xmotion.y_root,
                  &spacex, &spacey);
 
-    screen[0] = self->screen_orig[0] + spacex;
-    screen[1] = self->screen_orig[1] + spacey;
+    printf("%d,%d -> %f,%f\n",
+           event.xmotion.x_root - self->base.first_event.xmotion.x_root,
+           event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+           spacex - spacex_orig,
+           spacey - spacey_orig); fflush(stdout);
+    
+    screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
+    screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
 
     draw();
    
@@ -230,21 +240,25 @@ uint item_input_mode_handle_event(size_t mode, XEvent event) {
   } else if (event.type == MotionNotify) {
    //print_xevent(display, &event);
    
+    float spacex_orig, spacey_orig;
     float spacex, spacey;
     
-    screen2space(event.xmotion.x_root - self->base.first_event.xmotion.x_root,
-                 event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+    screen2space(self->base.first_event.xmotion.x_root,
+                 self->base.first_event.xmotion.y_root,
+                 &spacex_orig, &spacey_orig);
+    screen2space(event.xmotion.x_root,
+                 event.xmotion.y_root,
                  &spacex, &spacey);
 
-    self->item->coords[0] =  self->orig_item.coords[0] + spacex;
-    self->item->coords[1] =  self->orig_item.coords[1] + spacey;
-/*
-    printf("Motion %i,%i -> %f,%f\n",
+    self->item->coords[0] =  self->orig_item.coords[0] + (spacex - spacex_orig);
+    self->item->coords[1] =  self->orig_item.coords[1] + (spacey - spacey_orig);
+
+    printf("%d,%d -> %f,%f\n",
            event.xmotion.x_root - self->base.first_event.xmotion.x_root,
            event.xmotion.y_root - self->base.first_event.xmotion.y_root,
-           spacex, spacey);
-    fflush(stdout);
-*/
+           spacex - spacex_orig,
+           spacey - spacey_orig); fflush(stdout);
+    
     item_update_space_pos(self->item);
     draw();
   }
