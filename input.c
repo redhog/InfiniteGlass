@@ -46,7 +46,9 @@ InputMode *pop_input_mode() {
 
 
 void base_input_mode_enter(size_t mode) {
-  XGrabButton(display, AnyButton, ControlMask | Mod1Mask, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral));
+  for (int mod = 0; mod < 1<<8; mod++) {
+    XGrabButton(display, AnyButton, Mod4Mask | mod, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral));
+  }
 }
 void base_input_mode_exit(size_t mode) {}
 void base_input_mode_configure(size_t mode, Window window) {}
@@ -129,6 +131,24 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
  //print_xevent(display, &event);
   if (event.type == KeyRelease) {
     pop_input_mode();
+  } else if (event.type == ButtonRelease && event.xbutton.button == 4
+             && (event.xbutton.state & ShiftMask)) { // shift up -> zoom in to window
+    Item *item;
+    int winx, winy;
+    pick(event.xbutton.x_root, event.xbutton.y_root, &winx, &winy, &item);
+    if (item) {
+      screen[0] = -item->coords[0];
+      screen[1] = -item->coords[1];
+      screen[2] = item->coords[2];
+      screen[2] = item->coords[2];
+      draw();
+    } else {
+ 
+    }
+  } else if (event.type == ButtonRelease && event.xbutton.button == 5
+             && (event.xbutton.state & ShiftMask)) { // shift down -> zoom out to window
+
+
   } else if (event.type == ButtonRelease && event.xbutton.button == 4) { // up -> zoom in
     float x = ((float) (event.xbutton.x - overlay_attr.x)) / (float) overlay_attr.width;
     float y = ((float) (overlay_attr.height - (event.xbutton.y - overlay_attr.y))) / (float) overlay_attr.width;
