@@ -23,6 +23,7 @@ Item *item_get(Window window) {
  }
 
  item = (Item *) malloc(sizeof(Item));
+ item->coords_vbo = -1;
  item->is_mapped = False;
  item->pixmap = 0;
  item->glxpixmap = 0;
@@ -64,8 +65,10 @@ void item_update_space_pos_from_window(Item *item) {
   item_update_space_pos(item);
 }
 
-void item_update_space_pos(Item *item) {  
-  glGenBuffers(1, &item->coords_vbo); 
+void item_update_space_pos(Item *item) {
+  if (item->coords_vbo == -1) {
+    glGenBuffers(1, &item->coords_vbo);
+  }
   glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(item->coords), item->coords, GL_STATIC_DRAW);
 }

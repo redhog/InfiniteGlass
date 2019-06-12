@@ -51,17 +51,32 @@ void base_input_mode_exit(size_t mode) {}
 void base_input_mode_configure(size_t mode, Window window) {}
 void base_input_mode_unconfigure(size_t mode, Window window) {}
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
-  print_xevent(display, &event);
-  if (   ((event.type == KeyPress) && ((event.xkey.state & (ControlMask | Mod1Mask)) == (ControlMask | Mod1Mask)))
-      || ((event.type == ButtonPress) && ((event.xbutton.state & (ControlMask | Mod1Mask)) == (ControlMask | Mod1Mask)))) {
-    push_input_mode(&zoom_pan_input_mode);
-  } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
+ //print_xevent(display, &event);
+  if (event.type == ButtonPress
+      && event.xbutton.button == 1) {
+    int winx, winy;
+    Item *item;
+    pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
+    if (item) {
+      item_input_mode.base.first_event = event;
+      item_input_mode.base.last_event = event;
+      item_input_mode.orig_item = *item;
+      item_input_mode.item = item;
+      push_input_mode((InputMode *) &item_input_mode);
+    }
+  } else if (event.type == ButtonPress
+             && (   event.xbutton.button == 4
+                 || event.xbutton.button == 5)) {
+   push_input_mode((InputMode *) &zoom_pan_input_mode);
+/*
+ } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
     int winx, winy;
     Item *item;
     pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
     if (item) {
       fprintf(stderr, "Pick %d,%d -> %d,%d,%d\n", event.xbutton.x, event.xbutton.y, (int) item->window, winx, winy);
-      
+      fflush(stdout);
+
       XWindowChanges values;
       values.x = 0;
       values.y = 0;
@@ -74,10 +89,10 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
        //XTestFakeMotionEvent(display, -1, winx, winy, 0);
        //XTestFakeButtonEvent(display, event.xbutton.button, 1, 0);
        //overlay_set_input(True);
-      
     } else {
       XSetInputFocus(display, root, RevertToNone, CurrentTime);
     }
+*/
   }
   return 0;
 };
@@ -93,19 +108,19 @@ BaseInputMode base_input_mode = {
 
 
 void zoom_pan_input_mode_enter(size_t mode) {
-  printf("zoom_pan_input_mode_enter");
+  printf("zoom_pan_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 void zoom_pan_input_mode_exit(size_t mode) {
-  printf("zoom_pan_input_mode_exit");
+  printf("zoom_pan_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
 void zoom_pan_input_mode_configure(size_t mode, Window window) {}
 void zoom_pan_input_mode_unconfigure(size_t mode, Window window) {}
 uint zoom_pan_input_mode_handle_event(size_t mode, XEvent event) {
-  print_xevent(display, &event);
+ //print_xevent(display, &event);
   if (event.type == KeyRelease) {
     pop_input_mode();
   } else if (event.type == ButtonRelease && event.xbutton.button == 4) { // up -> zoom in
@@ -126,20 +141,6 @@ uint zoom_pan_input_mode_handle_event(size_t mode, XEvent event) {
     screen[2] = screen[2] * 1.1;
     screen[3] = screen[3] * 1.1;   
     draw();
-  } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
-    int winx, winy;
-    Item *item;
-    pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
-    if (item) {
-      printf("Item input\n");
-
-      item_input_mode.x_root = event.xbutton.x_root
-      item_input_mode.y_root = event.xbutton.y_root;
-      item_input_mode.winx = winx;
-      item_input_mode.winy = winy;
-      item_input_mode.item = item;
-      push_input_mode(&item_input_mode);
-    }
   }
   return 0;
 };
@@ -156,12 +157,12 @@ ZoomPanInputMode zoom_pan_input_mode = {
 
 
 void item_input_mode_enter(size_t mode) {
-  printf("item_input_mode_enter");
+  printf("item_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 void item_input_mode_exit(size_t mode) {
-  printf("item_input_mode_exit");
+  printf("item_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
@@ -172,10 +173,18 @@ void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
    float res = 0.0;
     for (int j = 0; j < 4; j++) {
-      res += mat4[i*4 + j];
+      res += mat4[i*4 + j] * vec4[j];
     }
     outvec4[i] = res;
   }
+  printf("|%f,%f,%f,%f||%f|   |%f|\n"
+         "|%f,%f,%f,%f||%f|   |%f|\n"
+         "|%f,%f,%f,%f||%f| = |%f|\n"
+         "|%f,%f,%f,%f||%f|   |%f|\n",
+         mat4[0], mat4[1], mat4[2], mat4[3],  vec4[0], outvec4[0],
+         mat4[4], mat4[5], mat4[6], mat4[7],  vec4[1], outvec4[1],
+         mat4[8], mat4[9], mat4[10],mat4[11], vec4[2], outvec4[2],
+         mat4[12],mat4[13],mat4[14],mat4[15], vec4[3], outvec4[3]);
 }
 
 void screen2space(float screenx, float screeny, float *spacex, float *spacey) {
@@ -208,18 +217,27 @@ void space2screen(float spacex, float spacey, float *screenx, float *screeny) {
 uint item_input_mode_handle_event(size_t mode, XEvent event) {
   ItemInputMode *self = (ItemInputMode *) input_mode_stack[mode];
   
-  print_xevent(display, &event);
+//  print_xevent(display, &event);
   if (event.type == KeyRelease) {
     pop_input_mode();
   } else if (event.type == MotionNotify) {
+   //print_xevent(display, &event);
+   
     float spacex, spacey;
     
-    screen2space(event.xmotion.x_root - self->x_root, event.xmotion.y_root - self->y_root, &spacex, &spacey);
+    screen2space(event.xmotion.x_root - self->base.first_event.xmotion.x_root,
+                 event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+                 &spacex, &spacey);
 
-    item->coords[0]
-    item->coords[1]
-
-  
+    self->item->coords[0] =  self->orig_item.coords[0] + spacex;
+    self->item->coords[1] =  self->orig_item.coords[1] + spacey;
+    printf("Motion %i,%i -> %f,%f\n",
+           event.xmotion.x_root - self->base.first_event.xmotion.x_root,
+           event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+           spacex, spacey);
+    fflush(stdout);
+    item_update_space_pos(self->item);
+    draw();
   }
   return 0;
 };

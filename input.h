@@ -16,6 +16,8 @@ typedef struct {
   ConfigureWindow *configure;
   UnconfigureWindow *unconfigure;
   HandleEvent *handle_event;
+  XEvent first_event;
+  XEvent last_event;
 } InputMode;
 
 InputMode **input_mode_stack;
@@ -35,11 +37,8 @@ typedef struct {
 } ZoomPanInputMode;
 typedef struct {
   InputMode base;
+  Item orig_item;
   Item *item;
-  int x_root;
-  int y_root;
-  int winx;
-  int winy;
 } ItemInputMode;
 
 BaseInputMode base_input_mode;
