@@ -25,11 +25,29 @@ addition to some other keys or mouse buttons.
 * Super_L + Button4 (Scroll wheel up) + Shift
   Zoom screen in to the window under the mouse pointer
 
-* Super_L + Button5 (Scroll wheel down) + Shift
+* *Super_L + Button5 (Scroll wheel down) + Shift*
   Zoom screen out to the window under the mouse cursor, or to include
   one more window
 
+* Super_L + Control_L + Up
+  Zoom screen in
+
+* Super_L + Control_L + Down
+  Zoom screen out
+
+
+
 # Future key bindings (ideas)
+
+* Super_L + Up/Down/Right/Left
+  Pan screen up/down/right/left
+
+* Super_L + Up + Shift
+  Zoom screen in to the window under the mouse pointer
+
+* Super_L + Down + Shift
+  Zoom screen out to the window under the mouse cursor, or to include
+  one more window
 
 * Super_L + Button4 +  (Scroll wheel up) + Alt_L
   Zoom window in, e.g. decrease it's size in pixels
