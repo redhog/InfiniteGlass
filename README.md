@@ -45,3 +45,12 @@ addition to some other keys or mouse buttons.
 * Super_L + any character key
   Start writing a shell command. Mode is exited by ENTER or by
   pressing and releasing Super_L.
+  
+# Resources
+
+* https://jichu4n.com/posts/how-x-window-managers-work-and-how-to-write-one-part-i/
+* http://www.talisman.org/~erlkonig/misc/x11-composite-tutorial/
+
+## Reference documentation
+* https://www.x.org/releases/X11R7.7/doc/libX11/libX11/libX11.html
+* https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/#glX
