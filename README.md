@@ -13,69 +13,40 @@ addition to some other keys or mouse buttons.
 Generally in these bindings
 
 * Button1+Control counts as Button2
-* Arrow keys count as moving the mouse
-* Arrow keys + Control counts as scroll wheel (Button4, Button5)
+* Arrow keys count as moving the mouse while holding Button1
+  * Arrow keys+Control count as moving the mouse while holding Button2
+* Arrow keys + Alt counts as scroll wheel (Button4, Button5)
 
 Bold ones are implemented:
 
-* **Super_L + Control_L + Home**
-  Zoom and pan screen to initial zoom and position
+|Function&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                                            |SuperL|CtrlL|Alt|Sift|Btn1|Btn2|Btn4|Btn5|Up|Down|Left|Right|Home|Motion|
+|-----------------------------------------------|------|-----|---|----|----|----|----|----|--|----|----|-----|----|------|
+|**Pan to initial position**                    |X     |     |   |    |    |    |    |    |  |    |    |     |X   |      |
+|**Move window**                                |X     |     |   |    |X   |    |    |    |  |    |    |     |    |X     |
+|**Move window**                                |X     |     |   |    |    |    |    |    |X |    |    |     |    |      |
+|**Move window**                                |X     |     |   |    |    |    |    |    |  |X   |    |     |    |      |
+|**Move window**                                |X     |     |   |    |    |    |    |    |  |    |X   |     |    |      |
+|**Move window**                                |X     |     |   |    |    |    |    |    |  |    |    |X    |    |      |
+|**Pan screen**                                 |X     |     |   |    |    |X   |    |    |  |    |    |     |    |X     |
+|**Pan screen**                                 |X     |X    |   |    |X   |    |    |    |  |    |    |     |    |X     |
+|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |X |    |    |     |    |      |
+|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |  |X   |    |     |    |      |
+|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |  |    |X   |     |    |      |
+|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |  |    |    |X    |    |      |
+|**Zoom screen in**                             |X     |     |   |    |    |    |X   |    |  |    |    |     |    |      |
+|**Zoom screen in**                             |X     |     |X  |    |    |    |    |    |X |    |    |     |    |      |
+|**Zoom screen out**                            |X     |     |   |    |    |    |    |X   |  |    |    |     |    |      |
+|**Zoom screen out**                            |X     |     |X  |    |    |    |    |    |  |X   |    |     |    |      |
+|Zoom screen in to window                       |X     |     |   |X   |    |    |X   |    |  |    |    |     |    |      |
+|Zoom screen in to window                       |X     |     |X  |X   |    |    |    |    |X |    |    |     |    |      |
+|Zoom screen out to next window                 |X     |     |   |X   |    |    |    |X   |  |    |    |     |    |      |
+|Zoom screen out to next window                 |X     |     |X  |X   |    |    |    |    |  |X   |    |     |    |      |
+|Decrease window resolution                     |X     |     |X  |    |    |    |X   |    |  |    |    |     |    |      |
+|Increase window resolution                     |X     |     |X  |    |    |    |    |X   |  |    |    |     |    |      |
+|Set window resolution to 1:1 to screen         |X     |     |X  |X   |    |    |X   |    |  |    |    |     |    |      |
+|Set screen resolution to 1:1 to window         |X     |     |X  |X   |    |    |    |X   |  |    |    |     |    |      |
+|Write shell command                            |X     |     |   |    |    |    |    |    |  |    |    |     |    |      |
 
-* **Super_L + Button1 + move**
-  Move window
-
-* Super_L + Up/Down/Right/Left
-  Move window
-
-* **Super_L + Button2 + move**
-  Pan the screen
-
-* **Super_L + Button1 + Control + move**
-  Pan the screen
-
-* **Super_L + Control + Up/Down/Right/Left**
-  Pan screen up/down/right/left
-
-* **Super_L + Button4 (Scroll wheel up)**
-  Zoom screen in
-
-* **Super_L + Control_L + Up**
-  Zoom screen in
-
-* **Super_L + Button5 (Scroll wheel down)**
-  Zoom screen out
-
-* **Super_L + Control_L + Down**
-  Zoom screen out
-
-* Super_L + Button4 (Scroll wheel up) + Shift
-  Zoom screen in to the window under the mouse pointer
-
-* Super_L + Control + Up + Shift
-  Zoom screen in to the window under the mouse pointer
-
-* Super_L + Button5 (Scroll wheel down) + Shift
-  Zoom screen out to the window under the mouse cursor, or to include
-  one more window
-
-* Super_L + Control + Down + Shift
-  Zoom screen out to the window under the mouse cursor, or to include
-  one more window
-
-* Super_L + Button4 (Scroll wheel up) + Alt_L
-  Zoom window in, e.g. decrease it's size in pixels
-
-* Super_L + Button5 (Scroll wheel down) + Alt_L
-  Zoom window out, e.g. increase it's size in pixels
-  
-* Super_L + Button4 (Scroll wheel up) + Alt_L + Shift
-* Super_L + Button5 (Scroll wheel down) + Alt_L + Shift
-  Zoom window to 1:1, that is, so that each pixel in the window
-  corresponds to 1 pixel on the screen.
-
-* Super_L + any character key
-  Start writing a shell command. Mode is exited by ENTER or by
-  pressing and releasing Super_L.
   
 # Resources
 
