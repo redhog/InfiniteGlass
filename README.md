@@ -14,7 +14,7 @@ Generally in these bindings
 
 * Button1+Control counts as Button2
 * Arrow keys count as moving the mouse
-* Arrow keys + Control counts as scroll wheel
+* Arrow keys + Control counts as scroll wheel (Button4, Button5)
 
 Bold ones are implemented:
 
@@ -24,13 +24,16 @@ Bold ones are implemented:
 * **Super_L + Button1 + move**
   Move window
 
+* Super_L + Up/Down/Right/Left
+  Move window
+
 * **Super_L + Button2 + move**
   Pan the screen
 
 * **Super_L + Button1 + Control + move**
   Pan the screen
 
-* **Super_L + Up/Down/Right/Left**
+* **Super_L + Control + Up/Down/Right/Left**
   Pan screen up/down/right/left
 
 * **Super_L + Button4 (Scroll wheel up)**
@@ -59,13 +62,13 @@ Bold ones are implemented:
   Zoom screen out to the window under the mouse cursor, or to include
   one more window
 
-* Super_L + Button4 +  (Scroll wheel up) + Alt_L
+* Super_L + Button4 (Scroll wheel up) + Alt_L
   Zoom window in, e.g. decrease it's size in pixels
 
 * Super_L + Button5 (Scroll wheel down) + Alt_L
   Zoom window out, e.g. increase it's size in pixels
   
-* Super_L + Button4 +  (Scroll wheel up) + Alt_L + Shift
+* Super_L + Button4 (Scroll wheel up) + Alt_L + Shift
 * Super_L + Button5 (Scroll wheel down) + Alt_L + Shift
   Zoom window to 1:1, that is, so that each pixel in the window
   corresponds to 1 pixel on the screen.
