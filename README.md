@@ -10,42 +10,52 @@ Compile with "make" and run with bin/wm.
 All key bindings require the Windows key (Super_L) to be pressed, in
 addition to some other keys or mouse buttons.
 
-* Super_L + Button1 + move
+Generally in these bindings
+
+* Button1+Control counts as Button2
+* Arrow keys count as moving the mouse
+* Arrow keys + Control counts as scroll wheel
+
+Bold ones are implemented:
+
+* Super_L + Control_L + Home
+  Zoom and pan screen to initial zoom and position
+
+* _Super_L + Button1 + move_
   Move window
 
-* Super_L + Button2 + move
+* _Super_L + Button2 + move_
   Pan the screen
 
-* Super_L + Button4 (Scroll wheel up)
+* _Super_L + Button1 + Control + move_
+  Pan the screen
+
+* Super_L + Up/Down/Right/Left
+  Pan screen up/down/right/left
+
+* _Super_L + Button4 (Scroll wheel up)_
   Zoom screen in
 
-* Super_L + Button5 (Scroll wheel down)
+* _Super_L + Control_L + Up_
+  Zoom screen in
+
+* _Super_L + Button5 (Scroll wheel down)_
+  Zoom screen out
+
+* _Super_L + Control_L + Down_
   Zoom screen out
 
 * Super_L + Button4 (Scroll wheel up) + Shift
   Zoom screen in to the window under the mouse pointer
 
-* *Super_L + Button5 (Scroll wheel down) + Shift*
+* Super_L + Control + Up + Shift
+  Zoom screen in to the window under the mouse pointer
+
+* Super_L + Button5 (Scroll wheel down) + Shift
   Zoom screen out to the window under the mouse cursor, or to include
   one more window
 
-* Super_L + Control_L + Up
-  Zoom screen in
-
-* Super_L + Control_L + Down
-  Zoom screen out
-
-
-
-# Future key bindings (ideas)
-
-* Super_L + Up/Down/Right/Left
-  Pan screen up/down/right/left
-
-* Super_L + Up + Shift
-  Zoom screen in to the window under the mouse pointer
-
-* Super_L + Down + Shift
+* Super_L + Control + Down + Shift
   Zoom screen out to the window under the mouse cursor, or to include
   one more window
 
