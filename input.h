@@ -38,6 +38,8 @@ typedef struct {
 typedef struct {
   InputMode base;
   float screen_orig[4];
+  int x;
+  int y;
 } PanInputMode;
 typedef struct {
   InputMode base;

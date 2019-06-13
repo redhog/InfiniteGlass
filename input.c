@@ -74,13 +74,12 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       if (debug_positions)
         printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, item->window, winx, winy); fflush(stdout);
     }
-  } else if (event.type == ButtonPress
-              && (   event.xbutton.button == 2
-                  || (event.xbutton.button == 1 && event.xbutton.state & ControlMask))) {
-    pan_input_mode.base.first_event = event;
-    pan_input_mode.base.last_event = event;
-    push_input_mode((InputMode *) &pan_input_mode);
-    input_mode_stack_handle(event);
+  } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
+    screen[0] = 0.;
+    screen[1] = 0.;
+    screen[2] = 1.;
+    screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
+    draw();
   } else if (   (event.type == ButtonPress
                  && (   event.xbutton.button == 4
                      || event.xbutton.button == 5))
@@ -90,6 +89,16 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
                      || event.xkey.keycode == XKeysymToKeycode(display, XK_Up)))) {
    push_input_mode((InputMode *) &zoom_input_mode);
    input_mode_stack_handle(event);
+  } else if (   (event.type == ButtonPress && event.xbutton.button == 2)
+             || (event.type == ButtonPress && event.xbutton.button == 1 && event.xbutton.state & ControlMask)
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Up))
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Down))
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Left))
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Right))) {
+    pan_input_mode.base.first_event = event;
+    pan_input_mode.base.last_event = event;
+    push_input_mode((InputMode *) &pan_input_mode);
+    input_mode_stack_handle(event);
   } else if (event.type == ButtonPress
       && event.xbutton.button == 1) {
     int winx, winy;
@@ -194,6 +203,8 @@ ZoomInputMode zoom_input_mode = {
 void pan_input_mode_enter(size_t mode) {
   printf("pan_input_mode_enter\n"); fflush(stdout);
   PanInputMode *self = (PanInputMode *) input_mode_stack[mode];
+  self->x = 0;
+  self->y = 0;
   memcpy(self->screen_orig, screen, sizeof screen);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -210,7 +221,29 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
 
   if (event.type == KeyRelease || event.type == ButtonRelease) {
     pop_input_mode();
-  } else if (event.type == MotionNotify) {
+  } else if (event.type == KeyPress) {
+    float spacex_orig, spacey_orig;
+    float spacex, spacey;
+
+    self->x += (event.xkey.keycode == XKeysymToKeycode(display, XK_Left)) - (event.xkey.keycode == XKeysymToKeycode(display, XK_Right));
+    self->y += (event.xkey.keycode == XKeysymToKeycode(display, XK_Up)) - (event.xkey.keycode == XKeysymToKeycode(display, XK_Down));
+
+    screen2space(0, 0, &spacex_orig, &spacey_orig);
+    screen2space(self->x, self->y, &spacex, &spacey);
+
+    if (debug_positions)
+      printf("Pan %d,%d -> %f,%f\n",
+             self->x,
+             self->y,
+             spacex - spacex_orig,
+             spacey - spacey_orig); fflush(stdout);
+    
+    screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
+    screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
+
+    draw();
+
+  } else if (self->base.first_event.type == ButtonPress && event.type == MotionNotify) {
     float spacex_orig, spacey_orig;
     float spacex, spacey;
     
