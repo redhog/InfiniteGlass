@@ -50,13 +50,14 @@ InputMode *pop_input_mode() {
 void base_input_mode_enter(size_t mode) {
   for (int mod = 0; mod < 1<<8; mod++) {
     XGrabButton(display, AnyButton, Mod4Mask | mod, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral));
+    XGrabKey(display, AnyKey, Mod4Mask | mod, root, False, GrabModeAsync, GrabModeAsync);
   }
 }
 void base_input_mode_exit(size_t mode) {}
 void base_input_mode_configure(size_t mode, Window window) {}
 void base_input_mode_unconfigure(size_t mode, Window window) {}
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
- //print_xevent(display, &event);
+  print_xevent(display, &event);
   if (event.type == MotionNotify) {
     int winx, winy;
     Item *item;
@@ -74,6 +75,22 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
         printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, item->window, winx, winy); fflush(stdout);
     }
   } else if (event.type == ButtonPress
+              && (   event.xbutton.button == 2
+                  || (event.xbutton.button == 1 && event.xbutton.state & ControlMask))) {
+    pan_input_mode.base.first_event = event;
+    pan_input_mode.base.last_event = event;
+    push_input_mode((InputMode *) &pan_input_mode);
+    input_mode_stack_handle(event);
+  } else if (   (event.type == ButtonPress
+                 && (   event.xbutton.button == 4
+                     || event.xbutton.button == 5))
+             || (event.type == KeyPress
+                 && event.xkey.state & ControlMask
+                 && (   event.xkey.keycode == XKeysymToKeycode(display, XK_Down)
+                     || event.xkey.keycode == XKeysymToKeycode(display, XK_Up)))) {
+   push_input_mode((InputMode *) &zoom_input_mode);
+   input_mode_stack_handle(event);
+  } else if (event.type == ButtonPress
       && event.xbutton.button == 1) {
     int winx, winy;
     Item *item;
@@ -84,18 +101,10 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       item_input_mode.orig_item = *item;
       item_input_mode.item = item;
       push_input_mode((InputMode *) &item_input_mode);
+      input_mode_stack_handle(event);
     }
-  } else if (event.type == ButtonPress
-      && event.xbutton.button == 2) {
-    pan_input_mode.base.first_event = event;
-    pan_input_mode.base.last_event = event;
-    push_input_mode((InputMode *) &pan_input_mode);
-  } else if (event.type == ButtonPress
-             && (   event.xbutton.button == 4
-                 || event.xbutton.button == 5)) {
-   push_input_mode((InputMode *) &zoom_input_mode);
   }
-  return 0;
+  return 1;
 };
 BaseInputMode base_input_mode = {
   {
@@ -130,10 +139,15 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
     int winx, winy;
     pick(event.xbutton.x_root, event.xbutton.y_root, &winx, &winy, &item);
     if (item) {
-      screen[0] = -item->coords[0];
-      screen[1] = -item->coords[1];
-      screen[2] = item->coords[2];
-      screen[2] = item->coords[2];
+      printf("%f,%f[%f,%f] - %f,%f[%f,%f]\n",
+             screen[0],screen[1],screen[2],screen[3],
+             item->coords[0],item->coords[1],item->coords[2],item->coords[3]);
+
+             
+screen[0] = item->coords[0]; // / item->coords[2];
+screen[1] = -(item->coords[1] - item->coords[3]);// / item->coords[3];
+//      screen[2] = item->coords[2];
+//      screen[2] = item->coords[2] * (float) overlay_attr.height / (float) overlay_attr.width;
       draw();
     } else {
  
@@ -142,7 +156,8 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
              && (event.xbutton.state & ShiftMask)) { // shift down -> zoom out to window
 
 
-  } else if (event.type == ButtonRelease && event.xbutton.button == 4) { // up -> zoom in
+  } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Up))) { // up -> zoom in
     float x = ((float) (event.xbutton.x - overlay_attr.x)) / (float) overlay_attr.width;
     float y = ((float) (overlay_attr.height - (event.xbutton.y - overlay_attr.y))) / (float) overlay_attr.width;
 
@@ -156,12 +171,13 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
     screen[1] = centery - screen[3] / 2.;
 
     draw();
-  } else if (event.type == ButtonRelease && event.xbutton.button == 5) { // down -> zoom out
+  } else if (   (event.type == ButtonRelease && event.xbutton.button == 5)
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Down))) { // down -> zoom out
     screen[2] = screen[2] * 1.1;
-    screen[3] = screen[3] * 1.1;   
+    screen[3] = screen[3] * 1.1;
     draw();
   }
-  return 0;
+  return 1;
 };
 
 ZoomInputMode zoom_input_mode = {
@@ -218,7 +234,7 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
     draw();
    
   }
-  return 0;
+  return 1;
 };
 
 PanInputMode pan_input_mode = {
@@ -277,7 +293,7 @@ uint item_input_mode_handle_event(size_t mode, XEvent event) {
     item_update_space_pos(self->item);
     draw();
   }
-  return 0;
+  return 1;
 };
 
 ItemInputMode item_input_mode = {
