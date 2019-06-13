@@ -21,7 +21,7 @@ Bold ones are implemented:
 * Super_L + Control_L + Home
   Zoom and pan screen to initial zoom and position
 
-* _Super_L + Button1 + move_
+* **Super_L + Button1 + move**
   Move window
 
 * _Super_L + Button2 + move_
