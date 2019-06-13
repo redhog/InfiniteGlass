@@ -24,25 +24,25 @@ Bold ones are implemented:
 * **Super_L + Button1 + move**
   Move window
 
-* _Super_L + Button2 + move_
+* **Super_L + Button2 + move**
   Pan the screen
 
-* _Super_L + Button1 + Control + move_
+* **Super_L + Button1 + Control + move**
   Pan the screen
 
 * Super_L + Up/Down/Right/Left
   Pan screen up/down/right/left
 
-* _Super_L + Button4 (Scroll wheel up)_
+* **Super_L + Button4 (Scroll wheel up)**
   Zoom screen in
 
-* _Super_L + Control_L + Up_
+* **Super_L + Control_L + Up**
   Zoom screen in
 
-* _Super_L + Button5 (Scroll wheel down)_
+* **Super_L + Button5 (Scroll wheel down)**
   Zoom screen out
 
-* _Super_L + Control_L + Down_
+* **Super_L + Control_L + Down**
   Zoom screen out
 
 * Super_L + Button4 (Scroll wheel up) + Shift
