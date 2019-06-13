@@ -39,7 +39,8 @@ int xinit() {
               KeyPressMask |
               KeyReleaseMask |
               ButtonPressMask |
-              ButtonReleaseMask);
+              ButtonReleaseMask |
+              PointerMotionMask);
  XSync(display, False);
  if (wm_detected) {
   fprintf(stderr, "Another window manager is already running"); fflush(stderr);

@@ -4,6 +4,8 @@
 #include "xevent.h"
 #include "screen.h"
 
+Bool debug_positions = False;
+
 InputMode **input_mode_stack = NULL;
 size_t input_mode_stack_len = 0;
 size_t input_mode_stack_size = 10;
@@ -55,7 +57,23 @@ void base_input_mode_configure(size_t mode, Window window) {}
 void base_input_mode_unconfigure(size_t mode, Window window) {}
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
  //print_xevent(display, &event);
-  if (event.type == ButtonPress
+  if (event.type == MotionNotify) {
+    int winx, winy;
+    Item *item;
+    pick(event.xmotion.x_root, event.xmotion.y_root, &winx, &winy, &item);
+    if (item) {
+
+      XWindowChanges values;
+      values.x = event.xmotion.x_root - winx;
+      values.y = event.xmotion.y_root - winy;
+      values.stack_mode = Above;
+      XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
+      XSetInputFocus(display, item->window, RevertToNone, CurrentTime);
+     
+      if (debug_positions)
+        printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, item->window, winx, winy); fflush(stdout);
+    }
+  } else if (event.type == ButtonPress
       && event.xbutton.button == 1) {
     int winx, winy;
     Item *item;
@@ -76,31 +94,6 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
              && (   event.xbutton.button == 4
                  || event.xbutton.button == 5)) {
    push_input_mode((InputMode *) &zoom_input_mode);
-/*
- } else if (event.type == ButtonRelease && event.xbutton.button == 1) { //click
-    int winx, winy;
-    Item *item;
-    pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
-    if (item) {
-      fprintf(stderr, "Pick %d,%d -> %d,%d,%d\n", event.xbutton.x, event.xbutton.y, (int) item->window, winx, winy);
-      fflush(stdout);
-
-      XWindowChanges values;
-      values.x = 0;
-      values.y = 0;
-      values.stack_mode = Above;
-      XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
-
-      //XSetInputFocus(display, item->window, RevertToNone, CurrentTime);
-      
-      //overlay_set_input(False);
-       //XTestFakeMotionEvent(display, -1, winx, winy, 0);
-       //XTestFakeButtonEvent(display, event.xbutton.button, 1, 0);
-       //overlay_set_input(True);
-    } else {
-      XSetInputFocus(display, root, RevertToNone, CurrentTime);
-    }
-*/
   }
   return 0;
 };
@@ -212,11 +205,12 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
                  event.xmotion.y_root,
                  &spacex, &spacey);
 
-    printf("%d,%d -> %f,%f\n",
-           event.xmotion.x_root - self->base.first_event.xmotion.x_root,
-           event.xmotion.y_root - self->base.first_event.xmotion.y_root,
-           spacex - spacex_orig,
-           spacey - spacey_orig); fflush(stdout);
+    if (debug_positions)
+      printf("Pan %d,%d -> %f,%f\n",
+             event.xmotion.x_root - self->base.first_event.xmotion.x_root,
+             event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+             spacex - spacex_orig,
+             spacey - spacey_orig); fflush(stdout);
     
     screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
     screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
@@ -273,11 +267,12 @@ uint item_input_mode_handle_event(size_t mode, XEvent event) {
     self->item->coords[0] =  self->orig_item.coords[0] + (spacex - spacex_orig);
     self->item->coords[1] =  self->orig_item.coords[1] + (spacey - spacey_orig);
 
-    printf("%d,%d -> %f,%f\n",
-           event.xmotion.x_root - self->base.first_event.xmotion.x_root,
-           event.xmotion.y_root - self->base.first_event.xmotion.y_root,
-           spacex - spacex_orig,
-           spacey - spacey_orig); fflush(stdout);
+    if (debug_positions)
+      printf("Move %d,%d -> %f,%f\n",
+             event.xmotion.x_root - self->base.first_event.xmotion.x_root,
+             event.xmotion.y_root - self->base.first_event.xmotion.y_root,
+             spacex - spacex_orig,
+             spacey - spacey_orig); fflush(stdout);
     
     item_update_space_pos(self->item);
     draw();

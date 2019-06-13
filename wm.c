@@ -100,7 +100,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
   abstract_draw();
   glReadPixels(x, overlay_attr.height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   checkError("pick2");
-  fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
+  //fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   *winx = 0;
   *winy = 0;
   *item = NULL;
@@ -111,11 +111,13 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
       *winy = (int) (data[1] * (*item)->height);
     }
   }
+  /*
   if (*item) {
     fprintf(stderr, "Pick %d,%d -> %d,%d,%d\n", x, y, (*item)->window, *winx, *winy);
   } else {
     fprintf(stderr, "Pick %d,%d -> NULL\n", x, y);
   }
+  */
 }
 
 int init_picking() {
@@ -214,10 +216,11 @@ int main() {
       changes.stack_mode = event->detail;
       // Grant request by calling XConfigureWindow().
       XConfigureWindow(display, event->window, event->value_mask, &changes);  
-    } else if (e.type == ConfigureNotify) {
-     fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
-      Item *item = item_get(e.xconfigure.window);
+      Item *item = item_get(event->window);
       item_update_space_pos_from_window(item);
+    } else if (e.type == ConfigureNotify) {
+      //fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
+      Item *item = item_get(e.xconfigure.window);
       checkError("item_update_space_pos_from_window");
       item_update_pixmap(item);
       checkError("item_update_pixmap");
