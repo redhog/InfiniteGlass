@@ -18,7 +18,7 @@ Generally in these bindings
 
 Bold ones are implemented:
 
-* Super_L + Control_L + Home
+* **Super_L + Control_L + Home**
   Zoom and pan screen to initial zoom and position
 
 * **Super_L + Button1 + move**
@@ -30,7 +30,7 @@ Bold ones are implemented:
 * **Super_L + Button1 + Control + move**
   Pan the screen
 
-* Super_L + Up/Down/Right/Left
+* **Super_L + Up/Down/Right/Left**
   Pan screen up/down/right/left
 
 * **Super_L + Button4 (Scroll wheel up)**
