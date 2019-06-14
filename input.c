@@ -155,21 +155,30 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
  //print_xevent(display, &event);
   if (event.type == KeyRelease) {
     pop_input_mode();
-  } else if (event.type == ButtonRelease && event.xbutton.button == 4
-             && (event.xbutton.state & ShiftMask)) { // shift up -> zoom in to window
+  } else if (   (event.type == ButtonRelease && event.xbutton.button == 4 && (event.xbutton.state & ShiftMask))
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior) && (event.xkey.state & ShiftMask))) {
+    // shift up -> zoom in to window
     Item *item;
     int winx, winy;
-    pick(event.xbutton.x_root, event.xbutton.y_root, &winx, &winy, &item);
+    if (event.type == ButtonPress) {
+      pick(event.xbutton.x_root, event.xbutton.y_root, &winx, &winy, &item);
+    } else {
+      Window window;
+      int revert_to;
+      XGetInputFocus(display, &window, &revert_to);
+      if (window != root && window != overlay) {
+        item = item_get(window);
+      }
+    }
     if (item) {
       printf("%f,%f[%f,%f] - %f,%f[%f,%f]\n",
              screen[0],screen[1],screen[2],screen[3],
              item->coords[0],item->coords[1],item->coords[2],item->coords[3]);
 
-             
-screen[0] = item->coords[0]; // / item->coords[2];
-screen[1] = -(item->coords[1] - item->coords[3]);// / item->coords[3];
-//      screen[2] = item->coords[2];
-//      screen[2] = item->coords[2] * (float) overlay_attr.height / (float) overlay_attr.width;
+      screen[2] = item->coords[2];
+      screen[3] = item->coords[2] * (float) overlay_attr.height / (float) overlay_attr.width;
+      screen[0] = item->coords[0];
+      screen[1] = item->coords[1] - screen[3];
       draw();
     } else {
  
@@ -278,7 +287,10 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
     screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
 
     draw();
-   
+
+    printf("%f,%f[%f,%f]\n",
+           screen[0],screen[1],screen[2],screen[3]);
+
   }
   return 1;
 };
