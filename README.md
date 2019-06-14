@@ -15,7 +15,7 @@ Generally in these bindings
 * Button1+Control counts as Button2
 * Arrow keys count as moving the mouse while holding Button1
   * Arrow keys+Control count as moving the mouse while holding Button2
-* Arrow keys + Alt counts as scroll wheel (Button4, Button5)
+* PageUp / PageDown keys counts as scroll wheel (Button4, Button5)
 
 Bold ones are implemented:
 
