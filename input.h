@@ -45,6 +45,8 @@ typedef struct {
   InputMode base;
   Item orig_item;
   Item *item;
+  int x;
+  int y;
 } ItemInputMode;
 
 BaseInputMode base_input_mode;
