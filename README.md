@@ -37,8 +37,8 @@ Bold ones are implemented:
 |**Zoom screen in**                             |X     |     |X  |    |    |    |    |    |X |    |    |     |    |      |
 |**Zoom screen out**                            |X     |     |   |    |    |    |    |X   |  |    |    |     |    |      |
 |**Zoom screen out**                            |X     |     |X  |    |    |    |    |    |  |X   |    |     |    |      |
-|Zoom screen in to window                       |X     |     |   |X   |    |    |X   |    |  |    |    |     |    |      |
-|Zoom screen in to window                       |X     |     |X  |X   |    |    |    |    |X |    |    |     |    |      |
+|**Zoom screen in to window**                   |X     |     |   |X   |    |    |X   |    |  |    |    |     |    |      |
+|**Zoom screen in to window**                   |X     |     |X  |X   |    |    |    |    |X |    |    |     |    |      |
 |Zoom screen out to next window                 |X     |     |   |X   |    |    |    |X   |  |    |    |     |    |      |
 |Zoom screen out to next window                 |X     |     |X  |X   |    |    |    |    |  |X   |    |     |    |      |
 |Decrease window resolution                     |X     |     |X  |    |    |    |X   |    |  |    |    |     |    |      |
