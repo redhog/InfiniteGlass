@@ -41,7 +41,7 @@ void item_remove(Item *item) {
  
  for (idx = 0; items_all[idx] && items_all[idx] != item; idx++);
  if (!items_all[idx]) return;
- memmove(items_all+idx, items_all+idx+1, items_all_size-idx-1);
+ memmove(items_all+idx, items_all+idx+1, sizeof(Item *) * (items_all_size-idx-1));
 }
 
 void item_update_space_pos_from_window(Item *item) {
