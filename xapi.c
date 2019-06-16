@@ -25,14 +25,61 @@ int OnXError(Display* display, XErrorEvent* e) {
  return 0;
 }
 
+XErrorHandler x_err_handler_stack[20];
+int x_err_handler_stack_pointer = -1;
+
+void x_push_error_handler(XErrorHandler handler) {
+  x_err_handler_stack_pointer++;
+  x_err_handler_stack[x_err_handler_stack_pointer] = handler;
+  XSetErrorHandler(handler);
+}
+
+void x_pop_error_handler() {
+  XSync(display, False);
+
+  x_err_handler_stack_pointer--;
+  XSetErrorHandler(x_err_handler_stack[x_err_handler_stack_pointer]);
+}
+
+XErrorEvent x_try_error;
+Bool x_try_has_error;
+
+int x_try_error_handler(Display *display, XErrorEvent *e) {
+  x_try_error = *e;
+  x_try_has_error = True;
+  return 0;
+}
+
+void x_try() {
+  x_try_has_error = False;
+  x_push_error_handler(&x_try_error_handler);
+}
+
+int x_catch(XErrorEvent *error) {
+  Bool res;
+
+  x_pop_error_handler();
+
+  res = x_try_has_error;
+  *error = x_try_error;
+
+  x_try_has_error = False;
+
+  return !res;
+}
+
 int xinit() {
+ XErrorEvent error;
+ 
  display = XOpenDisplay(NULL);
+
+ x_push_error_handler(&OnXError);
+
  root = DefaultRootWindow(display);
  WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
  WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
 
- wm_detected = False;
- XSetErrorHandler(&OnWMDetected);
+ x_try();
  XSelectInput(display, root,
               SubstructureRedirectMask |
               SubstructureNotifyMask |
@@ -41,13 +88,10 @@ int xinit() {
               ButtonPressMask |
               ButtonReleaseMask |
               PointerMotionMask);
- XSync(display, False);
- if (wm_detected) {
+ if (!x_catch(&error)) {
   fprintf(stderr, "Another window manager is already running"); fflush(stderr);
   return 0;
  }
-
- XSetErrorHandler(&OnXError);
 
  int event_base, error_base;
  if (!XCompositeQueryExtension(display, &event_base, &error_base)) {

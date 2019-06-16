@@ -57,7 +57,6 @@ void base_input_mode_exit(size_t mode) {}
 void base_input_mode_configure(size_t mode, Window window) {}
 void base_input_mode_unconfigure(size_t mode, Window window) {}
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
-  print_xevent(display, &event);
   if (event.type == MotionNotify) {
     int winx, winy;
     Item *item;

@@ -35,6 +35,12 @@ t_glx_release glXReleaseTexImageEXT;
 int damage_event, damage_error;
 int shape_event, shape_error;
 
+extern void x_push_error_handler(XErrorHandler handler);
+extern void x_pop_error_handler();
+
+extern void x_try();
+extern int x_catch(XErrorEvent *error);
+
 extern int xinit();
 extern void overlay_set_input(Bool enabled);
 

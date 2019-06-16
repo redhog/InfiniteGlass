@@ -11,6 +11,7 @@
 #include "input.h"
 #include "xevent.h"
 #include "screen.h"
+#include "xevent.h"
 #include "wm.h"
 
 #include <SOIL/SOIL.h>
@@ -184,14 +185,16 @@ int main() {
 
   for (;;) {
     XEvent e;
+    XSync(display, False);
     XNextEvent(display, &e);
-    //fprintf(stderr, "Received event: %i\n", e.type);
+//    print_xevent(display, &e);
 
     checkError("loop");
 
     if (e.type == damage_event + XDamageNotify) {
-     //fprintf(stderr, "Received XDamageNotify\n");
+      XErrorEvent error;
       XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
+      fprintf(stderr, "Received XDamageNotify: %d\n", event->drawable);
       // e->drawable is the window ID of the damaged window
       // e->geometry is the geometry of the damaged window	
       // e->area     is the bounding rect for the damaged area	
@@ -199,7 +202,9 @@ int main() {
 
       // Subtract all the damage, repairing the window.
       draw();
+      x_try();
       XDamageSubtract(display, event->damage, None, None);
+      x_catch(&error);
     } else if (e.type == shape_event + ShapeNotify) {
      //fprintf(stderr, "Received ShapeNotify\n");
       XShapeEvent *event = (XShapeEvent*) &e;
@@ -235,7 +240,8 @@ int main() {
         input_mode_stack_configure(e.xcreatewindow.window);
       }
     } else if (e.type == DestroyNotify) {
-     item_remove(item_get(e.xdestroywindow.window));
+      Item * item = item_get(e.xdestroywindow.window);
+      item_remove(item);
     } else if (e.type == ReparentNotify) {
       //OnReparentNotify(e.xreparent);
     } else if (e.type == MapNotify) {
