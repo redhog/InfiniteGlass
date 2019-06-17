@@ -73,6 +73,40 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       if (debug_positions)
         printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, item->window, winx, winy); fflush(stdout);
     }
+  } else if (event.type == KeyPress && event.xkey.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
+    Item *item;
+    int winx, winy;
+    if (event.type == ButtonPress) {
+      pick(event.xbutton.x_root, event.xbutton.y_root, &winx, &winy, &item);
+    } else {
+      Window window;
+      int revert_to;
+      XGetInputFocus(display, &window, &revert_to);
+      if (window != root && window != overlay) {
+        item = item_get(window);
+      }
+    }
+    if (item) {
+      printf("%f,%f[%f,%f] - %f,%f[%f,%f]\n",
+             screen[0],screen[1],screen[2],screen[3],
+             item->coords[0],item->coords[1],item->coords[2],item->coords[3]);
+
+      item->width = overlay_attr.width;
+      item->height = overlay_attr.height;
+      item->coords[3] = overlay_attr.height * item->coords[2] / overlay_attr.width;
+      XWindowChanges values;
+      values.width = item->width;
+      values.height = item->height;
+      XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+
+      screen[2] = item->coords[2];
+      screen[3] = item->coords[3];
+      screen[0] = item->coords[0];
+      screen[1] = item->coords[1] - screen[3];
+    
+      draw();
+    }
+
   } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
     screen[0] = 0.;
     screen[1] = 0.;
