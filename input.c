@@ -3,6 +3,7 @@
 #include "xapi.h"
 #include "xevent.h"
 #include "screen.h"
+#include "actions.h"
 
 Bool debug_positions = False;
 
@@ -87,32 +88,11 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       }
     }
     if (item) {
-      printf("%f,%f[%f,%f] - %f,%f[%f,%f]\n",
-             screen[0],screen[1],screen[2],screen[3],
-             item->coords[0],item->coords[1],item->coords[2],item->coords[3]);
-
-      item->width = overlay_attr.width;
-      item->height = overlay_attr.height;
-      item->coords[3] = overlay_attr.height * item->coords[2] / overlay_attr.width;
-      XWindowChanges values;
-      values.width = item->width;
-      values.height = item->height;
-      XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-
-      screen[2] = item->coords[2];
-      screen[3] = item->coords[3];
-      screen[0] = item->coords[0];
-      screen[1] = item->coords[1] - screen[3];
-    
-      draw();
+      action_zoom_screen_to_window_and_window_to_screen(item);
     }
 
   } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
-    screen[0] = 0.;
-    screen[1] = 0.;
-    screen[2] = 1.;
-    screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
-    draw();
+    action_zoom_screen_home();
   } else if (   (event.type == ButtonPress && event.xbutton.state & Mod1Mask && event.xbutton.button == 4)
              || (event.type == ButtonPress && event.xbutton.state & Mod1Mask && event.xbutton.button == 5)
              || (event.type == KeyPress && event.xkey.state & Mod1Mask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))
@@ -229,15 +209,7 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
       }
     }
     if (item) {
-      printf("%f,%f[%f,%f] - %f,%f[%f,%f]\n",
-             screen[0],screen[1],screen[2],screen[3],
-             item->coords[0],item->coords[1],item->coords[2],item->coords[3]);
-
-      screen[2] = item->coords[2];
-      screen[3] = item->coords[2] * (float) overlay_attr.height / (float) overlay_attr.width;
-      screen[0] = item->coords[0];
-      screen[1] = item->coords[1] - screen[3];
-      draw();
+      action_zoom_to_window(item);
     } else {
  
     }
@@ -386,51 +358,16 @@ uint item_zoom_input_mode_handle_event(size_t mode, XEvent event) {
     pop_input_mode();
   } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 4)
              || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
-    // up -> set window resolution to 1:1 to screen
-   
-    self->item->width = overlay_attr.width * self->item->coords[2]/screen[2];
-    self->item->height = overlay_attr.height * self->item->coords[3]/screen[3];
-    XWindowChanges values;
-    values.width = self->item->width;
-    values.height = self->item->height;
-    XConfigureWindow(display, self->item->window, CWWidth | CWHeight, &values);
-   
-    draw();
-
-   
+    action_zoom_window_to_1_to_1_to_screen(self->item);
   } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 5)
-             || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) { // down -> zoom out
-
-    screen[2] = overlay_attr.width * self->item->coords[2]/self->item->width;
-    screen[3] = overlay_attr.height * self->item->coords[3]/self->item->height;
-
-    screen[0] = self->item->coords[0] - (screen[2] - self->item->coords[2]) / 2.;
-    screen[1] = self->item->coords[1] - (screen[3] + self->item->coords[3]) / 2.;
-    
-    draw();
-   
+             || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) {
+    action_zoom_screen_to_1_to_1_to_window(self->item);   
   } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
-             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) { // up -> zoom in
-
-    self->item->width = self->item->width * 0.9;
-    self->item->height = self->item->height * 0.9;
-    XWindowChanges values;
-    values.width = self->item->width;
-    values.height = self->item->height;
-    XConfigureWindow(display, self->item->window, CWWidth | CWHeight, &values);
-   
-    draw();
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
+    action_zoom_window_by(self->item, 0.9);
   } else if (   (event.type == ButtonRelease && event.xbutton.button == 5)
-             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) { // down -> zoom out
-
-    self->item->width = self->item->width * 1.1;
-    self->item->height = self->item->height * 1.1;
-    XWindowChanges values;
-    values.width = self->item->width;
-    values.height = self->item->height;
-    XConfigureWindow(display, self->item->window, CWWidth | CWHeight, &values);
-   
-    draw();
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) {
+    action_zoom_window_by(self->item, 1.1);
   }
   return 1;
 };

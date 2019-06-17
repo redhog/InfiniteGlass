@@ -11,7 +11,7 @@ bin:
 bin/%.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-bin/wm: bin/wm.o bin/xapi.o bin/glapi.o bin/shader.o bin/space.o bin/input.o bin/xevent.o bin/screen.o
+bin/wm: bin/wm.o bin/xapi.o bin/glapi.o bin/shader.o bin/space.o bin/input.o bin/xevent.o bin/screen.o actions.o
 	$(CC) $(CFLAGS) -o $@ $^ -lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXfixes -lXrandr -lSOIL
 
 run: bin/wm
