@@ -366,6 +366,14 @@ uint item_zoom_input_mode_handle_event(size_t mode, XEvent event) {
    
   } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 5)
              || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) { // down -> zoom out
+
+    screen[2] = overlay_attr.width * self->item->coords[2]/self->item->width;
+    screen[3] = overlay_attr.height * self->item->coords[3]/self->item->height;
+
+    screen[0] = self->item->coords[0] - (screen[2] - self->item->coords[2]) / 2.;
+    screen[1] = self->item->coords[1] - (screen[3] + self->item->coords[3]) / 2.;
+    
+    draw();
    
   } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
              || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) { // up -> zoom in
