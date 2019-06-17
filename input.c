@@ -350,6 +350,23 @@ uint item_zoom_input_mode_handle_event(size_t mode, XEvent event) {
 //  print_xevent(display, &event);
   if (event.type == KeyRelease || event.type == ButtonRelease) {
     pop_input_mode();
+  } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 4)
+             || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
+    // up -> set window resolution to 1:1 to screen
+   
+    self->item->width = overlay_attr.width * self->item->coords[2]/screen[2];
+    self->item->height = overlay_attr.height * self->item->coords[3]/screen[3];
+    XWindowChanges values;
+    values.width = self->item->width;
+    values.height = self->item->height;
+    XConfigureWindow(display, self->item->window, CWWidth | CWHeight, &values);
+   
+    draw();
+
+   
+  } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 5)
+             || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) { // down -> zoom out
+   
   } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
              || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) { // up -> zoom in
 
