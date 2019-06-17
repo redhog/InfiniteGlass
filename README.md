@@ -35,10 +35,10 @@ Bold ones are implemented:
 |**Zoom screen in to window**                   |X     |     |   |X   |    |    |    |    |     |X   |    |    |      |
 |Zoom screen out to next window                 |X     |     |   |X   |    |    |    |X   |     |    |    |    |      |
 |Zoom screen out to next window                 |X     |     |   |X   |    |    |    |    |     |    |X   |    |      |
-|Decrease window resolution                     |X     |     |X  |    |    |    |X   |    |     |    |    |    |      |
-|Decrease window resolution                     |X     |     |X  |    |    |    |    |    |     |X   |    |    |      |
-|Increase window resolution                     |X     |     |X  |    |    |    |    |X   |     |    |    |    |      |
-|Increase window resolution                     |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
+|**Decrease window resolution**                 |X     |     |X  |    |    |    |X   |    |     |    |    |    |      |
+|**Decrease window resolution**                 |X     |     |X  |    |    |    |    |    |     |X   |    |    |      |
+|**Increase window resolution**                 |X     |     |X  |    |    |    |    |X   |     |    |    |    |      |
+|**Increase window resolution**                 |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
 |Set window resolution to 1:1 to screen         |X     |     |X  |X   |    |    |X   |    |     |    |    |    |      |
 |Set window resolution to 1:1 to screen         |X     |     |X  |X   |    |    |    |    |     |X   |    |    |      |
 |Set screen resolution to 1:1 to window         |X     |     |X  |X   |    |    |    |X   |     |    |    |    |      |

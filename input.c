@@ -79,6 +79,31 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     screen[2] = 1.;
     screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
     draw();
+  } else if (   (event.type == ButtonPress && event.xbutton.state & Mod1Mask && event.xbutton.button == 4)
+             || (event.type == ButtonPress && event.xbutton.state & Mod1Mask && event.xbutton.button == 5)
+             || (event.type == KeyPress && event.xkey.state & Mod1Mask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))
+             || (event.type == KeyPress && event.xkey.state & Mod1Mask && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
+    int winx, winy;
+    Item *item = NULL;
+
+    if (event.type == ButtonPress) {
+      pick(event.xbutton.x, event.xbutton.y, &winx, &winy, &item);
+    } else {
+      Window window;
+      int revert_to;
+      XGetInputFocus(display, &window, &revert_to);
+      if (window != root && window != overlay) {
+        item = item_get(window);
+      }
+    }
+
+    if (item) {
+      item_zoom_input_mode.base.first_event = event;
+      item_zoom_input_mode.base.last_event = event;
+      item_zoom_input_mode.item = item;
+      push_input_mode((InputMode *) &item_zoom_input_mode);
+      input_mode_stack_handle(event);
+    }
   } else if (   (event.type == ButtonPress
                  && (   event.xbutton.button == 4
                      || event.xbutton.button == 5))
@@ -117,11 +142,11 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     }
 
     if (item) {
-      item_input_mode.base.first_event = event;
-      item_input_mode.base.last_event = event;
-      item_input_mode.orig_item = *item;
-      item_input_mode.item = item;
-      push_input_mode((InputMode *) &item_input_mode);
+      item_pan_input_mode.base.first_event = event;
+      item_pan_input_mode.base.last_event = event;
+      item_pan_input_mode.orig_item = *item;
+      item_pan_input_mode.item = item;
+      push_input_mode((InputMode *) &item_pan_input_mode);
       input_mode_stack_handle(event);
     }
   }
@@ -305,24 +330,81 @@ PanInputMode pan_input_mode = {
 };
 
 
-void item_input_mode_enter(size_t mode) {
-  ItemInputMode *self = (ItemInputMode *) input_mode_stack[mode];
-  printf("item_input_mode_enter\n"); fflush(stdout);
+void item_zoom_input_mode_enter(size_t mode) {
+  ItemZoomInputMode *self = (ItemZoomInputMode *) input_mode_stack[mode];
+  printf("item_zoom_input_mode_enter\n"); fflush(stdout);
+  XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
+  XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
+}
+void item_zoom_input_mode_exit(size_t mode) {
+  printf("item_zoom_input_mode_exit\n"); fflush(stdout);
+  XUngrabPointer(display, CurrentTime);
+  XUngrabKeyboard(display, CurrentTime);
+}
+void item_zoom_input_mode_configure(size_t mode, Window window) {}
+void item_zoom_input_mode_unconfigure(size_t mode, Window window) {}
+
+uint item_zoom_input_mode_handle_event(size_t mode, XEvent event) {
+  ItemZoomInputMode *self = (ItemZoomInputMode *) input_mode_stack[mode];
+  
+//  print_xevent(display, &event);
+  if (event.type == KeyRelease || event.type == ButtonRelease) {
+    pop_input_mode();
+  } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) { // up -> zoom in
+
+    self->item->width = self->item->width * 0.9;
+    self->item->height = self->item->height * 0.9;
+    XWindowChanges values;
+    values.width = self->item->width;
+    values.height = self->item->height;
+    XConfigureWindow(display, self->item->window, CWWidth | CWHeight, &values);
+   
+    draw();
+  } else if (   (event.type == ButtonRelease && event.xbutton.button == 5)
+             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) { // down -> zoom out
+
+    self->item->width = self->item->width * 1.1;
+    self->item->height = self->item->height * 1.1;
+    XWindowChanges values;
+    values.width = self->item->width;
+    values.height = self->item->height;
+    XConfigureWindow(display, self->item->window, CWWidth | CWHeight, &values);
+   
+    draw();
+  }
+  return 1;
+};
+
+ItemZoomInputMode item_zoom_input_mode = {
+  {
+    item_zoom_input_mode_enter,
+    item_zoom_input_mode_exit,
+    item_zoom_input_mode_configure,
+    item_zoom_input_mode_unconfigure,
+    item_zoom_input_mode_handle_event
+  }
+};
+
+
+void item_pan_input_mode_enter(size_t mode) {
+  ItemPanInputMode *self = (ItemPanInputMode *) input_mode_stack[mode];
+  printf("item_pan_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
   self->x = 0;
   self->y = 0;
 }
-void item_input_mode_exit(size_t mode) {
-  printf("item_input_mode_exit\n"); fflush(stdout);
+void item_pan_input_mode_exit(size_t mode) {
+  printf("item_pan_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
-void item_input_mode_configure(size_t mode, Window window) {}
-void item_input_mode_unconfigure(size_t mode, Window window) {}
+void item_pan_input_mode_configure(size_t mode, Window window) {}
+void item_pan_input_mode_unconfigure(size_t mode, Window window) {}
 
-uint item_input_mode_handle_event(size_t mode, XEvent event) {
-  ItemInputMode *self = (ItemInputMode *) input_mode_stack[mode];
+uint item_pan_input_mode_handle_event(size_t mode, XEvent event) {
+  ItemPanInputMode *self = (ItemPanInputMode *) input_mode_stack[mode];
   
 //  print_xevent(display, &event);
   if (event.type == KeyRelease || event.type == ButtonRelease) {
@@ -379,12 +461,12 @@ uint item_input_mode_handle_event(size_t mode, XEvent event) {
   return 1;
 };
 
-ItemInputMode item_input_mode = {
+ItemPanInputMode item_pan_input_mode = {
   {
-    item_input_mode_enter,
-    item_input_mode_exit,
-    item_input_mode_configure,
-    item_input_mode_unconfigure,
-    item_input_mode_handle_event
+    item_pan_input_mode_enter,
+    item_pan_input_mode_exit,
+    item_pan_input_mode_configure,
+    item_pan_input_mode_unconfigure,
+    item_pan_input_mode_handle_event
   }
 };

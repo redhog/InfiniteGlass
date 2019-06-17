@@ -47,11 +47,16 @@ typedef struct {
   Item *item;
   int x;
   int y;
-} ItemInputMode;
+} ItemPanInputMode;
+typedef struct {
+  InputMode base;
+  Item *item;
+} ItemZoomInputMode;
 
 BaseInputMode base_input_mode;
 ZoomInputMode zoom_input_mode;
 PanInputMode pan_input_mode;
-ItemInputMode item_input_mode;
+ItemZoomInputMode item_zoom_input_mode;
+ItemPanInputMode item_pan_input_mode;
 
 #endif
