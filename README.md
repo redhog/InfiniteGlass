@@ -56,3 +56,9 @@ Bold ones are implemented:
 ## Reference documentation
 * https://www.x.org/releases/X11R7.7/doc/libX11/libX11/libX11.html
 * https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/#glX
+
+# License
+
+GNU GPL v3, see the file LICENSE
+
+The file xevent.c has a different, more permissible license, see the top of the file for details.
