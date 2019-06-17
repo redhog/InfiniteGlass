@@ -38,6 +38,7 @@ void x_pop_error_handler() {
 }
 
 void x_push_error_context(char *name) {
+  XSync(display, False);
   x_err_context_stack_pointer++;
   x_err_context_stack[x_err_context_stack_pointer] = name;
 }
@@ -47,6 +48,7 @@ char *x_get_error_context() {
 }
 
 void x_pop_error_context() {
+  XSync(display, False);
   x_err_context_stack_pointer--;
 }
 
