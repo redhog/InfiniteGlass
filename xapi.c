@@ -3,23 +3,16 @@
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
 
-int OnWMDetected(Display* display, XErrorEvent* e) {
- wm_detected = True;
- return 0;
-}
-
 int OnXError(Display* display, XErrorEvent* e) {
  const int MAX_ERROR_TEXT_LENGTH = 1024;
  char error_text[MAX_ERROR_TEXT_LENGTH];
  XGetErrorText(display, e->error_code, error_text, sizeof(error_text));
  fprintf(stderr,
-         "Received X error:\n"
-         "    Request: %i\n"
-         "    Error code: %i - %s\n"
-         "    Resource ID: %u\n",
-         e->request_code,
+         "%s: %i - %s: request: %i, resource: %u\n",
+         x_get_error_context(),
          e->error_code,
          error_text,
+         e->request_code,
          (uint) e->resourceid);
  *((char *) 0) = 0;
  return 0;
@@ -27,6 +20,9 @@ int OnXError(Display* display, XErrorEvent* e) {
 
 XErrorHandler x_err_handler_stack[20];
 int x_err_handler_stack_pointer = -1;
+
+char *x_err_context_stack[20];
+int x_err_context_stack_pointer = -1;
 
 void x_push_error_handler(XErrorHandler handler) {
   x_err_handler_stack_pointer++;
@@ -39,6 +35,19 @@ void x_pop_error_handler() {
 
   x_err_handler_stack_pointer--;
   XSetErrorHandler(x_err_handler_stack[x_err_handler_stack_pointer]);
+}
+
+void x_push_error_context(char *name) {
+  x_err_context_stack_pointer++;
+  x_err_context_stack[x_err_context_stack_pointer] = name;
+}
+
+char *x_get_error_context() {
+  return x_err_context_stack[x_err_context_stack_pointer];
+}
+
+void x_pop_error_context() {
+  x_err_context_stack_pointer--;
 }
 
 XErrorEvent x_try_error;
@@ -74,6 +83,7 @@ int xinit() {
  display = XOpenDisplay(NULL);
 
  x_push_error_handler(&OnXError);
+ x_push_error_context("(No context)");
 
  root = DefaultRootWindow(display);
  WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);

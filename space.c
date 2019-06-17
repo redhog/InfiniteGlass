@@ -75,6 +75,7 @@ void item_update_space_pos(Item *item) {
 
 void item_update_pixmap(Item *item) {
  if (!item->is_mapped) return;
+ x_push_error_context("item_update_pixmap");
  if (item->pixmap) XFreePixmap(display, item->pixmap);
  if (item->glxpixmap) glXDestroyGLXPixmap(display, item->glxpixmap);
  checkError("item_update_pixmap0");
@@ -93,10 +94,12 @@ void item_update_pixmap(Item *item) {
  
  item_update_texture(item);
  checkError("item_update_pixmap3");
+ x_pop_error_context();
 }
 
 void item_update_texture(Item *item) {
  if (!item->is_mapped) return;
+ x_push_error_context("item_update_texture");
  //glEnable(GL_TEXTURE_2D);
  //checkError("item_update_texture1");
  if (!item->texture_id) {
@@ -113,4 +116,5 @@ void item_update_texture(Item *item) {
  checkError("item_update_texture6");
  // glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
  // checkError("item_update_texture7");
+ x_pop_error_context();
 }

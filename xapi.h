@@ -25,7 +25,6 @@ Display* display;
 Window root;
 Window overlay;
 XWindowAttributes overlay_attr;
-Bool wm_detected;
 const char *extensions;
 typedef void (*t_glx_bind)(Display *, GLXDrawable, int , const int *);
 typedef void (*t_glx_release)(Display *, GLXDrawable, int);
@@ -37,6 +36,10 @@ int shape_event, shape_error;
 
 extern void x_push_error_handler(XErrorHandler handler);
 extern void x_pop_error_handler();
+
+extern void x_push_error_context(char *name);
+extern char *x_get_error_context();
+extern void x_pop_error_context();
 
 extern void x_try();
 extern int x_catch(XErrorEvent *error);
