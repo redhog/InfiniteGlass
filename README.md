@@ -39,10 +39,10 @@ Bold ones are implemented:
 |Decrease window resolution                     |X     |     |X  |    |    |    |    |    |     |X   |    |    |      |
 |Increase window resolution                     |X     |     |X  |    |    |    |    |X   |     |    |    |    |      |
 |Increase window resolution                     |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
-|Set window resolution to 1:1 to screen         |X     |     |X  |    |    |    |X   |    |     |    |    |    |      |
-|Set window resolution to 1:1 to screen         |X     |     |X  |    |    |    |    |    |     |X   |    |    |      |
-|Set screen resolution to 1:1 to window         |X     |     |X  |    |    |    |    |X   |     |    |    |    |      |
-|Set screen resolution to 1:1 to window         |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
+|Set window resolution to 1:1 to screen         |X     |     |X  |X   |    |    |X   |    |     |    |    |    |      |
+|Set window resolution to 1:1 to screen         |X     |     |X  |X   |    |    |    |    |     |X   |    |    |      |
+|Set screen resolution to 1:1 to window         |X     |     |X  |X   |    |    |    |X   |     |    |    |    |      |
+|Set screen resolution to 1:1 to window         |X     |     |X  |X   |    |    |    |    |     |    |X   |    |      |
 |Write shell command                            |X     |     |   |    |    |    |    |    |     |    |    |    |      |
 
   
