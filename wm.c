@@ -73,9 +73,9 @@ void abstract_draw() {
       glBindSampler(0, 0);
 
       glDrawArrays(GL_POINTS, 0, 1);
-      glFlush();
     }
   }
+  glFlush();
 }
 
 void draw() {
@@ -194,7 +194,7 @@ int main() {
     if (e.type == damage_event + XDamageNotify) {
       XErrorEvent error;
       XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
-      fprintf(stderr, "Received XDamageNotify: %d\n", event->drawable);
+      //fprintf(stderr, "Received XDamageNotify: %d\n", event->drawable);
       // e->drawable is the window ID of the damaged window
       // e->geometry is the geometry of the damaged window	
       // e->area     is the bounding rect for the damaged area	
