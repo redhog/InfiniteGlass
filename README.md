@@ -19,33 +19,31 @@ Generally in these bindings
 
 Bold ones are implemented:
 
-|Function&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                                            |SuperL|CtrlL|Alt|Sift|Btn1|Btn2|Btn4|Btn5|Up|Down|Left|Right|Home|Motion|
-|-----------------------------------------------|------|-----|---|----|----|----|----|----|--|----|----|-----|----|------|
-|**Pan to initial position**                    |X     |     |   |    |    |    |    |    |  |    |    |     |X   |      |
-|**Move window**                                |X     |     |   |    |X   |    |    |    |  |    |    |     |    |X     |
-|**Move window**                                |X     |     |   |    |    |    |    |    |X |    |    |     |    |      |
-|**Move window**                                |X     |     |   |    |    |    |    |    |  |X   |    |     |    |      |
-|**Move window**                                |X     |     |   |    |    |    |    |    |  |    |X   |     |    |      |
-|**Move window**                                |X     |     |   |    |    |    |    |    |  |    |    |X    |    |      |
-|**Pan screen**                                 |X     |     |   |    |    |X   |    |    |  |    |    |     |    |X     |
-|**Pan screen**                                 |X     |X    |   |    |X   |    |    |    |  |    |    |     |    |X     |
-|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |X |    |    |     |    |      |
-|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |  |X   |    |     |    |      |
-|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |  |    |X   |     |    |      |
-|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |  |    |    |X    |    |      |
-|**Zoom screen in**                             |X     |     |   |    |    |    |X   |    |  |    |    |     |    |      |
-|**Zoom screen in**                             |X     |     |X  |    |    |    |    |    |X |    |    |     |    |      |
-|**Zoom screen out**                            |X     |     |   |    |    |    |    |X   |  |    |    |     |    |      |
-|**Zoom screen out**                            |X     |     |X  |    |    |    |    |    |  |X   |    |     |    |      |
-|**Zoom screen in to window**                   |X     |     |   |X   |    |    |X   |    |  |    |    |     |    |      |
-|**Zoom screen in to window**                   |X     |     |X  |X   |    |    |    |    |X |    |    |     |    |      |
-|Zoom screen out to next window                 |X     |     |   |X   |    |    |    |X   |  |    |    |     |    |      |
-|Zoom screen out to next window                 |X     |     |X  |X   |    |    |    |    |  |X   |    |     |    |      |
-|Decrease window resolution                     |X     |     |X  |    |    |    |X   |    |  |    |    |     |    |      |
-|Increase window resolution                     |X     |     |X  |    |    |    |    |X   |  |    |    |     |    |      |
-|Set window resolution to 1:1 to screen         |X     |     |X  |X   |    |    |X   |    |  |    |    |     |    |      |
-|Set screen resolution to 1:1 to window         |X     |     |X  |X   |    |    |    |X   |  |    |    |     |    |      |
-|Write shell command                            |X     |     |   |    |    |    |    |    |  |    |    |     |    |      |
+|Function&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                                                                             |SuperL|CtrlL|Alt|Sift|Btn1|Btn2|Btn4|Btn5|Arrow|PgUp|PgDn|Home|Motion|
+|-----------------------------------------------|------|-----|---|----|----|----|----|----|-----|----|----|----|------|
+|**Pan & zoom to initial position**             |X     |     |   |    |    |    |    |    |     |    |    |X   |      |
+|**Move window**                                |X     |     |   |    |X   |    |    |    |     |    |    |    |X     |
+|**Move window**                                |X     |     |   |    |    |    |    |    |X    |    |    |    |      |
+|**Pan screen**                                 |X     |     |   |    |    |X   |    |    |     |    |    |    |X     |
+|**Pan screen**                                 |X     |X    |   |    |X   |    |    |    |     |    |    |    |X     |
+|**Pan screen**                                 |X     |X    |   |    |    |    |    |    |X    |    |    |    |      |
+|**Zoom screen in**                             |X     |     |   |    |    |    |X   |    |     |    |    |    |      |
+|**Zoom screen in**                             |X     |     |   |    |    |    |    |    |     |X   |    |    |      |
+|**Zoom screen out**                            |X     |     |   |    |    |    |    |X   |     |    |    |    |      |
+|**Zoom screen out**                            |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
+|**Zoom screen in to window**                   |X     |     |   |X   |    |    |X   |    |     |    |    |    |      |
+|**Zoom screen in to window**                   |X     |     |   |X   |    |    |    |    |     |X   |    |    |      |
+|Zoom screen out to next window                 |X     |     |   |X   |    |    |    |X   |     |    |    |    |      |
+|Zoom screen out to next window                 |X     |     |   |X   |    |    |    |    |     |    |X   |    |      |
+|Decrease window resolution                     |X     |     |X  |    |    |    |X   |    |     |    |    |    |      |
+|Decrease window resolution                     |X     |     |X  |    |    |    |    |    |     |X   |    |    |      |
+|Increase window resolution                     |X     |     |X  |    |    |    |    |X   |     |    |    |    |      |
+|Increase window resolution                     |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
+|Set window resolution to 1:1 to screen         |X     |     |X  |    |    |    |X   |    |     |    |    |    |      |
+|Set window resolution to 1:1 to screen         |X     |     |X  |    |    |    |    |    |     |X   |    |    |      |
+|Set screen resolution to 1:1 to window         |X     |     |X  |    |    |    |    |X   |     |    |    |    |      |
+|Set screen resolution to 1:1 to window         |X     |     |X  |    |    |    |    |    |     |    |X   |    |      |
+|Write shell command                            |X     |     |   |    |    |    |    |    |     |    |    |    |      |
 
   
 # Resources
