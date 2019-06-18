@@ -174,11 +174,11 @@ int main() {
   screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
   
   screen_attr = glGetUniformLocation(shader_program->program, "screen");
-  window_sampler_attr = glGetUniformLocation(shader_program->program, "windowSampler");
-  icon_sampler_attr = glGetUniformLocation(shader_program->program, "iconSampler");
+  window_sampler_attr = glGetUniformLocation(shader_program->program, "window_sampler");
+  icon_sampler_attr = glGetUniformLocation(shader_program->program, "icon_sampler");
   coords_attr = glGetAttribLocation(shader_program->program, "coords");
-  picking_mode_attr = glGetUniformLocation(shader_program->program, "pickingMode");
-  window_id_attr = glGetUniformLocation(shader_program->program, "windowId");
+  picking_mode_attr = glGetUniformLocation(shader_program->program, "picking_mode");
+  window_id_attr = glGetUniformLocation(shader_program->program, "window_id");
   
   push_input_mode(&base_input_mode.base);
 
