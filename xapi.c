@@ -3,19 +3,19 @@
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
 
-int OnXError(Display* display, XErrorEvent* e) {
- const int MAX_ERROR_TEXT_LENGTH = 1024;
- char error_text[MAX_ERROR_TEXT_LENGTH];
- XGetErrorText(display, e->error_code, error_text, sizeof(error_text));
- fprintf(stderr,
-         "%s: %i - %s: request: %i, resource: %u\n",
-         x_get_error_context(),
-         e->error_code,
-         error_text,
-         e->request_code,
-         (uint) e->resourceid);
- *((char *) 0) = 0;
- return 0;
+int x_default_error_handler(Display* display, XErrorEvent* e) {
+  const int MAX_ERROR_TEXT_LENGTH = 1024;
+  char error_text[MAX_ERROR_TEXT_LENGTH];
+  XGetErrorText(display, e->error_code, error_text, sizeof(error_text));
+  fprintf(stderr,
+          "%s: %i - %s: request: %i, resource: %u\n",
+          x_get_error_context(),
+          e->error_code,
+          error_text,
+          e->request_code,
+          (uint) e->resourceid);
+  *((char *) 0) = 0;
+  return 0;
 }
 
 XErrorHandler x_err_handler_stack[20];
@@ -80,92 +80,92 @@ int x_catch(XErrorEvent *error) {
 }
 
 int xinit() {
- XErrorEvent error;
- 
- display = XOpenDisplay(NULL);
+  XErrorEvent error;
 
- x_push_error_handler(&OnXError);
- x_push_error_context("(No context)");
+  display = XOpenDisplay(NULL);
 
- root = DefaultRootWindow(display);
- WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
- WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
+  x_push_error_handler(&x_default_error_handler);
+  x_push_error_context("(No context)");
 
- x_try();
- XSelectInput(display, root,
-              SubstructureRedirectMask |
-              SubstructureNotifyMask |
-              KeyPressMask |
-              KeyReleaseMask |
-              ButtonPressMask |
-              ButtonReleaseMask |
-              PointerMotionMask);
- if (!x_catch(&error)) {
-  fprintf(stderr, "Another window manager is already running"); fflush(stderr);
-  return 0;
- }
+  root = DefaultRootWindow(display);
+  WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
+  WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
 
- int event_base, error_base;
- if (!XCompositeQueryExtension(display, &event_base, &error_base)) {
-  fprintf(stderr, "X server does not support the Composite extension"); fflush(stderr);
-  return 0;
- }
-    
- int major = 0, minor = 3;
- XCompositeQueryVersion(display, &major, &minor);	
- if (major == 0 && minor < 3) {
-  fprintf(stderr, "X server Composite extension is too old %i.%i < 0.3)", major, minor); fflush(stderr);
-  return 0;
- }
+  x_try();
+  XSelectInput(display, root,
+               SubstructureRedirectMask |
+               SubstructureNotifyMask |
+               KeyPressMask |
+               KeyReleaseMask |
+               ButtonPressMask |
+               ButtonReleaseMask |
+               PointerMotionMask);
+  if (!x_catch(&error)) {
+    fprintf(stderr, "Another window manager is already running"); fflush(stderr);
+    return 0;
+  }
 
- extensions = glXQueryExtensionsString(display, 0); fflush(stderr);
+  int event_base, error_base;
+  if (!XCompositeQueryExtension(display, &event_base, &error_base)) {
+    fprintf(stderr, "X server does not support the Composite extension"); fflush(stderr);
+    return 0;
+  }
 
- printf("Extensions: %s\n", extensions);
- if(! strstr(extensions, "GLX_EXT_texture_from_pixmap")) {
-  fprintf(stderr, "GLX_EXT_texture_from_pixmap not supported!\n");
-  return 0;
- }
+  int major = 0, minor = 3;
+  XCompositeQueryVersion(display, &major, &minor);	
+  if (major == 0 && minor < 3) {
+    fprintf(stderr, "X server Composite extension is too old %i.%i < 0.3)", major, minor); fflush(stderr);
+    return 0;
+  }
 
- glXBindTexImageEXT = (t_glx_bind) glXGetProcAddress((const GLubyte *)"glXBindTexImageEXT");
- glXReleaseTexImageEXT = (t_glx_release) glXGetProcAddress((const GLubyte *)"glXReleaseTexImageEXT");
+  extensions = glXQueryExtensionsString(display, 0); fflush(stderr);
 
- if(!glXBindTexImageEXT || !glXReleaseTexImageEXT) {
-  fprintf(stderr, "Some extension functions missing!"); fflush(stderr);
-  return 0;
- }
- 
- overlay = XCompositeGetOverlayWindow(display, root);
- XGetWindowAttributes(display, overlay, &overlay_attr);
+  printf("Extensions: %s\n", extensions);
+  if(! strstr(extensions, "GLX_EXT_texture_from_pixmap")) {
+    fprintf(stderr, "GLX_EXT_texture_from_pixmap not supported!\n");
+    return 0;
+  }
 
- overlay_set_input(False);
- 
- Cursor cursor;
- cursor=XCreateFontCursor(display,XC_left_ptr);
- XDefineCursor(display, overlay, cursor);
- XFreeCursor(display, cursor);
- 
- XDamageQueryExtension(display, &damage_event, &damage_error);
- XShapeQueryExtension(display, &shape_event, &shape_error);
+  glXBindTexImageEXT = (t_glx_bind) glXGetProcAddress((const GLubyte *)"glXBindTexImageEXT");
+  glXReleaseTexImageEXT = (t_glx_release) glXGetProcAddress((const GLubyte *)"glXReleaseTexImageEXT");
 
- XSync(display, False);
+  if(!glXBindTexImageEXT || !glXReleaseTexImageEXT) {
+    fprintf(stderr, "Some extension functions missing!"); fflush(stderr);
+    return 0;
+  }
 
- fprintf(stderr, "root=%ld, overlay=%ld\n", root, overlay);
- 
- return 1;
+  overlay = XCompositeGetOverlayWindow(display, root);
+  XGetWindowAttributes(display, overlay, &overlay_attr);
+
+  overlay_set_input(False);
+
+  Cursor cursor;
+  cursor=XCreateFontCursor(display,XC_left_ptr);
+  XDefineCursor(display, overlay, cursor);
+  XFreeCursor(display, cursor);
+
+  XDamageQueryExtension(display, &damage_event, &damage_error);
+  XShapeQueryExtension(display, &shape_event, &shape_error);
+
+  XSync(display, False);
+
+  fprintf(stderr, "root=%ld, overlay=%ld\n", root, overlay);
+
+  return 1;
 }
 
 void overlay_set_input(Bool enabled) {
- XRectangle rect;
- rect.x = 0;
- rect.y = 0;
- rect.width = 0;
- rect.height = 0;
- if (enabled) {
-  rect.width = overlay_attr.width;
-  rect.height = overlay_attr.height;
- }
- XserverRegion region = XFixesCreateRegion(display, &rect, 1);
- XFixesSetWindowShapeRegion(display, overlay, ShapeInput, 0, 0, region);
- XFixesDestroyRegion(display, region);
+  XRectangle rect;
+  rect.x = 0;
+  rect.y = 0;
+  rect.width = 0;
+  rect.height = 0;
+  if (enabled) {
+    rect.width = overlay_attr.width;
+    rect.height = overlay_attr.height;
+  }
+  XserverRegion region = XFixesCreateRegion(display, &rect, 1);
+  XFixesSetWindowShapeRegion(display, overlay, ShapeInput, 0, 0, region);
+  XFixesDestroyRegion(display, region);
 }
 

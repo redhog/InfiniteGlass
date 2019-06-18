@@ -281,7 +281,7 @@ int main() {
     } else if (e.type == KeyRelease) {
       input_mode_stack_handle(e);
     } else {
-       print_xevent(display, &e);
+      print_xevent(display, &e);
       fprintf(stderr, "Ignored event\n"); fflush(stderr);
     }
   }
