@@ -9,7 +9,7 @@
 
 GLXFBConfig *configs;
 
-int checkError(char *msg);
+int gl_check_error(char *msg);
 int glinit(Window window);
 
 #endif

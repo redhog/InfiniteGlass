@@ -88,7 +88,7 @@ void item_update_pixmap(Item *item) {
   x_push_error_context("item_update_pixmap");
   if (item->window_pixmap) XFreePixmap(display, item->window_pixmap);
   if (item->window_glxpixmap) glXDestroyGLXPixmap(display, item->window_glxpixmap);
-  checkError("item_update_pixmap0");
+  gl_check_error("item_update_pixmap0");
 
   // FIXME: free all other stuff if already created
 
@@ -98,7 +98,7 @@ void item_update_pixmap(Item *item) {
     GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
     None
   };
-  checkError("item_update_pixmap1");
+  gl_check_error("item_update_pixmap1");
 
   if (item->wm_hints.flags & IconPixmapHint) {
     printf("Window %d: PIXMAP: %d: %d\n",
@@ -109,10 +109,10 @@ void item_update_pixmap(Item *item) {
   }
   item->window_glxpixmap = glXCreatePixmap(display, configs[0], item->window_pixmap, pixmap_attribs);
 
-  checkError("item_update_pixmap2");
+  gl_check_error("item_update_pixmap2");
 
   item_update_texture(item);
-  checkError("item_update_pixmap3");
+  gl_check_error("item_update_pixmap3");
   x_pop_error_context();
 }
 
@@ -121,32 +121,32 @@ void item_update_texture(Item *item) {
   x_push_error_context("item_update_texture");
   if (!item->window_texture_id) {
     glGenTextures(1, &item->window_texture_id);
-    checkError("item_update_texture1");
+    gl_check_error("item_update_texture1");
   }
   glBindTexture(GL_TEXTURE_2D, item->window_texture_id);
-  checkError("item_update_texture3");
+  gl_check_error("item_update_texture3");
   glXBindTexImageEXT(display, item->window_glxpixmap, GLX_FRONT_EXT, NULL);
-  checkError("item_update_texture4");
+  gl_check_error("item_update_texture4");
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  checkError("item_update_texture5");
+  gl_check_error("item_update_texture5");
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  checkError("item_update_texture6");
+  gl_check_error("item_update_texture6");
 
   if (item->wm_hints.flags & IconPixmapHint) {
     if (!item->icon_texture_id) {
       glGenTextures(1, &item->icon_texture_id);
-      checkError("item_update_texture7");
+      gl_check_error("item_update_texture7");
       printf("CREATE Window %d, icon %d\n", item->window, item->icon_texture_id);
     }
     printf("Window %d, icon %d\n", item->window, item->icon_texture_id);
     glBindTexture(GL_TEXTURE_2D, item->icon_texture_id);
-    checkError("item_update_texture9");
+    gl_check_error("item_update_texture9");
     glXBindTexImageEXT(display, item->icon_glxpixmap, GLX_FRONT_EXT, NULL);
-    checkError("item_update_texture10");
+    gl_check_error("item_update_texture10");
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    checkError("item_update_texture11");
+    gl_check_error("item_update_texture11");
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    checkError("item_update_texture12");
+    gl_check_error("item_update_texture12");
   }
   x_pop_error_context();
 }

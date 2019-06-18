@@ -87,28 +87,28 @@ void abstract_draw() {
 }
 
 void draw() {
-  checkError("draw0");
+  gl_check_error("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glUniform1i(picking_mode_attr, 0);
-  checkError("draw1");
+  gl_check_error("draw1");
   glClearColor(1.0, 1.0, 0.5, 1.0);
   abstract_draw();
-  checkError("draw2");
+  gl_check_error("draw2");
   glXSwapBuffers(display, overlay);
-  checkError("draw3");
+  gl_check_error("draw3");
 }
 GLint picking_fb;
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
   float data[4];
   memset(data, 0, sizeof(data));
-  checkError("pick1");
+  gl_check_error("pick1");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glUniform1i(picking_mode_attr, 1);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   abstract_draw();
   glReadPixels(x, overlay_attr.height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
-  checkError("pick2");
+  gl_check_error("pick2");
   //fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   *winx = 0;
   *winy = 0;
@@ -157,7 +157,7 @@ int init_picking() {
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
-  if (!(shader_program = loadShader("shader_window_vertex.glsl", "shader_window_geometry.glsl", "shader_window_fragment.glsl"))) return 1;
+  if (!(shader_program = shader_load("shader_window_vertex.glsl", "shader_window_geometry.glsl", "shader_window_fragment.glsl"))) return 1;
   if (!init_picking()) return 1;
   
   fprintf(stderr, "Initialized X and GL.\n");
@@ -186,11 +186,11 @@ int main() {
  
   glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
 
-  checkError("start1");
+  gl_check_error("start1");
 
   draw();
 
-  checkError("start2");
+  gl_check_error("start2");
 
   for (;;) {
     XEvent e;
@@ -198,7 +198,7 @@ int main() {
     XNextEvent(display, &e);
 //    print_xevent(display, &e);
 
-    checkError("loop");
+    gl_check_error("loop");
 
     if (e.type == damage_event + XDamageNotify) {
       XErrorEvent error;
@@ -235,9 +235,9 @@ int main() {
     } else if (e.type == ConfigureNotify) {
       //fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       Item *item = item_get(e.xconfigure.window);
-      checkError("item_update_space_pos_from_window");
+      gl_check_error("item_update_space_pos_from_window");
       item_update_pixmap(item);
-      checkError("item_update_pixmap");
+      gl_check_error("item_update_pixmap");
       draw();
     } else if (e.type == CreateNotify) {
       if (e.xcreatewindow.window != overlay) {

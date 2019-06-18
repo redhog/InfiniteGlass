@@ -5,7 +5,7 @@
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
-int checkError(char *msg) {
+int gl_check_error(char *msg) {
   GLenum errCode;
   const GLubyte *errString;
 

@@ -9,6 +9,6 @@ typedef struct {
   GLuint vertex_shader, geometry_shader, fragment_shader;
 } Shader;
 
-Shader *loadShader(char *vertex_src, char *geometry_src, char *fragment_src);
+Shader *shader_load(char *vertex_src, char *geometry_src, char *fragment_src);
 
 #endif
