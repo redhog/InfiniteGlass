@@ -7,6 +7,7 @@ uniform vec4 screen; // x,y,w,h in space
 in vec4 window[]; // x,y,w,h in space
 
 out vec2 UV;
+out float geometry_size;
 
 mat4 screen2glscreen = transpose(mat4(
   2., 0., 0., -1.,
@@ -16,7 +17,7 @@ mat4 screen2glscreen = transpose(mat4(
 ));
 
 void main() {
-  float left, right, top, bottom;
+  float left, right, top, bottom, size;
 
   mat4 space2screen = screen2glscreen * transpose(mat4(
     1./screen[2], 0., 0., -screen.x/screen[2],
@@ -32,20 +33,27 @@ void main() {
     right = left + window[i][2];
     bottom = top - window[i][3];
     
+    size = distance(space2screen * vec4(left, bottom, 0., 1.),
+                    space2screen * vec4(right, top, 0., 1.));
+
     gl_Position = space2screen * vec4(left, bottom, 0., 1.);
     UV = vec2(0., 1.);
+    geometry_size = size;
     EmitVertex();
 
     gl_Position = space2screen * vec4(left, top, 0., 1.);
     UV = vec2(0., 0.);
+    geometry_size = size;
     EmitVertex();
 
     gl_Position = space2screen * vec4(right, bottom, 0., 1.);
     UV = vec2(1., 1.);
+    geometry_size = size;
     EmitVertex();
 
     gl_Position = space2screen * vec4(right, top, 0., 1.);
     UV = vec2(1., 0.);
+    geometry_size = size;
     EmitVertex();
   }
   EndPrimitive();

@@ -73,14 +73,12 @@ void abstract_draw() {
       glBindTexture(GL_TEXTURE_2D, item->window_texture_id);
       glBindSampler(1, 0);
 
-      /*
       if (item->wm_hints.flags & IconPixmapHint) {
-        glUniform1i(icon_sampler_attr, 0);
+        glUniform1i(icon_sampler_attr, 1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, item->icon_texture_id);
         glBindSampler(1, 0);
       }
-      */
       
       glDrawArrays(GL_POINTS, 0, 1);
     }

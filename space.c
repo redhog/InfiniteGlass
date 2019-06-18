@@ -132,7 +132,6 @@ void item_update_texture(Item *item) {
  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
  checkError("item_update_texture6");
 
- /*
  if (item->wm_hints.flags & IconPixmapHint) {
    if (!item->icon_texture_id) {
      glGenTextures(1, &item->icon_texture_id);
@@ -149,6 +148,5 @@ void item_update_texture(Item *item) {
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
    checkError("item_update_texture12");
  }
- */ 
  x_pop_error_context();
 }
