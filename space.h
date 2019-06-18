@@ -9,9 +9,12 @@ typedef struct {
 
   Damage damage;
  
-  Pixmap pixmap;
-  GLXPixmap glxpixmap;
-  GLuint texture_id;
+  Pixmap window_pixmap;
+  GLXPixmap window_glxpixmap;
+  GLuint window_texture_id;
+
+  GLXPixmap icon_glxpixmap;
+  GLuint icon_texture_id;
 
   int width;
   int height;
@@ -20,6 +23,8 @@ typedef struct {
   GLuint coords_vbo;
 
   uint is_mapped;
+
+  XWMHints wm_hints;
 } Item;
 
 Item **items_all;

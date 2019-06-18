@@ -17,7 +17,8 @@
 #include <SOIL/SOIL.h>
 
 Shader *shader_program;
-GLint sampler_attr;
+GLint window_sampler_attr;
+GLint icon_sampler_attr;
 GLint screen_attr;
 GLint coords_attr;
 GLint picking_mode_attr;
@@ -67,11 +68,20 @@ void abstract_draw() {
       glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
       glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
-      glUniform1i(sampler_attr, 0);
-      glActiveTexture(GL_TEXTURE0 + 0);
-      glBindTexture(GL_TEXTURE_2D, item->texture_id);
-      glBindSampler(0, 0);
+      glUniform1i(window_sampler_attr, 0);
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, item->window_texture_id);
+      glBindSampler(1, 0);
 
+      /*
+      if (item->wm_hints.flags & IconPixmapHint) {
+        glUniform1i(icon_sampler_attr, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, item->icon_texture_id);
+        glBindSampler(1, 0);
+      }
+      */
+      
       glDrawArrays(GL_POINTS, 0, 1);
     }
   }
@@ -166,7 +176,8 @@ int main() {
   screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
   
   screen_attr = glGetUniformLocation(shader_program->program, "screen");
-  sampler_attr = glGetUniformLocation(shader_program->program, "myTextureSampler");
+  window_sampler_attr = glGetUniformLocation(shader_program->program, "windowSampler");
+  icon_sampler_attr = glGetUniformLocation(shader_program->program, "iconSampler");
   coords_attr = glGetAttribLocation(shader_program->program, "coords");
   picking_mode_attr = glGetUniformLocation(shader_program->program, "pickingMode");
   window_id_attr = glGetUniformLocation(shader_program->program, "windowId");

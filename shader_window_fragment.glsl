@@ -3,7 +3,8 @@ precision highp float;
 
 in vec2 UV;
 
-uniform sampler2D myTextureSampler;
+uniform sampler2D windowSampler;
+uniform sampler2D iconSampler;
 uniform int pickingMode;
 uniform float windowId;
 
@@ -13,6 +14,6 @@ void main() {
   if (pickingMode == 1) {
     fragColor = vec4(UV.x, UV.y, windowId, 1.);
   } else {
-    fragColor = texture(myTextureSampler, UV).rgba;
+    fragColor = texture(windowSampler, UV).rgba;
   }
 }
