@@ -89,6 +89,9 @@ void abstract_draw() {
 void draw() {
   gl_check_error("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glEnablei(GL_BLEND, 0);
+  glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
   glUniform1i(picking_mode_attr, 0);
   gl_check_error("draw1");
   glClearColor(1.0, 1.0, 0.5, 1.0);
