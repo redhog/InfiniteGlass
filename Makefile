@@ -8,7 +8,7 @@ bin/%: bin
 bin:
 	mkdir -p bin
 
-bin/%.o : %.c
+bin/%.o : %.c *.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 bin/wm: bin/wm.o bin/xapi.o bin/glapi.o bin/shader.o bin/space.o bin/input.o bin/xevent.o bin/screen.o actions.o
