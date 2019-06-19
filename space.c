@@ -37,10 +37,15 @@ Item *item_get(Window window) {
 
   item->wm_hints.flags = 0;
 
+  XErrorEvent error;
+  x_try();
   XWMHints *wm_hints = XGetWMHints(display, window);
   if (wm_hints) {
     item->wm_hints = *wm_hints;
     XFree(wm_hints);
+  }
+  if (!x_catch(&error)) {
+    printf("Window does not have any WM_HINTS: %d", window);
   }
 
   return item;
@@ -136,9 +141,7 @@ void item_update_texture(Item *item) {
     if (!item->icon_texture_id) {
       glGenTextures(1, &item->icon_texture_id);
       gl_check_error("item_update_texture7");
-      printf("CREATE Window %d, icon %d\n", item->window, item->icon_texture_id);
     }
-    printf("Window %d, icon %d\n", item->window, item->icon_texture_id);
     glBindTexture(GL_TEXTURE_2D, item->icon_texture_id);
     gl_check_error("item_update_texture9");
     glXBindTexImageEXT(display, item->icon_glxpixmap, GLX_FRONT_EXT, NULL);
