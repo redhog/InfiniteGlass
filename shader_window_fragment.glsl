@@ -11,14 +11,20 @@ uniform float window_id;
 
 out vec4 fragColor;
 
+vec4 icon_color;
+vec4 window_color;
+
 void main() {
   if (picking_mode == 1) {
     fragColor = vec4(window_coord.x, window_coord.y, window_id, 1.);
   } else {
+    window_color = texture(window_sampler, window_coord).rgba;
+    icon_color = texture(icon_sampler, window_coord).rgba;
+
     if (geometry_size > .4) {
-      fragColor = texture(window_sampler, window_coord).rgba;
+      fragColor = window_color;
     } else {
-      fragColor = texture(icon_sampler, window_coord).rgba;
+      fragColor = (geometry_size / .4) * window_color + (1 - geometry_size / .4) * icon_color;
     }
   }
 }
