@@ -28,6 +28,7 @@ void item_type_window_destructor(Item *item) {
   WindowItem *window_item = (WindowItem *) item;
   texture_destroy(&window_item->window_texture);
   texture_destroy(&window_item->icon_texture);
+  texture_destroy(&window_item->icon_mask_texture);
 }
 
 void item_type_window_draw(Item *item) {
@@ -40,12 +41,24 @@ void item_type_window_draw(Item *item) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, window_item->window_texture.texture_id);
     glBindSampler(1, 0);
-
+    
     if (window_item->wm_hints.flags & IconPixmapHint) {
+      glUniform1i(has_icon_attr, 1);
       glUniform1i(icon_sampler_attr, 1);
       glActiveTexture(GL_TEXTURE1);
       glBindTexture(GL_TEXTURE_2D, window_item->icon_texture.texture_id);
       glBindSampler(1, 0);
+    } else {
+      glUniform1i(has_icon_attr, 0);
+    }
+    if (window_item->wm_hints.flags & IconMaskHint) {
+      glUniform1i(has_icon_mask_attr, 1);
+      glUniform1i(icon_mask_sampler_attr, 2);
+      glActiveTexture(GL_TEXTURE2);
+      glBindTexture(GL_TEXTURE_2D, window_item->icon_mask_texture.texture_id);
+      glBindSampler(1, 0);
+    } else {
+      glUniform1i(has_icon_mask_attr, 1);
     }
     
     item_type_base.draw(item);
@@ -74,11 +87,10 @@ void item_type_window_update(Item *item) {
   texture_from_pixmap(&window_item->window_texture, window_item->window_pixmap);
 
   if (window_item->wm_hints.flags & IconPixmapHint) {
-    printf("Window %d: PIXMAP: %d: %d\n",
-           window_item->window,
-           window_item->wm_hints.flags & IconPixmapHint,
-           window_item->wm_hints.icon_pixmap);    
     texture_from_pixmap(&window_item->icon_texture, window_item->wm_hints.icon_pixmap);
+  }
+  if (window_item->wm_hints.flags & IconMaskHint) {
+    texture_from_pixmap(&window_item->icon_mask_texture, window_item->wm_hints.icon_mask);
   }
   gl_check_error("item_update_pixmap2");
 
@@ -114,6 +126,7 @@ Item *item_get_from_window(Window window) {
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
   texture_initialize(&item->icon_texture);
+  texture_initialize(&item->icon_mask_texture);
   item->window = window;
   item->damage = XDamageCreate(display, window, XDamageReportNonEmpty);
   item->wm_hints.flags = 0;

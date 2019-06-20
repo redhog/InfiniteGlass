@@ -14,6 +14,7 @@ typedef struct {
   Pixmap window_pixmap;
   Texture window_texture;
   Texture icon_texture;
+  Texture icon_mask_texture;
 
   XWMHints wm_hints;
 } WindowItem;

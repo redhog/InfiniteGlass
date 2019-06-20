@@ -16,9 +16,12 @@
 Shader *shader_program;
 GLint window_sampler_attr;
 GLint icon_sampler_attr;
+GLint icon_mask_sampler_attr;
 GLint screen_attr;
 GLint coords_attr;
 GLint picking_mode_attr;
+GLint has_icon_attr;
+GLint has_icon_mask_attr;
 GLint window_id_attr;
 
 void initItems() {
@@ -148,8 +151,11 @@ int main() {
   screen_attr = glGetUniformLocation(shader_program->program, "screen");
   window_sampler_attr = glGetUniformLocation(shader_program->program, "window_sampler");
   icon_sampler_attr = glGetUniformLocation(shader_program->program, "icon_sampler");
+  icon_mask_sampler_attr = glGetUniformLocation(shader_program->program, "icon_mask_sampler");
   coords_attr = glGetAttribLocation(shader_program->program, "coords");
   picking_mode_attr = glGetUniformLocation(shader_program->program, "picking_mode");
+  has_icon_attr = glGetUniformLocation(shader_program->program, "has_icon");
+  has_icon_mask_attr = glGetUniformLocation(shader_program->program, "has_icon_mask");
   window_id_attr = glGetUniformLocation(shader_program->program, "window_id");
   
   push_input_mode(&base_input_mode.base);
