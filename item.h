@@ -1,39 +1,41 @@
-#ifndef SHAPE
-#define SHAPE
+#ifndef ITEM
+#define ITEM
 
 #include "xapi.h"
 #include "glapi.h"
 
+struct ItemStruct;
+typedef struct ItemStruct Item;
+typedef void ItemTypeDestructor(Item *item);
+typedef void ItemTypeDraw(Item *item);
+typedef void ItemTypeUpdate(Item *item);
 typedef struct {
-  Window window;
+  ItemTypeDestructor *destructor;
+  ItemTypeDraw *draw;
+  ItemTypeUpdate *update;
+} ItemType;
 
-  Damage damage;
+struct ItemStruct {
+  ItemType *type;
+
+  int id;
  
-  Pixmap window_pixmap;
-  GLXPixmap window_glxpixmap;
-  GLuint window_texture_id;
-
-  GLXPixmap icon_glxpixmap;
-  GLuint icon_texture_id;
-
   int width;
   int height;
  
   float coords[4];
   GLuint coords_vbo;
 
-  uint is_mapped;
+  uint is_mapped; 
+};
 
-  XWMHints wm_hints;
-} Item;
+extern ItemType item_type_base;
 
-Item **items_all;
+extern Item **items_all;
+extern size_t items_all_usage;
 
-Item *item_get(Window window);
+Item *item_get(int id);
+void item_add(Item *item);
 void item_remove(Item *item);
-void item_update_space_pos_from_window(Item *item);
-void item_update_space_pos(Item *item);
-void item_update_pixmap(Item *item);
-void item_update_texture(Item *item);
 
 #endif

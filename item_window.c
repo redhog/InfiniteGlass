@@ -61,7 +61,7 @@ void item_type_window_destructor(Item *item) {}
 void item_type_window_draw(Item *item) {
   if (item->is_mapped) {
     WindowItem *window_item = (WindowItem *) item;
-     
+    
     item_type_window_update_texture(window_item);
 
     glUniform1i(window_sampler_attr, 0);

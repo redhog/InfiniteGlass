@@ -2,7 +2,8 @@
 #define INPUT
 
 #include "xapi.h"
-#include "space.h"
+#include "item.h"
+#include "item_window.h"
 
 typedef void EnterMode(size_t mode);
 typedef void ExitMode(size_t mode);

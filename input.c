@@ -62,17 +62,18 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     int winx, winy;
     Item *item;
     pick(event.xmotion.x_root, event.xmotion.y_root, &winx, &winy, &item);
-    if (item) {
-
+    if (item && item->type == &item_type_window) {
+      WindowItem *window_item = (WindowItem *) item;
+     
       XWindowChanges values;
       values.x = event.xmotion.x_root - winx;
       values.y = event.xmotion.y_root - winy;
       values.stack_mode = Above;
-      XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
-      XSetInputFocus(display, item->window, RevertToNone, CurrentTime);
+      XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
+      XSetInputFocus(display, window_item->window, RevertToNone, CurrentTime);
      
       if (debug_positions)
-        printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, item->window, winx, winy); fflush(stdout);
+        printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
     }
   } else if (event.type == KeyPress && event.xkey.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
     Item *item;
@@ -84,7 +85,7 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       int revert_to;
       XGetInputFocus(display, &window, &revert_to);
       if (window != root && window != overlay) {
-        item = item_get(window);
+        item = item_get_from_window(window);
       }
     }
     if (item) {
@@ -107,7 +108,7 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       int revert_to;
       XGetInputFocus(display, &window, &revert_to);
       if (window != root && window != overlay) {
-        item = item_get(window);
+        item = item_get_from_window(window);
       }
     }
 
@@ -151,7 +152,7 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       int revert_to;
       XGetInputFocus(display, &window, &revert_to);
       if (window != root && window != overlay) {
-        item = item_get(window);
+        item = item_get_from_window(window);
       }
     }
 
@@ -205,7 +206,7 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
       int revert_to;
       XGetInputFocus(display, &window, &revert_to);
       if (window != root && window != overlay) {
-        item = item_get(window);
+        item = item_get_from_window(window);
       }
     }
     if (item) {
@@ -425,7 +426,7 @@ uint item_pan_input_mode_handle_event(size_t mode, XEvent event) {
              spacex - spacex_orig,
              spacey - spacey_orig); fflush(stdout);
     
-    item_update_space_pos(self->item);
+    item_type_base.update(self->item);
     draw();
 
   } else if (event.type == MotionNotify) {
@@ -451,7 +452,7 @@ uint item_pan_input_mode_handle_event(size_t mode, XEvent event) {
              spacex - spacex_orig,
              spacey - spacey_orig); fflush(stdout);
     
-    item_update_space_pos(self->item);
+    item_type_base.update(self->item);
     draw();
   }
   return 1;

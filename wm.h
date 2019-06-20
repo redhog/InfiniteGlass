@@ -3,7 +3,8 @@
 
 #include "glapi.h"
 #include "shader.h"
-#include "space.h"
+#include "item.h"
+#include "item_window.h"
 
 extern Shader *shader_program;
 extern GLint window_sampler_attr;

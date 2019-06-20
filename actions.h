@@ -1,7 +1,7 @@
 #ifndef ACTIONS
 #define ACTIONS
 
-#include "space.h"
+#include "item.h"
 
 extern void action_zoom_screen_home();
 extern void action_zoom_to_window(Item *item);

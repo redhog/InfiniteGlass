@@ -5,9 +5,6 @@
 #include <limits.h>
 
 #include "xapi.h"
-#include "glapi.h"
-#include "shader.h"
-#include "space.h"
 #include "input.h"
 #include "xevent.h"
 #include "screen.h"
@@ -42,11 +39,7 @@ void initItems() {
              &num_top_level_windows);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    Item *item = item_get(top_level_windows[i]);
-    XGetWindowAttributes(display, top_level_windows[i], &attr);
-    item->is_mapped = attr.map_state == IsViewable;
-    item_update_space_pos_from_window(item);
-    item_update_pixmap(item);
+    item_get_from_window(top_level_windows[i]);
   }
 
   XFree(top_level_windows);
@@ -57,31 +50,7 @@ void abstract_draw() {
   glClear(GL_COLOR_BUFFER_BIT);
   glUniform4fv(screen_attr, 1, screen);
   for (Item **itemp = items_all; itemp && *itemp; itemp++) {
-    Item *item = *itemp;
-
-    if (item->is_mapped) {
-      glUniform1f(window_id_attr, (float) item->window / (float) INT_MAX);
-     
-      item_update_texture(item);
-
-      glEnableVertexAttribArray(coords_attr);
-      glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
-      glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-      glUniform1i(window_sampler_attr, 0);
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, item->window_texture_id);
-      glBindSampler(1, 0);
-
-      if (item->wm_hints.flags & IconPixmapHint) {
-        glUniform1i(icon_sampler_attr, 1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, item->icon_texture_id);
-        glBindSampler(1, 0);
-      }
-      
-      glDrawArrays(GL_POINTS, 0, 1);
-    }
+    (*itemp)->type->draw(*itemp);
   }
   glFlush();
 }
@@ -117,7 +86,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
   *winy = 0;
   *item = NULL;
   if (data[2] != 0.0) {
-    *item = item_get((Window) (data[2] * (float) INT_MAX));
+    *item = item_get(data[2] * (float) INT_MAX);
     if (*item) {
       *winx = (int) (data[0] * (*item)->width);
       *winy = (int) (data[1] * (*item)->height);
@@ -233,39 +202,39 @@ int main() {
       changes.stack_mode = event->detail;
       // Grant request by calling XConfigureWindow().
       XConfigureWindow(display, event->window, event->value_mask, &changes);  
-      Item *item = item_get(event->window);
-      item_update_space_pos_from_window(item);
+      Item *item = item_get_from_window(event->window);
+      item_type_window_update_space_pos_from_window((WindowItem *) item);
     } else if (e.type == ConfigureNotify) {
       //fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
-      Item *item = item_get(e.xconfigure.window);
+      Item *item = item_get_from_window(e.xconfigure.window);
       gl_check_error("item_update_space_pos_from_window");
-      item_update_pixmap(item);
+      item->type->update(item);
       gl_check_error("item_update_pixmap");
       draw();
     } else if (e.type == CreateNotify) {
       if (e.xcreatewindow.window != overlay) {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
-        Item *item = item_get(e.xcreatewindow.window);
+        Item *item = item_get_from_window(e.xcreatewindow.window);
         XMapWindow(display, e.xmaprequest.window);
-        item_update_space_pos_from_window(item);
-        item_update_pixmap(item);
+        item_type_window_update_space_pos_from_window((WindowItem *) item);
+        item->type->update(item);
         input_mode_stack_configure(e.xcreatewindow.window);
       }
     } else if (e.type == DestroyNotify) {
-      Item * item = item_get(e.xdestroywindow.window);
+      Item * item = item_get_from_window(e.xdestroywindow.window);
       item_remove(item);
     } else if (e.type == ReparentNotify) {
       //OnReparentNotify(e.xreparent);
     } else if (e.type == MapNotify) {
       if (e.xmap.window != overlay) {
         fprintf(stderr, "MapNotify %ld\n", e.xmap.window);
-        Item *item = item_get(e.xmap.window);
+        Item *item = item_get_from_window(e.xmap.window);
         item->is_mapped = True;
-        item_update_pixmap(item);
+        item->type->update(item);
         draw();
       }
    } else if (e.type == UnmapNotify) {
-      Item *item = item_get(e.xunmap.window);
+      Item *item = item_get_from_window(e.xunmap.window);
       item->is_mapped = False;
       draw();
     } else if (e.type == MapRequest) {
