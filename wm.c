@@ -10,6 +10,7 @@
 #include "screen.h"
 #include "xevent.h"
 #include "wm.h"
+#include "item_test.h"
 
 #include <SOIL/SOIL.h>
 
@@ -47,6 +48,8 @@ void initItems() {
 
   XFree(top_level_windows);
   XUngrabServer(display);
+
+  item_get_test();
 }
 
 void abstract_draw() {
