@@ -24,21 +24,15 @@ void action_zoom_to_window(Item *item) {
 void action_zoom_window_to_1_to_1_to_screen(Item *item) {
   item->width = overlay_attr.width * item->coords[2]/screen[2];
   item->height = overlay_attr.height * item->coords[3]/screen[3];
-  XWindowChanges values;
-  values.width = item->width;
-  values.height = item->height;
-  XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-
+  item->type->update(item);
   draw();
 }
 
 void action_zoom_window_by(Item *item, float factor) {
   item->width = item->width * factor;
   item->height = item->height * factor;
-  XWindowChanges values;
-  values.width = item->width;
-  values.height = item->height;
-  XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+  item->type->update(item);
+  draw();
 }
 
 void action_zoom_screen_to_1_to_1_to_window(Item *item) {
@@ -59,15 +53,13 @@ void action_zoom_screen_to_window_and_window_to_screen(Item *item) {
   item->width = overlay_attr.width;
   item->height = overlay_attr.height;
   item->coords[3] = overlay_attr.height * item->coords[2] / overlay_attr.width;
-  XWindowChanges values;
-  values.width = item->width;
-  values.height = item->height;
-  XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
 
   screen[2] = item->coords[2];
   screen[3] = item->coords[3];
   screen[0] = item->coords[0];
   screen[1] = item->coords[1] - screen[3];
 
+  item->type->update(item);
+  
   draw();
 }

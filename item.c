@@ -22,6 +22,14 @@ void item_type_base_update(Item *item) {
   }
   glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(item->coords), item->coords, GL_STATIC_DRAW);
+
+  item->_width = item->width;
+  item->_height = item->height;
+  item->_coords[0] = item->coords[0];
+  item->_coords[1] = item->coords[1];
+  item->_coords[2] = item->coords[2];
+  item->_coords[3] = item->coords[3];
+  item->_is_mapped = item->is_mapped;
 }
 
 ItemType item_type_base = {

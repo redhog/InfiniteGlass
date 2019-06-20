@@ -22,11 +22,17 @@ struct ItemStruct {
  
   int width;
   int height;
- 
+
   float coords[4];
   GLuint coords_vbo;
 
   uint is_mapped; 
+
+  int _width;
+  int _height;
+
+  float _coords[4];
+  uint _is_mapped; 
 };
 
 extern ItemType item_type_base;

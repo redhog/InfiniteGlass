@@ -85,6 +85,13 @@ void item_type_window_update(Item *item) {
    
   if (!item->is_mapped) return;
 
+  if (item->width != item->_width || item->height != item->_height) {
+    XWindowChanges values;
+    values.width = item->width;
+    values.height = item->height;
+    XConfigureWindow(display, window_item->window, CWWidth | CWHeight, &values);
+  }
+  
   item_type_base.update(item);
 
   x_push_error_context("item_update_pixmap");
