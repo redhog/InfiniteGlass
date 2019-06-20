@@ -36,6 +36,35 @@ void action_zoom_window_by(Item *item, float factor) {
   draw();
 }
 
+void action_zoom_screen_by(float factor) {
+  float mousex = screen[0] + 0.5 * screen[2];
+  float mousey = screen[1] + 0.5 * screen[3];
+
+  screen[2] = screen[2] * factor;
+  screen[3] = screen[3] * factor;
+
+  screen[0] = mousex - 0.5 * screen[2];
+  screen[1] = mousey - 0.5 * screen[3];
+
+  draw();
+}
+
+void action_zoom_screen_by_around(float factor, int x, int y) {
+  float spacex = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
+  float spacey = ((float) (overlay_attr.height - (y - overlay_attr.y))) / (float) overlay_attr.width;
+
+  float mousex = screen[0] + spacex * screen[2];
+  float mousey = screen[1] + spacey * screen[3];
+
+  screen[2] = screen[2] * factor;
+  screen[3] = screen[3] * factor;
+
+  screen[0] = mousex - spacex * screen[2];
+  screen[1] = mousey - spacey * screen[3];
+
+  draw();
+}
+
 void action_zoom_screen_to_1_to_1_to_window(Item *item) {
   screen[2] = overlay_attr.width * item->coords[2]/item->width;
   screen[3] = overlay_attr.height * item->coords[3]/item->height;

@@ -218,26 +218,14 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
              && (event.xbutton.state & ShiftMask)) { // shift down -> zoom out to window
 
 
-  } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
-             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) { // up -> zoom in
-    float x = ((float) (event.xbutton.x - overlay_attr.x)) / (float) overlay_attr.width;
-    float y = ((float) (overlay_attr.height - (event.xbutton.y - overlay_attr.y))) / (float) overlay_attr.width;
-
-    float centerx = screen[0] + x * screen[2];
-    float centery = screen[1] + y * screen[3];
-  
-    screen[2] = screen[2] / 1.1;
-    screen[3] = screen[3] / 1.1;
-
-    screen[0] = centerx - screen[2] / 2.;
-    screen[1] = centery - screen[3] / 2.;
-
-    draw();
-  } else if (   (event.type == ButtonRelease && event.xbutton.button == 5)
-             || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) { // down -> zoom out
-    screen[2] = screen[2] * 1.1;
-    screen[3] = screen[3] * 1.1;
-    draw();
+  } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior)) { // up -> zoom in
+    action_zoom_screen_by(1 / 1.1);
+  } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next)) { // down -> zoom out
+    action_zoom_screen_by(1.1);
+  } else if (event.type == ButtonRelease && event.xbutton.button == 4) { // up -> zoom in
+    action_zoom_screen_by_around(1 / 1.1, event.xbutton.x, event.xbutton.y);
+  } else if (event.type == ButtonRelease && event.xbutton.button == 5) { // down -> zoom out
+    action_zoom_screen_by_around(1.1, event.xbutton.x, event.xbutton.y);
   }
   return 1;
 };
@@ -355,7 +343,7 @@ uint item_zoom_input_mode_handle_event(size_t mode, XEvent event) {
   ItemZoomInputMode *self = (ItemZoomInputMode *) input_mode_stack[mode];
   
 //  print_xevent(display, &event);
-  if (event.type == KeyRelease || event.type == ButtonRelease) {
+  if (event.type == KeyRelease) {
     pop_input_mode();
   } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 4)
              || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
