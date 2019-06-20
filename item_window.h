@@ -2,6 +2,7 @@
 #define ITEM_WINDOW
 
 #include "item.h"
+#include "texture.h"
 
 typedef struct {
   Item base;
@@ -11,11 +12,8 @@ typedef struct {
   Damage damage;
  
   Pixmap window_pixmap;
-  GLXPixmap window_glxpixmap;
-  GLuint window_texture_id;
-
-  GLXPixmap icon_glxpixmap;
-  GLuint icon_texture_id;
+  Texture window_texture;
+  Texture icon_texture;
 
   XWMHints wm_hints;
 } WindowItem;

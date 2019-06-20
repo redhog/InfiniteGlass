@@ -203,7 +203,6 @@ int main() {
       // Grant request by calling XConfigureWindow().
       XConfigureWindow(display, event->window, event->value_mask, &changes);  
       Item *item = item_get_from_window(event->window);
-      item_type_window_update_space_pos_from_window((WindowItem *) item);
     } else if (e.type == ConfigureNotify) {
       //fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       Item *item = item_get_from_window(e.xconfigure.window);
@@ -216,7 +215,6 @@ int main() {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
         Item *item = item_get_from_window(e.xcreatewindow.window);
         XMapWindow(display, e.xmaprequest.window);
-        item_type_window_update_space_pos_from_window((WindowItem *) item);
         item->type->update(item);
         input_mode_stack_configure(e.xcreatewindow.window);
       }

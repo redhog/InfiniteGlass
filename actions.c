@@ -1,6 +1,7 @@
 #include "actions.h"
 #include "screen.h"
 #include "xapi.h"
+#include "wm.h"
 
 void action_zoom_screen_home() {
   screen[0] = 0.;
