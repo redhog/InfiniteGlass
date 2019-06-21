@@ -3,16 +3,19 @@
 
 #include "xapi.h"
 #include "glapi.h"
+#include "shader.h"
 
 struct ItemStruct;
 typedef struct ItemStruct Item;
 typedef void ItemTypeDestructor(Item *item);
 typedef void ItemTypeDraw(Item *item);
 typedef void ItemTypeUpdate(Item *item);
+typedef Shader *ItemTypeGetShader(Item *);
 typedef struct {
   ItemTypeDestructor *destructor;
   ItemTypeDraw *draw;
   ItemTypeUpdate *update;
+  ItemTypeGetShader *get_shader;
 } ItemType;
 
 struct ItemStruct {

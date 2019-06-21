@@ -4,11 +4,20 @@
 #include<GL/gl.h>
 
 typedef struct {
+  GLchar *vertex_src_file;
+  GLchar *geometry_src_file;
+  GLchar *fragment_src_file;
+
+  GLchar *vertex_src;
+  GLchar *geometry_src;
+  GLchar *fragment_src;
+ 
   GLuint program;
-  GLchar *vertex_src, *geometry_src, *fragment_src;
-  GLuint vertex_shader, geometry_shader, fragment_shader;
+  GLuint vertex_shader;
+  GLuint geometry_shader;
+  GLuint fragment_shader;
 } Shader;
 
-Shader *shader_load(char *vertex_src, char *geometry_src, char *fragment_src);
+extern int shader_load(Shader *shader);
 
 #endif

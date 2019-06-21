@@ -52,38 +52,36 @@ int checkProgramError(GLuint program) {
   return 0;
 }
 
-Shader *shader_load(char *vertex_src, char *geometry_src, char *fragment_src) {
-  Shader *res = (Shader *) malloc(sizeof(Shader));
- 
-  res->vertex_src = filetobuf(vertex_src);
-  res->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(res->vertex_shader, 1, (const GLchar**)&(res->vertex_src), 0);
-  glCompileShader(res->vertex_shader);
-  if (!checkShaderError("vertex", res->vertex_src, res->vertex_shader)) { free(res); return NULL; }
+int shader_load(Shader *shader) {
+  shader->vertex_src = filetobuf(shader->vertex_src_file);
+  shader->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(shader->vertex_shader, 1, (const GLchar**)&(shader->vertex_src), 0);
+  glCompileShader(shader->vertex_shader);
+  if (!checkShaderError("vertex", shader->vertex_src, shader->vertex_shader)) return 0;
 
-  res->geometry_src = filetobuf(geometry_src);
-  res->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
-  if (!gl_check_error("shader_load")) { free(res); return NULL; }
-  glShaderSource(res->geometry_shader, 1, (const GLchar**)&(res->geometry_src), 0);
-  glCompileShader(res->geometry_shader);
-  if (!checkShaderError("geometry", res->geometry_src, res->geometry_shader)) { free(res); return NULL; }
+  shader->geometry_src = filetobuf(shader->geometry_src_file);
+  shader->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
+  if (!gl_check_error("shader_load")) return 0;
+  glShaderSource(shader->geometry_shader, 1, (const GLchar**)&(shader->geometry_src), 0);
+  glCompileShader(shader->geometry_shader);
+  if (!checkShaderError("geometry", shader->geometry_src, shader->geometry_shader)) return 0;
 
-  res->fragment_src = filetobuf(fragment_src);
-  res->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(res->fragment_shader, 1, (const GLchar**)&(res->fragment_src), 0);
-  glCompileShader(res->fragment_shader);
-  if (!checkShaderError("fragment", res->fragment_src, res->fragment_shader)) { free(res); return NULL; }
+  shader->fragment_src = filetobuf(shader->fragment_src_file);
+  shader->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(shader->fragment_shader, 1, (const GLchar**)&(shader->fragment_src), 0);
+  glCompileShader(shader->fragment_shader);
+  if (!checkShaderError("fragment", shader->fragment_src, shader->fragment_shader)) return 0;
 
-  res->program = glCreateProgram();
+  shader->program = glCreateProgram();
 
-  glAttachShader(res->program, res->vertex_shader);
-  glAttachShader(res->program, res->geometry_shader);
-  glAttachShader(res->program, res->fragment_shader);
+  glAttachShader(shader->program, shader->vertex_shader);
+  glAttachShader(shader->program, shader->geometry_shader);
+  glAttachShader(shader->program, shader->fragment_shader);
 
-  // glBindAttribLocation(res->program, 1, "in_Position");
+  // glBindAttribLocation(shader->program, 1, "in_Position");
 
-  glLinkProgram(res->program);
-  if (!checkProgramError(res->program)) { free(res); return NULL; }
-  
-  return res;
+  glLinkProgram(shader->program);
+  if (!checkProgramError(shader->program)) return 0;
+
+  return 1;
 }

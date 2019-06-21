@@ -14,17 +14,6 @@
 
 #include <SOIL/SOIL.h>
 
-Shader *shader_program;
-GLint window_sampler_attr;
-GLint icon_sampler_attr;
-GLint icon_mask_sampler_attr;
-GLint screen_attr;
-GLint coords_attr;
-GLint picking_mode_attr;
-GLint has_icon_attr;
-GLint has_icon_mask_attr;
-GLint window_id_attr;
-
 void initItems() {
   XWindowAttributes attr;
 
@@ -54,7 +43,6 @@ void initItems() {
 
 void abstract_draw() {
   glClear(GL_COLOR_BUFFER_BIT);
-  glUniform4fv(screen_attr, 1, screen);
   for (Item **itemp = items_all; itemp && *itemp; itemp++) {
     (*itemp)->type->draw(*itemp);
   }
@@ -67,7 +55,6 @@ void draw() {
   glEnablei(GL_BLEND, 0);
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
-  glUniform1i(picking_mode_attr, 0);
   gl_check_error("draw1");
   glClearColor(1.0, 1.0, 0.5, 1.0);
   abstract_draw();
@@ -82,7 +69,6 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
   memset(data, 0, sizeof(data));
   gl_check_error("pick1");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
-  glUniform1i(picking_mode_attr, 1);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   abstract_draw();
   glReadPixels(x, overlay_attr.height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
@@ -135,12 +121,9 @@ int init_picking() {
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
-  if (!(shader_program = shader_load("shader_window_vertex.glsl", "shader_window_geometry.glsl", "shader_window_fragment.glsl"))) return 1;
   if (!init_picking()) return 1;
   
   fprintf(stderr, "Initialized X and GL.\n");
-
-  glUseProgram(shader_program->program);
 
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
@@ -150,17 +133,7 @@ int main() {
   screen[1] = 0.;
   screen[2] = 1.;
   screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
-  
-  screen_attr = glGetUniformLocation(shader_program->program, "screen");
-  window_sampler_attr = glGetUniformLocation(shader_program->program, "window_sampler");
-  icon_sampler_attr = glGetUniformLocation(shader_program->program, "icon_sampler");
-  icon_mask_sampler_attr = glGetUniformLocation(shader_program->program, "icon_mask_sampler");
-  coords_attr = glGetAttribLocation(shader_program->program, "coords");
-  picking_mode_attr = glGetUniformLocation(shader_program->program, "picking_mode");
-  has_icon_attr = glGetUniformLocation(shader_program->program, "has_icon");
-  has_icon_mask_attr = glGetUniformLocation(shader_program->program, "has_icon_mask");
-  window_id_attr = glGetUniformLocation(shader_program->program, "window_id");
-  
+    
   push_input_mode(&base_input_mode.base);
 
   initItems();

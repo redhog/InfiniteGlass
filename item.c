@@ -7,11 +7,16 @@
 void item_type_base_destructor(Item *item) {}
 void item_type_base_draw(Item *item) {
   if (item->is_mapped) {
-    glUniform1f(window_id_attr, (float) item->id / (float) INT_MAX);
+    ItemShader *shader = (ItemShader *) item->type->get_shader(item);
+
+    glUniform1i(shader->picking_mode_attr, 0);
+    glUniform4fv(shader->screen_attr, 1, screen);
     
-    glEnableVertexAttribArray(coords_attr);
+    glUniform1f(shader->window_id_attr, (float) item->id / (float) INT_MAX);
+    
+    glEnableVertexAttribArray(shader->coords_attr);
     glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
-    glVertexAttribPointer(coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(shader->coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
     glDrawArrays(GL_POINTS, 0, 1);
   }
@@ -32,10 +37,15 @@ void item_type_base_update(Item *item) {
   item->_is_mapped = item->is_mapped;
 }
 
+Shader *item_type_base_get_shader(Item *) {
+  return NULL;
+}
+
 ItemType item_type_base = {
   &item_type_base_destructor,
   &item_type_base_draw,
-  &item_type_base_update
+  &item_type_base_update,
+  &item_type_base_get_shader
 };
 
 Item **items_all = NULL;

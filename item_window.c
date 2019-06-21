@@ -1,5 +1,6 @@
 #include "glapi.h"
 #include "item_window.h"
+#include "item_window_shader.h"
 #include "xapi.h"
 #include "wm.h"
 
@@ -35,30 +36,32 @@ void item_type_window_draw(Item *item) {
   if (item->is_mapped) {
     WindowItem *window_item = (WindowItem *) item;
 
+    ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
+    
     texture_from_pixmap(&window_item->window_texture, window_item->window_pixmap);
 
-    glUniform1i(window_sampler_attr, 0);
+    glUniform1i(shader->window_sampler_attr, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, window_item->window_texture.texture_id);
     glBindSampler(1, 0);
     
     if (window_item->wm_hints.flags & IconPixmapHint) {
-      glUniform1i(has_icon_attr, 1);
-      glUniform1i(icon_sampler_attr, 1);
+      glUniform1i(shader->has_icon_attr, 1);
+      glUniform1i(shader->icon_sampler_attr, 1);
       glActiveTexture(GL_TEXTURE1);
       glBindTexture(GL_TEXTURE_2D, window_item->icon_texture.texture_id);
       glBindSampler(1, 0);
     } else {
-      glUniform1i(has_icon_attr, 0);
+      glUniform1i(shader->has_icon_attr, 0);
     }
     if (window_item->wm_hints.flags & IconMaskHint) {
-      glUniform1i(has_icon_mask_attr, 1);
-      glUniform1i(icon_mask_sampler_attr, 2);
+      glUniform1i(shader->has_icon_mask_attr, 1);
+      glUniform1i(shader->icon_mask_sampler_attr, 2);
       glActiveTexture(GL_TEXTURE2);
       glBindTexture(GL_TEXTURE_2D, window_item->icon_mask_texture.texture_id);
       glBindSampler(1, 0);
     } else {
-      glUniform1i(has_icon_mask_attr, 1);
+      glUniform1i(shader->has_icon_mask_attr, 1);
     }
     
     item_type_base.draw(item);
@@ -97,10 +100,15 @@ void item_type_window_update(Item *item) {
   x_pop_error_context();
 }
 
+Shader *item_type_window_get_shader(Item *) {
+  return (Shader *) item_window_shader_get();
+}
+
 ItemType item_type_window = {
   &item_type_window_destructor,
   &item_type_window_draw,
-  &item_type_window_update
+  &item_type_window_update,
+  &item_type_window_get_shader
 };
 
 Item *item_get_from_window(Window window) {
