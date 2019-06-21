@@ -38,4 +38,5 @@ void texture_initialize(Texture *texture) {
 void texture_destroy(Texture *texture) {
   if (texture->glxpixmap) glXDestroyGLXPixmap(display, texture->glxpixmap);
   if (texture->texture_id) glDeleteTextures(1, &texture->texture_id);
+  texture_initialize(texture);
 }

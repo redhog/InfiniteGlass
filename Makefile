@@ -1,6 +1,8 @@
 CC=gcc
 CFLAGS=-ggdb
 
+LIBS=-lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXfixes -lXrandr -lSOIL $(shell imlib2-config --libs)
+
 all: run
 
 bin/%: bin
@@ -12,8 +14,7 @@ bin/%.o : %.c *.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 bin/wm: $(patsubst %.c,bin/%.o, $(wildcard *.c))
-	$(CC) $(CFLAGS) -o $@ $^ -lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXfixes -lXrandr -lSOIL
-
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 run: bin/wm
 	#xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 800x600 -host-cursor
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 800x600 -host-cursor &
