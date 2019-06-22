@@ -32,7 +32,7 @@ void item_type_window_destructor(Item *item) {
   texture_destroy(&window_item->icon_mask_texture);
 }
 
-void item_type_window_draw(Item *item) {
+void item_type_window_draw(View *view, Item *item) {
   if (item->is_mapped) {
     WindowItem *window_item = (WindowItem *) item;
 
@@ -64,7 +64,7 @@ void item_type_window_draw(Item *item) {
       glUniform1i(shader->has_icon_mask_attr, 1);
     }
     
-    item_type_base.draw(item);
+    item_type_base.draw(view, item);
   }
 }
 
@@ -100,7 +100,7 @@ void item_type_window_update(Item *item) {
   x_pop_error_context();
 }
 
-Shader *item_type_window_get_shader(Item *) {
+Shader *item_type_window_get_shader(Item *item) {
   return (Shader *) item_window_shader_get();
 }
 

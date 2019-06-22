@@ -1,4 +1,5 @@
 #include "item_test.h"
+#include "item_window_shader.h"
 #include "texture.h"
 #include "glapi.h"
 #include "xapi.h"
@@ -7,8 +8,10 @@
 
 void item_type_test_destructor(Item *item) {}
 
-void item_type_test_draw(Item *item) {
+void item_type_test_draw(View *view, Item *item) {
   gl_check_error("item_type_test_draw1");
+
+  ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
 
   imlib_context_set_display(display);
   imlib_context_set_visual(DefaultVisual(display, DefaultScreen(display)));
@@ -25,14 +28,14 @@ void item_type_test_draw(Item *item) {
   texture_initialize(&texture);
   texture_from_pixmap(&texture, pixmap);
 
-  glUniform1i(window_sampler_attr, 0);
+  glUniform1i(shader->window_sampler_attr, 0);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture.texture_id);
   glBindSampler(1, 0);
  
   gl_check_error("item_type_test_draw2");
 
-  item_type_base.draw(item);
+  item_type_base.draw(view, item);
 
   gl_check_error("item_type_test_draw3");
 
@@ -44,10 +47,15 @@ void item_type_test_update(Item *item) {
   item_type_base.update(item);
 }
 
+Shader *item_type_test_get_shader(Item *item) {
+  return (Shader *) item_window_shader_get();
+}
+
 ItemType item_type_test = {
   &item_type_test_destructor,
   &item_type_test_draw,
-  &item_type_test_update
+  &item_type_test_update,
+  &item_type_test_get_shader
 };
 
 Item *item_get_test() {

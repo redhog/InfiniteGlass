@@ -7,16 +7,18 @@
 #include "xapi.h"
 #include "input.h"
 #include "xevent.h"
-#include "screen.h"
+#include "view.h"
 #include "xevent.h"
 #include "wm.h"
 #include "item_test.h"
 
 #include <SOIL/SOIL.h>
 
+View default_view;
+
 void initItems() {
   XWindowAttributes attr;
-
+  
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
   XGrabServer(display);
@@ -41,56 +43,13 @@ void initItems() {
   item_get_test();
 }
 
-void abstract_draw() {
-  glClear(GL_COLOR_BUFFER_BIT);
-  for (Item **itemp = items_all; itemp && *itemp; itemp++) {
-    (*itemp)->type->draw(*itemp);
-  }
-  glFlush();
-}
-
 void draw() {
-  gl_check_error("draw0");
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glEnablei(GL_BLEND, 0);
-  glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
-  gl_check_error("draw1");
-  glClearColor(1.0, 1.0, 0.5, 1.0);
-  abstract_draw();
-  gl_check_error("draw2");
-  glXSwapBuffers(display, overlay);
-  gl_check_error("draw3");
+  view_draw(0, &default_view, items_all);
 }
 GLint picking_fb;
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
-  float data[4];
-  memset(data, 0, sizeof(data));
-  gl_check_error("pick1");
-  glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  abstract_draw();
-  glReadPixels(x, overlay_attr.height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
-  gl_check_error("pick2");
-  //fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
-  *winx = 0;
-  *winy = 0;
-  *item = NULL;
-  if (data[2] != 0.0) {
-    *item = item_get(data[2] * (float) INT_MAX);
-    if (*item) {
-      *winx = (int) (data[0] * (*item)->width);
-      *winy = (int) (data[1] * (*item)->height);
-    }
-  }
-  /*
-  if (*item) {
-    fprintf(stderr, "Pick %d,%d -> %d,%d,%d\n", x, y, (*item)->window, *winx, *winy);
-  } else {
-    fprintf(stderr, "Pick %d,%d -> NULL\n", x, y);
-  }
-  */
+  view_pick(picking_fb, &default_view, items_all, x, y, winx, winy, item);
 }
 
 int init_picking() {
@@ -129,11 +88,14 @@ int main() {
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
 
-  screen[0] = 0.;
-  screen[1] = 0.;
-  screen[2] = 1.;
-  screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
-    
+
+  default_view.screen[0] = 0.;
+  default_view.screen[1] = 0.;
+  default_view.screen[2] = 1.;
+  default_view.screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
+  default_view.width = overlay_attr.width;
+  default_view.height = overlay_attr.height;
+ 
   push_input_mode(&base_input_mode.base);
 
   initItems();

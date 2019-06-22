@@ -1,16 +1,17 @@
 #include "glapi.h"
 #include "xapi.h"
 #include "item.h"
+#include "item_shader.h"
 #include "wm.h"
 #include <limits.h>
 
 void item_type_base_destructor(Item *item) {}
-void item_type_base_draw(Item *item) {
+void item_type_base_draw(View *view, Item *item) {
   if (item->is_mapped) {
     ItemShader *shader = (ItemShader *) item->type->get_shader(item);
 
-    glUniform1i(shader->picking_mode_attr, 0);
-    glUniform4fv(shader->screen_attr, 1, screen);
+    glUniform1i(shader->picking_mode_attr, view->picking);
+    glUniform4fv(shader->screen_attr, 1, view->screen);
     
     glUniform1f(shader->window_id_attr, (float) item->id / (float) INT_MAX);
     
@@ -37,7 +38,7 @@ void item_type_base_update(Item *item) {
   item->_is_mapped = item->is_mapped;
 }
 
-Shader *item_type_base_get_shader(Item *) {
+Shader *item_type_base_get_shader(Item *item) {
   return NULL;
 }
 

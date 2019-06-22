@@ -4,11 +4,12 @@
 #include "xapi.h"
 #include "glapi.h"
 #include "shader.h"
+#include "view_type.h"
 
 struct ItemStruct;
 typedef struct ItemStruct Item;
 typedef void ItemTypeDestructor(Item *item);
-typedef void ItemTypeDraw(Item *item);
+typedef void ItemTypeDraw(View *view, Item *item);
 typedef void ItemTypeUpdate(Item *item);
 typedef Shader *ItemTypeGetShader(Item *);
 typedef struct {
