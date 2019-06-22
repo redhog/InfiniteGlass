@@ -49,13 +49,11 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 
 
 void view_abstract_draw(View *view, Item **items, ItemFilter *filter) {
-  glClear(GL_COLOR_BUFFER_BIT);
   for (; items && *items; items++) {
     if (!filter || filter(*items)) {
       (*items)->type->draw(view, *items);
     }
   }
-  glFlush();
 }
 
 void view_draw(GLint fb, View *view, Item **items, ItemFilter *filter) {
@@ -65,11 +63,9 @@ void view_draw(GLint fb, View *view, Item **items, ItemFilter *filter) {
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
   gl_check_error("draw1");
-  glClearColor(1.0, 1.0, 0.5, 1.0);
   view->picking = 0;
   view_abstract_draw(view, items, filter);
   gl_check_error("draw2");
-  glXSwapBuffers(display, overlay);
   gl_check_error("draw3");
 }
 
@@ -79,6 +75,7 @@ void view_pick(GLint fb, View *view, Item **items, ItemFilter *filter, int x, in
   gl_check_error("pick1");
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
   view->picking = 1;
   view_abstract_draw(view, items, filter);
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);

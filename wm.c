@@ -15,6 +15,7 @@
 #include <SOIL/SOIL.h>
 
 View default_view;
+View overlay_view;
 
 void initItems() {
   XWindowAttributes attr;
@@ -43,8 +44,21 @@ void initItems() {
   item_get_test();
 }
 
+Bool filter_item_test(Item *item) {
+  return item->type == &item_type_test;
+}
+Bool filter_item_not_test(Item *item) {
+  return item->type != &item_type_test;
+}
+
 void draw() {
-  view_draw(0, &default_view, items_all, NULL);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearColor(1.0, 1.0, 0.5, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  view_draw(0, &default_view, items_all, &filter_item_not_test);
+  view_draw(0, &overlay_view, items_all, &filter_item_test);
+  glFlush();
+  glXSwapBuffers(display, overlay);
 }
 GLint picking_fb;
 
@@ -95,7 +109,14 @@ int main() {
   default_view.screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
   default_view.width = overlay_attr.width;
   default_view.height = overlay_attr.height;
- 
+
+  overlay_view.screen[0] = 0.;
+  overlay_view.screen[1] = 0.;
+  overlay_view.screen[2] = 1.;
+  overlay_view.screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
+  overlay_view.width = overlay_attr.width;
+  overlay_view.height = overlay_attr.height;
+  
   push_input_mode(&base_input_mode.base);
 
   initItems();
