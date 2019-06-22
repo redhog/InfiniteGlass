@@ -10,7 +10,8 @@
 #include "view.h"
 #include "xevent.h"
 #include "wm.h"
-#include "item_test.h"
+#include "item_widget.h"
+#include "actions.h"
 
 #include <SOIL/SOIL.h>
 
@@ -41,22 +42,24 @@ void initItems() {
   XFree(top_level_windows);
   XUngrabServer(display);
 
-  item_get_test();
+  Item *item = item_get_widget("\xEF\x80\x8E", "Font-Awesome-5-Free-Solid-900.ttf/128");
+  action_resize_window_to_1_to_1_to_screen(&overlay_view, item);
+  action_position_window(&overlay_view, item, 1., 1., 1., 1.);
 }
 
-Bool filter_item_test(Item *item) {
-  return item->type == &item_type_test;
+Bool filter_item_widget(Item *item) {
+  return item->type == &item_type_widget;
 }
-Bool filter_item_not_test(Item *item) {
-  return item->type != &item_type_test;
+Bool filter_item_not_widget(Item *item) {
+  return item->type != &item_type_widget;
 }
 
 void draw() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  view_draw(0, &default_view, items_all, &filter_item_not_test);
-  view_draw(0, &overlay_view, items_all, &filter_item_test);
+  view_draw(0, &default_view, items_all, &filter_item_not_widget);
+  view_draw(0, &overlay_view, items_all, &filter_item_widget);
   glFlush();
   glXSwapBuffers(display, overlay);
 }

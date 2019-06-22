@@ -29,6 +29,13 @@ void action_zoom_window_to_1_to_1_to_screen(View *view, Item *item) {
   draw();
 }
 
+void action_resize_window_to_1_to_1_to_screen(View *view, Item *item) {
+  item->coords[2] = item->width * view->screen[2] / view->width;
+  item->coords[3] = item->height * view->screen[3] / view->height;
+  item->type->update(item);
+  draw();
+}
+
 void action_zoom_window_by(View *view, Item *item, float factor) {
   item->width = item->width * factor;
   item->height = item->height * factor;
@@ -91,5 +98,16 @@ void action_zoom_screen_to_window_and_window_to_screen(View *view, Item *item) {
 
   item->type->update(item);
   
+  draw();
+}
+
+void action_position_window(View *view, Item *item, float x, float y, float xalign, float yalign) {
+  x = view->screen[0] + x * view->screen[2];
+  y = view->screen[1] + (1. - y) * view->screen[3];
+ 
+  item->coords[0] = x - xalign * item->coords[2];
+  item->coords[1] = y + yalign * item->coords[3];
+
+  item->type->update(item);
   draw();
 }
