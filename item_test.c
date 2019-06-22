@@ -9,6 +9,8 @@
 void item_type_test_destructor(Item *item) {}
 
 void item_type_test_draw(View *view, Item *item) {
+  int width, height;
+ 
   gl_check_error("item_type_test_draw1");
 
   ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
@@ -17,16 +19,59 @@ void item_type_test_draw(View *view, Item *item) {
   imlib_context_set_visual(DefaultVisual(display, DefaultScreen(display)));
   imlib_context_set_colormap(DefaultColormap(display, DefaultScreen(display)));
 
+  Imlib_Font font;
+  imlib_add_path_to_font_path("/usr/share/fonts-font-awesome/fonts");
+
+  /*
   Imlib_Image image = imlib_load_image("So_happy_smiling_cat.jpg");
   imlib_context_set_image(image);
-  Pixmap pixmap = XCreatePixmap(display, root, imlib_image_get_width(), imlib_image_get_height(), DefaultDepth(display, DefaultScreen(display)));
-  imlib_context_set_drawable(pixmap);
-  imlib_render_image_on_drawable(0, 0);
-  imlib_free_image();
+  width = imlib_image_get_width();
+  height = imlib_image_get_height();
+  */
+  
+  font = imlib_load_font("fontawesome-webfont.ttf/128");
+  if (!font) {
+    printf("Unable to find font awesome\n");
+    exit(1);
+  }
+  imlib_context_set_font(font);
+ 
+  imlib_get_text_size("\xEF\x80\x8E", &width, &height);
 
+  Pixmap pixmap = XCreatePixmap(display, root, width, height, DefaultDepth(display, DefaultScreen(display)));
+  imlib_context_set_drawable(pixmap);
+
+  Imlib_Image image = imlib_create_image(width, height);
+  imlib_context_set_image(image);
+  imlib_image_set_has_alpha(1);
+  memset(imlib_image_get_data(), 0, width * height * 4);
+
+  //imlib_context_set_color(0, 0, 0, 255);
+  //imlib_image_fill_rectangle(0, 0, width, height);
+  imlib_context_set_color(255, 0, 0, 255);
+  
+  imlib_text_draw(0, 0, "\xEF\x80\x8E"); 
+
+  imlib_render_image_on_drawable(0, 0);
+
+  
   Texture texture;
   texture_initialize(&texture);
-  texture_from_pixmap(&texture, pixmap);
+  glGenTextures(1, &texture.texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture.texture_id);
+  //glActiveTexture(GL_TEXTURE0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_BLUE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_GREEN);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imlib_image_get_data_for_reading_only());
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl_check_error("texture_from_pixmap4");
+ 
+ //texture_from_pixmap(&texture, pixmap);
 
   glUniform1i(shader->window_sampler_attr, 0);
   glActiveTexture(GL_TEXTURE0);
@@ -39,6 +84,8 @@ void item_type_test_draw(View *view, Item *item) {
 
   gl_check_error("item_type_test_draw3");
 
+  imlib_free_font();
+  imlib_free_image();
   texture_destroy(&texture);
   XFreePixmap(display, pixmap);
 }
