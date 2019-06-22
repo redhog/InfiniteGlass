@@ -44,12 +44,12 @@ void initItems() {
 }
 
 void draw() {
-  view_draw(0, &default_view, items_all);
+  view_draw(0, &default_view, items_all, NULL);
 }
 GLint picking_fb;
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
-  view_pick(picking_fb, &default_view, items_all, x, y, winx, winy, item);
+  view_pick(picking_fb, &default_view, items_all, NULL, x, y, winx, winy, item);
 }
 
 int init_picking() {
