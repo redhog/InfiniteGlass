@@ -58,8 +58,8 @@ void draw() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  view_draw(0, &default_view, items_all, &filter_item_not_widget);
-  view_draw(0, &overlay_view, items_all, &filter_item_widget);
+  view_draw(0, &default_view, items_all, NULL); //&filter_item_not_widget);
+//  view_draw(0, &overlay_view, items_all, &filter_item_widget);
   glFlush();
   glXSwapBuffers(display, overlay);
 }

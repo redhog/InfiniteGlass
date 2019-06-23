@@ -55,6 +55,11 @@ void item_type_widget_update(Item *item) {
   }
   
   cairo_t *cairo_ctx = cairo_create(widget_item->surface);
+
+
+  cairo_translate(cairo_ctx, -100, -100);
+  //cairo_scale(cairo_ctx, 2, 2);
+  
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
   cairo_destroy(cairo_ctx);
