@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-ggdb
+CFLAGS=-ggdb $(shell pkg-config --cflags librsvg-2.0 pangocairo cairo)
 
-LIBS=-lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXfixes -lXrandr -lSOIL $(shell imlib2-config --libs)
+LIBS=-lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXfixes -lXrandr -lSOIL $(shell pkg-config --libs librsvg-2.0 pangocairo cairo)
 
 all: run
 

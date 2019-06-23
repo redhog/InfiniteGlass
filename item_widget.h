@@ -4,18 +4,17 @@
 #include "item.h"
 #include "view.h"
 #include "texture.h"
-#include <Imlib2.h>
+#include <cairo.h>
 
 typedef struct {
   Item base;
   char *label;
-  char *font;
-  Imlib_Image image;
+  cairo_surface_t *surface;
   Texture texture;
 } WidgetItem;
 
 extern ItemType item_type_widget;
 
-extern Item *item_get_widget(char *label, char *font);
+extern Item *item_get_widget(char *label);
 
 #endif

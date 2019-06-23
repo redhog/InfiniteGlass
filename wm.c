@@ -42,7 +42,7 @@ void initItems() {
   XFree(top_level_windows);
   XUngrabServer(display);
 
-  Item *item = item_get_widget("\xEF\x80\x8E", "Font-Awesome-5-Free-Solid-900.ttf/128");
+  Item *item = item_get_widget("fontawesome-free-5.9.0-desktop/svgs/regular/lightbulb.svg");
   action_resize_window_to_1_to_1_to_screen(&overlay_view, item);
   action_position_window(&overlay_view, item, 1., 1., 1., 1.);
 }
