@@ -7,10 +7,19 @@
 #include <cairo.h>
 
 typedef struct {
-  Item base;
-  char *label;
+  float x;
+  float y;
+  float zoom;
   cairo_surface_t *surface;
   Texture texture;
+} WidgetItemTile;
+
+#define WIDGET_ITEM_TILE_CACHE_SIZE 5
+
+typedef struct {
+  Item base;
+  char *label;
+  WidgetItemTile tiles[WIDGET_ITEM_TILE_CACHE_SIZE];
 } WidgetItem;
 
 extern ItemType item_type_widget;
