@@ -1,5 +1,5 @@
 #include "item_widget.h"
-#include "item_window_shader.h"
+#include "item_widget_shader.h"
 #include "texture.h"
 #include "glapi.h"
 #include "xapi.h"
@@ -25,14 +25,14 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
     tile->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, dimension.width, dimension.height);
     item->base.width = dimension.width;
     item->base.height = dimension.height;
-    printf("XXXXXXXXXXXXXXXX %d, %d\n",     dimension.width, dimension.height);
   }
   
   cairo_t *cairo_ctx = cairo_create(tile->surface);
 
-  
-  cairo_translate(cairo_ctx, -tile->x, -tile->y);
-  cairo_scale(cairo_ctx, tile->zoom, tile->zoom);
+  printf("AAAAAAAAAAAAAAAAAAAAA %f, %f, %f\n", tile->coords[0], tile->coords[1], tile->coords[2]);
+  printf("XXXXXXXXXXXXXXXXXXXXX %f, %f\n", tile->coords[0] * dimension.width, tile->coords[1] * dimension.height);
+  cairo_translate(cairo_ctx, -tile->coords[0] * dimension.width, -tile->coords[1] * dimension.height);
+  cairo_scale(cairo_ctx, tile->coords[2], tile->coords[3]);
   
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
@@ -53,15 +53,15 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
   
   zoom = ((float) item->base.width / (float) view->width) * (view->screen[2] / item->base.coords[2]);
   
-  x = item->base.width * (item->base.coords[0] - view->screen[0]) / item->base.coords[2];
-  y = item->base.height * (1 - (item->base.coords[1] - view->screen[1]) / item->base.coords[3]);
+  x = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
+  y = (item->base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.coords[3];
 
-  item->tiles[0].x = x + zoom * 10;
-  item->tiles[0].y = y;
-  item->tiles[0].zoom = zoom;
+  item->tiles[0].coords[0] = x;
+  item->tiles[0].coords[1] = y;
+  item->tiles[0].coords[2] = zoom;
+  item->tiles[0].coords[3] = zoom;
   item_type_widget_update_tile(item, &item->tiles[0]);
 
-  printf("Update tile %f, %f, %f\n", x, y, zoom);
   return &item->tiles[0];
 }
 
@@ -79,13 +79,15 @@ void item_type_widget_destructor(Item *item) {
 void item_type_widget_draw(View *view, Item *item) {
   WidgetItem *widget_item = (WidgetItem *) item;
 
-  ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
+  ItemWidgetShader *shader = (ItemWidgetShader *) item->type->get_shader(item);
 
   WidgetItemTile *tile = item_type_widget_get_tile(view, (WidgetItem *) item);
   
   gl_check_error("item_type_widget_draw1");
+
+  glUniform4fv(shader->transform_attr, 1, tile->coords);
   
-  glUniform1i(shader->window_sampler_attr, 0);
+  glUniform1i(shader->texture_attr, 0);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, tile->texture.texture_id);
   glBindSampler(1, 0);
@@ -116,7 +118,7 @@ void item_type_widget_update(Item *item) {
 }
 
 Shader *item_type_widget_get_shader(Item *item) {
-  return (Shader *) item_window_shader_get();
+  return (Shader *) item_widget_shader_get();
 }
 
 ItemType item_type_widget = {

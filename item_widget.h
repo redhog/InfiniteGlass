@@ -7,9 +7,7 @@
 #include <cairo.h>
 
 typedef struct {
-  float x;
-  float y;
-  float zoom;
+  float coords[4];
   cairo_surface_t *surface;
   Texture texture;
 } WidgetItemTile;
