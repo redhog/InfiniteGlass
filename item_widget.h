@@ -8,6 +8,8 @@
 
 typedef struct {
   float coords[4];
+  int width;
+  int height;
   cairo_surface_t *surface;
   Texture texture;
 } WidgetItemTile;

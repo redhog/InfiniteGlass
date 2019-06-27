@@ -23,11 +23,6 @@ void main() {
   ));
   texture_coord = transform_mat * vec4(window_coord, 0, 1.);
 
-  if (texture_coord.x < 0.) texture_coord.x = 0.;
-  if (texture_coord.x > 1.) texture_coord.x = 1.;
-  if (texture_coord.y < 0.) texture_coord.y = 0.;
-  if (texture_coord.y > 1.) texture_coord.y = 1.;
-
   if (picking_mode == 1) {
     fragColor = vec4(texture_coord.x, texture_coord.y, window_id, 1.);
   } else {
