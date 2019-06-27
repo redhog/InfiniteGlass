@@ -40,22 +40,7 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
 
   cairo_surface_flush(tile->surface);
   
-  if (!tile->texture.texture_id) {
-    glGenTextures(1, &tile->texture.texture_id);
-  }
-  
-  glBindTexture(GL_TEXTURE_2D, tile->texture.texture_id);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_BLUE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_GREEN);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, item->base.width, item->base.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               cairo_image_surface_get_data(tile->surface));
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl_check_error("texture_from_pixmap4");
+  texture_from_cairo_surface(&tile->texture, tile->surface);
 }
 
 WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {

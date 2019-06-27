@@ -1,5 +1,28 @@
 #include "texture.h"
 
+void texture_from_cairo_surface(Texture *texture, cairo_surface_t *surface) {
+  if (!texture->texture_id) {
+    glGenTextures(1, &texture->texture_id);
+    gl_check_error("texture_from_cairo_surface1");
+  }
+
+  glBindTexture(GL_TEXTURE_2D, texture->texture_id);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_BLUE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_GREEN);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+               cairo_image_surface_get_width(surface),
+               cairo_image_surface_get_height(surface),
+               0, GL_RGBA, GL_UNSIGNED_BYTE,
+               cairo_image_surface_get_data(surface));
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl_check_error("texture_from_cairo_surface2");
+}
+
 void texture_from_glpixmap(Texture *texture) {
   if (!texture->texture_id) {
     glGenTextures(1, &texture->texture_id);
