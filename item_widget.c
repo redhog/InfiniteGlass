@@ -29,10 +29,9 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
   
   cairo_t *cairo_ctx = cairo_create(tile->surface);
 
-  printf("AAAAAAAAAAAAAAAAAAAAA %f, %f, %f\n", tile->coords[0], tile->coords[1], tile->coords[2]);
-  printf("XXXXXXXXXXXXXXXXXXXXX %f, %f\n", tile->coords[0] * dimension.width, tile->coords[1] * dimension.height);
+  printf("AAAAAAAAAAAAAAAAAAAAA %f -> %f\n", tile->coords[2], 1./tile->coords[2]);
   cairo_translate(cairo_ctx, -tile->coords[0] * dimension.width, -tile->coords[1] * dimension.height);
-  cairo_scale(cairo_ctx, tile->coords[2], tile->coords[3]);
+  cairo_scale(cairo_ctx, 1./tile->coords[2], 1./tile->coords[3]);
   
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
@@ -56,8 +55,8 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
   x = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
   y = (item->base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.coords[3];
 
-  item->tiles[0].coords[0] = x;
-  item->tiles[0].coords[1] = y;
+  item->tiles[0].coords[0] = x > 0. ? x : 0.;
+  item->tiles[0].coords[1] = y > 0. ? y : 0.;
   item->tiles[0].coords[2] = zoom;
   item->tiles[0].coords[3] = zoom;
   item_type_widget_update_tile(item, &item->tiles[0]);
@@ -106,13 +105,12 @@ void item_type_widget_update(Item *item) {
   RsvgHandle *rsvg = rsvg_handle_new_from_file(((WidgetItem *) item)->label, &error);
   rsvg_handle_get_dimensions(rsvg, &dimension);
 
-  /*
   item->width = dimension.width;
   item->height = dimension.height;
-  */
+  /*
   item->width = default_view.width;
   item->height = default_view.height;
-
+  */
   
   item_type_base.update(item);
 }
