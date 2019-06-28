@@ -8,12 +8,14 @@
 
 void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
   GError *error;
+  RsvgDimensionData dimension;
 
   RsvgHandle *rsvg = rsvg_handle_new_from_file(item->label, &error);
   if (!rsvg) {
     printf("Unable to load svg: %s\n",  error->message);
     fflush(stdout);
   }
+  rsvg_handle_get_dimensions(rsvg, &dimension);
 
   // Check if current surface size is wrong before recreating...
   if (1 || !tile->surface) {
@@ -21,14 +23,23 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
       cairo_surface_destroy(tile->surface);
     }
    
-    tile->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile->width, tile->height);
+    tile->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile->pixelwidth, tile->pixelheight);
   }
   
   cairo_t *cairo_ctx = cairo_create(tile->surface);
 
-  // Bug: scale first, then translate, or we round off to whole pixels at zoom = 1!
-  cairo_translate(cairo_ctx, -tile->coords[0] * item->base.width, -tile->coords[1] * item->base.height);
-  cairo_scale(cairo_ctx, 1./tile->coords[2], 1./tile->coords[3]);
+  printf("RENDER %d,%d [%f,%f]\n",
+         (int) (-tile->x * tile->itempixelwidth),
+         (int) (-tile->y * tile->itempixelheight),
+         (float) tile->itempixelwidth / (float) dimension.width,
+         (float) tile->itempixelheight / (float) dimension.height);
+
+  cairo_scale(cairo_ctx,
+              (float) tile->itempixelwidth / (float) dimension.width,
+              (float) tile->itempixelheight / (float) dimension.height);
+  cairo_translate(cairo_ctx,
+                  (int) (-tile->x * tile->itempixelwidth),
+                  (int) (-tile->y * tile->itempixelheight));
   
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
@@ -40,45 +51,55 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
 }
 
 WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
-  float x, y, zoomx, zoomy;
-  int width, height;
+ float x1, y1, x2, y2, width, height;
+  int itempixelwidth, itempixelheight;
+  int pixelwidth, pixelheight;
   WidgetItemTile *tile;
   
-  // Screen to window 1:1
+  // x and y are ]0,1[, from top left to bottom right of window.
+  x1 = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
+  y1 = (item->base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.coords[3];
+
+  x2 = (view->screen[0] + view->screen[2] - item->base.coords[0]) / item->base.coords[2];
+  y2 = (item->base.coords[1] - view->screen[1]) / item->base.coords[3];
+  
+  if (x1 < 0.) x1 = 0.; if (x1 > 1.) x1 = 1.;
+  if (y1 < 0.) y1 = 0.; if (y1 > 1.) y1 = 1.;
+  if (x2 < 0.) x2 = 0.; if (x2 > 1.) x2 = 1.;
+  if (y2 < 0.) y2 = 0.; if (y2 > 1.) y2 = 1.;
+
+  width = x2 - x1;
+  height = y2 - y1;
+  
+  // When screen to window is 1:1 this holds:
   // item->coords[2] = item->width * view->screen[2] / view->width;
   // item->coords[3] = item->height * view->screen[3] / view->height;
-  // -> zoom = 1
-  
-  zoomx = ((float) item->base.width / (float) view->width) * (view->screen[2] / item->base.coords[2]);
-  zoomy = ((float) item->base.height / (float) view->height) * (view->screen[3] / item->base.coords[3]);
-  
-  // x and y are ]0,1[, from top left to bottom right of window.
-  x = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
-  y = (item->base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.coords[3];
 
-  if (x < 0.) x = 0.;
-  if (y < 0.) y = 0.;
+  itempixelwidth = item->base.coords[2] * view->width / view->screen[2];
+  itempixelheight = item->base.coords[3] * view->height / view->screen[3];
 
-  width = (int) ((1. - x) * (float) item->base.width * (1./zoomx));
-  height = (int) ((1. - y) * (float) item->base.height * (1./zoomy));
-  if (width > default_view.width) width = default_view.width;
-  if (height > default_view.height) height = default_view.height;
+  pixelwidth = (int) (width * (float) itempixelwidth);
+  pixelheight = (int) (height * (float) itempixelheight);
 
-  printf("TILE %f,%f[%d,%d] @ %f,%f ... %f,%f\n",
-         x, y, width, height,
-         zoomx, zoomy,
-         zoomx * (float) width / (float) item->base.width,
-         zoomy * (float) height / (float) item->base.height);
+  printf("TILE %f,%f-%f,%f[%f,%f] -> [%d,%d] out of [%d,%d]\n",
+         x1, y1,
+         x2, y2,
+         width, height,
+         pixelwidth, pixelheight,
+         itempixelwidth, itempixelheight);
    
   tile = &item->tiles[0];
   tile->width = width;
   tile->height = height;
-  tile->coords[0] = x;
-  tile->coords[1] = y;
-  tile->coords[2] = zoomx;
-  tile->coords[3] = zoomy;
-  item_type_widget_update_tile(item, tile);
+  tile->x = x1;
+  tile->y = y1;
+  tile->pixelwidth = pixelwidth;
+  tile->pixelheight = pixelheight;
+  tile->itempixelwidth = itempixelwidth;
+  tile->itempixelheight = itempixelheight;
 
+  item_type_widget_update_tile(item, tile);
+  
   return tile;
 }
 
@@ -101,12 +122,24 @@ void item_type_widget_draw(View *view, Item *item) {
   WidgetItemTile *tile = item_type_widget_get_tile(view, (WidgetItem *) item);
   
   gl_check_error("item_type_widget_draw1");
+  
+  float transform[4] = {tile->x * tile->width,
+                        tile->y * tile->height,
+                        tile->width,
+                        tile->height};
+  
+//  float transform[4] = {0., 0., 1., 1.};
+  
+  printf("DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
+         item->coords[0],
+         item->coords[1],
+         item->coords[2],
+         item->coords[3],
+         transform[0],
+         transform[1],
+         transform[2],
+         transform[3]);
 
-  float transform[4] = {tile->coords[0] * (float) tile->width / (float) item->width,
-                        tile->coords[1] * (float) tile->height / (float) item->height,
-                        tile->coords[2] * (float) tile->width / (float) item->width,
-                        tile->coords[3] * (float) tile->height / (float) item->height};
-   
   glUniform4fv(shader->transform_attr, 1, transform);
   
   glUniform1i(shader->texture_attr, 0);
@@ -168,5 +201,5 @@ Item *item_get_widget(char *label) {
   
   item_type_widget.update((Item*) item);
 
-  return item;
+  return (Item *) item;
 }
