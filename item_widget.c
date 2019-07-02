@@ -51,10 +51,14 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
 }
 
 WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
- float x1, y1, x2, y2, width, height;
+  float x1, y1, x2, y2, width, height;
+  int px1, py1, px2, py2;
   int itempixelwidth, itempixelheight;
   int pixelwidth, pixelheight;
   WidgetItemTile *tile;
+  
+  itempixelwidth = item->base.coords[2] * view->width / view->screen[2];
+  itempixelheight = item->base.coords[3] * view->height / view->screen[3];
   
   // x and y are ]0,1[, from top left to bottom right of window.
   x1 = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
@@ -74,12 +78,14 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
   // When screen to window is 1:1 this holds:
   // item->coords[2] = item->width * view->screen[2] / view->width;
   // item->coords[3] = item->height * view->screen[3] / view->height;
+  
+  px1 = (int) (x1 * (float) itempixelwidth);
+  px2 = (int) (x2 * (float) itempixelwidth);
+  py1 = (int) (y1 * (float) itempixelheight);
+  py2 = (int) (y2 * (float) itempixelheight);
 
-  itempixelwidth = item->base.coords[2] * view->width / view->screen[2];
-  itempixelheight = item->base.coords[3] * view->height / view->screen[3];
-
-  pixelwidth = (int) (width * (float) itempixelwidth);
-  pixelheight = (int) (height * (float) itempixelheight);
+  pixelwidth = px2 - px1;
+  pixelheight = py2 - py1;
 
   printf("TILE %f,%f-%f,%f[%f,%f] -> [%d,%d] out of [%d,%d]\n",
          x1, y1,
