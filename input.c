@@ -6,6 +6,7 @@
 #include "actions.h"
 
 Bool debug_positions = False;
+Bool debug_modes = False;
 
 InputMode **input_mode_stack = NULL;
 size_t input_mode_stack_len = 0;
@@ -179,12 +180,12 @@ BaseInputMode base_input_mode = {
 
 
 void zoom_input_mode_enter(size_t mode) {
-  printf("zoom_input_mode_enter\n"); fflush(stdout);
+  if(debug_modes) printf("zoom_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 void zoom_input_mode_exit(size_t mode) {
-  printf("zoom_input_mode_exit\n"); fflush(stdout);
+  if(debug_modes) printf("zoom_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
@@ -242,7 +243,7 @@ ZoomInputMode zoom_input_mode = {
 
 
 void pan_input_mode_enter(size_t mode) {
-  printf("pan_input_mode_enter\n"); fflush(stdout);
+  if(debug_modes) printf("pan_input_mode_enter\n"); fflush(stdout);
   PanInputMode *self = (PanInputMode *) input_mode_stack[mode];
   self->x = 0;
   self->y = 0;
@@ -251,7 +252,7 @@ void pan_input_mode_enter(size_t mode) {
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 void pan_input_mode_exit(size_t mode) {
-  printf("pan_input_mode_exit\n"); fflush(stdout);
+  if(debug_modes) printf("pan_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
@@ -307,8 +308,9 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
 
     draw();
 
-    printf("%f,%f[%f,%f]\n",
-           default_view.screen[0],default_view.screen[1],default_view.screen[2],default_view.screen[3]);
+    if (debug_positions)
+      printf("%f,%f[%f,%f]\n",
+             default_view.screen[0],default_view.screen[1],default_view.screen[2],default_view.screen[3]);
 
   }
   return 1;
@@ -327,12 +329,12 @@ PanInputMode pan_input_mode = {
 
 void item_zoom_input_mode_enter(size_t mode) {
   ItemZoomInputMode *self = (ItemZoomInputMode *) input_mode_stack[mode];
-  printf("item_zoom_input_mode_enter\n"); fflush(stdout);
+  if(debug_modes) printf("item_zoom_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
 void item_zoom_input_mode_exit(size_t mode) {
-  printf("item_zoom_input_mode_exit\n"); fflush(stdout);
+  if(debug_modes) printf("item_zoom_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
@@ -374,14 +376,14 @@ ItemZoomInputMode item_zoom_input_mode = {
 
 void item_pan_input_mode_enter(size_t mode) {
   ItemPanInputMode *self = (ItemPanInputMode *) input_mode_stack[mode];
-  printf("item_pan_input_mode_enter\n"); fflush(stdout);
+  if(debug_modes) printf("item_pan_input_mode_enter\n"); fflush(stdout);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
   self->x = 0;
   self->y = 0;
 }
 void item_pan_input_mode_exit(size_t mode) {
-  printf("item_pan_input_mode_exit\n"); fflush(stdout);
+  if(debug_modes) printf("item_pan_input_mode_exit\n"); fflush(stdout);
   XUngrabPointer(display, CurrentTime);
   XUngrabKeyboard(display, CurrentTime);
 }
