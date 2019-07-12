@@ -7,16 +7,12 @@
 #include <cairo.h>
 
 typedef struct {
-  // x and y are ]0,1[, from top left to bottom right of window.
-  // width and height are ]0,1[ as a fraction of the whole window width/height
-  float x;
-  float y;
-  float width;
-  float height;
-  int pixelwidth;
-  int pixelheight;
-  int itempixelwidth;
-  int itempixelheight;
+  int x;
+  int y;
+  int width;
+  int height;
+  int itemwidth;
+  int itemheight;
   cairo_surface_t *surface;
   Texture texture;
 } WidgetItemTile;

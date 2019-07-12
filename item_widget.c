@@ -23,23 +23,42 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
       cairo_surface_destroy(tile->surface);
     }
    
-    tile->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile->pixelwidth, tile->pixelheight);
+    tile->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile->width, tile->height);
   }
   
   cairo_t *cairo_ctx = cairo_create(tile->surface);
 
-  printf("RENDER %d,%d [%f,%f]\n",
+  /*
+  printf("RENDER %d,%d[%d,%d]/[%d,%d] = [%f,%f]\n",
          (int) (-tile->x * tile->itempixelwidth),
          (int) (-tile->y * tile->itempixelheight),
+         tile->pixelwidth,
+         tile->pixelheight,
+         tile->itempixelwidth,
+         tile->itempixelheight,
          (float) tile->itempixelwidth / (float) dimension.width,
          (float) tile->itempixelheight / (float) dimension.height);
+  */
 
-  cairo_scale(cairo_ctx,
-              (float) tile->itempixelwidth / (float) dimension.width,
-              (float) tile->itempixelheight / (float) dimension.height);
+
+  printf("YYYYYYYYYYYYYYYYYYYYYY %f / %f\n", 1. / default_view.screen[2], (float) tile->itemwidth / (float) dimension.width);
+  
   cairo_translate(cairo_ctx,
-                  (int) (-tile->x * tile->itempixelwidth),
-                  (int) (-tile->y * tile->itempixelheight));
+                  -tile->x,
+                  -tile->y);
+  cairo_scale(cairo_ctx,
+              (float) tile->itemwidth / (float) dimension.width,
+              (float) tile->itemheight / (float) dimension.height);
+  printf("XXXXXXXXXXXXXX %f, %f\n", tile->x, tile->y);
+
+  /*
+  cairo_set_source_rgb(cairo_ctx, 0., 0., .5);
+  cairo_rectangle(cairo_ctx, tile->x, tile->y, tile->width, tile->height);
+  cairo_fill(cairo_ctx);
+  cairo_set_source_rgb(cairo_ctx, .5, .5, 1.);
+  cairo_rectangle(cairo_ctx, tile->x+40, tile->y+40, tile->width-80, tile->height-80);
+  cairo_fill(cairo_ctx);
+  */
   
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
@@ -51,7 +70,7 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
 }
 
 WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
-  float x1, y1, x2, y2, width, height;
+  float x1, y1, x2, y2;
   int px1, py1, px2, py2;
   int itempixelwidth, itempixelheight;
   int pixelwidth, pixelheight;
@@ -71,9 +90,6 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
   if (y1 < 0.) y1 = 0.; if (y1 > 1.) y1 = 1.;
   if (x2 < 0.) x2 = 0.; if (x2 > 1.) x2 = 1.;
   if (y2 < 0.) y2 = 0.; if (y2 > 1.) y2 = 1.;
-
-  width = x2 - x1;
-  height = y2 - y1;
   
   // When screen to window is 1:1 this holds:
   // item->coords[2] = item->width * view->screen[2] / view->width;
@@ -86,24 +102,33 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
 
   pixelwidth = px2 - px1;
   pixelheight = py2 - py1;
-
-  printf("TILE %f,%f-%f,%f[%f,%f] -> [%d,%d] out of [%d,%d]\n",
-         x1, y1,
-         x2, y2,
-         width, height,
-         pixelwidth, pixelheight,
-         itempixelwidth, itempixelheight);
-   
+  
   tile = &item->tiles[0];
-  tile->width = width;
-  tile->height = height;
-  tile->x = x1;
-  tile->y = y1;
-  tile->pixelwidth = pixelwidth;
-  tile->pixelheight = pixelheight;
-  tile->itempixelwidth = itempixelwidth;
-  tile->itempixelheight = itempixelheight;
+  tile->width = pixelwidth;
+  tile->height = pixelheight;
+  tile->x = px1;
+  tile->y = py1;
+  tile->itemwidth = itempixelwidth;
+  tile->itemheight = itempixelheight;
 
+  float transform[4] = {(float) tile->x / (float) tile->itemwidth,
+                        (float) tile->y / (float) tile->itemheight,
+                        (float) tile->width / (float) tile->itemwidth,
+                        (float) tile->height / (float) tile->itemheight};
+
+  printf("TILE %d,%d[%d,%d]/[%d,%d] => %f,%f/%f,%f\n",
+         tile->x,
+         tile->y,
+         tile->width,
+         tile->height,
+         tile->itemwidth,
+         tile->itemheight,
+         transform[0],
+         transform[1],
+         transform[2],
+         transform[3]
+         );
+  
   item_type_widget_update_tile(item, tile);
   
   return tile;
@@ -129,13 +154,13 @@ void item_type_widget_draw(View *view, Item *item) {
   
   gl_check_error("item_type_widget_draw1");
   
-  float transform[4] = {tile->x * tile->width,
-                        tile->y * tile->height,
-                        tile->width,
-                        tile->height};
+  float transform[4] = {(float) tile->x / (float) tile->itemwidth,
+                        (float) tile->y / (float) tile->itemheight,
+                        (float) tile->width / (float) tile->itemwidth,
+                        (float) tile->height / (float) tile->itemheight};
   
 //  float transform[4] = {0., 0., 1., 1.};
-  
+  /*
   printf("DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
          item->coords[0],
          item->coords[1],
@@ -145,7 +170,8 @@ void item_type_widget_draw(View *view, Item *item) {
          transform[1],
          transform[2],
          transform[3]);
-
+  */
+  
   glUniform4fv(shader->transform_attr, 1, transform);
   
   glUniform1i(shader->texture_attr, 0);

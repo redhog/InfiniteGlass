@@ -63,3 +63,14 @@ def draw(window):
             "left top": space2glscreen([left, top]),
             "right bottom": space2glscreen([right, bottom]),
             "right top": space2glscreen([right, top])}
+
+def pixeldraw(window):
+    left = window[0]
+    top = window[1]
+    right = left + window[2]
+    bottom = top - window[3]
+
+    return {"left bottom": space2pixelscreen(left, bottom),
+            "left top": space2pixelscreen(left, top),
+            "right bottom": space2pixelscreen(right, bottom),
+            "right top": space2pixelscreen(right, top)}
