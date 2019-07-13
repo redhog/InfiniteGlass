@@ -1,5 +1,5 @@
-gdbserver :2048 ./bin/wm &
-#./bin/wm &
+gdbserver :2048 ./build/wm &
+#./build/wm &
 
 xclock -render -update 1 &
 xev &
