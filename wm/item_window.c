@@ -22,7 +22,7 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
   item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
 
-  item_type_base.update((Item *) item);
+  item_type_window.base->update((Item *) item);
 }
 
 void item_type_window_constructor(Item *item) {
@@ -68,7 +68,7 @@ void item_type_window_draw(View *view, Item *item) {
       glUniform1i(shader->has_icon_mask_attr, 1);
     }
     
-    item_type_base.draw(view, item);
+    item_type_window.base->draw(view, item);
   }
 }
 
@@ -84,7 +84,7 @@ void item_type_window_update(Item *item) {
     XConfigureWindow(display, window_item->window, CWWidth | CWHeight, &values);
   }
   
-  item_type_base.update(item);
+  item_type_window.base->update(item);
 
   x_push_error_context("item_update_pixmap");
   

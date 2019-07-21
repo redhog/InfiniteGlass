@@ -183,7 +183,7 @@ void item_type_widget_draw(View *view, Item *item) {
  
   gl_check_error("item_type_widget_draw2");
 
-  item_type_base.draw(view, item);
+  item_type_widget.base->draw(view, item);
 
   gl_check_error("item_type_widget_draw3");
 }
@@ -199,7 +199,7 @@ void item_type_widget_update(Item *item) {
   item->width = dimension.width;
   item->height = dimension.height;
   
-  item_type_base.update(item);
+  item_type_widget.base->update(item);
 }
 
 Shader *item_type_widget_get_shader(Item *item) {
@@ -207,7 +207,7 @@ Shader *item_type_widget_get_shader(Item *item) {
 }
 
 ItemType item_type_widget = {
-  NULL,
+  &item_type_base,
   sizeof(WidgetItem),
   &item_type_widget_constructor,
   &item_type_widget_destructor,
