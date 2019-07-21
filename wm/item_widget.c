@@ -134,6 +134,8 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
   return tile;
 }
 
+void item_type_widget_constructor(Item *item, void *args) {}
+
 void item_type_widget_destructor(Item *item) {
   WidgetItem *widget_item = (WidgetItem *) item;
 
@@ -205,6 +207,9 @@ Shader *item_type_widget_get_shader(Item *item) {
 }
 
 ItemType item_type_widget = {
+  NULL,
+  sizeof(WidgetItem),
+  &item_type_widget_constructor,
   &item_type_widget_destructor,
   &item_type_widget_draw,
   &item_type_widget_update,

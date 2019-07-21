@@ -64,7 +64,7 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     Item *item;
     pick(event.xmotion.x_root, event.xmotion.y_root, &winx, &winy, &item);
     if (item && item->type == &item_type_window) {
-      WindowItem *window_item = (WindowItem *) item;
+      ItemWindow *window_item = (ItemWindow *) item;
      
       XWindowChanges values;
       values.x = event.xmotion.x_root - winx;

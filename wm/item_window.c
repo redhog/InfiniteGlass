@@ -4,7 +4,7 @@
 #include "xapi.h"
 #include "wm.h"
 
-void item_type_window_update_space_pos_from_window(WindowItem *item) {
+void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   XWindowAttributes attr;
   XGetWindowAttributes(display, item->window, &attr);
 
@@ -25,8 +25,12 @@ void item_type_window_update_space_pos_from_window(WindowItem *item) {
   item_type_base.update((Item *) item);
 }
 
+void item_type_window_constructor(Item *item) {
+  ItemWindow *window_item = (ItemWindow *) item;
+}
+
 void item_type_window_destructor(Item *item) {
-  WindowItem *window_item = (WindowItem *) item;
+  ItemWindow *window_item = (ItemWindow *) item;
   texture_destroy(&window_item->window_texture);
   texture_destroy(&window_item->icon_texture);
   texture_destroy(&window_item->icon_mask_texture);
@@ -34,7 +38,7 @@ void item_type_window_destructor(Item *item) {
 
 void item_type_window_draw(View *view, Item *item) {
   if (item->is_mapped) {
-    WindowItem *window_item = (WindowItem *) item;
+    ItemWindow *window_item = (ItemWindow *) item;
 
     ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
     
@@ -69,7 +73,7 @@ void item_type_window_draw(View *view, Item *item) {
 }
 
 void item_type_window_update(Item *item) {
-  WindowItem *window_item = (WindowItem *) item;
+  ItemWindow *window_item = (ItemWindow *) item;
    
   if (!item->is_mapped) return;
 
@@ -105,6 +109,9 @@ Shader *item_type_window_get_shader(Item *item) {
 }
 
 ItemType item_type_window = {
+  &item_type_base,
+  sizeof(ItemWindow),
+  &item_type_window_constructor,
   &item_type_window_destructor,
   &item_type_window_draw,
   &item_type_window_update,
@@ -112,14 +119,14 @@ ItemType item_type_window = {
 };
 
 Item *item_get_from_window(Window window) {
-  WindowItem *item;
+  ItemWindow *item;
   size_t idx = 0;
 
   if (items_all) {
     for (;
          items_all[idx]
          && items_all[idx]->type == &item_type_window
-         && ((WindowItem *) items_all[idx])->window != window;
+         && ((ItemWindow *) items_all[idx])->window != window;
          idx++);
     if (items_all[idx]) return items_all[idx];
   }
@@ -127,7 +134,7 @@ Item *item_get_from_window(Window window) {
   fprintf(stderr, "Adding window %ld\n", window);
 
 
-  item = (WindowItem *) malloc(sizeof(WindowItem));
+  item = (ItemWindow *) malloc(sizeof(ItemWindow));
   item->base.type = &item_type_window;
   item_add((Item *) item);
 

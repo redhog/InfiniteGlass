@@ -17,7 +17,7 @@ typedef struct {
   Texture icon_mask_texture;
 
   XWMHints wm_hints;
-} WindowItem;
+} ItemWindow;
 
 extern ItemType item_type_window;
 

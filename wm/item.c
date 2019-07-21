@@ -5,6 +5,7 @@
 #include "wm.h"
 #include <limits.h>
 
+void item_type_base_constructor(Item *item, void *args) {}
 void item_type_base_destructor(Item *item) {}
 void item_type_base_draw(View *view, Item *item) {
   if (item->is_mapped) {
@@ -43,6 +44,9 @@ Shader *item_type_base_get_shader(Item *item) {
 }
 
 ItemType item_type_base = {
+  NULL,
+  sizeof(Item),
+  &item_type_base_constructor,
   &item_type_base_destructor,
   &item_type_base_draw,
   &item_type_base_update,
@@ -53,6 +57,20 @@ Item **items_all = NULL;
 size_t items_all_usage = 0;
 size_t items_all_size = 0;
 size_t items_all_id = 0;
+
+Bool item_isinstance(Item *item, ItemType *type) {
+  ItemType *item_type;
+  for (item_type = item->type; item_type && item_type != type; item_type = item_type->base);
+  return !!item_type;
+}
+
+Item *item_create(ItemType *type, void *args) {
+  Item *item = (Item *) malloc(type->size);
+  item->type = &type;
+  item->type->init(item, args);
+  item_add(item);
+  item->type->update(item);  
+}
 
 Item *item_get(int id) {
   Item *item;
