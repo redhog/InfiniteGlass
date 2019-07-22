@@ -2,10 +2,8 @@ all: run
 
 BUILD=build
 
-$(BUILD)/%: $(BUILD)
-
-$(BUILD):
-	mkdir -p $(BUILD)
+SUBDIRS := $(wildcard */.)
+BINARIES := $(patsubst %/.,$(BUILD)/%,$(SUBDIRS))
 
 fontawesome-free-5.9.0-desktop.zip:
 	wget https://use.fontawesome.com/releases/v5.9.0/fontawesome-free-5.9.0-desktop.zip
@@ -20,10 +18,14 @@ fontawesome/%.otf: fontawesome-free-5.9.0-desktop
 %.ttf: %.otf
 	fontforge -script otf2ttf.sh $<
 
-.PHONY: $(BUILD)/%
+$(BINARIES): $(BUILD)
 
-$(BUILD)/%:
-	make -C $(notdir $@) 
+$(BUILD):
+	mkdir -p $(BUILD)
+
+.PHONY: $(BINARIES)
+$(BINARIES):
+	$(MAKE) -C $(notdir $@)
 
 run: $(BUILD)/wm fontawesome/Font-Awesome-5-Free-Regular-400.ttf
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &

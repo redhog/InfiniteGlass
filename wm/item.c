@@ -66,10 +66,13 @@ Bool item_isinstance(Item *item, ItemType *type) {
 
 Item *item_create(ItemType *type, void *args) {
   Item *item = (Item *) malloc(type->size);
-  item->type = &type;
+  item->coords_vbo = -1;
+  item->is_mapped = False;
+  item->type = type;
   item->type->init(item, args);
   item_add(item);
-  item->type->update(item);  
+  item->type->update(item);
+  return item;
 }
 
 Item *item_get(int id) {
@@ -92,8 +95,6 @@ void item_add(Item *item) {
   }
 
   item->id = ++items_all_id;
-  item->coords_vbo = -1;
-  item->is_mapped = False;
   items_all[items_all_usage] = item;
   items_all[items_all_usage+1] = NULL;
 

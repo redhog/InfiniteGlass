@@ -134,7 +134,24 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
   return tile;
 }
 
-void item_type_widget_constructor(Item *item, void *args) {}
+void item_type_widget_constructor(Item *item, void *args) {
+  WidgetItem *item_widget = (WidgetItem *) item;
+  char *label = (char *) args;
+ 
+  item_widget->label = label;
+  item_widget->base.coords[0] = .25;
+  item_widget->base.coords[1] = .25;
+  item_widget->base.coords[2] = .25;
+  item_widget->base.coords[3] = .25;
+  item_widget->base.width = 200;
+  item_widget->base.height = 200;
+  item_widget->base.is_mapped = 1;
+
+  for (int i = 0; i < WIDGET_ITEM_TILE_CACHE_SIZE; i++) {
+    texture_initialize(&item_widget->tiles[i].texture);
+    item_widget->tiles[i].surface = 0;
+  }
+}
 
 void item_type_widget_destructor(Item *item) {
   WidgetItem *widget_item = (WidgetItem *) item;
@@ -219,24 +236,5 @@ ItemType item_type_widget = {
 Item *item_get_widget(char *label) {
   WidgetItem *item;
   
-  item = (WidgetItem *) malloc(sizeof(WidgetItem));
-  item->label = label;
-  item->base.coords[0] = .25;
-  item->base.coords[1] = .25;
-  item->base.coords[2] = .25;
-  item->base.coords[3] = .25;
-  item->base.width = 200;
-  item->base.height = 200;
-  item->base.type = &item_type_widget;
-  item_add((Item *) item);
-  item->base.is_mapped = 1;
-
-  for (int i = 0; i < WIDGET_ITEM_TILE_CACHE_SIZE; i++) {
-    texture_initialize(&item->tiles[i].texture);
-    item->tiles[i].surface = 0;
-  }
-  
-  item_type_widget.update((Item*) item);
-
-  return (Item *) item;
+  return item_create(&item_type_widget, label);
 }

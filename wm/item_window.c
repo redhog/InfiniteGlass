@@ -25,8 +25,34 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   item_type_window.base->update((Item *) item);
 }
 
-void item_type_window_constructor(Item *item) {
+void item_type_window_constructor(Item *item, void *args) {
   ItemWindow *window_item = (ItemWindow *) item;
+  Window window = *(Window *) args;
+  
+  window_item->window_pixmap = 0;
+  texture_initialize(&window_item->window_texture);
+  texture_initialize(&window_item->icon_texture);
+  texture_initialize(&window_item->icon_mask_texture);
+
+  window_item->window = window;
+  window_item->damage = XDamageCreate(display, window, XDamageReportNonEmpty);
+  window_item->wm_hints.flags = 0;
+
+  XErrorEvent error;
+  x_try();
+  XWMHints *wm_hints = XGetWMHints(display, window);
+  if (wm_hints) {
+    window_item->wm_hints = *wm_hints;
+    XFree(wm_hints);
+  }
+  if (!x_catch(&error)) {
+    printf("Window does not have any WM_HINTS: %d", window);
+  }
+
+  XWindowAttributes attr;
+  XGetWindowAttributes(display, window, &attr);
+  window_item->base.is_mapped = attr.map_state == IsViewable;
+  item_type_window_update_space_pos_from_window(item);
 }
 
 void item_type_window_destructor(Item *item) {
@@ -133,36 +159,5 @@ Item *item_get_from_window(Window window) {
 
   fprintf(stderr, "Adding window %ld\n", window);
 
-
-  item = (ItemWindow *) malloc(sizeof(ItemWindow));
-  item->base.type = &item_type_window;
-  item_add((Item *) item);
-
-  item->window_pixmap = 0;
-  texture_initialize(&item->window_texture);
-  texture_initialize(&item->icon_texture);
-  texture_initialize(&item->icon_mask_texture);
-  item->window = window;
-  item->damage = XDamageCreate(display, window, XDamageReportNonEmpty);
-  item->wm_hints.flags = 0;
-
-  XErrorEvent error;
-  x_try();
-  XWMHints *wm_hints = XGetWMHints(display, window);
-  if (wm_hints) {
-    item->wm_hints = *wm_hints;
-    XFree(wm_hints);
-  }
-  if (!x_catch(&error)) {
-    printf("Window does not have any WM_HINTS: %d", window);
-  }
-
-  XWindowAttributes attr;
-  XGetWindowAttributes(display, window, &attr);
-  item->base.is_mapped = attr.map_state == IsViewable;
-
-  item_type_window_update_space_pos_from_window(item);
-  item_type_window.update((Item*) item);
-  
-  return (Item*) item;
+  return item_create(&item_type_window, &window);
 }
