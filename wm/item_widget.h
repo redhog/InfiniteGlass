@@ -15,15 +15,15 @@ typedef struct {
   int itemheight;
   cairo_surface_t *surface;
   Texture texture;
-} WidgetItemTile;
+} ItemWidgetTile;
 
-#define WIDGET_ITEM_TILE_CACHE_SIZE 5
+#define ITEM_WIDGET_TILE_CACHE_SIZE 5
 
 typedef struct {
   Item base;
   char *label;
-  WidgetItemTile tiles[WIDGET_ITEM_TILE_CACHE_SIZE];
-} WidgetItem;
+  ItemWidgetTile tiles[ITEM_WIDGET_TILE_CACHE_SIZE];
+} ItemWidget;
 
 extern ItemType item_type_widget;
 

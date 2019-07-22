@@ -6,7 +6,7 @@
 #include "wm.h"
 #include <librsvg/rsvg.h>
 
-void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
+void item_type_widget_update_tile(ItemWidget *item, ItemWidgetTile *tile) {
   GError *error;
   RsvgDimensionData dimension;
 
@@ -69,12 +69,12 @@ void item_type_widget_update_tile(WidgetItem *item, WidgetItemTile *tile) {
   texture_from_cairo_surface(&tile->texture, tile->surface);
 }
 
-WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
+ItemWidgetTile *item_type_widget_get_tile(View *view, ItemWidget *item) {
   float x1, y1, x2, y2;
   int px1, py1, px2, py2;
   int itempixelwidth, itempixelheight;
   int pixelwidth, pixelheight;
-  WidgetItemTile *tile;
+  ItemWidgetTile *tile;
   
   itempixelwidth = item->base.coords[2] * view->width / view->screen[2];
   itempixelheight = item->base.coords[3] * view->height / view->screen[3];
@@ -135,7 +135,7 @@ WidgetItemTile *item_type_widget_get_tile(View *view, WidgetItem *item) {
 }
 
 void item_type_widget_constructor(Item *item, void *args) {
-  WidgetItem *item_widget = (WidgetItem *) item;
+  ItemWidget *item_widget = (ItemWidget *) item;
   char *label = (char *) args;
  
   item_widget->label = label;
@@ -147,29 +147,29 @@ void item_type_widget_constructor(Item *item, void *args) {
   item_widget->base.height = 200;
   item_widget->base.is_mapped = 1;
 
-  for (int i = 0; i < WIDGET_ITEM_TILE_CACHE_SIZE; i++) {
+  for (int i = 0; i < ITEM_WIDGET_TILE_CACHE_SIZE; i++) {
     texture_initialize(&item_widget->tiles[i].texture);
     item_widget->tiles[i].surface = 0;
   }
 }
 
 void item_type_widget_destructor(Item *item) {
-  WidgetItem *widget_item = (WidgetItem *) item;
+  ItemWidget *item_widget = (ItemWidget *) item;
 
-  for (int i = 0; i < WIDGET_ITEM_TILE_CACHE_SIZE; i++) {
-    if (widget_item->tiles[i].surface) {
-      cairo_surface_destroy(widget_item->tiles[i].surface);
+  for (int i = 0; i < ITEM_WIDGET_TILE_CACHE_SIZE; i++) {
+    if (item_widget->tiles[i].surface) {
+      cairo_surface_destroy(item_widget->tiles[i].surface);
     }
-    texture_destroy(&widget_item->tiles[i].texture);
+    texture_destroy(&item_widget->tiles[i].texture);
   }
 }
 
 void item_type_widget_draw(View *view, Item *item) {
-  WidgetItem *widget_item = (WidgetItem *) item;
+  ItemWidget *item_widget = (ItemWidget *) item;
 
   ItemWidgetShader *shader = (ItemWidgetShader *) item->type->get_shader(item);
 
-  WidgetItemTile *tile = item_type_widget_get_tile(view, (WidgetItem *) item);
+  ItemWidgetTile *tile = item_type_widget_get_tile(view, (ItemWidget *) item);
   
   gl_check_error("item_type_widget_draw1");
   
@@ -209,7 +209,7 @@ void item_type_widget_update(Item *item) {
   GError *error;
   RsvgDimensionData dimension;
 
-  RsvgHandle *rsvg = rsvg_handle_new_from_file(((WidgetItem *) item)->label, &error);
+  RsvgHandle *rsvg = rsvg_handle_new_from_file(((ItemWidget *) item)->label, &error);
   rsvg_handle_get_dimensions(rsvg, &dimension);
   g_object_unref(rsvg);
 
@@ -225,7 +225,7 @@ Shader *item_type_widget_get_shader(Item *item) {
 
 ItemType item_type_widget = {
   &item_type_base,
-  sizeof(WidgetItem),
+  sizeof(ItemWidget),
   &item_type_widget_constructor,
   &item_type_widget_destructor,
   &item_type_widget_draw,
@@ -234,7 +234,7 @@ ItemType item_type_widget = {
 };
 
 Item *item_get_widget(char *label) {
-  WidgetItem *item;
+  ItemWidget *item;
   
   return item_create(&item_type_widget, label);
 }
