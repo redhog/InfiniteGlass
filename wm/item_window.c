@@ -1,6 +1,7 @@
 #include "glapi.h"
 #include "item_window.h"
 #include "item_window_shader.h"
+#include "item_window_pixmap.h"
 #include "xapi.h"
 #include "wm.h"
 
@@ -29,25 +30,7 @@ void item_type_window_constructor(Item *item, void *args) {
   ItemWindow *window_item = (ItemWindow *) item;
   Window window = *(Window *) args;
   
-  window_item->window_pixmap = 0;
-  texture_initialize(&window_item->window_texture);
-  texture_initialize(&window_item->icon_texture);
-  texture_initialize(&window_item->icon_mask_texture);
-
   window_item->window = window;
-  window_item->damage = XDamageCreate(display, window, XDamageReportNonEmpty);
-  window_item->wm_hints.flags = 0;
-
-  XErrorEvent error;
-  x_try();
-  XWMHints *wm_hints = XGetWMHints(display, window);
-  if (wm_hints) {
-    window_item->wm_hints = *wm_hints;
-    XFree(wm_hints);
-  }
-  if (!x_catch(&error)) {
-    printf("Window does not have any WM_HINTS: %d", window);
-  }
 
   XWindowAttributes attr;
   XGetWindowAttributes(display, window, &attr);
@@ -56,46 +39,11 @@ void item_type_window_constructor(Item *item, void *args) {
 }
 
 void item_type_window_destructor(Item *item) {
-  ItemWindow *window_item = (ItemWindow *) item;
-  texture_destroy(&window_item->window_texture);
-  texture_destroy(&window_item->icon_texture);
-  texture_destroy(&window_item->icon_mask_texture);
+  item_type_base.destroy(item);
 }
 
 void item_type_window_draw(View *view, Item *item) {
-  if (item->is_mapped) {
-    ItemWindow *window_item = (ItemWindow *) item;
-
-    ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
-    
-    texture_from_pixmap(&window_item->window_texture, window_item->window_pixmap);
-
-    glUniform1i(shader->window_sampler_attr, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, window_item->window_texture.texture_id);
-    glBindSampler(1, 0);
-    
-    if (window_item->wm_hints.flags & IconPixmapHint) {
-      glUniform1i(shader->has_icon_attr, 1);
-      glUniform1i(shader->icon_sampler_attr, 1);
-      glActiveTexture(GL_TEXTURE1);
-      glBindTexture(GL_TEXTURE_2D, window_item->icon_texture.texture_id);
-      glBindSampler(1, 0);
-    } else {
-      glUniform1i(shader->has_icon_attr, 0);
-    }
-    if (window_item->wm_hints.flags & IconMaskHint) {
-      glUniform1i(shader->has_icon_mask_attr, 1);
-      glUniform1i(shader->icon_mask_sampler_attr, 2);
-      glActiveTexture(GL_TEXTURE2);
-      glBindTexture(GL_TEXTURE_2D, window_item->icon_mask_texture.texture_id);
-      glBindSampler(1, 0);
-    } else {
-      glUniform1i(shader->has_icon_mask_attr, 1);
-    }
-    
-    item_type_window.base->draw(view, item);
-  }
+  item_type_base.draw(view, item);
 }
 
 void item_type_window_update(Item *item) {
@@ -111,23 +59,6 @@ void item_type_window_update(Item *item) {
   }
   
   item_type_window.base->update(item);
-
-  x_push_error_context("item_update_pixmap");
-  
-  // FIXME: free all other stuff if already created
-
-  window_item->window_pixmap = XCompositeNameWindowPixmap(display, window_item->window);
-  texture_from_pixmap(&window_item->window_texture, window_item->window_pixmap);
-
-  if (window_item->wm_hints.flags & IconPixmapHint) {
-    texture_from_pixmap(&window_item->icon_texture, window_item->wm_hints.icon_pixmap);
-  }
-  if (window_item->wm_hints.flags & IconMaskHint) {
-    texture_from_pixmap(&window_item->icon_mask_texture, window_item->wm_hints.icon_mask);
-  }
-  gl_check_error("item_update_pixmap2");
-
-  x_pop_error_context();
 }
 
 Shader *item_type_window_get_shader(Item *item) {
@@ -151,13 +82,13 @@ Item *item_get_from_window(Window window) {
   if (items_all) {
     for (;
          items_all[idx]
-         && items_all[idx]->type == &item_type_window
-         && ((ItemWindow *) items_all[idx])->window != window;
+         && (   !item_isinstance(items_all[idx], &item_type_window)
+             || ((ItemWindow *) items_all[idx])->window != window);
          idx++);
     if (items_all[idx]) return items_all[idx];
   }
 
   fprintf(stderr, "Adding window %ld\n", window);
 
-  return item_create(&item_type_window, &window);
+  return item_create(&item_type_window_pixmap, &window);
 }

@@ -43,6 +43,18 @@ Shader *item_type_base_get_shader(Item *item) {
   return NULL;
 }
 
+void item_type_base_print(Item *item) {
+  printf("%d:%s [%d,%d] @ %f,%f,%f,%f",
+         item->id,
+         item->is_mapped ? "" : " invisible",
+         item->width,
+         item->height,
+         item->coords[0],
+         item->coords[1],
+         item->coords[2],
+         item->coords[3]);
+}
+
 ItemType item_type_base = {
   NULL,
   sizeof(Item),

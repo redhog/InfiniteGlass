@@ -41,7 +41,7 @@ void item_type_widget_update_tile(ItemWidget *item, ItemWidgetTile *tile) {
   */
 
 
-  printf("YYYYYYYYYYYYYYYYYYYYYY %f / %f\n", 1. / default_view.screen[2], (float) tile->itemwidth / (float) dimension.width);
+  // printf("YYYYYYYYYYYYYYYYYYYYYY %f / %f\n", 1. / default_view.screen[2], (float) tile->itemwidth / (float) dimension.width);
   
   cairo_translate(cairo_ctx,
                   -tile->x,
@@ -49,7 +49,7 @@ void item_type_widget_update_tile(ItemWidget *item, ItemWidgetTile *tile) {
   cairo_scale(cairo_ctx,
               (float) tile->itemwidth / (float) dimension.width,
               (float) tile->itemheight / (float) dimension.height);
-  printf("XXXXXXXXXXXXXX %f, %f\n", tile->x, tile->y);
+  // printf("XXXXXXXXXXXXXX %f, %f\n", tile->x, tile->y);
 
   /*
   cairo_set_source_rgb(cairo_ctx, 0., 0., .5);
@@ -116,6 +116,7 @@ ItemWidgetTile *item_type_widget_get_tile(View *view, ItemWidget *item) {
                         (float) tile->width / (float) tile->itemwidth,
                         (float) tile->height / (float) tile->itemheight};
 
+  /*
   printf("TILE %d,%d[%d,%d]/[%d,%d] => %f,%f/%f,%f\n",
          tile->x,
          tile->y,
@@ -128,6 +129,7 @@ ItemWidgetTile *item_type_widget_get_tile(View *view, ItemWidget *item) {
          transform[2],
          transform[3]
          );
+  */
   
   item_type_widget_update_tile(item, tile);
   
