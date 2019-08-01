@@ -4,6 +4,7 @@
 #include "item_window_pixmap.h"
 #include "xapi.h"
 #include "wm.h"
+#include <X11/Xatom.h>
 
 void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   XWindowAttributes attr;
@@ -90,5 +91,21 @@ Item *item_get_from_window(Window window) {
 
   fprintf(stderr, "Adding window %ld\n", window);
 
-  return item_create(&item_type_window_pixmap, &window);
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return;
+  
+  XGetWindowProperty(display, window, DISPLAYSVG, 0, 1, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  XFree(prop_return);
+  if (type_return == None) {
+    return item_create(&item_type_window_pixmap, &window);
+  } else {
+    printf("{SVG WINDOW %d}\n", bytes_after_return);
+    XGetWindowProperty(display, window, DISPLAYSVG, 0, bytes_after_return, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+    printf(prop_return);
+    printf("{/SVG WINDOW}\n");
+    XFree(prop_return);
+ }
 }

@@ -27,7 +27,7 @@ $(BUILD):
 $(BINARIES):
 	$(MAKE) -C $(notdir $@)
 
-run: $(BUILD)/wm fontawesome/Font-Awesome-5-Free-Regular-400.ttf
+run: $(BUILD)/wm $(BUILD)/widgets fontawesome/Font-Awesome-5-Free-Regular-400.ttf
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &
 	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
 

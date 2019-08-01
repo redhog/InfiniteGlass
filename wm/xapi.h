@@ -20,6 +20,7 @@
 
 Atom WM_PROTOCOLS;
 Atom WM_DELETE_WINDOW;
+Atom DISPLAYSVG;
 
 Display* display;
 Window root;

@@ -90,6 +90,7 @@ int xinit() {
   root = DefaultRootWindow(display);
   WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
   WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
+  DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
 
   x_try();
   XSelectInput(display, root,
