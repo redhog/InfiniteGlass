@@ -5,7 +5,7 @@
 #include "view.h"
 #include "actions.h"
 
-Bool debug_positions = False;
+Bool debug_positions = True;
 Bool debug_modes = False;
 
 InputMode **input_mode_stack = NULL;
@@ -63,7 +63,7 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     int winx, winy;
     Item *item;
     pick(event.xmotion.x_root, event.xmotion.y_root, &winx, &winy, &item);
-    if (item && item->type == &item_type_window) {
+    if (item && item_isinstance(item, &item_type_window)) {
       ItemWindow *window_item = (ItemWindow *) item;
      
       XWindowChanges values;
@@ -75,6 +75,9 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
      
       if (debug_positions)
         printf("Point %d,%d -> %d,%d,%d\n", event.xmotion.x_root, event.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
+    } else {
+      if (debug_positions)
+        printf("Point %d,%d -> NONE\n", event.xmotion.x_root, event.xmotion.y_root); fflush(stdout);
     }
   } else if (event.type == KeyPress && event.xkey.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
     Item *item;

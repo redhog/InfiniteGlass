@@ -2,6 +2,8 @@
 #include "xapi.h"
 #include <limits.h>
 
+Bool debugpicks = False;
+ 
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
    float res = 0.0;
@@ -80,7 +82,9 @@ void view_pick(GLint fb, View *view, Item **items, ItemFilter *filter, int x, in
   view_abstract_draw(view, items, filter);
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   gl_check_error("pick2");
-  //fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
+  if (debugpicks) {
+    fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
+  }
   *winx = 0;
   *winy = 0;
   *returnitem = NULL;
@@ -91,11 +95,11 @@ void view_pick(GLint fb, View *view, Item **items, ItemFilter *filter, int x, in
       *winy = (int) (data[1] * (*returnitem)->height);
     }
   }
-  /*
-  if (*returnitem) {
-    fprintf(stderr, "Pick %d,%d -> %d,%d,%d\n", x, y, (*returnitem)->window, *winx, *winy);
-  } else {
-    fprintf(stderr, "Pick %d,%d -> NULL\n", x, y);
-  }
-  */
+  if (debugpicks) {
+    if (*returnitem) {
+      fprintf(stderr, "  -> %d,%d,%d\n", (*returnitem)->id, *winx, *winy);
+    } else {
+      fprintf(stderr, "  -> NULL\n");
+    }
+ }
 }
