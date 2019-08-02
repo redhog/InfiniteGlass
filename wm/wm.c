@@ -62,7 +62,17 @@ void draw() {
 GLint picking_fb;
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
-  view_pick(picking_fb, &default_view, items_all, NULL, x, y, winx, winy, item);
+  gl_check_error("pick1");
+  glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  current_layer = IG_LAYER_DESKTOP;
+  view_draw_picking(picking_fb,  &default_view, items_all, &filter_by_layer);
+  current_layer = IG_LAYER_OVERLAY;
+  view_draw_picking(picking_fb,  &overlay_view, items_all, &filter_by_layer);
+  
+  view_pick(picking_fb, &default_view, x, y, winx, winy, item);
 }
 
 int init_picking() {

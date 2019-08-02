@@ -68,18 +68,19 @@ void view_draw(GLint fb, View *view, Item **items, ItemFilter *filter) {
   view->picking = 0;
   view_abstract_draw(view, items, filter);
   gl_check_error("draw2");
-  gl_check_error("draw3");
 }
 
-void view_pick(GLint fb, View *view, Item **items, ItemFilter *filter, int x, int y, int *winx, int *winy, Item **returnitem) {
-  float data[4];
-  memset(data, 0, sizeof(data));
-  gl_check_error("pick1");
+void view_draw_picking(GLint fb, View *view, Item **items, ItemFilter *filter) {
+  gl_check_error("view_draw_picking1");
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
   view->picking = 1;
   view_abstract_draw(view, items, filter);
+  gl_check_error("view_draw_picking2");
+}
+  
+void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **returnitem) {
+  float data[4];
+  memset(data, 0, sizeof(data));
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   gl_check_error("pick2");
   if (debugpicks) {

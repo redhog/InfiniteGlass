@@ -5,7 +5,7 @@
 #include "view.h"
 #include "actions.h"
 
-Bool debug_positions = True;
+Bool debug_positions = False;
 Bool debug_modes = False;
 
 InputMode **input_mode_stack = NULL;
