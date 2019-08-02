@@ -20,15 +20,6 @@
 Display* display;
 Window win;
 
-Atom DISPLAYSVG;
-Atom IG_LAYER;
-Atom IG_LAYER_DESKTOP;
-Atom IG_LAYER_OVERLAY;
-Atom IG_X;
-Atom IG_Y;
-Atom IG_W;
-Atom IG_H;
-
 void readfile(FILE *file, char **buf, size_t *buf_size) {
   size_t readsize;
 
@@ -43,41 +34,62 @@ void readfile(FILE *file, char **buf, size_t *buf_size) {
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   char *buf;
   size_t buf_size;
+  Atom action;
+  
+  if (argc != 3) {
+    fprintf(stderr, "Usage: widgets path/to/file.svg IG_ACTION_NAME\n");
+    exit(1);
+  }
+  
   display = XOpenDisplay(NULL);
 
-  DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
-  IG_LAYER = XInternAtom(display, "IG_LAYER", False);
-  IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
-  IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
-  IG_X = XInternAtom(display, "IG_X", False);
-  IG_Y = XInternAtom(display, "IG_Y", False);
-  IG_W = XInternAtom(display, "IG_W", False);
-  IG_H = XInternAtom(display, "IG_H", False);
-  
-  FILE *f = fopen("fontawesome-free-5.9.0-desktop/svgs/regular/map.svg", "r");
+  Atom DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
+  Atom IG_LAYER = XInternAtom(display, "IG_LAYER", False);
+  Atom IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
+
+  action = XInternAtom(display, argv[2], False);
+
+  FILE *f = fopen(argv[1], "r");
   if (!f) {
     fprintf(stderr, "Unable to read svg file\n");
     exit(1);
   }
   readfile(f, &buf, &buf_size);
   fclose(f);
-
-  printf("PROPERTY\n%s\n%d\nEND\n", buf, buf_size);
   
   win = XCreateWindow(display, DefaultRootWindow(display), 0, 0, 100, 100, 0, DefaultDepth(display, 0), InputOutput, CopyFromParent, 0, NULL);
   XChangeProperty(display, win, DISPLAYSVG, XA_STRING, 8, PropModeReplace, buf, buf_size);
   free(buf);
 
   XChangeProperty(display, win, IG_LAYER, XA_ATOM, 32, PropModeReplace, &IG_LAYER_OVERLAY, 1);
-  
+
+  XSelectInput(display, win,
+               KeyPressMask |
+               KeyReleaseMask |
+               ButtonPressMask |
+               ButtonReleaseMask |
+               PointerMotionMask);
+
   XMapWindow(display, win);
 
   for (;;) {
     XEvent e;
     XSync(display, False);
     XNextEvent(display, &e);
+
+    if (e.type == ButtonPress) {
+      printf("Sending %s\n", argv[2]);
+      XEvent ev = {0};
+      ev.xclient.type = ClientMessage;
+      ev.xclient.window = DefaultRootWindow(display);
+      ev.xclient.message_type = action;
+      ev.xclient.format = 8;
+
+      XSendEvent(display, DefaultRootWindow(display), False, NoEventMask, &ev);
+      XSync(display, False);
+    }
   }
 }
