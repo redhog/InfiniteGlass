@@ -71,7 +71,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
   view_draw_picking(picking_fb,  &default_view, items_all, &filter_by_layer);
   current_layer = IG_LAYER_OVERLAY;
   view_draw_picking(picking_fb,  &overlay_view, items_all, &filter_by_layer);
-  
+  glFlush();
   view_pick(picking_fb, &default_view, x, y, winx, winy, item);
 }
 

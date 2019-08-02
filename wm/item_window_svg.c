@@ -183,7 +183,7 @@ Shader *item_type_window_svg_get_shader(Item *item) {
 }
 
 ItemType item_type_window_svg = {
-  &item_type_base,
+  &item_type_window,
   sizeof(ItemWindowSVG),
   &item_type_window_svg_constructor,
   &item_type_window_svg_destructor,
