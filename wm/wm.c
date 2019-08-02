@@ -41,10 +41,6 @@ void initItems() {
 
   XFree(top_level_windows);
   XUngrabServer(display);
-
-  Item *item = item_get_widget("fontawesome-free-5.9.0-desktop/svgs/regular/lightbulb.svg");
-  action_resize_window_to_1_to_1_to_screen(&default_view, item);
-  action_position_window(&default_view, item, .5, .5, .5, .5);
 }
 
 Bool filter_item_widget(Item *item) {

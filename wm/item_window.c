@@ -2,6 +2,7 @@
 #include "item_window.h"
 #include "item_window_shader.h"
 #include "item_window_pixmap.h"
+#include "item_window_svg.h"
 #include "xapi.h"
 #include "wm.h"
 #include <X11/Xatom.h>
@@ -101,11 +102,14 @@ Item *item_get_from_window(Window window) {
   XFree(prop_return);
   if (type_return == None) {
     return item_create(&item_type_window_pixmap, &window);
-  } else {
+  } else {    
     printf("{SVG WINDOW %d}\n", bytes_after_return);
     XGetWindowProperty(display, window, DISPLAYSVG, 0, bytes_after_return, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
     printf(prop_return);
     printf("{/SVG WINDOW}\n");
-    XFree(prop_return);
- }
+
+    ItemWindowSVGArgs args = {window, prop_return};
+    
+    return item_create(&item_type_window_svg, &args);
+  }
 }
