@@ -34,6 +34,20 @@ void item_type_window_constructor(Item *item, void *args) {
   
   window_item->window = window;
 
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return = NULL;
+  XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return == None) {
+    window_item->base.layer = IG_LAYER_DESKTOP;
+  } else {
+    window_item->base.layer = *(Atom *) prop_return;
+  }
+  XFree(prop_return);
+  
   XWindowAttributes attr;
   XGetWindowAttributes(display, window, &attr);
   window_item->base.is_mapped = attr.map_state == IsViewable;
@@ -98,7 +112,7 @@ Item *item_get_from_window(Window window) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
   
-  XGetWindowProperty(display, window, DISPLAYSVG, 0, 1, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  XGetWindowProperty(display, window, DISPLAYSVG, 0, 0, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (type_return == None) {
     return item_create(&item_type_window_pixmap, &window);

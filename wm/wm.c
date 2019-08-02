@@ -43,19 +43,19 @@ void initItems() {
   XUngrabServer(display);
 }
 
-Bool filter_item_widget(Item *item) {
-  return item->type == &item_type_widget;
-}
-Bool filter_item_not_widget(Item *item) {
-  return item->type != &item_type_widget;
+Atom current_layer;
+Bool filter_by_layer(Item *item) {
+  return item->layer == current_layer;
 }
 
 void draw() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  view_draw(0, &default_view, items_all, NULL); //&filter_item_not_widget);
-//  view_draw(0, &overlay_view, items_all, &filter_item_widget);
+  current_layer = IG_LAYER_DESKTOP;
+  view_draw(0, &default_view, items_all, &filter_by_layer);
+  current_layer = IG_LAYER_OVERLAY;
+  view_draw(0, &overlay_view, items_all, &filter_by_layer);
   glFlush();
   glXSwapBuffers(display, overlay);
 }

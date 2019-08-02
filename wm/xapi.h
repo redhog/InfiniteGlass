@@ -21,6 +21,13 @@
 Atom WM_PROTOCOLS;
 Atom WM_DELETE_WINDOW;
 Atom DISPLAYSVG;
+Atom IG_LAYER;
+Atom IG_LAYER_DESKTOP;
+Atom IG_LAYER_OVERLAY;
+Atom IG_X;
+Atom IG_Y;
+Atom IG_W;
+Atom IG_H;
 
 Display* display;
 Window root;

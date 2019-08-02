@@ -41,6 +41,8 @@ struct ItemStruct {
 
   uint is_mapped; 
 
+  int layer;
+ 
   int _width;
   int _height;
 

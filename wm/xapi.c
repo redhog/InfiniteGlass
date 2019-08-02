@@ -92,6 +92,14 @@ int xinit() {
   WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
   DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
 
+  IG_LAYER = XInternAtom(display, "IG_LAYER", False);
+  IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
+  IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
+  IG_X = XInternAtom(display, "IG_X", False);
+  IG_Y = XInternAtom(display, "IG_Y", False);
+  IG_W = XInternAtom(display, "IG_W", False);
+  IG_H = XInternAtom(display, "IG_H", False);
+  
   x_try();
   XSelectInput(display, root,
                SubstructureRedirectMask |
@@ -169,4 +177,3 @@ void overlay_set_input(Bool enabled) {
   XFixesSetWindowShapeRegion(display, overlay, ShapeInput, 0, 0, region);
   XFixesDestroyRegion(display, region);
 }
-
