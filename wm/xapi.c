@@ -99,6 +99,7 @@ int xinit() {
   IG_Y = XInternAtom(display, "IG_Y", False);
   IG_W = XInternAtom(display, "IG_W", False);
   IG_H = XInternAtom(display, "IG_H", False);
+  IG_ZOOM = XInternAtom(display, "IG_ZOOM", False);
   
   x_try();
   XSelectInput(display, root,

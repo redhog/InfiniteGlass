@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   size_t buf_size;
   Atom action;
   
-  if (argc != 3) {
+  if (argc < 3) {
     fprintf(stderr, "Usage: widgets path/to/file.svg IG_ACTION_NAME\n");
     exit(1);
   }
@@ -51,6 +51,22 @@ int main(int argc, char *argv[]) {
   Atom IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
 
   action = XInternAtom(display, argv[2], False);
+  XEvent ev = {0};
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = DefaultRootWindow(display);
+  ev.xclient.message_type = action;
+  ev.xclient.format = 32;
+  for (int argi = 3; argi < argc; argi++) {
+    if (argv[argi][0] - '0' >= 0 && argv[argi][0] - '0' < 10) {
+      if (strstr(argv[argi], ".") == NULL) {
+        ev.xclient.data.l[argi-3] = atoi(argv[argi]);
+      } else {
+       *(float *) &ev.xclient.data.l[argi-3] = atof(argv[argi]);
+      }
+    } else {
+      ev.xclient.data.l[argi-3] = XInternAtom(display, argv[argi], False);
+    }
+  }
 
   FILE *f = fopen(argv[1], "r");
   if (!f) {
@@ -82,13 +98,9 @@ int main(int argc, char *argv[]) {
 
     if (e.type == ButtonPress) {
       printf("Sending %s\n", argv[2]);
-      XEvent ev = {0};
-      ev.xclient.type = ClientMessage;
-      ev.xclient.window = DefaultRootWindow(display);
-      ev.xclient.message_type = action;
-      ev.xclient.format = 8;
-
-      XSendEvent(display, DefaultRootWindow(display), False, NoEventMask, &ev);
+      
+      XSendEvent(display, DefaultRootWindow(display), False, SubstructureNotifyMask|SubstructureRedirectMask, &ev);
+      XFlush(display);
       XSync(display, False);
     }
   }

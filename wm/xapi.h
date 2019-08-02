@@ -28,6 +28,7 @@ Atom IG_X;
 Atom IG_Y;
 Atom IG_W;
 Atom IG_H;
+Atom IG_ZOOM;
 
 Display* display;
 Window root;

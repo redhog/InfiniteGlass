@@ -224,6 +224,11 @@ int main() {
       input_mode_stack_handle(e);
     } else if (e.type == KeyRelease) {
       input_mode_stack_handle(e);
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM) {
+      View *view = &default_view;
+      if (e.xclient.data.l[0] == IG_LAYER_DESKTOP) view = &default_view;
+      if (e.xclient.data.l[0] == IG_LAYER_OVERLAY) view = &overlay_view;
+      action_zoom_screen_by(view, *(float *) &e.xclient.data.l[1]);
     } else {
       print_xevent(display, &e);
       fprintf(stderr, "Ignored event\n"); fflush(stderr);
