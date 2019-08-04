@@ -119,15 +119,13 @@ int main(int argc, char *argv[]) {
 
   int evargi = 0;
   for (int argi = 0; argi < argc-1; argi++) {
-    size_t len;
+    size_t len = 1;
+    size_t format = 32;
     void *data = &items[argi]->data;
-    if (items[argi]->type == XA_INTEGER) len = sizeof(long);
-    else if (items[argi]->type == XA_FLOAT) len = sizeof(float);
-    else if (items[argi]->type == XA_ATOM) len = sizeof(Atom);
-    else if (items[argi]->type == XA_STRING) { len = strlen(items[argi]->data.s) + 1; data = items[argi]->data.s; }
+    if (items[argi]->type == XA_STRING) { format = 8; len = strlen(items[argi]->data.s) + 1; data = items[argi]->data.s; }
 
     if (items[argi]->name != None) {
-      XChangeProperty(display, win, items[argi]->name, items[argi]->type, 8, PropModeReplace, data, len);
+      XChangeProperty(display, win, items[argi]->name, items[argi]->type, format, PropModeReplace, data, len);
     } else {
       if (evargi > 5) {
         fprintf(stderr, "Only up to 6 action parameters can be sent: %s\n", items[argi]->unparsed);

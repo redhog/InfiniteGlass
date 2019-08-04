@@ -32,10 +32,10 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   unsigned char *prop_return;
   Atom coords[] = {IG_X, IG_Y, IG_W, IG_H};
   for (int coordi = 0; coordi < 4; coordi++) {
-    XGetWindowProperty(display, item->window, coords[coordi], 0, sizeof(float), 0, XA_FLOAT,
+    XGetWindowProperty(display, item->window, coords[coordi], 0, sizeof(float), 0, AnyPropertyType,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
     if (type_return != None) {
-     item->base.coords[coordi] = *(float *) prop_return;
+      item->base.coords[coordi] = *(float *) prop_return;
     }
     XFree(prop_return);
   }
