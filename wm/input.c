@@ -5,7 +5,7 @@
 #include "view.h"
 #include "actions.h"
 
-Bool debug_positions = False;
+Bool debug_positions = True;
 Bool debug_modes = False;
 
 InputMode **input_mode_stack = NULL;
@@ -56,7 +56,11 @@ void base_input_mode_enter(size_t mode) {
   }
 }
 void base_input_mode_exit(size_t mode) {}
-void base_input_mode_configure(size_t mode, Window window) {}
+void base_input_mode_configure(size_t mode, Window window) {
+  XSelectInput(display, window,
+               PointerMotionMask);
+  printf("XYZZ123 %d\n", window);
+}
 void base_input_mode_unconfigure(size_t mode, Window window) {}
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
   if (event.type == MotionNotify) {

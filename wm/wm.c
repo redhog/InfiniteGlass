@@ -36,7 +36,10 @@ void initItems() {
              &num_top_level_windows);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    item_get_from_window(top_level_windows[i]);
+    Item *item = item_get_from_window(top_level_windows[i]);
+    XMapWindow(display, top_level_windows[i]);
+    item->type->update(item);
+    input_mode_stack_configure(top_level_windows[i]);
   }
 
   XFree(top_level_windows);
@@ -230,6 +233,8 @@ int main() {
       if (e.xclient.data.l[0] == IG_LAYER_OVERLAY) view = &overlay_view;
       printf("ACTION: Zoom by %f\n", *(float *) &e.xclient.data.l[1]);
       action_zoom_screen_by(view, *(float *) &e.xclient.data.l[1]);
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
+      exit(1);
     } else {
       print_xevent(display, &e);
       fprintf(stderr, "Ignored event\n"); fflush(stderr);
