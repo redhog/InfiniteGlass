@@ -227,8 +227,13 @@ int main() {
       View *view = &default_view;
       if (e.xclient.data.l[0] == IG_LAYER_DESKTOP) view = &default_view;
       if (e.xclient.data.l[0] == IG_LAYER_OVERLAY) view = &overlay_view;
-      printf("ACTION: Zoom by %f\n", *(float *) &e.xclient.data.l[1]);
-      action_zoom_screen_by(view, *(float *) &e.xclient.data.l[1]);
+      float zoom = *(float *) &e.xclient.data.l[1];
+      printf("ACTION: Zoom by %f\n", zoom);
+      if (zoom < 0.0) {
+        action_zoom_screen_home(view);
+      } else {
+        action_zoom_screen_by(view, zoom);
+      }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       exit(1);
     } else {

@@ -73,7 +73,9 @@ Item *parse_item(char *value) {
     readfile(f, &item->data.s, &readsize);
     item->data.s[readsize] = 0;
     fclose(f);
-  } else if (value[0] - '0' >= 0 && value[0] - '0' < 10) {
+  } else if (   (   value[0] - '0' >= 0
+                 && value[0] - '0' < 10)
+             || value[0] == '-') {
     if (strstr(value, ".") == NULL) {
       item->type = XA_INTEGER;
       item->data.l = atoi(value);
