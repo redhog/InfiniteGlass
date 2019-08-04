@@ -228,6 +228,7 @@ int main() {
       View *view = &default_view;
       if (e.xclient.data.l[0] == IG_LAYER_DESKTOP) view = &default_view;
       if (e.xclient.data.l[0] == IG_LAYER_OVERLAY) view = &overlay_view;
+      printf("ACTION: Zoom by %f\n", *(float *) &e.xclient.data.l[1]);
       action_zoom_screen_by(view, *(float *) &e.xclient.data.l[1]);
     } else {
       print_xevent(display, &e);

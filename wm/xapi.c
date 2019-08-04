@@ -100,7 +100,8 @@ int xinit() {
   IG_W = XInternAtom(display, "IG_W", False);
   IG_H = XInternAtom(display, "IG_H", False);
   IG_ZOOM = XInternAtom(display, "IG_ZOOM", False);
-  
+  XA_FLOAT = XInternAtom(display, "XA_FLOAT", False);
+
   x_try();
   XSelectInput(display, root,
                SubstructureRedirectMask |
