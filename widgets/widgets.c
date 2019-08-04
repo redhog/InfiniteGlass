@@ -17,8 +17,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Display* display;
-Window win;
 
 void readfile(FILE *file, char **buf, size_t *buf_size) {
   size_t readsize;
@@ -34,54 +32,126 @@ void readfile(FILE *file, char **buf, size_t *buf_size) {
   }
 }
 
+Display* display;
+Window win;
+Atom XA_FLOAT;
+
+typedef struct {
+  char *unparsed;
+  Atom name;
+  Atom type;
+  union {
+    float f;
+    long l;
+    Atom a;
+    char *s;
+  } data; 
+} Item;
+
+Item *parse_item(char *value) {
+  char *equalsign;
+  Item *item = malloc(sizeof(Item));
+  item->unparsed = value;
+  item->name = None;
+  item->type = None;
+
+  if ((equalsign = strstr(value, "=")) != NULL) {
+    char strname[equalsign - value + 1];
+    strncpy(strname, value, equalsign - value);
+    strname[equalsign - value] = 0;
+    value = equalsign + 1;
+    item->name = XInternAtom(display, strname, False);
+  }
+  if (value[0] == '@') {
+    item->type = XA_STRING;
+    size_t readsize;
+    FILE *f = fopen(value+1, "r");
+    if (!f) {
+      fprintf(stderr, "Unable to read file: %s\n", value+1);
+      exit(1);
+    }
+    readfile(f, &item->data.s, &readsize);
+    item->data.s[readsize] = 0;
+    fclose(f);
+  } else if (value[0] - '0' >= 0 && value[0] - '0' < 10) {
+    if (strstr(value, ".") == NULL) {
+      item->type = XA_INTEGER;
+      item->data.l = atoi(value);
+    } else {
+      item->type = XA_FLOAT;
+     item->data.f = atof(value);
+    }
+  } else {
+    item->type = XA_ATOM;
+    item->data.a = XInternAtom(display, value, False);
+  }
+  return item;
+}
+
+void free_item(Item *item) {
+  if (item->type == XA_STRING) {
+    free(item->data.s);
+  }
+  free(item);
+}
+
 int main(int argc, char *argv[]) {
-  char *buf;
-  size_t buf_size;
-  Atom action;
-  
-  if (argc < 3) {
-    fprintf(stderr, "Usage: widgets path/to/file.svg IG_ACTION_NAME\n");
+  Item *items[argc-1];
+ 
+  display = XOpenDisplay(NULL);
+  XA_FLOAT = XInternAtom(display, "FLOAT", False);
+
+  if (argc < 2) {
+    fprintf(stderr, "Usage: widgets ATOMNAME=value ATOMNAME=value... ACTION_ATOMNAME ACTION_PARAM...\n");
     exit(1);
   }
+
+  for (int argi = 1; argi < argc; argi++) {
+    items[argi-1] = parse_item(argv[argi]);
+  }
+
+  win = XCreateWindow(display, DefaultRootWindow(display), 0, 0, 100, 100, 0, DefaultDepth(display, 0), InputOutput, CopyFromParent, 0, NULL);
   
-  display = XOpenDisplay(NULL);
-
-  Atom DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
-  Atom IG_LAYER = XInternAtom(display, "IG_LAYER", False);
-  Atom IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
-
-  action = XInternAtom(display, argv[2], False);
   XEvent ev = {0};
   ev.xclient.type = ClientMessage;
   ev.xclient.window = DefaultRootWindow(display);
-  ev.xclient.message_type = action;
   ev.xclient.format = 32;
-  for (int argi = 3; argi < argc; argi++) {
-    if (argv[argi][0] - '0' >= 0 && argv[argi][0] - '0' < 10) {
-      if (strstr(argv[argi], ".") == NULL) {
-        ev.xclient.data.l[argi-3] = atoi(argv[argi]);
-      } else {
-       *(float *) &ev.xclient.data.l[argi-3] = atof(argv[argi]);
-      }
+
+  int evargi = 0;
+  for (int argi = 0; argi < argc-1; argi++) {
+    size_t len;
+    void *data = &items[argi]->data;
+    if (items[argi]->type == XA_INTEGER) len = sizeof(long);
+    else if (items[argi]->type == XA_FLOAT) len = sizeof(float);
+    else if (items[argi]->type == XA_ATOM) len = sizeof(Atom);
+    else if (items[argi]->type == XA_STRING) { len = strlen(items[argi]->data.s) + 1; data = items[argi]->data.s; }
+
+    if (items[argi]->name != None) {
+      XChangeProperty(display, win, items[argi]->name, items[argi]->type, 8, PropModeReplace, data, len);
     } else {
-      ev.xclient.data.l[argi-3] = XInternAtom(display, argv[argi], False);
+      if (evargi > 5) {
+        fprintf(stderr, "Only up to 6 action parameters can be sent: %s\n", items[argi]->unparsed);
+        exit(1);
+      }
+      if (items[argi]->type == XA_STRING) {
+       fprintf(stderr, "Strings (files) can not be sent as action parameters: %s\n", items[argi]->unparsed);
+        exit(1);
+      }
+      if (evargi == 0) {
+        if (items[argi]->type != XA_ATOM) {
+          fprintf(stderr, "First action parameter must be of type ATOM. Atoms are simply specified by name: %s\n", items[argi]->unparsed);
+          exit(1);
+        }
+        ev.xclient.message_type = items[argi]->data.a;
+      } else {
+        memcpy(&ev.xclient.data.l[evargi-1],
+               data,
+               sizeof(long));
+      }
+      evargi++;
     }
   }
-
-  FILE *f = fopen(argv[1], "r");
-  if (!f) {
-    fprintf(stderr, "Unable to read svg file\n");
-    exit(1);
-  }
-  readfile(f, &buf, &buf_size);
-  fclose(f);
   
-  win = XCreateWindow(display, DefaultRootWindow(display), 0, 0, 100, 100, 0, DefaultDepth(display, 0), InputOutput, CopyFromParent, 0, NULL);
-  XChangeProperty(display, win, DISPLAYSVG, XA_STRING, 8, PropModeReplace, buf, buf_size);
-  free(buf);
-
-  XChangeProperty(display, win, IG_LAYER, XA_ATOM, 32, PropModeReplace, &IG_LAYER_OVERLAY, 1);
-
   XSelectInput(display, win,
                KeyPressMask |
                KeyReleaseMask |
@@ -97,7 +167,7 @@ int main(int argc, char *argv[]) {
     XNextEvent(display, &e);
 
     if (e.type == ButtonPress) {
-      printf("Sending %s\n", argv[2]);
+      printf("Sending action.\n");
       
       XSendEvent(display, DefaultRootWindow(display), False, SubstructureNotifyMask|SubstructureRedirectMask, &ev);
       XFlush(display);
