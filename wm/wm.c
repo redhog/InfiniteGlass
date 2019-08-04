@@ -36,10 +36,7 @@ void initItems() {
              &num_top_level_windows);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    Item *item = item_get_from_window(top_level_windows[i]);
-    XMapWindow(display, top_level_windows[i]);
-    item->type->update(item);
-    input_mode_stack_configure(top_level_windows[i]);
+    item_get_from_window(top_level_windows[i]);
   }
 
   XFree(top_level_windows);
@@ -193,7 +190,6 @@ int main() {
         Item *item = item_get_from_window(e.xcreatewindow.window);
         XMapWindow(display, e.xmaprequest.window);
         item->type->update(item);
-        input_mode_stack_configure(e.xcreatewindow.window);
       }
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window);

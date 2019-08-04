@@ -1,4 +1,5 @@
 #include "glapi.h"
+#include "input.h"
 #include "item_window.h"
 #include "item_window_shader.h"
 #include "item_window_pixmap.h"
@@ -67,6 +68,8 @@ void item_type_window_constructor(Item *item, void *args) {
   XGetWindowAttributes(display, window, &attr);
   window_item->base.is_mapped = attr.map_state == IsViewable;
   item_type_window_update_space_pos_from_window(item);
+
+  input_mode_stack_configure(window);
 }
 
 void item_type_window_destructor(Item *item) {
