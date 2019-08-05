@@ -1,0 +1,23 @@
+prop(root,
+     IG_VIEWS=["IG_VIEW_OVERLAY", "IG_VIEW_DESKTOP"]
+     IG_VIEW_OVERLAY_LAYER="IG_LAYER_OVERLAY"
+     IG_VIEW_OVERLAY_VIEW=[0.0, 0.0, 1.0, 0.75]
+     IG_VIEW_DESKTOP_LAYER="IG_LAYER_DESKTOP"
+     IG_VIEW_DESKTOP_VIEW=[0.0, 0.0, 1.0, 0.75])
+
+
+win = create(root, 0, 0, 300, 200)
+prop(win,
+     IG_LAYER="IG_LAYER_OVERLAY",
+     IG_X=0.01
+     IG_Y=0.70
+     IG_W=0.05
+     IG_H=0.05
+     DISPLAYSVG="@fontawesome-free-5.9.0-desktop/svgs/solid/search-plus.svg")
+
+@on(win, button=1, state=ShiftMask)
+def ButtonPress(self, event):
+    send(root,
+         "IG_ZOOM",
+         "IG_LAYER_DESKTOP",
+         0.9090909090909091)
