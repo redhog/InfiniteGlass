@@ -5,8 +5,8 @@
 #include "view.h"
 #include "actions.h"
 
-Bool debug_positions = False;
-Bool debug_modes = False;
+static Bool debug_positions = False;
+static Bool debug_modes = False;
 
 InputMode **input_mode_stack = NULL;
 size_t input_mode_stack_len = 0;
@@ -56,11 +56,7 @@ void base_input_mode_enter(size_t mode) {
   }
 }
 void base_input_mode_exit(size_t mode) {}
-void base_input_mode_configure(size_t mode, Window window) {
-  XSelectInput(display, window,
-               PointerMotionMask);
-  printf("XYZZ123 %d\n", window);
-}
+void base_input_mode_configure(size_t mode, Window window) {}
 void base_input_mode_unconfigure(size_t mode, Window window) {}
 uint base_input_mode_handle_event(size_t mode, XEvent event) {
   if (event.type == MotionNotify) {
@@ -69,12 +65,6 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
     pick(event.xmotion.x_root, event.xmotion.y_root, &winx, &winy, &item);
     if (item && item_isinstance(item, &item_type_window)) {
       ItemWindow *window_item = (ItemWindow *) item;
-     
-      XWindowChanges values;
-      values.x = event.xmotion.x_root - winx;
-      values.y = event.xmotion.y_root - winy;
-      values.stack_mode = Above;
-      XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
       XSetInputFocus(display, window_item->window, RevertToNone, CurrentTime);
      
       if (debug_positions)

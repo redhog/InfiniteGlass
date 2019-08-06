@@ -15,6 +15,8 @@
 
 #include <SOIL/SOIL.h>
 
+static Bool debug_positions = False;
+
 View default_view;
 View overlay_view;
 
@@ -111,6 +113,7 @@ int main() {
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
 
+  View **views = view_load_all();
 
   default_view.screen[0] = 0.;
   default_view.screen[1] = 0.;
@@ -212,12 +215,37 @@ int main() {
       XMapWindow(display, e.xmaprequest.window);
     } else if (e.type == ConfigureRequest) {
       //OnConfigureRequest(e.xconfigurerequest);
+    } else if (e.type == PropertyNotify) {
+
+
+     
+      print_xevent(display, &e);
     } else if (e.type == ButtonPress) {
       input_mode_stack_handle(e);
     } else if (e.type == ButtonRelease) {
       input_mode_stack_handle(e);
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
+
+      int winx, winy;
+      Item *item;
+      pick(e.xmotion.x_root, e.xmotion.y_root, &winx, &winy, &item);
+      if (item && item_isinstance(item, &item_type_window)) {
+        ItemWindow *window_item = (ItemWindow *) item;
+
+        XWindowChanges values;
+        values.x = e.xmotion.x_root - winx;
+        values.y = e.xmotion.y_root - winy;
+        values.stack_mode = Above;
+        XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
+
+        if (debug_positions)
+          printf("Point %d,%d -> %d,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
+      } else {
+        if (debug_positions)
+          printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
+      }
+      
       input_mode_stack_handle(e);
     } else if (e.type == KeyPress) {
       input_mode_stack_handle(e);

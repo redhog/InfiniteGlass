@@ -15,5 +15,9 @@ extern void view_draw(GLint fb, View *view, Item **items, ItemFilter *filter);
 extern void view_draw_picking(GLint fb, View *view, Item **items, ItemFilter *filter);
 extern void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **returnitem);
 
+extern View *view_load(Atom name);
+extern View **view_load_all(void);
+extern void view_set_screen(View *view, float screen[4]);
+
 #endif
 

@@ -104,3 +104,77 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
     }
  }
 }
+
+View *view_load(Atom name) {
+  View *view = malloc(sizeof(View));
+  view->name = name;
+  char *strname = XGetAtomName(display, name);
+
+  {
+    char str_attr_layer[strlen(strname) + 7];
+    strcpy(str_attr_layer, strname);
+    strcpy(str_attr_layer + strlen(strname), "_LAYER");
+  
+    view->attr_layer = XInternAtom(display, str_attr_layer, False);
+  }
+  {
+    char str_attr_view[strlen(strname) + 6];
+    strcpy(str_attr_view, strname);
+    strcpy(str_attr_view + strlen(strname), "_VIEW");
+    view->attr_view = XInternAtom(display, str_attr_view, False);
+  }
+  
+  XFree(strname);
+ 
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return;
+
+  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom), 0, AnyPropertyType,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return != None) {
+   view->layer = *(Atom *) prop_return;
+  }
+  XFree(prop_return);
+
+  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(Atom), 0, AnyPropertyType,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return != None) {
+    memcpy((void *) view->screen, prop_return, sizeof(float) * 4);
+  }
+  XFree(prop_return);
+}
+
+View **view_load_all(void) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return;
+
+  XGetWindowProperty(display, root, IG_VIEWS, 0, 100000, 0, AnyPropertyType,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return == None) {
+    XFree(prop_return);
+    return NULL;
+  }
+  
+  View **res = malloc(sizeof(View *) * (nitems_return + 1));
+  
+  for (int i=0; i < nitems_return; i++) {
+    res[i] = view_load(((Atom *) prop_return)[i]);
+  }
+  res[nitems_return] = NULL;
+  XFree(prop_return);
+
+  return res;
+}
+
+void view_set_screen(View *view, float screen[4]) {
+  for (int i = 0; i < 4; i++) {
+    view->screen[i] = screen[i];
+  }
+  XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, screen, 4);
+}

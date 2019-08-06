@@ -69,6 +69,8 @@ void item_type_window_constructor(Item *item, void *args) {
   window_item->base.is_mapped = attr.map_state == IsViewable;
   item_type_window_update_space_pos_from_window(item);
 
+  XSelectInput(display, window, PointerMotionMask | PropertyChangeMask);
+  
   input_mode_stack_configure(window);
 }
 

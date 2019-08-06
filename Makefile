@@ -31,7 +31,7 @@ $(BUILD)/env:
 	virtualenv --python=python3 $@
 	. $@/bin/activate; cd pyig; python setup.py develop
 
-run: $(BUILD)/env $(BUILD)/wm $(BUILD)/widgets fontawesome/Font-Awesome-5-Free-Regular-400.ttf
+run: $(BUILD)/env $(BUILD)/wm fontawesome/Font-Awesome-5-Free-Regular-400.ttf
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &
 	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
 

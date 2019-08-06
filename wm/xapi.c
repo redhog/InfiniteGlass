@@ -92,6 +92,7 @@ int xinit() {
   WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
   DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
 
+  IG_VIEWS = XInternAtom(display, "IG_VIEWS", False);
   IG_LAYER = XInternAtom(display, "IG_LAYER", False);
   IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
   IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
@@ -107,6 +108,7 @@ int xinit() {
   XSelectInput(display, root,
                SubstructureRedirectMask |
                SubstructureNotifyMask |
+               PropertyChangeMask |
                KeyPressMask |
                KeyReleaseMask |
                ButtonPressMask |
