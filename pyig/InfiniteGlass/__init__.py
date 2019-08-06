@@ -61,6 +61,8 @@ def window_getitem(self, name):
     res = res.value
     if property_type == "ATOM":
         res = [display.get_atom_name(item) for item in res]
+    if property_type == "FLOAT":
+        res = struct.unpack("<" + "f" * len(res), res.tobytes())
     if len(res) == 1:
         res = res[0]
     return res
