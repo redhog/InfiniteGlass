@@ -1,6 +1,7 @@
 xterm &
 #xclock &
 {
+source ./build/env/bin/activate
 python3 <<EOF
 import InfiniteGlass, Xlib.X
 with InfiniteGlass.Display() as display:
