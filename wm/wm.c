@@ -17,8 +17,7 @@
 
 static Bool debug_positions = False;
 
-View default_view;
-View overlay_view;
+View **views;
 
 void initItems() {
   XWindowAttributes attr;
@@ -54,10 +53,10 @@ void draw() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  current_layer = IG_LAYER_DESKTOP;
-  view_draw(0, &default_view, items_all, &filter_by_layer);
-  current_layer = IG_LAYER_OVERLAY;
-  view_draw(0, &overlay_view, items_all, &filter_by_layer);
+  for (View **v = views; *v; v++) {
+    current_layer = (*v)->layer;
+    view_draw(0, *v, items_all, &filter_by_layer);
+  }
   glFlush();
   glXSwapBuffers(display, overlay);
 }
@@ -68,13 +67,12 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-
-  current_layer = IG_LAYER_DESKTOP;
-  view_draw_picking(picking_fb,  &default_view, items_all, &filter_by_layer);
-  current_layer = IG_LAYER_OVERLAY;
-  view_draw_picking(picking_fb,  &overlay_view, items_all, &filter_by_layer);
+  for (View **v = views; *v; v++) {
+    current_layer = (*v)->layer;
+    view_draw_picking(picking_fb, *v, items_all, &filter_by_layer);
+  }
   glFlush();
-  view_pick(picking_fb, &default_view, x, y, winx, winy, item);
+  view_pick(picking_fb, *views, x, y, winx, winy, item);
 }
 
 int init_picking() {
@@ -113,21 +111,16 @@ int main() {
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
 
-  View **views = view_load_all();
+  views = view_load_all();
 
-  default_view.screen[0] = 0.;
-  default_view.screen[1] = 0.;
-  default_view.screen[2] = 1.;
-  default_view.screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
-  default_view.width = overlay_attr.width;
-  default_view.height = overlay_attr.height;
-
-  overlay_view.screen[0] = 0.;
-  overlay_view.screen[1] = 0.;
-  overlay_view.screen[2] = 1.;
-  overlay_view.screen[3] = (float) overlay_attr.height / (float) overlay_attr.width;
-  overlay_view.width = overlay_attr.width;
-  overlay_view.height = overlay_attr.height;
+  for (View **v = views; *v; v++) {
+   printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
+          XGetAtomName(display, v[0]->layer),
+          v[0]->screen[0],
+          v[0]->screen[1],
+          v[0]->screen[2],
+          v[0]->screen[3]);
+  }
   
   push_input_mode(&base_input_mode.base);
 
@@ -145,7 +138,7 @@ int main() {
     XEvent e;
     XSync(display, False);
     XNextEvent(display, &e);
-//    print_xevent(display, &e);
+    //print_xevent(display, &e);
 
     gl_check_error("loop");
 
@@ -252,15 +245,23 @@ int main() {
     } else if (e.type == KeyRelease) {
       input_mode_stack_handle(e);
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM) {
-      View *view = &default_view;
-      if (e.xclient.data.l[0] == IG_LAYER_DESKTOP) view = &default_view;
-      if (e.xclient.data.l[0] == IG_LAYER_OVERLAY) view = &overlay_view;
+      View *view = NULL;
+      for (View **v = views; *v; v++) {
+        if ((*v)->layer == e.xclient.data.l[0]) {
+          view = *v;
+          break;
+        }
+      }
       float zoom = *(float *) &e.xclient.data.l[1];
       printf("ACTION: Zoom by %f\n", zoom);
-      if (zoom < 0.0) {
-        action_zoom_screen_home(view);
+      if (!view) {
+        printf("ACTION: Zoom layer does not exist\n");
       } else {
-        action_zoom_screen_by(view, zoom);
+        if (zoom < 0.0) {
+          action_zoom_screen_home(view);
+        } else {
+          action_zoom_screen_by(view, zoom);
+        }
       }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       exit(1);

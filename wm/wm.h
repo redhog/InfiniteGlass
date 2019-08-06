@@ -6,7 +6,7 @@
 #include "item.h"
 #include "item_window.h"
 
-extern View default_view;
+extern View **views;
 
 extern void draw();
 extern void pick(int x, int y, int *winx, int *winy, Item **item);

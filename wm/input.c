@@ -87,11 +87,11 @@ uint base_input_mode_handle_event(size_t mode, XEvent event) {
       }
     }
     if (item) {
-      action_zoom_screen_to_window_and_window_to_screen(&default_view, item);
+      action_zoom_screen_to_window_and_window_to_screen(views[0], item);
     }
 
   } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Home)) {
-    action_zoom_screen_home(&default_view);
+    action_zoom_screen_home(views[0]);
   } else if (   (event.type == ButtonPress && event.xbutton.state & Mod1Mask && event.xbutton.button == 4)
              || (event.type == ButtonPress && event.xbutton.state & Mod1Mask && event.xbutton.button == 5)
              || (event.type == KeyPress && event.xkey.state & Mod1Mask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))
@@ -208,7 +208,7 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
       }
     }
     if (item) {
-      action_zoom_to_window(&default_view, item);
+      action_zoom_to_window(views[0], item);
     } else {
  
     }
@@ -217,13 +217,13 @@ uint zoom_input_mode_handle_event(size_t mode, XEvent event) {
 
 
   } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior)) { // up -> zoom in
-    action_zoom_screen_by(&default_view, 1 / 1.1);
+    action_zoom_screen_by(views[0], 1 / 1.1);
   } else if (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next)) { // down -> zoom out
-    action_zoom_screen_by(&default_view, 1.1);
+    action_zoom_screen_by(views[0], 1.1);
   } else if (event.type == ButtonRelease && event.xbutton.button == 4) { // up -> zoom in
-    action_zoom_screen_by_around(&default_view, 1 / 1.1, event.xbutton.x, event.xbutton.y);
+    action_zoom_screen_by_around(views[0], 1 / 1.1, event.xbutton.x, event.xbutton.y);
   } else if (event.type == ButtonRelease && event.xbutton.button == 5) { // down -> zoom out
-    action_zoom_screen_by_around(&default_view, 1.1, event.xbutton.x, event.xbutton.y);
+    action_zoom_screen_by_around(views[0], 1.1, event.xbutton.x, event.xbutton.y);
   }
   return 1;
 };
@@ -244,7 +244,7 @@ void pan_input_mode_enter(size_t mode) {
   PanInputMode *self = (PanInputMode *) input_mode_stack[mode];
   self->x = 0;
   self->y = 0;
-  memcpy(self->screen_orig, default_view.screen, sizeof default_view.screen);
+  memcpy(self->screen_orig, views[0]->screen, sizeof views[0]->screen);
   XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, root, XCreateFontCursor(display, XC_box_spiral), CurrentTime);
   XGrabKeyboard(display, root, False, GrabModeAsync, GrabModeAsync, CurrentTime);
 }
@@ -267,8 +267,8 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
     self->x += (event.xkey.keycode == XKeysymToKeycode(display, XK_Left)) - (event.xkey.keycode == XKeysymToKeycode(display, XK_Right));
     self->y += (event.xkey.keycode == XKeysymToKeycode(display, XK_Up)) - (event.xkey.keycode == XKeysymToKeycode(display, XK_Down));
 
-    view_to_space(&default_view, 0, 0, &spacex_orig, &spacey_orig);
-    view_to_space(&default_view, self->x, self->y, &spacex, &spacey);
+    view_to_space(views[0], 0, 0, &spacex_orig, &spacey_orig);
+    view_to_space(views[0], self->x, self->y, &spacex, &spacey);
 
     if (debug_positions)
       printf("Pan %d,%d -> %f,%f\n",
@@ -277,8 +277,8 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
              spacex - spacex_orig,
              spacey - spacey_orig); fflush(stdout);
     
-    default_view.screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
-    default_view.screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
+    views[0]->screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
+    views[0]->screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
 
     draw();
 
@@ -286,10 +286,10 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
     float spacex_orig, spacey_orig;
     float spacex, spacey;
     
-    view_to_space(&default_view, self->base.first_event.xmotion.x_root,
+    view_to_space(views[0], self->base.first_event.xmotion.x_root,
                  self->base.first_event.xmotion.y_root,
                  &spacex_orig, &spacey_orig);
-    view_to_space(&default_view, event.xmotion.x_root,
+    view_to_space(views[0], event.xmotion.x_root,
                  event.xmotion.y_root,
                  &spacex, &spacey);
 
@@ -300,14 +300,14 @@ uint pan_input_mode_handle_event(size_t mode, XEvent event) {
              spacex - spacex_orig,
              spacey - spacey_orig); fflush(stdout);
     
-    default_view.screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
-    default_view.screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
+    views[0]->screen[0] = self->screen_orig[0] - (spacex - spacex_orig);
+    views[0]->screen[1] = self->screen_orig[1] - (spacey - spacey_orig);
 
     draw();
 
     if (debug_positions)
       printf("%f,%f[%f,%f]\n",
-             default_view.screen[0],default_view.screen[1],default_view.screen[2],default_view.screen[3]);
+             views[0]->screen[0],views[0]->screen[1],views[0]->screen[2],views[0]->screen[3]);
 
   }
   return 1;
@@ -346,16 +346,16 @@ uint item_zoom_input_mode_handle_event(size_t mode, XEvent event) {
     pop_input_mode();
   } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 4)
              || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
-    action_zoom_window_to_1_to_1_to_screen(&default_view, self->item);
+    action_zoom_window_to_1_to_1_to_screen(views[0], self->item);
   } else if (   (event.type == ButtonRelease && event.xbutton.state & ShiftMask && event.xbutton.button == 5)
              || (event.type == KeyPress && event.xbutton.state & ShiftMask && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) {
-    action_zoom_screen_to_1_to_1_to_window(&default_view, self->item);   
+    action_zoom_screen_to_1_to_1_to_window(views[0], self->item);   
   } else if (   (event.type == ButtonRelease && event.xbutton.button == 4)
              || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Prior))) {
-    action_zoom_window_by(&default_view, self->item, 0.9);
+    action_zoom_window_by(views[0], self->item, 0.9);
   } else if (   (event.type == ButtonRelease && event.xbutton.button == 5)
              || (event.type == KeyPress && event.xkey.keycode == XKeysymToKeycode(display, XK_Next))) {
-    action_zoom_window_by(&default_view, self->item, 1.1);
+    action_zoom_window_by(views[0], self->item, 1.1);
   }
   return 1;
 };
@@ -400,8 +400,8 @@ uint item_pan_input_mode_handle_event(size_t mode, XEvent event) {
     self->x += (event.xkey.keycode == XKeysymToKeycode(display, XK_Right)) - (event.xkey.keycode == XKeysymToKeycode(display, XK_Left));
     self->y += (event.xkey.keycode == XKeysymToKeycode(display, XK_Down)) - (event.xkey.keycode == XKeysymToKeycode(display, XK_Up));
 
-    view_to_space(&default_view, 0, 0, &spacex_orig, &spacey_orig);
-    view_to_space(&default_view, self->x, self->y, &spacex, &spacey);
+    view_to_space(views[0], 0, 0, &spacex_orig, &spacey_orig);
+    view_to_space(views[0], self->x, self->y, &spacex, &spacey);
 
     self->item->coords[0] =  self->orig_item.coords[0] + (spacex - spacex_orig);
     self->item->coords[1] =  self->orig_item.coords[1] + (spacey - spacey_orig);
@@ -422,10 +422,10 @@ uint item_pan_input_mode_handle_event(size_t mode, XEvent event) {
     float spacex_orig, spacey_orig;
     float spacex, spacey;
     
-    view_to_space(&default_view, self->base.first_event.xmotion.x_root,
+    view_to_space(views[0], self->base.first_event.xmotion.x_root,
                  self->base.first_event.xmotion.y_root,
                  &spacex_orig, &spacey_orig);
-    view_to_space(&default_view, event.xmotion.x_root,
+    view_to_space(views[0], event.xmotion.x_root,
                  event.xmotion.y_root,
                  &spacex, &spacey);
 

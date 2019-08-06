@@ -1,11 +1,11 @@
 xterm &
 #xclock &
 {
-source ./build/env/bin/activate
+. ./build/env/bin/activate
 python3 <<EOF
 import InfiniteGlass, Xlib.X
 with InfiniteGlass.Display() as display:
-    display.root["IG_VIEWS"]=["IG_VIEW_OVERLAY", "IG_VIEW_DESKTOP"]
+    display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY"]
     display.root["IG_VIEW_OVERLAY_LAYER"]="IG_LAYER_OVERLAY"
     display.root["IG_VIEW_OVERLAY_VIEW"]=[0.0, 0.0, 1.0, 0.75]
     display.root["IG_VIEW_DESKTOP_LAYER"]="IG_LAYER_DESKTOP"

@@ -121,6 +121,7 @@ View *view_load(Atom name) {
     char str_attr_view[strlen(strname) + 6];
     strcpy(str_attr_view, strname);
     strcpy(str_attr_view + strlen(strname), "_VIEW");
+    printf("XXXXXXXXXXXXXXXXX11111 >%s<\n", str_attr_view);
     view->attr_view = XInternAtom(display, str_attr_view, False);
   }
   
@@ -139,12 +140,19 @@ View *view_load(Atom name) {
   }
   XFree(prop_return);
 
-  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(Atom), 0, AnyPropertyType,
+  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(float)*4, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
-    memcpy((void *) view->screen, prop_return, sizeof(float) * 4);
+    for (int i = 0; i < 4; i++) {
+      // Yes, on 64bit linux, long is 8 bytes, and XGetWindowProperty inserts a bunch of zeroes!
+      // So we need to step through the array in chunks of long, not float (which is still 4 bytes)...
+      view->screen[i] = *(float *) &((long *) prop_return)[i];
+    }
   }
   XFree(prop_return);
+
+  view->width = overlay_attr.width;
+  view->height = overlay_attr.height;
 }
 
 View **view_load_all(void) {
