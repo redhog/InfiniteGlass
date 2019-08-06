@@ -209,9 +209,19 @@ int main() {
     } else if (e.type == ConfigureRequest) {
       //OnConfigureRequest(e.xconfigurerequest);
     } else if (e.type == PropertyNotify) {
-
-
-     
+      if (   (e.xproperty.window == root)
+          && (e.xproperty.atom == IG_VIEWS)) {
+        view_free_all(views);
+        views = view_load_all();
+      } else {
+        for (View **v = views; *v; v++) {
+          if (e.xproperty.atom == (*v)->attr_layer) {
+            view_load_layer(*v);
+          } else if (e.xproperty.atom == (*v)->attr_view) {
+            view_load_screen(*v);
+          }
+        }
+      }
       print_xevent(display, &e);
     } else if (e.type == ButtonPress) {
       input_mode_stack_handle(e);

@@ -105,6 +105,39 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
  }
 }
 
+void view_load_layer(View *view) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return;
+
+  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom), 0, AnyPropertyType,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return != None) {
+   view->layer = *(Atom *) prop_return;
+  }
+  XFree(prop_return);
+}
+void view_load_screen(View *view) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return;
+
+  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(float)*4, 0, AnyPropertyType,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return != None) {
+    for (int i = 0; i < 4; i++) {
+      // Yes, on 64bit linux, long is 8 bytes, and XGetWindowProperty inserts a bunch of zeroes!
+      // So we need to step through the array in chunks of long, not float (which is still 4 bytes)...
+      view->screen[i] = *(float *) &((long *) prop_return)[i];
+    }
+  }
+  XFree(prop_return);
+}
+
 View *view_load(Atom name) {
   View *view = malloc(sizeof(View));
   view->name = name;
@@ -127,32 +160,12 @@ View *view_load(Atom name) {
   
   XFree(strname);
  
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
-
-  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom), 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return != None) {
-   view->layer = *(Atom *) prop_return;
-  }
-  XFree(prop_return);
-
-  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(float)*4, 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return != None) {
-    for (int i = 0; i < 4; i++) {
-      // Yes, on 64bit linux, long is 8 bytes, and XGetWindowProperty inserts a bunch of zeroes!
-      // So we need to step through the array in chunks of long, not float (which is still 4 bytes)...
-      view->screen[i] = *(float *) &((long *) prop_return)[i];
-    }
-  }
-  XFree(prop_return);
-
+  view_load_layer(view);
+  view_load_screen(view);
   view->width = overlay_attr.width;
   view->height = overlay_attr.height;
+  
+  return view;
 }
 
 View **view_load_all(void) {
@@ -178,6 +191,17 @@ View **view_load_all(void) {
   XFree(prop_return);
 
   return res;
+}
+
+void view_free(View *view) {
+  free(view);
+}
+
+void view_free_all(View **views) {
+  for (View **v = views; *v; v++) {
+    free(*v);
+  }
+  free(views);
 }
 
 void view_set_screen(View *view, float screen[4]) {
