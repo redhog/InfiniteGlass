@@ -127,8 +127,6 @@ def on_event(self, event=None, mask=None, **kw):
         e = getattr(Xlib.X, e)
         self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         def handler(event):
-            print(event.window)
-            print(self)
             if hasattr(event, "window") and event.window.__window__() != self.__window__(): return False
             if event.type != e: return False
             for name, value in kw.items():
