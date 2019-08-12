@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
@@ -32,6 +33,7 @@ Atom IG_H;
 Atom IG_ZOOM;
 Atom IG_EXIT;
 Atom XA_FLOAT;
+Atom IG_NOTIFY_MOTION;
 
 Display* display;
 Window root;

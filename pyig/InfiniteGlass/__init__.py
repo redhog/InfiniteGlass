@@ -133,7 +133,7 @@ for key, value in event_mask_map.items():
 
 eventhandlers = []
 
-def on_event(self, event=None, mask=None, **kw):
+def on_event(self, any_window=False, event=None, mask=None, **kw):
     def parse(value):
         value = parse_value(self, value)[1]
         if len(value) == 1:
@@ -155,7 +155,6 @@ def on_event(self, event=None, mask=None, **kw):
             e = event_mask_map_inv[m]
             if isinstance(e, tuple): e = e[0]
         e = getattr(Xlib.X, e)
-        print("MASK", self, self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         def handler(event):
             if hasattr(event, "window") and event.window.__window__() != self.__window__(): return False
@@ -163,7 +162,7 @@ def on_event(self, event=None, mask=None, **kw):
             for name, value in kw.items():
                 if not hasattr(event, name): return False
                 if "mask" in name.lower():
-                    if not getattr(event, name) & value != value: return False
+                    if getattr(event, name) & value != value: return False
                 else:
                     if getattr(event, name) != value: return False
             fn(self, event)
@@ -183,7 +182,6 @@ def display_exit(self, exctype, exc, tr):
     self.flush()
     while eventhandlers:
         event = self.next_event()
-        print("XXXX", event)
         for handler in eventhandlers:
             if handler(event):
                 break

@@ -104,14 +104,14 @@ int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
-  
+
   fprintf(stderr, "Initialized X and GL.\n");
 
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
 
-  views = view_load_all();
+  while (!(views = view_load_all())) sleep(1);
 
   for (View **v = views; *v; v++) {
    printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
@@ -232,9 +232,11 @@ int main() {
 
       int winx, winy;
       Item *item;
+      Window win = root;
       pick(e.xmotion.x_root, e.xmotion.y_root, &winx, &winy, &item);
       if (item && item_isinstance(item, &item_type_window)) {
         ItemWindow *window_item = (ItemWindow *) item;
+        win = window_item->window;
 
         XWindowChanges values;
         values.x = e.xmotion.x_root - winx;
@@ -248,8 +250,22 @@ int main() {
         if (debug_positions)
           printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
       }
-      
+
+      XEvent ev = {0};
+      ev.xclient.type = ClientMessage;
+      ev.xclient.window = win;
+      ev.xclient.message_type = IG_NOTIFY_MOTION;
+      ev.xclient.format = 32;
+      for (int i=0; i < 2 && views[i]; i++) {
+        view_to_space(views[i],
+                      e.xmotion.x_root, e.xmotion.y_root,
+                      (float *) &ev.xclient.data.l[i*2], (float *) &ev.xclient.data.l[i*2+1]);
+      }
+      XSendEvent(display, win, False, PointerMotionMask, &ev);
+
       input_mode_stack_handle(e);
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_NOTIFY_MOTION) {
+      // Ignore
     } else if (e.type == KeyPress) {
       input_mode_stack_handle(e);
     } else if (e.type == KeyRelease) {
