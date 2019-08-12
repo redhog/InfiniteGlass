@@ -8,6 +8,12 @@ import contextlib
 
 from Xlib.display import Display
 
+orig_display_init = Xlib.display.Display.__init__
+def display_init(self, *arg, **kw):
+    orig_display_init(self, *arg, **kw)
+    self.display.real_display = self
+Xlib.display.Display.__init__ = display_init
+        
 def parse_value(self, value):
     if isinstance(value, (tuple, list)):
         items = value
@@ -21,28 +27,41 @@ def parse_value(self, value):
                 items = [float(item) for item in items]
             else:
                 items = [int(item) for item in items]
-    if isinstance(items[0], int):
+    if isinstance(items[0], Xlib.xobject.drawable.Window):
+        itemtype = self.display.get_atom("WINDOW")
+        items = [item.__window__() for item in items]
+    elif isinstance(items[0], int):
         itemtype = self.display.get_atom("INTEGER")
-        items = struct.pack("<" + "i" * len(items), *items)
     elif isinstance(items[0], float):
         itemtype = self.display.get_atom("FLOAT")
-        items = struct.pack("<" + "f" * len(items), *items)
     elif items[0].startswith("@"):
         itemtype = self.display.get_atom("STRING")
         res = []
         for item in items:
             with open(value[1:], "rb") as f:
                 res.append(f.read())
-        items = b''.join(res)
+        items = res
     else:
         itemtype = self.display.get_atom("ATOM")
         items = [self.display.get_atom(item) for item in items]
+    return itemtype, items
+
+def format_value(self, value):
+    itemtype, items = parse_value(self, value)
+
+    if isinstance(items[0], int):
+        items = struct.pack("<" + "i" * len(items), *items)
+    elif isinstance(items[0], float):
+        items = struct.pack("<" + "f" * len(items), *items)
+    elif isinstance(items[0], bytes):
+        items = b''.join(items)
+    else:
         items = struct.pack("<" + "l" * len(items), *items)
     return itemtype, items
-        
+
 def window_setitem(self, key, value):
     key = self.display.get_atom(key)
-    itemtype, items = parse_value(self, value)
+    itemtype, items = format_value(self, value)
     format = 32
     if itemtype == self.display.get_atom("STRING"):
         format = 8
@@ -50,19 +69,21 @@ def window_setitem(self, key, value):
 Xlib.xobject.drawable.Window.__setitem__ = window_setitem
 
 def window_keys(self):
-    display = Xlib.display.Display(self.display.get_display_name())
-    return [display.get_atom_name(atom) for atom in self.list_properties()]
+    return [self.display.real_display.get_atom_name(atom) for atom in self.list_properties()]
 Xlib.xobject.drawable.Window.keys = window_keys
 
 def window_getitem(self, name):
-    display = Xlib.display.Display(self.display.get_display_name())
     res = self.get_property(self.display.get_atom(name), Xlib.X.AnyPropertyType, 0, 100000)
-    property_type = display.get_atom_name(res.property_type)
+    if res is None:
+        raise KeyError("Window %s has no property %s" % (self.__window__(), name))
+    property_type = self.display.real_display.get_atom_name(res.property_type)
     res = res.value
     if property_type == "ATOM":
-        res = [display.get_atom_name(item) for item in res]
+        res = [self.display.real_display.get_atom_name(item) for item in res]
     if property_type == "FLOAT":
         res = struct.unpack("<" + "f" * len(res), res.tobytes())
+    if property_type == "WINDOW":
+        res = [self.display.real_display.create_resource_object("window", item) for item in res]
     if len(res) == 1:
         res = res[0]
     return res
@@ -113,6 +134,13 @@ for key, value in event_mask_map.items():
 eventhandlers = []
 
 def on_event(self, event=None, mask=None, **kw):
+    def parse(value):
+        value = parse_value(self, value)[1]
+        if len(value) == 1:
+            return value[0]
+        return value
+    kw = {key: parse(value)
+          for key, value in kw.items()}
     def wrapper(fn):
         e = event
         m = mask
@@ -127,6 +155,7 @@ def on_event(self, event=None, mask=None, **kw):
             e = event_mask_map_inv[m]
             if isinstance(e, tuple): e = e[0]
         e = getattr(Xlib.X, e)
+        print("MASK", self, self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         def handler(event):
             if hasattr(event, "window") and event.window.__window__() != self.__window__(): return False
@@ -154,11 +183,24 @@ def display_exit(self, exctype, exc, tr):
     self.flush()
     while eventhandlers:
         event = self.next_event()
+        print("XXXX", event)
         for handler in eventhandlers:
             if handler(event):
                 break
         self.flush()
 Xlib.display.Display.__exit__ = display_exit
+
+
+def window_require(self, prop):
+    def wrapper(fn):    
+        @self.on(atom=prop)
+        def PropertyNotify(win, event):
+            print("NNNNNNNNNNNNNNNNNNNN REQUIRE NOTIFY", event)
+            eventhandlers.remove(PropertyNotify)
+            fn(self, win[prop])
+    return wrapper
+Xlib.xobject.drawable.Window.require = window_require
+
 
 @property
 def display_root(self):
@@ -175,7 +217,7 @@ def create_window(self, x=0, y=0, width=100, height=100, border_width=0, depth=X
 Xlib.xobject.drawable.Window.create_window = create_window
 
 def window_send(self, window, client_type, *arg, **kw):
-    arg = [parse_value(self, value) for value in arg]
+    arg = [format_value(self, value) for value in arg]
     format = 32
     if arg and arg[0][0] == self.display.get_atom("STRING"):
         format = 8
