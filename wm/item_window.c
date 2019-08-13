@@ -1,5 +1,4 @@
 #include "glapi.h"
-#include "input.h"
 #include "item_window.h"
 #include "item_window_shader.h"
 #include "item_window_pixmap.h"
@@ -70,8 +69,6 @@ void item_type_window_constructor(Item *item, void *args) {
   item_type_window_update_space_pos_from_window(item);
 
   XSelectInput(display, window, PointerMotionMask | PropertyChangeMask);
-  
-  input_mode_stack_configure(window);
 }
 
 void item_type_window_destructor(Item *item) {

@@ -19,7 +19,7 @@ with InfiniteGlass.Display() as display:
         @w.on()
         def ButtonPress(win, event):
             display.root.send(display.root,
-                              "IG_ZOOM", "IG_LAYER_DESKTOP", win.zoom,
+                              "IG_ZOOM", "IG_LAYER_DESKTOP", win.zoom, -1, -1,
                               event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
 
     w = display.root.create_window()

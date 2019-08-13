@@ -101,19 +101,17 @@ int xinit() {
   IG_W = XInternAtom(display, "IG_W", False);
   IG_H = XInternAtom(display, "IG_H", False);
   IG_ZOOM = XInternAtom(display, "IG_ZOOM", False);
+  IG_ZOOM_TO_WINDOW = XInternAtom(display, "IG_ZOOM_TO_WINDOW", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   XA_FLOAT = XInternAtom(display, "FLOAT", False);
   IG_NOTIFY_MOTION = XInternAtom(display, "IG_NOTIFY_MOTION", False);
-  
+  IG_ACTIVE_WINDOW = XInternAtom(display, "IG_ACTIVE_WINDOW", False);
+   
   x_try();
   XSelectInput(display, root,
                SubstructureRedirectMask |
                SubstructureNotifyMask |
                PropertyChangeMask |
-               KeyPressMask |
-               KeyReleaseMask |
-               ButtonPressMask |
-               ButtonReleaseMask |
                PointerMotionMask);
   if (!x_catch(&error)) {
     fprintf(stderr, "Another window manager is already running"); fflush(stderr);

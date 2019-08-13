@@ -31,9 +31,11 @@ Atom IG_Y;
 Atom IG_W;
 Atom IG_H;
 Atom IG_ZOOM;
+Atom IG_ZOOM_TO_WINDOW;
 Atom IG_EXIT;
 Atom XA_FLOAT;
 Atom IG_NOTIFY_MOTION;
+Atom IG_ACTIVE_WINDOW;
 
 Display* display;
 Window root;

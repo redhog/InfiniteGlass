@@ -210,3 +210,12 @@ void view_set_screen(View *view, float screen[4]) {
   }
   XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, screen, 4);
 }
+
+View *view_find(View **views, Atom name) {
+  for (View **v = views; *v; v++) {
+    if ((*v)->layer == name) {
+      return *v;
+    }
+  }
+  return NULL;
+}

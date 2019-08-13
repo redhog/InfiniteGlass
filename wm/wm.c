@@ -5,7 +5,6 @@
 #include <limits.h>
 
 #include "xapi.h"
-#include "input.h"
 #include "xevent.h"
 #include "view.h"
 #include "xevent.h"
@@ -17,6 +16,7 @@
 
 static Bool debug_positions = False;
 
+Window motion_notification_window;
 View **views;
 
 void initItems() {
@@ -37,6 +37,7 @@ void initItems() {
              &num_top_level_windows);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
+    if (top_level_windows[i] == motion_notification_window) continue;
     item_get_from_window(top_level_windows[i]);
   }
 
@@ -113,6 +114,10 @@ int main() {
 
   while (!(views = view_load_all())) sleep(1);
 
+  motion_notification_window = XCreateSimpleWindow(display, root, 0, 0, 1, 1, 0, 0, 0);
+  
+  XChangeProperty(display, root, IG_NOTIFY_MOTION, XA_WINDOW, 32, PropModeReplace, &motion_notification_window, 1);
+  
   for (View **v = views; *v; v++) {
    printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
           XGetAtomName(display, v[0]->layer),
@@ -122,8 +127,6 @@ int main() {
           v[0]->screen[3]);
   }
   
-  push_input_mode(&base_input_mode.base);
-
   initItems();
  
   glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
@@ -181,7 +184,7 @@ int main() {
       gl_check_error("item_update_pixmap");
       draw();
     } else if (e.type == CreateNotify) {
-      if (e.xcreatewindow.window != overlay) {
+      if (e.xcreatewindow.window != overlay && e.xcreatewindow.window != motion_notification_window) {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
         Item *item = item_get_from_window(e.xcreatewindow.window);
         XMapWindow(display, e.xmaprequest.window);
@@ -223,10 +226,6 @@ int main() {
         }
       }
       print_xevent(display, &e);
-    } else if (e.type == ButtonPress) {
-      input_mode_stack_handle(e);
-    } else if (e.type == ButtonRelease) {
-      input_mode_stack_handle(e);
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
 
@@ -250,7 +249,7 @@ int main() {
         if (debug_positions)
           printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
       }
-
+/*
       XEvent ev = {0};
       ev.xclient.type = ClientMessage;
       ev.xclient.window = win;
@@ -262,32 +261,48 @@ int main() {
                       (float *) &ev.xclient.data.l[i*2], (float *) &ev.xclient.data.l[i*2+1]);
       }
       XSendEvent(display, win, False, PointerMotionMask, &ev);
+*/
 
-      input_mode_stack_handle(e);
-    } else if (e.type == ClientMessage && e.xclient.message_type == IG_NOTIFY_MOTION) {
-      // Ignore
-    } else if (e.type == KeyPress) {
-      input_mode_stack_handle(e);
-    } else if (e.type == KeyRelease) {
-      input_mode_stack_handle(e);
-    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM) {
-      View *view = NULL;
-      for (View **v = views; *v; v++) {
-        if ((*v)->layer == e.xclient.data.l[0]) {
-          view = *v;
-          break;
-        }
+      size_t nrviews = 0;
+      for (View **v = views; *v; v++, nrviews++);
+      float coords[nrviews * 2];
+      for (int i=0; i<nrviews; i++) {
+        view_to_space(views[i],
+                      e.xmotion.x_root, e.xmotion.y_root,
+                      &coords[i*2], &coords[i*2+1]);
       }
+      XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, &coords, 2*nrviews);
+      XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, &win, 1);
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM) {
+      View *view = view_find(views, e.xclient.data.l[0]);
       float zoom = *(float *) &e.xclient.data.l[1];
-      printf("ACTION: Zoom by %f\n", zoom);
+      long x = *(long *) &e.xclient.data.l[2];
+      long y = *(long *) &e.xclient.data.l[3];
+      printf("ACTION: Zoom %l by %f around %d,%d\n", e.xclient.data.l[0], zoom, x, y);
       if (!view) {
         printf("ACTION: Zoom layer does not exist\n");
       } else {
         if (zoom < 0.0) {
           action_zoom_screen_home(view);
+        } else if (x >= 0 && y >=0) {
+          action_zoom_screen_by_around(view, zoom, x, y);
         } else {
           action_zoom_screen_by(view, zoom);
         }
+      }
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM_TO_WINDOW) {
+      View *view = view_find(views, e.xclient.data.l[0]);
+      Window win = *(Window *) &e.xclient.data.l[1];
+      Item *item = item_get_from_window(win);
+      printf("ACTION: Zoom to window %d\n", win);
+      if (!view) {
+        printf("ACTION: Zoom layer does not exist\n");
+      } else if (!item) {
+        printf("ACTION: Unknown window\n");
+      } else if (e.xclient.data.l[2]) {
+        action_zoom_screen_to_window_and_window_to_screen(view, item);
+      } else {
+        action_zoom_to_window(view, item);
       }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       exit(1);

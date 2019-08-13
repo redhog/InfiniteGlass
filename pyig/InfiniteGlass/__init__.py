@@ -5,8 +5,16 @@ import Xlib.protocol.event
 import sys
 import struct
 import contextlib
+import importlib
 
 from Xlib.display import Display
+
+keysymdef = importlib.__import__("Xlib.keysymdef", fromlist="*")
+
+keysyms = {keyname: getattr(dictionary, keyname) 
+           for dictionary in [getattr(keysymdef, name) for name in keysymdef.__all__]
+           for keyname in dir(dictionary)
+           if not keyname.startswith("_")}
 
 orig_display_init = Xlib.display.Display.__init__
 def display_init(self, *arg, **kw):
@@ -227,6 +235,12 @@ def window_send(self, window, client_type, *arg, **kw):
         data = (format, data))
     self.send_event(event, **kw)
 Xlib.xobject.drawable.Window.send = window_send
+
+def display_keycode(self, name):
+    return self.keysym_to_keycode(keysyms[name])
+
+Xlib.display.Display.keycode = display_keycode
+
 
 
 # with Display() as display:

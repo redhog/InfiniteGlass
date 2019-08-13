@@ -22,6 +22,7 @@ extern View **view_load_all(void);
 extern void view_free(View *view);
 extern void view_free_all(View **views);
 extern void view_set_screen(View *view, float screen[4]);
+extern View *view_find(View **views, Atom name);
 
 #endif
 
