@@ -286,7 +286,7 @@ with InfiniteGlass.Display() as display:
         win.change_attributes(event_mask = Xlib.X.PropertyChangeMask)
         display.notify_motion_window = win
     
-    @InfiniteGlass.eventhandlers.append
+    @display.eventhandlers.append
     def handle(event):
         return handle_event(display, event)
 

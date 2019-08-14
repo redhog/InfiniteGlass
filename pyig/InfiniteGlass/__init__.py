@@ -18,6 +18,8 @@ keysyms = {keyname: getattr(dictionary, keyname)
 
 orig_display_init = Xlib.display.Display.__init__
 def display_init(self, *arg, **kw):
+    self.eventhandlers = []
+    self.eventhandlerstack = []
     orig_display_init(self, *arg, **kw)
     self.display.real_display = self
 Xlib.display.Display.__init__ = display_init
@@ -36,26 +38,26 @@ def parse_value(self, value):
             else:
                 items = [int(item) for item in items]
     if isinstance(items[0], Xlib.xobject.drawable.Window):
-        itemtype = self.display.get_atom("WINDOW")
+        itemtype = self.get_atom("WINDOW")
         items = [item.__window__() for item in items]
     elif isinstance(items[0], int):
-        itemtype = self.display.get_atom("INTEGER")
+        itemtype = self.get_atom("INTEGER")
     elif isinstance(items[0], float):
-        itemtype = self.display.get_atom("FLOAT")
+        itemtype = self.get_atom("FLOAT")
     elif items[0].startswith("@"):
-        itemtype = self.display.get_atom("STRING")
+        itemtype = self.get_atom("STRING")
         res = []
         for item in items:
             with open(value[1:], "rb") as f:
                 res.append(f.read())
         items = res
     else:
-        itemtype = self.display.get_atom("ATOM")
-        items = [self.display.get_atom(item) for item in items]
+        itemtype = self.get_atom("ATOM")
+        items = [self.get_atom(item) for item in items]
     return itemtype, items
 
 def format_value(self, value):
-    itemtype, items = parse_value(self, value)
+    itemtype, items = parse_value(self.display, value)
 
     if isinstance(items[0], int):
         items = struct.pack("<" + "i" * len(items), *items)
@@ -139,9 +141,8 @@ for key, value in event_mask_map.items():
             event_mask_map_inv[item] = tuple(set(event_mask_map_inv[item]).union((key,)))
         event_mask_map_inv[item] = (key,)
 
-eventhandlers = []
 
-def on_event(self, any_window=False, event=None, mask=None, **kw):
+def display_on_event(self, event=None, mask=None, **kw):
     def parse(value):
         value = parse_value(self, value)[1]
         if len(value) == 1:
@@ -152,9 +153,9 @@ def on_event(self, any_window=False, event=None, mask=None, **kw):
     def wrapper(fn):
         e = event
         m = mask
-        if fn.__name__.endswith("Mask"):
+        if m is None and fn.__name__.endswith("Mask"):
             m = fn.__name__
-        else:
+        elif e is None:
             e = fn.__name__
         if m is None:
             m = event_mask_map[e]
@@ -163,9 +164,7 @@ def on_event(self, any_window=False, event=None, mask=None, **kw):
             e = event_mask_map_inv[m]
             if isinstance(e, tuple): e = e[0]
         e = getattr(Xlib.X, e)
-        self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         def handler(event):
-            if hasattr(event, "window") and event.window.__window__() != self.__window__(): return False
             if event.type != e: return False
             for name, value in kw.items():
                 if not hasattr(event, name): return False
@@ -175,11 +174,28 @@ def on_event(self, any_window=False, event=None, mask=None, **kw):
                     if getattr(event, name) != value: return False
             fn(self, event)
             return True
-        eventhandlers.append(handler)
+        self.eventhandlers.append(handler)
         return handler
     return wrapper
-
-Xlib.xobject.drawable.Window.on = on_event
+Xlib.display.Display.on = display_on_event
+        
+def window_on_event(self, event=None, mask=None, **kw):
+    def wrapper(fn):
+        e = event
+        m = mask
+        if fn.__name__.endswith("Mask"):
+            m = fn.__name__
+        else:
+            e = fn.__name__
+        if m is None:
+            m = event_mask_map[e]
+        self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
+        @self.display.real_display.on(event=e, mask=m, **kw)
+        def handler(display, event):
+            return fn(self, event)
+        return handler
+    return wrapper
+Xlib.xobject.drawable.Window.on = window_on_event
 
 def display_enter(self):
     return self
@@ -188,21 +204,28 @@ def display_exit(self, exctype, exc, tr):
     if exc is not None:
         raise exc
     self.flush()
-    while eventhandlers:
+    while self.eventhandlers:
         event = self.next_event()
-        for handler in eventhandlers:
+        for handler in self.eventhandlers:
             if handler(event):
                 break
         self.flush()
 Xlib.display.Display.__exit__ = display_exit
 
+@contextlib.contextmanager
+def mode(self):
+    self.eventhandlerstack.append(self.eventhandlers)
+    self.eventhandlers = []
+    yield
+    self.eventhandlers = self.eventhandlerstack.pop()
+Xlib.display.Display.mode = mode
 
 def window_require(self, prop):
     def wrapper(fn):    
         @self.on(atom=prop)
         def PropertyNotify(win, event):
             print("NNNNNNNNNNNNNNNNNNNN REQUIRE NOTIFY", event)
-            eventhandlers.remove(PropertyNotify)
+            self.display.real_display.eventhandlers.remove(PropertyNotify)
             fn(self, win[prop])
     return wrapper
 Xlib.xobject.drawable.Window.require = window_require
