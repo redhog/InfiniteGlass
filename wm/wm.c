@@ -220,7 +220,9 @@ int main() {
         draw();
         handled=True;
       } else if (e.xproperty.atom == IG_COORDS) {
-        item_type_window_update_space_pos_from_window(item_get_from_window(e.xproperty.window));
+        Item *item = item_get_from_window(e.xproperty.window);
+        item_type_window_update_space_pos_from_window(item);
+        item->type->update(item);
         draw();
         handled=True;
       } else {

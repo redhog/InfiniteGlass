@@ -29,7 +29,9 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
     for (int i = 0; i < 4; i++) {
-      item->base.coords[i] = *(float *) &prop_return[i];
+     item->base.coords[i] = *(float *) (i + (long *) prop_return);
+     item->base._coords[i] = *(float *) (i + (long *) prop_return);
+     printf("MOVE WINDOW TO %f,%f,%f,%f\n", item->base.coords[0], item->base.coords[1], item->base.coords[2], item->base.coords[3]);
     }
     XFree(prop_return);
   } else {
@@ -37,14 +39,7 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
     item->base.coords[1] = ((float) (overlay_attr.height - y - overlay_attr.y)) / (float) overlay_attr.width;
     item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
     item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
-    long arr[4];
-    for (int i = 0; i < 4; i++) {
-      arr[i] = item->base.coords[i];
-    }
-    XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, arr, 4);
   }
-  
-  item_type_window.base->update((Item *) item);
 }
 
 void item_type_window_constructor(Item *item, void *args) {
@@ -88,6 +83,16 @@ void item_type_window_update(Item *item) {
    
   if (!item->is_mapped) return;
 
+  if (   (item->_coords[0] != item->coords[0])
+      || (item->_coords[1] != item->coords[1])
+      || (item->_coords[2] != item->coords[2])
+      || (item->_coords[3] != item->coords[3])) {
+    long arr[4];
+    for (int i = 0; i < 4; i++) {
+     arr[i] = *(long *) &item->coords[i];
+    }
+    XChangeProperty(display, window_item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, arr, 4);
+  }
   if (item->width != item->_width || item->height != item->_height) {
     XWindowChanges values;
     values.width = item->width;
