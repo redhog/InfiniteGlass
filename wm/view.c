@@ -218,11 +218,18 @@ void view_free_all(View **views) {
   free(views);
 }
 
-void view_set_screen(View *view, float screen[4]) {
-  for (int i = 0; i < 4; i++) {
-    view->screen[i] = screen[i];
+void view_update(View *view) {
+ if (   (view->_screen[0] != view->screen[0])
+     || (view->_screen[1] != view->screen[1])
+     || (view->_screen[2] != view->screen[2])
+     || (view->_screen[3] != view->screen[3])) {
+    long arr[4];
+    for (int i = 0; i < 4; i++) {
+      *(float *) (arr + i) = view->screen[i];
+      view->_screen[i] = view->screen[i];
+    }
+    XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, arr, 4);
   }
-  XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, screen, 4);
 }
 
 View *view_find(View **views, Atom name) {

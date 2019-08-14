@@ -12,6 +12,7 @@ typedef struct {
   Atom attr_size;
 
   float screen[4];
+  float _screen[4];
   int width;
   int height;
   int picking;

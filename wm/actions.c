@@ -8,6 +8,7 @@ void action_zoom_screen_home(View *view) {
   view->screen[1] = 0.;
   view->screen[2] = 1.;
   view->screen[3] = (float) view->height / (float) view->width;
+  view_update(view);
   draw();
 }
 
@@ -19,6 +20,7 @@ void action_zoom_to_window(View *view, Item *item) {
   view->screen[3] = item->coords[2] * (float) view->height / (float) view->width;
   view->screen[0] = item->coords[0];
   view->screen[1] = item->coords[1] - view->screen[3];
+  view_update(view);
   draw();
 }
 
@@ -52,7 +54,8 @@ void action_zoom_screen_by(View *view, float factor) {
 
   view->screen[0] = mousex - 0.5 * view->screen[2];
   view->screen[1] = mousey - 0.5 * view->screen[3];
-
+  
+  view_update(view);
   draw();
 }
 
@@ -69,6 +72,7 @@ void action_zoom_screen_by_around(View *view, float factor, int x, int y) {
   view->screen[0] = mousex - spacex * view->screen[2];
   view->screen[1] = mousey - spacey * view->screen[3];
 
+  view_update(view);
   draw();
 }
 
@@ -79,6 +83,7 @@ void action_zoom_screen_to_1_to_1_to_window(View *view, Item *item) {
   view->screen[0] = item->coords[0] - (view->screen[2] - item->coords[2]) / 2.;
   view->screen[1] = item->coords[1] - (view->screen[3] + item->coords[3]) / 2.;
 
+  view_update(view);
   draw();
 }
 
@@ -96,6 +101,7 @@ void action_zoom_screen_to_window_and_window_to_screen(View *view, Item *item) {
   view->screen[0] = item->coords[0];
   view->screen[1] = item->coords[1] - view->screen[3];
 
+  view_update(view);
   item->type->update(item);
   
   draw();
