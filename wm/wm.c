@@ -294,7 +294,7 @@ int main() {
       float zoom = *(float *) &e.xclient.data.l[1];
       long x = *(long *) &e.xclient.data.l[2];
       long y = *(long *) &e.xclient.data.l[3];
-      printf("ACTION: Zoom %l by %f around %d,%d\n", e.xclient.data.l[0], zoom, x, y);
+      printf("ACTION: Zoom %d by %f around %d,%d\n", e.xclient.data.l[0], zoom, x, y);
       if (!view) {
         printf("ACTION: Zoom layer does not exist\n");
       } else {

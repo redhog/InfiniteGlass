@@ -12,13 +12,19 @@ def push(display, Mode, **kw):
 
 def pop(display):
     res = display.input_stack.pop()
+    print("POP", res)
     res.exit()
     return res
 
 def handle_event(display, event):
+    xxx = not (event == "PropertyNotify" and event.window == display.notify_motion_window)
+    if xxx: print("    HANDLE", event)
     for i in range(len(display.input_stack)-1, -1, -1):
-        if display.input_stack[i].handle(event):
+        mode = display.input_stack[i]
+        if mode.handle(event):
+            if xxx: print("        BY", i, mode)
             return True
+    if xxx: print("        UNHANDLED")    
     return False
 
 def view_to_space(screen, size, screenx, screeny):
@@ -44,7 +50,8 @@ class Mode(object):
     def get_active_window(self):
         try:
             return self.display.notify_motion_window["IG_ACTIVE_WINDOW"]
-        except (KeyError, AttributeError):
+        except (KeyError, AttributeError) as e:
+            print("Unable to get active window", e)
             return None
         
 class BaseMode(Mode):
@@ -63,14 +70,36 @@ class BaseMode(Mode):
             win = self.get_active_window()
             if win and win != self.display.root:
                 win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
+        elif event == "KeyPress" and event["XK_Super_L"]:
+            push(self.display, GrabbedMode)
+        return True
+
+class GrabbedMode(Mode):
+    def __init__(self, **kw):
+        Mode.__init__(self, **kw)
+        self.display.root.grab_pointer(
+            False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
+            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
+        self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
+
+    def exit(self):
+        self.display.ungrab_pointer(Xlib.X.CurrentTime)
+        self.display.ungrab_keyboard(Xlib.X.CurrentTime)
+
+    def handle(self, event):
+        if event == "KeyRelease" and event["XK_Super_L"]:
+            # Not Mod4Mask here, as we only want to ungrab when the super key itself is released
+            pop(self.display)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                self.self.display.root.send(self.display.root,
-                                            "IG_ZOOM_TO_WINDOW", "IG_LAYER_DESKTOP", win, 1,
-                                            event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+                self.display.root.send(self.display.root,
+                                       "IG_ZOOM_TO_WINDOW", "IG_LAYER_DESKTOP", win, 1,
+                                       event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif event == "KeyPress" and event["XK_Home"]:
-            self.display.root.send(self.display.root, "IG_ZOOM", "IG_LAYER_DESKTOP", -1.0, -1, -1)
+            print("ZOOM HOME")
+            self.display.root.send(self.display.root, "IG_ZOOM", "IG_LAYER_DESKTOP", -1.0, -1, -1,
+                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif (   (event == "ButtonPress" and event["Mod1Mask"] and event[4])
               or (event == "ButtonPress" and event["Mod1Mask"] and event[5])
               or (event == "KeyPress" and event["Mod1Mask"] and event["XK_Next"])
@@ -107,28 +136,17 @@ class BaseMode(Mode):
             if event == "ButtonPress":
                 win = self.get_active_window()
             else:
-                win = self.self.display.get_input_focus().focus
+                win = self.display.get_input_focus().focus
             if win and win != self.display.root:
                 push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
                 handle_event(self.display, event)
         return True
-                
-class ZoomMode(Mode):
-    def __init__(self, **kw):
-        Mode.__init__(self, **kw)
-        self.display.root.grab_pointer(
-            False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
-        self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
 
-    def exit(self):
-        self.display.ungrab_pointer(Xlib.X.CurrentTime)
-        self.display.ungrab_keyboard(Xlib.X.CurrentTime)
     
+class ZoomMode(Mode):
     def handle(self, event):
-        print("ZoomMode", event)
         if event == "KeyRelease":
-            pop(self.display);
+            pop(self.display)
         elif (   (event == "ButtonRelease" and event[4] and (event["ShiftMask"]))
                  or (event == "KeyPress" and event["XK_Prior"] and (event["ShiftMask"]))):
             # shift up -> zoom in to window
@@ -159,18 +177,10 @@ class ZoomMode(Mode):
 class PanMode(Mode):
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
-        self.display.root.grab_pointer(
-            False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
-        self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
         self.x = 0
         self.y = 0
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-        
-    def exit(self):
-        self.display.ungrab_pointer(Xlib.X.CurrentTime)
-        self.display.ungrab_keyboard(Xlib.X.CurrentTime)
 
     def handle(self, event):
         if event == "KeyRelease" or event == "ButtonRelease":
@@ -200,17 +210,6 @@ class PanMode(Mode):
         return True
 
 class ItemZoomMode(Mode):
-    def __init__(self, **kw):
-        Mode.__init__(self, **kw)
-        self.display.root.grab_pointer(
-            False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
-        self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
-        
-    def exit(self):
-        self.display.ungrab_pointer(Xlib.X.CurrentTime)
-        self.display.ungrab_keyboard(Xlib.X.CurrentTime)
-
     def handle(self, event):
         if event == "KeyRelease":
             pop(self.display)
@@ -222,35 +221,27 @@ class ItemZoomMode(Mode):
             action_zoom_screen_to_1_to_1_to_window(views[0], self.window)
         elif (   (event == "ButtonRelease" and event[4])
               or (event == "KeyPress" and event["XK_Prior"])):
-            coords = self.window["IG_COORDS"]
-            coords[2] *= 1/1.1
-            coords[3] *= 1/1.1
-            self.window["IG_COORDS"] = coords
+            geom = self.window.get_geometry()
+            width = int(geom.width * 1/1.1)
+            height = int(geom.height * 1/1.1)
+            self.window.configure(width = width, height = height)
         elif (   (event == "ButtonRelease" and event[5])
               or (event == "KeyPress" and event["XK_Next"])):
-            coords = self.window["IG_COORDS"]
-            coords[2] *= 1.1
-            coords[3] *= 1.1
-            self.window["IG_COORDS"] = coords
+            geom = self.window.get_geometry()
+            width = int(geom.width * 1.1)
+            height = int(geom.height * 1.1)
+            self.window.configure(width = width, height = height)
         return True
     
 class ItemPanMode(Mode):
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
-        self.display.root.grab_pointer(
-            False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
-        self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
         self.x = 0
         self.y = 0
         self.orig_coords = self.window["IG_COORDS"]
         # FIXME: Get the right view...
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-
-    def exit(self):
-        self.display.ungrab_pointer(Xlib.X.CurrentTime)
-        self.display.ungrab_keyboard(Xlib.X.CurrentTime)
 
     def handle(self, event):
         if event == "KeyRelease" or event == "ButtonRelease":

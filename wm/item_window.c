@@ -15,7 +15,7 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   int y                     = attr.y;
   int width                 = attr.width;
   int height                = attr.height;
-  fprintf(stderr, "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, x, y, width, height);
+  // fprintf(stderr, "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, x, y, width, height);
 
   item->base.width = width;
   item->base.height = height;
@@ -31,7 +31,6 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
     for (int i = 0; i < 4; i++) {
      item->base.coords[i] = *(float *) (i + (long *) prop_return);
      item->base._coords[i] = *(float *) (i + (long *) prop_return);
-     printf("MOVE WINDOW TO %f,%f,%f,%f\n", item->base.coords[0], item->base.coords[1], item->base.coords[2], item->base.coords[3]);
     }
     XFree(prop_return);
   } else {
