@@ -320,6 +320,21 @@ int main() {
       } else {
         action_zoom_to_window(view, item);
       }
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM_1_1) {
+      View *view = view_find(views, e.xclient.data.l[0]);
+      Window win = *(Window *) &e.xclient.data.l[1];
+      Item *item = item_get_from_window(win);
+      Bool screen_to_window = e.xclient.data.l[2];
+      printf("ACTION: Zoom %s 1:1 to %s window %d\n", screen_to_window ? "screen" : "window", screen_to_window ? "window" : "screen", win);
+      if (!view) {
+        printf("ACTION: Zoom layer does not exist\n");
+      } else if (!item) {
+        printf("ACTION: Unknown window\n");
+      } else if (screen_to_window) {
+        action_zoom_screen_to_1_to_1_to_window(view, item);
+      } else {
+        action_zoom_window_to_1_to_1_to_screen(view, item);
+      }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       exit(1);
     } else {

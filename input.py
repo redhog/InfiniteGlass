@@ -215,10 +215,16 @@ class ItemZoomMode(Mode):
             pop(self.display)
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[4])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Prior"])):
-            action_zoom_window_to_1_to_1_to_screen("IG_LAYER_DESKTOP", self.window)
+            # zoom_window_to_1_to_1_to_screen
+            self.display.root.send(self.display.root,
+                                   "IG_ZOOM_1_1", "IG_LAYER_DESKTOP", self.window, 0,
+                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[5])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Next"])):
-            action_zoom_screen_to_1_to_1_to_window(views[0], self.window)
+            # zoom_screen_to_1_to_1_to_window
+            self.display.root.send(self.display.root,
+                                   "IG_ZOOM_1_1", "IG_LAYER_DESKTOP", self.window, 1,
+                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif (   (event == "ButtonRelease" and event[4])
               or (event == "KeyPress" and event["XK_Prior"])):
             geom = self.window.get_geometry()
