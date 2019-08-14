@@ -137,33 +137,47 @@ void view_load_screen(View *view) {
   }
   XFree(prop_return);
 }
+void view_load_size(View *view) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return;
+
+  XGetWindowProperty(display, root, view->attr_size, 0, sizeof(long)*2, 0, AnyPropertyType,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return != None) {
+    view->width = prop_return[0];
+    view->height = prop_return[1];
+  } else {
+    view->width = overlay_attr.width;
+    view->height = overlay_attr.height;
+    long arr[2];
+    arr[0] = view->width;
+    arr[1] = view->height;
+    XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, arr, 2);
+  }
+  XFree(prop_return);
+}
+
+Atom atom_append(Display *display, Atom base, char *suffix) {
+  char *strbase = XGetAtomName(display, base);
+  char appended[strlen(strbase) + strlen(suffix) + 1];
+  strcpy(appended, strbase);
+  strcpy(appended + strlen(strbase), suffix);
+  XFree(strbase);
+  return XInternAtom(display, appended, False);
+}
 
 View *view_load(Atom name) {
   View *view = malloc(sizeof(View));
   view->name = name;
-  char *strname = XGetAtomName(display, name);
-
-  {
-    char str_attr_layer[strlen(strname) + 7];
-    strcpy(str_attr_layer, strname);
-    strcpy(str_attr_layer + strlen(strname), "_LAYER");
-  
-    view->attr_layer = XInternAtom(display, str_attr_layer, False);
-  }
-  {
-    char str_attr_view[strlen(strname) + 6];
-    strcpy(str_attr_view, strname);
-    strcpy(str_attr_view + strlen(strname), "_VIEW");
-    printf("XXXXXXXXXXXXXXXXX11111 >%s<\n", str_attr_view);
-    view->attr_view = XInternAtom(display, str_attr_view, False);
-  }
-  
-  XFree(strname);
- 
+  view->attr_layer = atom_append(display, name, "_LAYER");
+  view->attr_view = atom_append(display, name, "_VIEW");
+  view->attr_size = atom_append(display, name, "_SIZE");
+  view_load_size(view);
   view_load_layer(view);
   view_load_screen(view);
-  view->width = overlay_attr.width;
-  view->height = overlay_attr.height;
   
   return view;
 }

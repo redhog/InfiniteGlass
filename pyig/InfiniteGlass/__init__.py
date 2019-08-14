@@ -241,6 +241,22 @@ def display_keycode(self, name):
 
 Xlib.display.Display.keycode = display_keycode
 
+orig_event_eq = Xlib.protocol.rq.Event.__eq__
+def event_eq(self, other):
+    if isinstance(other, str):
+        return self.type == getattr(Xlib.X, other)
+    return orig_event_eq(self, other)
+Xlib.protocol.rq.Event.__eq__ = event_eq
+
+def keybutton_getitem(self, item):
+    if isinstance(item, str):
+        if hasattr(Xlib.X, item):
+            return self.state & getattr(Xlib.X, item)
+        elif item in keysyms:
+            return self.detail == self.window.display.real_display.keycode(item)
+    else:
+        return self.detail == item
+Xlib.protocol.event.KeyButtonPointer.__getitem__ = keybutton_getitem
 
 
 # with Display() as display:

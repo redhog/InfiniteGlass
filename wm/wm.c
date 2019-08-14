@@ -212,20 +212,30 @@ int main() {
     } else if (e.type == ConfigureRequest) {
       //OnConfigureRequest(e.xconfigurerequest);
     } else if (e.type == PropertyNotify) {
+      Bool handled = False;
       if (   (e.xproperty.window == root)
           && (e.xproperty.atom == IG_VIEWS)) {
         view_free_all(views);
         views = view_load_all();
+        draw();
+        handled=True;
       } else {
         for (View **v = views; *v; v++) {
           if (e.xproperty.atom == (*v)->attr_layer) {
             view_load_layer(*v);
+            draw();
+            handled=True;
           } else if (e.xproperty.atom == (*v)->attr_view) {
             view_load_screen(*v);
+            draw();
+            handled=True;
           }
         }
       }
-      print_xevent(display, &e);
+      if (!handled) {
+        print_xevent(display, &e);
+        fprintf(stderr, "Ignored event\n"); fflush(stderr);
+      }
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
 

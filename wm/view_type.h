@@ -9,6 +9,7 @@ typedef struct {
 
   Atom attr_layer;
   Atom attr_view;
+  Atom attr_size;
 
   float screen[4];
   int width;
