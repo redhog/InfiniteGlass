@@ -219,6 +219,10 @@ int main() {
         views = view_load_all();
         draw();
         handled=True;
+      } else if (e.xproperty.atom == IG_COORDS) {
+        item_type_window_update_space_pos_from_window(item_get_from_window(e.xproperty.window));
+        draw();
+        handled=True;
       } else {
         for (View **v = views; *v; v++) {
           if (e.xproperty.atom == (*v)->attr_layer) {

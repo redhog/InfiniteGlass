@@ -92,7 +92,7 @@ class BaseMode(Mode):
             push(self.display, ZoomMode)
             handle_event(self.display, event)
         elif (   (event == "ButtonPress" and event[2])
-                 or (event == "ButtonPress" and event[1] and event["ControlMask)"])
+                 or (event == "ButtonPress" and event[1] and event["ControlMask"])
                  or (event == "KeyPress" and event["ControlMask"] and event["XK_Up"])
                  or (event == "KeyPress" and event["ControlMask"] and event["XK_Down"])
                  or (event == "KeyPress" and event["ControlMask"] and event["XK_Left"])
@@ -109,7 +109,7 @@ class BaseMode(Mode):
             else:
                 win = self.self.display.get_input_focus().focus
             if win and win != self.display.root:
-                push(self.display, ItemPanMode, window=win, first_even=event, last_event=event)
+                push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
                 handle_event(self.display, event)
         return True
                 
@@ -188,12 +188,8 @@ class PanMode(Mode):
             self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
             
         elif self.first_event == "ButtonPress" and event == "MotionNotify":
-            space_orig = view_to_space(
-                self.orig_view, self.size,
-                self.first_event.root_x, self.first_event.root_y)
-            space = view_to_space(
-                self.orig_view, self.size,
-                event.root_x, event.root_y)
+            space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
+            space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
 
             view = list(self.orig_view)
             view[0] = self.orig_view[0] - (space[0] - space_orig[0])
@@ -216,11 +212,71 @@ class ItemZoomMode(Mode):
         self.display.ungrab_keyboard(Xlib.X.CurrentTime)
 
     def handle(self, event):
+        if event == "KeyRelease":
+            pop(self.display)
+        elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[4])
+              or (event == "KeyPress" and event["ShiftMask"] and event["XK_Prior"])):
+            action_zoom_window_to_1_to_1_to_screen("IG_LAYER_DESKTOP", self.window)
+        elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[5])
+              or (event == "KeyPress" and event["ShiftMask"] and event["XK_Next"])):
+            action_zoom_screen_to_1_to_1_to_window(views[0], self.window)
+        elif (   (event == "ButtonRelease" and event[4])
+              or (event == "KeyPress" and event["XK_Prior"])):
+            coords = self.window["IG_COORDS"]
+            coords[2] *= 1/1.1
+            coords[3] *= 1/1.1
+            self.window["IG_COORDS"] = coords
+        elif (   (event == "ButtonRelease" and event[5])
+              or (event == "KeyPress" and event["XK_Next"])):
+            coords = self.window["IG_COORDS"]
+            coords[2] *= 1.1
+            coords[3] *= 1.1
+            self.window["IG_COORDS"] = coords
         return True
     
 class ItemPanMode(Mode):
+    def __init__(self, **kw):
+        Mode.__init__(self, **kw)
+        self.display.root.grab_pointer(
+            False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
+            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
+        self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
+        self.x = 0
+        self.y = 0
+        self.orig_coords = self.window["IG_COORDS"]
+        # FIXME: Get the right view...
+        self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+        self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+
+    def exit(self):
+        self.display.ungrab_pointer(Xlib.X.CurrentTime)
+        self.display.ungrab_keyboard(Xlib.X.CurrentTime)
+
     def handle(self, event):
-        pop(self.display)
+        if event == "KeyRelease" or event == "ButtonRelease":
+            pop(self.display)
+        elif event == "KeyPress":
+            self.x += event["XK_Right"] - event["XK_Left"]
+            self.y += event["XK_Down"] - event["XK_Up"]
+
+            space_orig = view_to_space(self.orig_view, self.size, 0, 0)
+            space = view_to_space(self.orig_view, self.size, self.x, self.y)
+
+            coords = list(self.orig_coords)
+            coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
+            coords[1] =  self.orig_coords[1] + (space[1] - space_orig[1])
+            
+            self.window["IG_COORDS"] = coords
+
+        elif event == "MotionNotify":
+            space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
+            space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
+            
+            coords = list(self.orig_coords)
+            coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
+            coords[1] =  self.orig_coords[1] + (space[1] - space_orig[1])
+            
+            self.window["IG_COORDS"] = coords
         return True
     
 with InfiniteGlass.Display() as display:

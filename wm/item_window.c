@@ -20,24 +20,28 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   item->base.width = width;
   item->base.height = height;
   
-  item->base.coords[0] = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
-  item->base.coords[1] = ((float) (overlay_attr.height - y - overlay_attr.y)) / (float) overlay_attr.width;
-  item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
-  item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
-
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
-  Atom coords[] = {IG_X, IG_Y, IG_W, IG_H};
-  for (int coordi = 0; coordi < 4; coordi++) {
-    XGetWindowProperty(display, item->window, coords[coordi], 0, sizeof(float), 0, AnyPropertyType,
+  XGetWindowProperty(display, item->window, IG_COORDS, 0, sizeof(float)*4, 0, AnyPropertyType,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-    if (type_return != None) {
-      item->base.coords[coordi] = *(float *) prop_return;
+  if (type_return != None) {
+    for (int i = 0; i < 4; i++) {
+      item->base.coords[i] = *(float *) &prop_return[i];
     }
     XFree(prop_return);
+  } else {
+    item->base.coords[0] = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
+    item->base.coords[1] = ((float) (overlay_attr.height - y - overlay_attr.y)) / (float) overlay_attr.width;
+    item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
+    item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
+    long arr[4];
+    for (int i = 0; i < 4; i++) {
+      arr[i] = item->base.coords[i];
+    }
+    XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, arr, 4);
   }
   
   item_type_window.base->update((Item *) item);

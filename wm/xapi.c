@@ -96,10 +96,7 @@ int xinit() {
   IG_LAYER = XInternAtom(display, "IG_LAYER", False);
   IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
   IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
-  IG_X = XInternAtom(display, "IG_X", False);
-  IG_Y = XInternAtom(display, "IG_Y", False);
-  IG_W = XInternAtom(display, "IG_W", False);
-  IG_H = XInternAtom(display, "IG_H", False);
+  IG_COORDS = XInternAtom(display, "IG_COORDS", False);
   IG_ZOOM = XInternAtom(display, "IG_ZOOM", False);
   IG_ZOOM_TO_WINDOW = XInternAtom(display, "IG_ZOOM_TO_WINDOW", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);

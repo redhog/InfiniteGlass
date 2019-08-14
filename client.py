@@ -14,7 +14,7 @@ with InfiniteGlass.Display() as display:
         w = display.root.create_window()
         w.zoom = zoom
         w["IG_LAYER"]="IG_LAYER_OVERLAY"
-        w["IG_X"]=0.01; w["IG_Y"]=0.60+0.05*idx; w["IG_W"]=0.05; w["IG_H"]=0.05
+        w["IG_COORDS"]=[0.01, 0.60+0.05*idx, 0.05, 0.05]
         w["DISPLAYSVG"]="@fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon
         @w.on()
         def ButtonPress(win, event):
@@ -24,7 +24,7 @@ with InfiniteGlass.Display() as display:
 
     w = display.root.create_window()
     w["IG_LAYER"]="IG_LAYER_OVERLAY"
-    w["IG_X"]=0.01; w["IG_Y"]=0.55; w["IG_W"]=0.05; w["IG_H"]=0.05
+    w["IG_COORDS"]=[0.01,0.55,0.05,0.05]
     w["DISPLAYSVG"]="@fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg"
     @w.on()
     def ButtonPress(win, event):
