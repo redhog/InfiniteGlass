@@ -51,6 +51,12 @@ def parse_value(self, value):
             with open(value[1:], "rb") as f:
                 res.append(f.read())
         items = res
+    elif items[0] in keysyms:
+        itemtype = self.get_atom("KEYCODE")
+        items = [self.keycode(item) for item in items]
+    elif hasattr(Xlib.X, items[0]):
+        itemtype = self.get_atom("XCONST")
+        items = [getattr(Xlib.X, item) for item in items]
     else:
         itemtype = self.get_atom("ATOM")
         items = [self.get_atom(item) for item in items]
@@ -198,6 +204,8 @@ def window_on_event(self, event=None, mask=None, **kw):
 Xlib.xobject.drawable.Window.on = window_on_event
 
 def display_enter(self):
+    self.eventhandlerstack.append(self.eventhandlers)
+    self.eventhandlers = []
     return self
 Xlib.display.Display.__enter__ = display_enter
 def display_exit(self, exctype, exc, tr):
@@ -210,15 +218,12 @@ def display_exit(self, exctype, exc, tr):
             if handler(event):
                 break
         self.flush()
+    self.eventhandlers = self.eventhandlerstack.pop()
 Xlib.display.Display.__exit__ = display_exit
 
-@contextlib.contextmanager
-def mode(self):
-    self.eventhandlerstack.append(self.eventhandlers)
+def pop(self):
     self.eventhandlers = []
-    yield
-    self.eventhandlers = self.eventhandlerstack.pop()
-Xlib.display.Display.mode = mode
+Xlib.display.Display.pop = pop
 
 def window_require(self, prop):
     def wrapper(fn):    
