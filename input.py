@@ -64,6 +64,7 @@ class BaseMode(Mode):
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor)           
+        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [-100., -100., 1., .75]
 
     def handle(self, event):
         if event == "PropertyNotify" and event.window == self.display.notify_motion_window:
@@ -90,6 +91,12 @@ class GrabbedMode(Mode):
         if event == "KeyRelease" and event["XK_Super_L"]:
             # Not Mod4Mask here, as we only want to ungrab when the super key itself is released
             pop(self.display)
+        elif event == "KeyPress" and event["XK_Escape"]:
+            old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
+            if old[0] == 0.:
+                self.display.root["IG_VIEW_OVERLAY_VIEW"] = [-100., -100., 1., .75]
+            else:
+                self.display.root["IG_VIEW_OVERLAY_VIEW"] = [0., 0., 1., .75]
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
