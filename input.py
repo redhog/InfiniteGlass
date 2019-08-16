@@ -64,7 +64,7 @@ class BaseMode(Mode):
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor)           
-        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [-100., -100., 1., .75]
+        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, .6*.75]
 
     def handle(self, event):
         if event == "PropertyNotify" and event.window == self.display.notify_motion_window:
@@ -94,9 +94,10 @@ class GrabbedMode(Mode):
         elif event == "KeyPress" and event["XK_Escape"]:
             old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
             if old[0] == 0.:
-                self.display.root["IG_VIEW_OVERLAY_VIEW"] = [-100., -100., 1., .75]
+                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6*.75]
             else:
-                self.display.root["IG_VIEW_OVERLAY_VIEW"] = [0., 0., 1., .75]
+                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., .75]
+            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
@@ -292,9 +293,16 @@ with InfiniteGlass.Display() as display:
     def notify_motion(root, win):
         win.change_attributes(event_mask = Xlib.X.PropertyChangeMask)
         display.notify_motion_window = win
-    
+
+    display.animate_window = -1
+    @display.root.require("IG_ANIMATE")
+    def notify_motion(root, win):
+        display.animate_window = win
+
     @display.eventhandlers.append
     def handle(event):
+        if display.notify_motion_window == -1 or display.animate_window == -1:
+            return False
         return handle_event(display, event)
 
     push(display, BaseMode)

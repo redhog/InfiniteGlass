@@ -44,13 +44,16 @@ with InfiniteGlass.Display() as display:
                 progress = (current - start) / timeframe
                 if progress > 1.:
                     window[atom] = dst
-                    print("SET FINAL %s.%s=%s" % (window.__window__(), atom, dst))
                     animations.remove(animation)
-                if tick[0] % 100 == 0:
-                    print("SET %s.%s=%s" % (window.__window__(), atom, [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
-                window[atom] = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
+                    print("SET FINAL %s.%s=%s" % (window.__window__(), atom, dst))
+                else:
+                    window[atom] = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
+                    if tick[0] % 100 == 0:
+                        print("SET %s.%s=%s" % (window.__window__(), atom, [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
                 display.flush()
                 display.sync()
                 yield
         animation = iter(animationfn())
         animations.append(animation)
+
+    print("ANIMATOR STARTED")

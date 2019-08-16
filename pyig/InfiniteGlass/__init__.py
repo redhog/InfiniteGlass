@@ -235,12 +235,19 @@ def pop(self):
 Xlib.display.Display.pop = pop
 
 def window_require(self, prop):
-    def wrapper(fn):    
+    def wrapper(fn):
         @self.on(atom=prop)
         def PropertyNotify(win, event):
-            print("NNNNNNNNNNNNNNNNNNNN REQUIRE NOTIFY", event)
             self.display.real_display.eventhandlers.remove(PropertyNotify)
             fn(self, win[prop])
+        try:
+            value = self[prop]
+        except KeyError:
+            pass
+        else:
+            self.display.real_display.eventhandlers.remove(PropertyNotify)
+            fn(self, value)
+            
     return wrapper
 Xlib.xobject.drawable.Window.require = window_require
 
