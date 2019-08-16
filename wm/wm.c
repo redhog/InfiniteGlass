@@ -148,10 +148,6 @@ int main() {
       XErrorEvent error;
       XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
       //fprintf(stderr, "Received XDamageNotify: %d\n", event->drawable);
-      // e->drawable is the window ID of the damaged window
-      // e->geometry is the geometry of the damaged window	
-      // e->area     is the bounding rect for the damaged area	
-      // e->damage   is the damage handle returned by XDamageCreate()
 
       // Subtract all the damage, repairing the window.
       draw();
@@ -264,19 +260,6 @@ int main() {
         if (debug_positions)
           printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
       }
-/*
-      XEvent ev = {0};
-      ev.xclient.type = ClientMessage;
-      ev.xclient.window = win;
-      ev.xclient.message_type = IG_NOTIFY_MOTION;
-      ev.xclient.format = 32;
-      for (int i=0; i < 2 && views[i]; i++) {
-        view_to_space(views[i],
-                      e.xmotion.x_root, e.xmotion.y_root,
-                      (float *) &ev.xclient.data.l[i*2], (float *) &ev.xclient.data.l[i*2+1]);
-      }
-      XSendEvent(display, win, False, PointerMotionMask, &ev);
-*/
 
       size_t nrviews = 0;
       for (View **v = views; *v; v++, nrviews++);
