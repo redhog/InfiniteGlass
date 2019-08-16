@@ -4,27 +4,34 @@ import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
 import numpy
 
+debug_events = False
+debug_property_notify = False
+debug_modes = False
+
 def push(display, Mode, **kw):
-    print("PUSH", Mode)
+    if debug_modes: print("PUSH", Mode)
     if not hasattr(display, "input_stack"):
         display.input_stack = []
     display.input_stack.append(Mode(display=display, **kw))
 
 def pop(display):
     res = display.input_stack.pop()
-    print("POP", res)
+    if debug_modes: print("POP", res)
     res.exit()
     return res
 
 def handle_event(display, event):
-    xxx = not (event == "PropertyNotify" and event.window == display.notify_motion_window)
-    if xxx: print("    HANDLE", event)
+    is_propnot = not (event == "PropertyNotify" and event.window == display.notify_motion_window)
+    if debug_property_notify and (is_propnot or debug_property_notify):
+        print("    HANDLE", event)
     for i in range(len(display.input_stack)-1, -1, -1):
         mode = display.input_stack[i]
         if mode.handle(event):
-            if xxx: print("        BY", i, mode)
+            if debug_property_notify and (is_propnot or debug_property_notify):
+                print("        BY", i, mode)
             return True
-    if xxx: print("        UNHANDLED")    
+    if debug_property_notify and (is_propnot or debug_property_notify):
+        print("        UNHANDLED")    
     return False
 
 def view_to_space(screen, size, screenx, screeny):
@@ -101,9 +108,31 @@ class GrabbedMode(Mode):
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                self.display.root.send(self.display.root,
-                                       "IG_ZOOM_TO_WINDOW", "IG_LAYER_DESKTOP", win, 1,
-                                       event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+                # zoom_screen_to_window_and_window_to_screen
+
+                print("zoom_screen_to_window_and_window_to_screen")
+                wingeom = win.get_geometry()
+                viewgeom = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+                coords = list(win["IG_COORDS"])
+                screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+
+                geom = [wingeom.x, wingeom.y, viewgeom[0], viewgeom[1]]
+
+                coords[3] = viewgeom[1] * coords[2] / viewgeom[0]
+
+                screen[2] = coords[2]
+                screen[3] = coords[3]
+                screen[0] = coords[0]
+                screen[1] = coords[1] - screen[3]
+
+                print("    screen=%s geom=%s" % (screen, geom))
+                
+                win["__GEOMETRY__ANIMATE"] = geom
+                self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
+                display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "__GEOMETRY__", .5)
+                display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+                display.flush()
+                display.sync()
         elif event == "KeyPress" and event["XK_Home"]:
             print("ZOOM HOME")
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., .75]
@@ -227,15 +256,33 @@ class ItemZoomMode(Mode):
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[4])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Prior"])):
             # zoom_window_to_1_to_1_to_screen
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM_1_1", "IG_LAYER_DESKTOP", self.window, 0,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            wingeom = self.window.get_geometry()
+            viewgeom = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+            coords = self.window["IG_COORDS"]
+            screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+
+            geom = [wingeom.x, wingeom.y,
+                    int(viewgeom[0] * coords[2]/screen[2]),
+                    int(viewgeom[1] * coords[3]/screen[3])]
+            
+            self.window["__GEOMETRY__ANIMATE"] = geom
+            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.window, "__GEOMETRY__", .5)
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[5])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Next"])):
             # zoom_screen_to_1_to_1_to_window
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM_1_1", "IG_LAYER_DESKTOP", self.window, 1,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+
+            wingeom = self.window.get_geometry()
+            viewgeom = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+            coords = self.window["IG_COORDS"]
+            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+
+            screen[2] = viewgeom[0] * coords[2]/wingeom.width
+            screen[3] = viewgeom[1] * coords[3]/wingeom.height
+            screen[0] = coords[0] - (screen[2] - coords[2]) / 2.
+            screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
+
+            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
+            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (   (event == "ButtonRelease" and event[4])
               or (event == "KeyPress" and event["XK_Prior"])):
             geom = self.window.get_geometry()
