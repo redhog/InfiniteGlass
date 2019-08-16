@@ -141,14 +141,9 @@ Item *item_get_from_window(Window window) {
   XFree(prop_return);
   if (type_return == None) {
     return item_create(&item_type_window_pixmap, &window);
-  } else {    
-    printf("{SVG WINDOW %d}\n", bytes_after_return);
+  } else {
     XGetWindowProperty(display, window, DISPLAYSVG, 0, bytes_after_return, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-    printf(prop_return);
-    printf("{/SVG WINDOW}\n");
-
     ItemWindowSVGArgs args = {window, prop_return};
-    
     return item_create(&item_type_window_svg, &args);
   }
 }
