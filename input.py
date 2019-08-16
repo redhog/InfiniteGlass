@@ -199,21 +199,25 @@ class ZoomMode(Mode):
                  and (event["ShiftMask"])):
             pass
         elif event == "KeyPress" and event["XK_Prior"]:
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM", "IG_LAYER_DESKTOP", 1 / 1.1, -1, -1,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+            screen[2] *= 1/1.1
+            screen[3] *= 1/1.1
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
         elif event == "KeyPress" and event["XK_Next"]: # down -> zoom out
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM", "IG_LAYER_DESKTOP", 1.1, -1, -1,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+            screen[2] *= 1.1
+            screen[3] *= 1.1
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
         elif event == "ButtonRelease" and event[4]: # up -> zoom in
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM", "IG_LAYER_DESKTOP", 1/1.1, event.root_x, event.root_y,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+            screen[2] *= 1/1.1
+            screen[3] *= 1/1.1
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
         elif event == "ButtonRelease" and event[5]: # down -> zoom out
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM", "IG_LAYER_DESKTOP", 1.1, event.root_x, event.root_y,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+            screen[2] *= 1.1
+            screen[3] *= 1.1
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
         return True
 
 class PanMode(Mode):
