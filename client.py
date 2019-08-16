@@ -18,9 +18,16 @@ with InfiniteGlass.Display() as display:
         w["DISPLAYSVG"]="@fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon
         @w.on()
         def ButtonPress(win, event):
-            display.root.send(display.root,
-                              "IG_ZOOM", "IG_LAYER_DESKTOP", win.zoom, -1, -1,
-                              event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            screen = list(display.root["IG_VIEW_DESKTOP_VIEW"])
+            if win.zoom == -1.:
+                screen[0] = 0.
+                screen[1] = 0.
+                screen[3] = screen[3] / screen[2]
+                screen[2] = 1.
+            else:
+                screen[2] *= win.zoom
+                screen[3] *= win.zoom
+            display.root["IG_VIEW_DESKTOP_VIEW"] = screen
 
     w = display.root.create_window()
     w["IG_LAYER"]="IG_LAYER_OVERLAY"

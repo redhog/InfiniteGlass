@@ -10,7 +10,6 @@
 #include "xevent.h"
 #include "wm.h"
 #include "item_widget.h"
-#include "actions.h"
 
 #include <SOIL/SOIL.h>
 
@@ -289,52 +288,6 @@ int main() {
       }
       XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, &coords, 2*nrviews);
       XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, &win, 1);
-    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM) {
-      View *view = view_find(views, e.xclient.data.l[0]);
-      float zoom = *(float *) &e.xclient.data.l[1];
-      long x = *(long *) &e.xclient.data.l[2];
-      long y = *(long *) &e.xclient.data.l[3];
-      printf("ACTION: Zoom %d by %f around %d,%d\n", e.xclient.data.l[0], zoom, x, y);
-      if (!view) {
-        printf("ACTION: Zoom layer does not exist\n");
-      } else {
-        if (zoom < 0.0) {
-          action_zoom_screen_home(view);
-        } else if (x >= 0 && y >=0) {
-          action_zoom_screen_by_around(view, zoom, x, y);
-        } else {
-          action_zoom_screen_by(view, zoom);
-        }
-      }
-    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM_TO_WINDOW) {
-      View *view = view_find(views, e.xclient.data.l[0]);
-      Window win = *(Window *) &e.xclient.data.l[1];
-      Item *item = item_get_from_window(win);
-      printf("ACTION: Zoom to window %d\n", win);
-      if (!view) {
-        printf("ACTION: Zoom layer does not exist\n");
-      } else if (!item) {
-        printf("ACTION: Unknown window\n");
-      } else if (e.xclient.data.l[2]) {
-        action_zoom_screen_to_window_and_window_to_screen(view, item);
-      } else {
-        action_zoom_to_window(view, item);
-      }
-    } else if (e.type == ClientMessage && e.xclient.message_type == IG_ZOOM_1_1) {
-      View *view = view_find(views, e.xclient.data.l[0]);
-      Window win = *(Window *) &e.xclient.data.l[1];
-      Item *item = item_get_from_window(win);
-      Bool screen_to_window = e.xclient.data.l[2];
-      printf("ACTION: Zoom %s 1:1 to %s window %d\n", screen_to_window ? "screen" : "window", screen_to_window ? "window" : "screen", win);
-      if (!view) {
-        printf("ACTION: Zoom layer does not exist\n");
-      } else if (!item) {
-        printf("ACTION: Unknown window\n");
-      } else if (screen_to_window) {
-        action_zoom_screen_to_1_to_1_to_window(view, item);
-      } else {
-        action_zoom_window_to_1_to_1_to_screen(view, item);
-      }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       exit(1);
     } else {
