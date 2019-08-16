@@ -26,7 +26,7 @@ void item_type_window_pixmap_constructor(Item *item, void *args) {
     XFree(wm_hints);
   }
   if (!x_catch(&error)) {
-    printf("Window does not have any WM_HINTS: %d", window_item->window);
+    printf("Window does not have any WM_HINTS: %lu", window_item->window);
   }
 }
 

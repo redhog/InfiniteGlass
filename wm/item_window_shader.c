@@ -1,6 +1,5 @@
 #include "item_window_shader.h"
 #include "glapi.h"
-#include <GL/gl.h>
 
 
 int item_window_shader_load(ItemWindowShader *shader) {

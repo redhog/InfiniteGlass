@@ -12,12 +12,10 @@
 #include <X11/extensions/shape.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xfixes.h>
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "glapi.h"
 
 Atom WM_PROTOCOLS;
 Atom WM_DELETE_WINDOW;

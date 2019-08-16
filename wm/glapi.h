@@ -1,6 +1,8 @@
 #ifndef GLAPI
 #define GLAPI
 
+#define GL_GLEXT_PROTOTYPES
+
 #include <X11/Xutil.h>
 
 #include <GL/glew.h>

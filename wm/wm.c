@@ -115,7 +115,7 @@ int main() {
 
   motion_notification_window = XCreateSimpleWindow(display, root, 0, 0, 1, 1, 0, 0, 0);
   
-  XChangeProperty(display, root, IG_NOTIFY_MOTION, XA_WINDOW, 32, PropModeReplace, &motion_notification_window, 1);
+  XChangeProperty(display, root, IG_NOTIFY_MOTION, XA_WINDOW, 32, PropModeReplace, (void *) &motion_notification_window, 1);
   
   for (View **v = views; *v; v++) {
    printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
@@ -172,7 +172,7 @@ int main() {
       XConfigureWindow(display, event->window, event->value_mask, &changes);  
       Item *item = item_get_from_window(event->window);
     } else if (e.type == ConfigureNotify) {
-      //fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
+      fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       Item *item = item_get_from_window(e.xconfigure.window);
       gl_check_error("item_update_space_pos_from_window");
       item->type->update(item);
@@ -216,7 +216,7 @@ int main() {
         handled=True;
       } else if (e.xproperty.atom == IG_COORDS) {
         Item *item = item_get_from_window(e.xproperty.window);
-        item_type_window_update_space_pos_from_window(item);
+        item_type_window_update_space_pos_from_window((ItemWindow *) item);
         item->type->update(item);
         draw();
         handled=True;
@@ -255,7 +255,7 @@ int main() {
         XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
 
         if (debug_positions)
-          printf("Point %d,%d -> %d,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
+          printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
       } else {
         if (debug_positions)
           printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
@@ -269,8 +269,8 @@ int main() {
                       e.xmotion.x_root, e.xmotion.y_root,
                       &coords[i*2], &coords[i*2+1]);
       }
-      XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, &coords, 2*nrviews);
-      XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, &win, 1);
+      XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*nrviews);
+      XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       exit(1);
     } else {

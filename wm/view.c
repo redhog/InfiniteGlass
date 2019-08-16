@@ -155,7 +155,7 @@ void view_load_size(View *view) {
     long arr[2];
     arr[0] = view->width;
     arr[1] = view->height;
-    XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, arr, 2);
+    XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   }
   XFree(prop_return);
 }
@@ -228,7 +228,7 @@ void view_update(View *view) {
       *(float *) (arr + i) = view->screen[i];
       view->_screen[i] = view->screen[i];
     }
-    XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, arr, 4);
+    XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
 }
 

@@ -64,7 +64,7 @@ void item_type_window_constructor(Item *item, void *args) {
   XWindowAttributes attr;
   XGetWindowAttributes(display, window, &attr);
   window_item->base.is_mapped = attr.map_state == IsViewable;
-  item_type_window_update_space_pos_from_window(item);
+  item_type_window_update_space_pos_from_window(window_item);
 
   XSelectInput(display, window, PointerMotionMask | PropertyChangeMask);
 }
@@ -90,7 +90,7 @@ void item_type_window_update(Item *item) {
     for (int i = 0; i < 4; i++) {
      arr[i] = *(long *) &item->coords[i];
     }
-    XChangeProperty(display, window_item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, arr, 4);
+    XChangeProperty(display, window_item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
   if (item->width != item->_width || item->height != item->_height) {
     XWindowChanges values;

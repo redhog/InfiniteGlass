@@ -1,7 +1,7 @@
 #ifndef SHADER
 #define SHADER
 
-#include<GL/gl.h>
+#include "glapi.h"
 
 typedef struct {
   GLchar *vertex_src_file;
