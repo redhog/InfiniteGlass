@@ -2,16 +2,25 @@ import InfiniteGlass
 import time
 import select
 import array
+import traceback
+
+debug_aninmation = False
 
 animations = []
 
 def animate(display):
     while True:
+        if display.pending_events():
+            return
         r, w, e = select.select([display], [], [], 0.01)
         if r or w or e:
             return
         for animation in animations:
-            next(animation)
+            try:
+                next(animation)
+            except Exception as e:
+                print("Animation failed: ", e)
+                traceback.print_exc()
 
 def animate_property(display, window, atom, timeframe):
     src = window[atom]
@@ -22,7 +31,7 @@ def animate_property(display, window, atom, timeframe):
     start = time.time()
     tick = [0]
 
-    print("ANIMATE %s.%s=%s...%s / %ss" % (window.__window__(), atom, src, dst, timeframe))
+    if debug_aninmation: print("ANIMATE %s.%s=%s...%s / %ss" % (window.__window__(), atom, src, dst, timeframe))
 
     def animationfn():
         while True:
@@ -32,10 +41,10 @@ def animate_property(display, window, atom, timeframe):
             if progress > 1.:
                 window[atom] = dst
                 animations.remove(animation)
-                print("SET FINAL %s.%s=%s" % (window.__window__(), atom, dst))
+                if debug_aninmation: print("SET FINAL %s.%s=%s" % (window.__window__(), atom, dst))
             else:
                 window[atom] = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
-                if tick[0] % 100 == 0:
+                if debug_aninmation and tick[0] % 100 == 0:
                     print("SET %s.%s=%s" % (window.__window__(), atom, [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
             display.flush()
             display.sync()

@@ -118,7 +118,7 @@ class GrabbedMode(Mode):
 
                 geom = [wingeom.x, wingeom.y, viewgeom[0], viewgeom[1]]
 
-                coords[3] = viewgeom[1] * coords[2] / viewgeom[0]
+                coords[3] = (viewgeom[1] * coords[2]) / viewgeom[0]
 
                 screen[2] = coords[2]
                 screen[3] = coords[3]
@@ -127,8 +127,10 @@ class GrabbedMode(Mode):
 
                 print("    screen=%s geom=%s" % (screen, geom))
                 
+                win["IG_COORDS_ANIMATE"] = coords
                 win["__GEOMETRY__ANIMATE"] = geom
                 self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
+                display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "IG_COORDS", .5)
                 display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "__GEOMETRY__", .5)
                 display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
                 display.flush()
