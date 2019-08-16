@@ -18,6 +18,8 @@ def animate(display):
         for animation in animations:
             try:
                 next(animation)
+            except StopIteration:
+                animations.remove(animation)
             except Exception as e:
                 print("Animation failed: ", e)
                 traceback.print_exc()
