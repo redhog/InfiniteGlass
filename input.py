@@ -157,10 +157,13 @@ class ZoomMode(Mode):
             pop(self.display)
         elif (   (event == "ButtonRelease" and event[4] and (event["ShiftMask"]))
                  or (event == "KeyPress" and event["XK_Prior"] and (event["ShiftMask"]))):
-            # shift up -> zoom in to window
-            self.display.root.send(self.display.root,
-                                   "IG_ZOOM_TO_WINDOW", "IG_LAYER_DESKTOP", self.get_active_window(), 0,
-                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+            win = self.get_active_window()
+            old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+            view = list(win["IG_COORDS"])
+            view[3] = view[2] * old_view[3] / old_view[2]
+            view[1] -= view[3]
+            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
+            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (event == "ButtonRelease" and event[5]
                  and (event["ShiftMask"])):
             pass
