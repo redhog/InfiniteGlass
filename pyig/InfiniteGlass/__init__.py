@@ -88,6 +88,15 @@ def window_keys(self):
     return [self.display.real_display.get_atom_name(atom) for atom in self.list_properties()]
 Xlib.xobject.drawable.Window.keys = window_keys
 
+def unpack_value(self, value_type, value):
+    if value_type == "ATOM":
+        value = self.get_atom_name(value)
+    if value_type == "FLOAT":
+        value = struct.unpack("<f", struct.pack("<i", value))[0]
+    if value_type == "WINDOW":
+        value = self.create_resource_object("window", value)
+    return value
+
 def window_getitem(self, name):
     res = self.get_property(self.display.get_atom(name), Xlib.X.AnyPropertyType, 0, 100000)
     if res is None:
@@ -275,6 +284,13 @@ def event_eq(self, other):
         return self.type == getattr(Xlib.X, other)
     return orig_event_eq(self, other)
 Xlib.protocol.rq.Event.__eq__ = event_eq
+
+def client_message_parse(self, *types):
+    display = self.window.display.real_display
+    format, data = self.data
+    return [unpack_value(display, t, value)
+            for t, value in zip(types, data)]    
+Xlib.protocol.event.ClientMessage.parse = client_message_parse
 
 def keybutton_getitem(self, item):
     if isinstance(item, str):
