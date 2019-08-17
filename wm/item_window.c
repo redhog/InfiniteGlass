@@ -97,7 +97,9 @@ void item_type_window_update(Item *item) {
     values.width = item->width;
     values.height = item->height;
     XConfigureWindow(display, window_item->window, CWWidth | CWHeight, &values);
-  }
+    long arr[2] = {item->width, item->height};
+    XChangeProperty(display, window_item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+ }
   
   item_type_window.base->update(item);
 }

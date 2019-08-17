@@ -6,6 +6,7 @@ import sys
 import struct
 import contextlib
 import importlib
+import array
 
 from Xlib.display import Display
 
@@ -25,7 +26,7 @@ def display_init(self, *arg, **kw):
 Xlib.display.Display.__init__ = display_init
         
 def parse_value(self, value):
-    if isinstance(value, (tuple, list)):
+    if isinstance(value, (tuple, list, array.array)):
         items = value
     elif isinstance(value, str):
         items = value.split(" ")

@@ -111,27 +111,24 @@ class GrabbedMode(Mode):
                 # zoom_screen_to_window_and_window_to_screen
 
                 print("zoom_screen_to_window_and_window_to_screen")
-                wingeom = win.get_geometry()
-                viewgeom = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+                size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
                 coords = list(win["IG_COORDS"])
                 screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
 
-                geom = [wingeom.x, wingeom.y, viewgeom[0], viewgeom[1]]
-
-                coords[3] = (viewgeom[1] * coords[2]) / viewgeom[0]
+                coords[3] = (size[1] * coords[2]) / size[0]
 
                 screen[2] = coords[2]
                 screen[3] = coords[3]
                 screen[0] = coords[0]
                 screen[1] = coords[1] - screen[3]
 
-                print("    screen=%s geom=%s" % (screen, geom))
+                print("    screen=%s geom=%s" % (screen, size))
                 
                 win["IG_COORDS_ANIMATE"] = coords
-                win["__GEOMETRY__ANIMATE"] = geom
+                win["IG_SIZE_ANIMATE"] = size
                 self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
                 display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "IG_COORDS", .5)
-                display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "__GEOMETRY__", .5)
+                display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
                 display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
                 display.flush()
                 display.sync()
@@ -262,28 +259,26 @@ class ItemZoomMode(Mode):
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[4])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Prior"])):
             # zoom_window_to_1_to_1_to_screen
-            wingeom = self.window.get_geometry()
-            viewgeom = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+            size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
             coords = self.window["IG_COORDS"]
             screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
 
-            geom = [wingeom.x, wingeom.y,
-                    int(viewgeom[0] * coords[2]/screen[2]),
-                    int(viewgeom[1] * coords[3]/screen[3])]
+            geom = [int(size[0] * coords[2]/screen[2]),
+                    int(size[1] * coords[3]/screen[3])]
             
-            self.window["__GEOMETRY__ANIMATE"] = geom
-            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.window, "__GEOMETRY__", .5)
+            self.window["IG_SIZE_ANIMATE"] = geom
+            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.window, "IG_SIZE", .5)
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[5])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Next"])):
             # zoom_screen_to_1_to_1_to_window
 
-            wingeom = self.window.get_geometry()
-            viewgeom = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+            winsize = self.window["IG_SIZE"]
+            size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
             coords = self.window["IG_COORDS"]
             screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
 
-            screen[2] = viewgeom[0] * coords[2]/wingeom.width
-            screen[3] = viewgeom[1] * coords[3]/wingeom.height
+            screen[2] = size[0] * coords[2]/winsize[0]
+            screen[3] = size[1] * coords[3]/winsize[1]
             screen[0] = coords[0] - (screen[2] - coords[2]) / 2.
             screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
 
@@ -291,16 +286,10 @@ class ItemZoomMode(Mode):
             display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (   (event == "ButtonRelease" and event[4])
               or (event == "KeyPress" and event["XK_Prior"])):
-            geom = self.window.get_geometry()
-            width = int(geom.width * 1/1.1)
-            height = int(geom.height * 1/1.1)
-            self.window.configure(width = width, height = height)
+            self.window["IG_SIZE"] = [int(item * 1/1.1) for item in self.window["IG_SIZE"]]
         elif (   (event == "ButtonRelease" and event[5])
               or (event == "KeyPress" and event["XK_Next"])):
-            geom = self.window.get_geometry()
-            width = int(geom.width * 1.1)
-            height = int(geom.height * 1.1)
-            self.window.configure(width = width, height = height)
+            self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
         return True
     
 class ItemPanMode(Mode):

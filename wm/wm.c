@@ -159,25 +159,33 @@ int main() {
       XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureRequest) {
       XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
-      XWindowChanges changes;
-      // Copy fields from e to changes.
-      changes.x = event->x;
-      changes.y = event->y;
-      changes.width = event->width;
-      changes.height = event->height;
-      changes.border_width = event->border_width;
-      changes.sibling = event->above;
-      changes.stack_mode = event->detail;
-      // Grant request by calling XConfigureWindow().
-      XConfigureWindow(display, event->window, event->value_mask, &changes);  
       Item *item = item_get_from_window(event->window);
-    } else if (e.type == ConfigureNotify) {
-      fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
-      Item *item = item_get_from_window(e.xconfigure.window);
-      gl_check_error("item_update_space_pos_from_window");
+      item->coords[2] *= (float) event->width / (float) item->width;
+      item->coords[3] *= (float) event->height / (float) item->height;
+      item->width = event->width;
+      item->height = event->height;
       item->type->update(item);
       gl_check_error("item_update_pixmap");
-      draw();
+      draw();      
+    } else if (e.type == ConfigureNotify) {
+      fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
+    } else if (e.type == PropertyNotify && e.xproperty.atom == IG_SIZE) {
+      Atom type_return;
+      int format_return;
+      unsigned long nitems_return;
+      unsigned long bytes_after_return;
+      unsigned char *prop_return;
+      XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
+                         &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+      if (type_return != None) {
+        Item *item = item_get_from_window(e.xproperty.window);
+        item->width = ((long *) prop_return)[0];
+        item->height = ((long *) prop_return)[1];
+        printf("SIZE CHANGED TO %i,%i\n", item->width, item->height);
+        item->type->update(item);
+        draw();
+      }
+      XFree(prop_return);
     } else if (e.type == CreateNotify) {
       if (e.xcreatewindow.window != overlay && e.xcreatewindow.window != motion_notification_window) {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);

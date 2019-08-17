@@ -29,6 +29,7 @@ $(BINARIES):
 
 $(BUILD)/env:
 	virtualenv --python=python3 $@
+	. $@/bin/activate; cd pyig; pip install numpy
 	. $@/bin/activate; cd pyig; python setup.py develop
 
 run: $(BUILD)/env $(BUILD)/wm fontawesome/Font-Awesome-5-Free-Regular-400.ttf

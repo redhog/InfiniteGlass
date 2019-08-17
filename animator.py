@@ -26,9 +26,10 @@ def animate(display):
 
 def animate_property(display, window, atom, timeframe):
     src = window[atom]
-    if not isinstance(src, (tuple, list)): src = [src]
+    if not isinstance(src, (tuple, list, array.array)): src = [src]
     dst = window[atom + "_ANIMATE"]
-    if not isinstance(dst, (tuple, list)): dst = [dst]
+    if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
+    isint = isinstance(src[0], int)
     values = list(zip(src, dst))
     start = time.time()
     tick = [0]
@@ -45,7 +46,10 @@ def animate_property(display, window, atom, timeframe):
                 animations.remove(animation)
                 if debug_aninmation: print("SET FINAL %s.%s=%s" % (window.__window__(), atom, dst))
             else:
-                window[atom] = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
+                res = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
+                if isint:
+                    res = [int(item) for item in res]
+                window[atom] = res
                 if debug_aninmation and tick[0] % 100 == 0:
                     print("SET %s.%s=%s" % (window.__window__(), atom, [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
             display.flush()
