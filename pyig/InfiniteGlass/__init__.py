@@ -188,8 +188,7 @@ def display_on_event(self, event=None, mask=None, **kw):
                     if getattr(event, name) & value != value: return False
                 else:
                     if getattr(event, name) != value: return False
-            fn(self, event)
-            return True
+            return fn(self, event)
         self.eventhandlers.append(handler)
         return handler
     return wrapper
@@ -208,6 +207,10 @@ def window_on_event(self, event=None, mask=None, **kw):
         self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         @self.display.real_display.on(event=e, mask=m, **kw)
         def handler(display, event):
+            win = event.window
+            if hasattr(event, "event"): win = event.event
+            if self != win:
+                return False
             return fn(self, event)
         return handler
     return wrapper
