@@ -73,7 +73,7 @@ def format_value(self, value):
     elif isinstance(items[0], float):
         items = struct.pack("<" + "f" * len(items), *items)
     elif isinstance(items[0], bytes):
-        items = b''.join(items)
+        items = b'\0'.join(items)
     else:
         items = struct.pack("<" + "l" * len(items), *items)
     return itemtype, items
@@ -112,6 +112,8 @@ def window_getitem(self, name):
         res = struct.unpack("<" + "f" * len(res), res.tobytes())
     if property_type == "WINDOW":
         res = [self.display.real_display.create_resource_object("window", item) for item in res]
+    if property_type == "STRING":
+        res = res.split(b"\0")
     if len(res) == 1:
         res = res[0]
     return res

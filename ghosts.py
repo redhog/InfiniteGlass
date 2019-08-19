@@ -1,11 +1,17 @@
 import InfiniteGlass, Xlib.X
 import struct
+import array
 
 SET = ("IG_SIZE", "IG_COORDS")
 MATCH = ("WM_CLASS", "WM_NAME")
 
 windows = {}
 shadows = {}
+
+def tuplify(value):
+    if isinstance(value, list):
+        return tuple(value)
+    return value
 
 class Shadow(object):
     def __init__(self, display, properties):
@@ -17,7 +23,7 @@ class Shadow(object):
         print("SHADOW CREATE", self)
 
     def key(self):
-        return tuple(self.properties.get(name, None) for name in sorted(MATCH))
+        return tuple(tuplify(self.properties.get(name, None)) for name in sorted(MATCH))
 
     def update_key(self):
         key = self.key()
@@ -25,9 +31,10 @@ class Shadow(object):
             return
         if self.current_key is not None:
             del shadows[self.current_key]
+        print("UPDATE KEY from %s to %s" % (self.current_key, key))
         self.current_key = key
         shadows[self.current_key] = self
-    
+        
     def apply(self, window):
         print("SHADOW APPLY", window.__window__(), self)
         for key in SET:
@@ -42,8 +49,15 @@ class Shadow(object):
             ghost_image = f.read()
         for name, value in self.properties.items():
             key = ("{%s}" % name).encode("utf-8")
+            if not isinstance(value, (array.array, list, tuple)):
+                value = [value]
+            if value and isinstance(value[0], bytes):
+                value = b'/'.join(item for item in value)
+            else:
+                value = b'/'.join(str(item).encode("utf-8")
+                                  for item in value)
             if key in ghost_image:
-                ghost_image = ghost_image.replace(key, str(value).encode("utf-8"))
+                ghost_image = ghost_image.replace(key, value)
         self.window["DISPLAYSVG"] = ghost_image
         self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
         self.apply(self.window)
@@ -79,9 +93,6 @@ class Shadow(object):
             self.window.destroy()
             self.window.display.real_display.eventhandlers.remove(self.PropertyNotify)
             self.window.display.real_display.eventhandlers.remove(self.WMDelete)
-
-    def key(self):
-        return tuple(self.properties.get(name, None) for name in sorted(MATCH))
         
     def __str__(self):
         return "/".join(str(item) for item in self.key())
@@ -120,7 +131,7 @@ class Window(object):
             self.window.display.real_display.eventhandlers.remove(DestroyNotify)
             
     def key(self):
-        return tuple(self.properties.get(name, None) for name in sorted(MATCH))
+        return tuple(tuplify(self.properties.get(name, None)) for name in sorted(MATCH))
 
     def match_shadow(self):
         if self.shadow: return
@@ -129,9 +140,6 @@ class Window(object):
             self.shadow = shadows[key]
             self.shadow.apply(self.window)
             self.shadow.deactivate()
-
-    def key(self):
-        return tuple(self.properties.get(name, None) for name in sorted(MATCH))
         
     def __str__(self):
         res = str(self.window.__window__())
