@@ -351,3 +351,5 @@ with InfiniteGlass.Display() as display:
         return handle_event(display, event)
 
     push(display, BaseMode)
+
+    print("Input handler started")

@@ -45,3 +45,5 @@ with InfiniteGlass.Display() as display:
                   for i in range(4)]
         
         print("MOTION", win, coords)
+
+    print("Widgets started")
