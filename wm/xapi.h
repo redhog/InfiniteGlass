@@ -30,6 +30,7 @@ Atom IG_EXIT;
 Atom XA_FLOAT;
 Atom IG_NOTIFY_MOTION;
 Atom IG_ACTIVE_WINDOW;
+Atom WM_STATE;
 
 Display* display;
 Window root;

@@ -102,7 +102,8 @@ int xinit() {
   XA_FLOAT = XInternAtom(display, "FLOAT", False);
   IG_NOTIFY_MOTION = XInternAtom(display, "IG_NOTIFY_MOTION", False);
   IG_ACTIVE_WINDOW = XInternAtom(display, "IG_ACTIVE_WINDOW", False);
-   
+  WM_STATE = XInternAtom(display, "WM_STATE", False);
+    
   x_try();
   XSelectInput(display, root,
                SubstructureRedirectMask |

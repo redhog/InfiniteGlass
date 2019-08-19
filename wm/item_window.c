@@ -60,6 +60,9 @@ void item_type_window_constructor(Item *item, void *args) {
     window_item->base.layer = *(Atom *) prop_return;
   }
   XFree(prop_return);
+
+  long value = 1;
+  XChangeProperty(display, window, WM_STATE, XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
   
   XWindowAttributes attr;
   XGetWindowAttributes(display, window, &attr);
