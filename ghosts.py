@@ -12,8 +12,22 @@ class Shadow(object):
         self.display = display
         self.properties = properties
         self.window = None
+        self.current_key = None
+        self.update_key()
         print("SHADOW CREATE", self)
-        
+
+    def key(self):
+        return tuple(self.properties.get(name, None) for name in sorted(MATCH))
+
+    def update_key(self):
+        key = self.key()
+        if key == self.current_key:
+            return
+        if self.current_key is not None:
+            del shadows[self.current_key]
+        self.current_key = key
+        shadows[self.current_key] = self
+    
     def apply(self, window):
         print("SHADOW APPLY", window.__window__(), self)
         for key in SET:
@@ -24,7 +38,13 @@ class Shadow(object):
         print("SHADOW ACTIVATE", self)
         self.window = display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
-        self.window["DISPLAYSVG"] = "@fontawesome-free-5.9.0-desktop/svgs/solid/bed.svg"
+        with open("ghost.svg", "rb") as f:
+            ghost_image = f.read()
+        for name, value in self.properties.items():
+            key = ("{%s}" % name).encode("utf-8")
+            if key in ghost_image:
+                ghost_image = ghost_image.replace(key, str(value).encode("utf-8"))
+        self.window["DISPLAYSVG"] = ghost_image
         self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
         self.apply(self.window)
 
@@ -38,7 +58,18 @@ class Shadow(object):
             else:
                 print("%s: Unknown WM_PROTOCOLS message: %s" % (self, event))
 
+        @self.window.on()
+        def PropertyNotify(win, event):
+            name = self.window.display.real_display.get_atom_name(event.atom)
+            try:
+                self.properties[name] = win[name]
+            except:
+                pass
+            else:
+                self.update_key()
+                
         self.WMDelete = ClientMessage
+        self.PropertyNotify = PropertyNotify
                 
         self.window.map()
 
@@ -46,6 +77,7 @@ class Shadow(object):
         print("SHADOW DEACTIVATE", self)
         if self.window is not None:
             self.window.destroy()
+            self.window.display.real_display.eventhandlers.remove(self.PropertyNotify)
             self.window.display.real_display.eventhandlers.remove(self.WMDelete)
 
     def key(self):
@@ -80,17 +112,19 @@ class Window(object):
             print("WINDOW DESTROY", self, event.window.__window__())
             if not self.shadow:
                 self.shadow = Shadow(self.window.display.real_display, self.properties)
-                key = tuple(self.properties.get(name, None) for name in sorted(MATCH))
-                shadows[key] = self.shadow
             self.shadow.properties.update(self.properties)
+            self.shadow.update_key()
             self.shadow.activate()
             windows.pop(self.id, None)
             self.window.display.real_display.eventhandlers.remove(PropertyNotify)
             self.window.display.real_display.eventhandlers.remove(DestroyNotify)
             
+    def key(self):
+        return tuple(self.properties.get(name, None) for name in sorted(MATCH))
+
     def match_shadow(self):
         if self.shadow: return
-        key = tuple(self.properties.get(name, None) for name in sorted(MATCH))
+        key = self.key()
         if key in shadows:
             self.shadow = shadows[key]
             self.shadow.apply(self.window)

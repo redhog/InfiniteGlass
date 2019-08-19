@@ -45,6 +45,8 @@ def parse_value(self, value):
         itemtype = self.get_atom("INTEGER")
     elif isinstance(items[0], float):
         itemtype = self.get_atom("FLOAT")
+    elif isinstance(items[0], bytes):
+        itemtype = self.get_atom("STRING")
     elif items[0].startswith("@"):
         itemtype = self.get_atom("STRING")
         res = []
