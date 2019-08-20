@@ -1,4 +1,5 @@
 #include "xapi.h"
+#include "item_window.h"
 
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
@@ -14,7 +15,10 @@ int x_default_error_handler(Display* display, XErrorEvent* e) {
           error_text,
           e->request_code,
           (uint) e->resourceid);
-  *((char *) 0) = 0;
+  if (e->error_code != BadWindow) {
+    // BadWindow usually just means the window dissappeared under our feet, so no need to get all excited and exit...
+    *((char *) 0) = 0;
+  }
   return 0;
 }
 
@@ -96,6 +100,7 @@ int xinit() {
   IG_LAYER = XInternAtom(display, "IG_LAYER", False);
   IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
   IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
+  IG_LAYER_MENU = XInternAtom(display, "IG_LAYER_MENU", False);
   IG_COORDS = XInternAtom(display, "IG_COORDS", False);
   IG_SIZE = XInternAtom(display, "IG_SIZE", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);

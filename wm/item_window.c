@@ -55,7 +55,13 @@ void item_type_window_constructor(Item *item, void *args) {
   XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
-    window_item->base.layer = IG_LAYER_DESKTOP;
+    XWindowAttributes attr;
+    XGetWindowAttributes(display, window, &attr);
+    if (attr.override_redirect) {
+      window_item->base.layer = IG_LAYER_MENU;
+    } else {
+      window_item->base.layer = IG_LAYER_DESKTOP;
+    }
   } else {
     window_item->base.layer = *(Atom *) prop_return;
   }

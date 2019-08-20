@@ -93,6 +93,19 @@ void item_type_window_pixmap_update(Item *item) {
   // FIXME: free all other stuff if already created
 
   pixmap_item->window_pixmap = XCompositeNameWindowPixmap(display, window_item->window);
+
+  Window root_return;
+  int x_return;
+  int y_return;
+  unsigned int width_return;
+  unsigned int height_return;
+  unsigned int border_width_return;
+  unsigned int depth_return;
+  
+  Status res = XGetGeometry(display, pixmap_item->window_pixmap, &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
+  printf("XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
+         pixmap_item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);
+  
   texture_from_pixmap(&pixmap_item->window_texture, pixmap_item->window_pixmap);
 
   if (pixmap_item->wm_hints.flags & IconPixmapHint) {

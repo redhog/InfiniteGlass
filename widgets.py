@@ -2,7 +2,9 @@ import InfiniteGlass, Xlib.X
 import struct
 
 with InfiniteGlass.Display() as display:
-    display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY"]
+    display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
+    display.root["IG_VIEW_MENU_LAYER"]="IG_LAYER_MENU"
+    display.root["IG_VIEW_MENU_VIEW"]=[0.0, 0.0, 1.0, 0.75]
     display.root["IG_VIEW_OVERLAY_LAYER"]="IG_LAYER_OVERLAY"
     display.root["IG_VIEW_OVERLAY_VIEW"]=[0.0, 0.0, 1.0, 0.75]
     display.root["IG_VIEW_DESKTOP_LAYER"]="IG_LAYER_DESKTOP"

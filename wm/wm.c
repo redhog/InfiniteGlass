@@ -169,6 +169,18 @@ int main() {
       draw();      
     } else if (e.type == ConfigureNotify) {
       fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
+      XConfigureEvent *event = (XConfigureEvent*) &e;
+      Item *item = item_get_from_window(event->window);
+      if (item->layer == IG_LAYER_MENU) {       
+        item->coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
+        item->coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.width;
+        item->coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
+        item->coords[3] = ((float) (event->height)) / (float) overlay_attr.width;
+        item->width = event->width;
+        item->height = event->height;
+        item->type->update(item);
+        draw();
+      }
     } else if (e.type == PropertyNotify && e.xproperty.atom == IG_SIZE) {
       Atom type_return;
       int format_return;
@@ -190,7 +202,7 @@ int main() {
       if (e.xcreatewindow.window != overlay && e.xcreatewindow.window != motion_notification_window) {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
         Item *item = item_get_from_window(e.xcreatewindow.window);
-        XMapWindow(display, e.xmaprequest.window);
+        // XMapWindow(display, e.xmaprequest.window);
         item->type->update(item);
       }
     } else if (e.type == DestroyNotify) {
