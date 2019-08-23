@@ -10,6 +10,7 @@
 #include "xevent.h"
 #include "wm.h"
 #include "item_widget.h"
+#include "event.h"
 
 #include <SOIL/SOIL.h>
 
@@ -144,7 +145,9 @@ int main() {
 
     gl_check_error("loop");
 
-    if (e.type == damage_event + XDamageNotify) {
+    if (event_handle(&e)) {
+     // Already handled
+    } else if (e.type == damage_event + XDamageNotify) {
       XErrorEvent error;
       XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
       //fprintf(stderr, "Received XDamageNotify: %d\n", event->drawable);
