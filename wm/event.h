@@ -8,14 +8,14 @@
 
 typedef struct EventHandlerStruct EventHandler;
 typedef Bool EventHandlerFunction(EventHandler *handler, XEvent *event);
-struct {
+struct EventHandlerStruct {
   long event_mask;
   XEvent match_event;
   XEvent match_mask;
  
   EventHandlerFunction *handler;
   void *data;
-} EventHandlerStruct;
+};
 
 extern Bool event_handle(XEvent *event);
 extern void event_handler_install(EventHandler *handler);

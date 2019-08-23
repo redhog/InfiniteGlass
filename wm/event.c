@@ -20,7 +20,7 @@ Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
 
 Bool event_handle(XEvent *event) {
   for (int idx = 0; idx < nr_event_handlers; idx++) {
-    if (   event_match(event, event_handlers[idx]->match_event, event_handlers[idx]->match_mask)
+    if (   event_match(event, &event_handlers[idx]->match_event, &event_handlers[idx]->match_mask)
         && event_handlers[idx]->handler(event_handlers[idx], event)) {
       return True;
     }
@@ -35,8 +35,8 @@ void event_handler_install(EventHandler *handler) {
   }
   event_handlers[nr_event_handlers] = handler;
   // Fetch existing mask and OR!!!
-  if (handler->match_mask.xany->window) {
-    XSelectInput(display, handler->match_event.xany->window, handler->event_mask);
+  if (handler->match_mask.xany.window) {
+    XSelectInput(display, handler->match_event.xany.window, handler->event_mask);
   }
   nr_event_handlers++;
 }

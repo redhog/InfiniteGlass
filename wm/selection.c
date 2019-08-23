@@ -1,6 +1,6 @@
 #include "xapi.h"
 #include "event.h"
-
+#include "selection.h"
 
 
 int selection_get_params(Selection *selection, XEvent *event, long offset, long length,
@@ -12,74 +12,112 @@ int selection_get_params(Selection *selection, XEvent *event, long offset, long 
                            actual_type_return, actual_format_return, nitems_return, bytes_after_return, prop_return);
 } 
 
-void selection_answer(Selection *selection, XEvent *event, Atom type, int format, int mode, unsignedchar *data, int nelements) {
+void selection_answer(Selection *selection, XEvent *event, Atom type, int format, int mode, unsigned char *data, int nelements) {
   XChangeProperty(display, event->xselectionrequest.requestor, event->xselectionrequest.property,
                   type, format, mode, data, nelements);
 }
 
 Bool event_handler_convert(EventHandler *handler, XEvent *event) {
-  Bool status = ((Selection *) handler->data)->handler(handler->data, event)
+  Bool status = ((Selection *) handler->data)->handler(handler->data, event);
    
   XSelectionEvent reply;
   reply.type = SelectionNotify;
-  reply.requestor = event.xselectionrequest.requestor;
-  reply.selection = event.xselectionrequest.selection;
-  reply.target = event.xselectionrequest.target;
-  reply.time = event.xselectionrequest.time;
+  reply.requestor = event->xselectionrequest.requestor;
+  reply.selection = event->xselectionrequest.selection;
+  reply.target = event->xselectionrequest.target;
+  reply.time = event->xselectionrequest.time;
 
   if (status) {
-    reply.property = event.xselectionrequest.property;
+    reply.property = event->xselectionrequest.property;
   } else {
     reply.property = None;
   }
-  XSendEvent(display, reply.requestor, False, NoEventMask, &reply);
+  XSendEvent(display, reply.requestor, False, NoEventMask, (XEvent *) &reply);
+  return True;
 }
 
-Select *selection_create(Window owner, Atom name, SelectionHandler *handler, void *data) {
+Bool event_handler_clear(EventHandler *handler, XEvent *event) {
+  Selection *selection = (Selection *) handler->data;
+  selection->clear(selection);
+
+  event_handler_uninstall(&selection->event_handler_convert);
+  event_handler_uninstall(&selection->event_handler_clear);
+  free(selection);
+   
+  return True;
+}
+
+void selection_destroy(Selection *selection) {
+  // The actual selection object is destroyed by the clear event handler.
+  if (selection->ownsowner) {
+    XDestroyWindow(display, selection->owner);
+  } else {
+    XSetSelectionOwner(display, selection->name, None, CurrentTime);
+  }
+}
+
+Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data) {
   Selection *selection = malloc(sizeof(Selection));
 
   selection->owner = owner;
+  selection->ownsowner = False;
   selection->name = name;
   selection->handler = handler;
+  selection->clear = clear;
   selection->data = data;
   
   if (selection->owner == None) {
     selection->owner = XCreateSimpleWindow(display, root, -1, -1, 1, 1, 0, 0, 0);
+    selection->ownsowner = True;
   }
 
-  EventHandler *handler;
+  EventHandler *event_handler;
 
-  handler = &selection->event_handler_convert;
-  handler->event_mask = NoEventMask;
-  event_mask_unset(&handler->match_event);
-  event_mask_unset(&handler->match_mask);
-  event_mask_set(&handler->match_mask.xselectionrequest.type);
-  event_mask_set(&handler->match_mask.xselectionrequest.selection);
-  handler->match_event.xselectionrequest.type = SelectionRequest
-  handler->match_event.xselectionrequest.selection = selection->name;
-  handler->handler = &event_handler_convert;
-  handler->data = selection;
-  event_handler_install(handler);
+  event_handler = &selection->event_handler_convert;
+  event_handler->event_mask = NoEventMask;
+  event_mask_unset(&event_handler->match_event);
+  event_mask_unset(&event_handler->match_mask);
+  event_mask_set(&event_handler->match_mask.xselectionrequest.type);
+  event_mask_set(&event_handler->match_mask.xselectionrequest.selection);
+  event_handler->match_event.xselectionrequest.type = SelectionRequest;
+  event_handler->match_event.xselectionrequest.selection = selection->name;
+  event_handler->handler = &event_handler_convert;
+  event_handler->data = selection;
+  event_handler_install(event_handler);
 
+  event_handler = &selection->event_handler_clear;
+  event_handler->event_mask = NoEventMask;
+  event_mask_unset(&event_handler->match_event);
+  event_mask_unset(&event_handler->match_mask);
+  event_mask_set(&event_handler->match_mask.xselectionrequest.type);
+  event_mask_set(&event_handler->match_mask.xselectionrequest.selection);
+  event_handler->match_event.xselectionrequest.type = SelectionClear;
+  event_handler->match_event.xselectionrequest.selection = selection->name;
+  event_handler->handler = &event_handler_clear;
+  event_handler->data = selection;
+  event_handler_install(event_handler);
+  
 
   // Generate timestamp
-  char data;
+  char dummy;
   XEvent timestamp_event;
-  XChangeProperty(display, selection->owner, selection->name, XA_STRING, 8, PropModeAppend, &data, 0);
+  XChangeProperty(display, selection->owner, selection->name, XA_STRING, 8, PropModeAppend, &dummy, 0);
   XWindowEvent(display, selection->owner, PropertyChangeMask, &timestamp_event);
 
-  XSetSelectionOwner(display, selection->name, selection->owner, timestamp_event->xproperty.time);
-  Window owner = XGetSelectionOwner(display, selection->name);
-  if (owner != selection->owner) {
-    return Fallse;
+  XSetSelectionOwner(display, selection->name, selection->owner, timestamp_event.xproperty.time);
+  Window current_owner = XGetSelectionOwner(display, selection->name);
+  if (current_owner != selection->owner) {
+    event_handler_uninstall(&selection->event_handler_convert);
+    event_handler_uninstall(&selection->event_handler_clear);
+    free(selection);
+    return NULL;
   } else {
-    selection->time = timestamp_event->xproperty.time;
-    return True;
+    selection->time = timestamp_event.xproperty.time;
+    return selection;
   }
 }
 
-Select *manager_selection_create(Atom name, SelectionHandler *handler, void *data, Bool force, long arg1, long arg2) {
-  ManagerSelection *selection = malloc(sizeof(ManagerSelection));
+Selection *manager_selection_create(Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data, Bool force, long arg1, long arg2) {
   Window existing = XGetSelectionOwner(display, name);
   
   if (existing != None) {
@@ -89,7 +127,7 @@ Select *manager_selection_create(Atom name, SelectionHandler *handler, void *dat
     XSelectInput(display, existing, StructureNotifyMask);
   }
   
-  selection->selection = selection_create(None, name, handler, data);
+  Selection *selection = selection_create(None, name, handler, clear, data);
   
   if (existing != None) {
     XEvent destroy_event;
@@ -110,7 +148,7 @@ Select *manager_selection_create(Atom name, SelectionHandler *handler, void *dat
   event.data.l[2] = selection->owner;
   event.data.l[3] = arg1;
   event.data.l[4] = arg2;
-  XSendEvent(display, root, False, StructureNotify, &event);
+  XSendEvent(display, root, False, StructureNotifyMask, (XEvent *) &event);
   
   return selection;
 }
