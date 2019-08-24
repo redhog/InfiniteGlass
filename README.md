@@ -46,7 +46,40 @@ Bold ones are implemented:
 |**Zoom screen in to window at 1:1 resolution** |X     |     |   |X   |    |    |    |    |     |    |    |X   |      |
 |Write shell command                            |X     |     |   |    |    |    |    |    |     |    |    |    |      |
 
-  
+# Protocols
+
+## Window properties
+
+* IG_COORDS float[4] - Coordinates for the window on the desktop. A client can change these to move and resize a window.
+* IG_SIZE int[2] - horizontal and vertical resolution of the window in pixels. A client can change these to change the window resolution without automatically resizing the window. A ConfigureRequest however, changes both resolution and size (proportionally).
+* IG_LAYER atom - the desktop layer to place this window in
+* DISPLAYSVG string - svg xml source code for an image to render instead of the window. Note: This rendering will support infinite zoom.
+
+## ROOT properties
+
+* IG_VIEWS atom[any] - a list of layers to display. Each layer needs to be further specified with the next two properties
+* layer_LAYER atom - layer name to match on IG_LAYER on windows
+* layer_VIEW float[4] - left,bottom,width,height of layer viewport (zoom and pan)
+* IG_NOTIFY_MOTION window - Properties for describing the current mouse pointer position on the desktop
+  * IG_ACTIVE_WINDOW window - the (top most) window under the mouse pointer (if any)
+  * IG_NOTIFY_MOTION float[2*len(IG_VIEWS)] - mouse coordinates (x,y) for each desktop layer
+* IG_ANIMATE window - event destination for animation events
+
+## Animations
+
+Window properties:
+
+* prop_ANIMATE any[any] animate the value of the property pop to eventually be set to the value of this property. The animation is started by sending an IG_ANIMATE message.
+
+The IG_ANIMATE message is a ClientMessage with the following properties:
+
+    window = root.IG_ANIMATE
+    type = "IG_ANIMATE"
+    data[0] window = window to animate on
+    data[1] atom = prop
+    data[2] float = animation time in seconds
+
+
 # Resources
 
 * https://jichu4n.com/posts/how-x-window-managers-work-and-how-to-write-one-part-i/
