@@ -11,6 +11,7 @@
 #include "wm.h"
 #include "item_widget.h"
 #include "event.h"
+#include "selection.h"
 
 #include <SOIL/SOIL.h>
 
@@ -101,11 +102,23 @@ int init_picking() {
   return 1;
 }
 
+Bool selection_sn_handler(Selection *selection, XEvent *event) {
+  return False;
+}
+void selection_sn_clear(Selection *selection) {
+}
+
+
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
 
+  Selection *Sn = manager_selection_create(XInternAtom(display, "WM_S0", False),
+                                           &selection_sn_handler,
+                                           &selection_sn_clear,
+                                           NULL, True, 0, 0);
+  
   fprintf(stderr, "Initialized X and GL.\n");
 
   unsigned int VAO;
