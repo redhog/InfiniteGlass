@@ -1,10 +1,13 @@
 all: run
 
 BUILD=build
+PREFIX=/usr/local
 
-SUBDIRS := $(wildcard */.)
-BINARIES := $(patsubst %/.,$(BUILD)/%,$(SUBDIRS))
-PYTHONAPPS := $(patsubst %/.,$(BUILD)/env/bin/%,$(SUBDIRS))
+BINARIES_SUBDIRS := $(patsubst %/Makefile,%,$(wildcard */Makefile))
+BINARIES := $(patsubst %,$(BUILD)/%,$(BINARIES_SUBDIRS))
+
+PYTHONAPPS_SUBDIRS := $(patsubst %/setup.py,%,$(wildcard */setup.py))
+PYTHONAPPS := $(patsubst %,$(BUILD)/env/bin/%,$(PYTHONAPPS_SUBDIRS))
 
 $(BINARIES): $(BUILD)
 
@@ -23,9 +26,17 @@ $(BUILD)/env:
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
-run: $(BUILD)/env $(BUILD)/glass-renderer $(BUILD)/env/bin/glass-animator $(BUILD)/env/bin/glass-widgets $(BUILD)/env/bin/glass-input $(BUILD)/env/bin/glass-ghosts
+run: $(BINARIES) $(PYTHONAPPS)
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &
 	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
+
+install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
+	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
+	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
+	cp glass.desktop /usr/share/xsessions/glass.desktop
+
+$(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
+	cd $(patsubst install-%,%,$@); python setup.py install
 
 clean:
 	rm -rf $(BUILD)

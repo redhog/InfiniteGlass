@@ -1,0 +1,15 @@
+## /usr/share/xsessions/glass.desktop ##
+
+[Desktop Entry]
+Name=InfiniteGlass
+Keywords=InfiniteGlass
+Comment=Infinite zoomable desktop window manager
+Exec=glass-startup.sh
+Terminal=False
+TryExec=glass-startup.sh
+Type=Application
+
+[Window Manager]
+SessionManaged=true
+
+##
