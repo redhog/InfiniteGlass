@@ -1,5 +1,5 @@
 xterm &
-#xclock &
+xclock &
 . ./build/env/bin/activate
 glass-input &
 glass-widgets &

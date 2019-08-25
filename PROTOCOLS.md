@@ -7,11 +7,11 @@ When implementing new protocols, properties extending the data model
 of client windows are to be preffered over ClientMessages implementing
 actions.
 
-# Compositor
+# Renderer
 
-Window rendering is implemented by the compositor, wm. It is
-controlled by properties both on individual client windows and on the
-root window.
+Window rendering is implemented by the compositor, glass-renderer. It
+is controlled by properties both on individual client windows and on
+the root window.
 
 ## Window properties
 
@@ -60,7 +60,7 @@ Example root properties:
 
 # Animator
 
-Animations are implemented by animator.py and controlled by setting
+Animations are implemented by glass-animator and controlled by setting
 window properties and sending ClientMessages.
 
 To animate the value of the property 'prop' from its current value to
