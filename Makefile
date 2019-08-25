@@ -23,7 +23,7 @@ $(BUILD)/env:
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
-run: $(BUILD)/env $(BUILD)/wm $(BUILD)/env/bin/glass-animator $(BUILD)/env/bin/glass-widgets $(BUILD)/env/bin/glass-input $(BUILD)/env/bin/glass-ghosts
+run: $(BUILD)/env $(BUILD)/glass-renderer $(BUILD)/env/bin/glass-animator $(BUILD)/env/bin/glass-widgets $(BUILD)/env/bin/glass-input $(BUILD)/env/bin/glass-ghosts
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &
 	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
 

@@ -5,12 +5,12 @@ LIBS=-lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXf
 
 BUILD=../build
 
-all: $(BUILD)/wm
+all: $(BUILD)/glass-renderer
 
 $(BUILD)/%.o: %.c *.h
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/wm: $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c))
+$(BUILD)/glass-renderer: $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c))
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)

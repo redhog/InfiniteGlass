@@ -5,7 +5,7 @@ glass-input &
 glass-widgets &
 glass-ghosts &
 glass-animator &
-gdbserver :2048 ./build/wm &
+gdbserver :2048 ./build/glass-renderer &
 while sleep 1; do
   :
 done
