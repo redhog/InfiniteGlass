@@ -1,3 +1,4 @@
+export GLASS_SHADER_PATH=build
 xterm &
 xclock &
 . ./build/env/bin/activate

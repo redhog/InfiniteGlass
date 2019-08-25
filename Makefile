@@ -32,11 +32,13 @@ run: $(BINARIES) $(PYTHONAPPS)
 
 install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
+	mkdir -p $(PREFIX)/share/glass
+	cp $(BUILD)/*.glsl $(PREFIX)/share/glass
 	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
 	cp glass.desktop /usr/share/xsessions/glass.desktop
 
 $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
-	cd $(patsubst install-%,%,$@); python setup.py install
+	cd $(patsubst install-%,%,$@); python3 setup.py install
 
 clean:
 	rm -rf $(BUILD)
