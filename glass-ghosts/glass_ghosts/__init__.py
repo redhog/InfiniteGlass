@@ -45,7 +45,8 @@ class Shadow(object):
         print("SHADOW ACTIVATE", self)
         self.window = display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
-        with open("ghost.svg", "rb") as f:
+        
+        with resource_stream("glass-ghosts", "ghost.svg") as f:
             ghost_image = f.read()
         for name, value in self.properties.items():
             key = ("{%s}" % name).encode("utf-8")

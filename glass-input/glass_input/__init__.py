@@ -65,12 +65,12 @@ class BaseMode(Mode):
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
         for mod in range(0, 2**8):
-            self.display.root.grab_key(display.keycode("XK_Super_L"),
+            self.display.root.grab_key(self.display.keycode("XK_Super_L"),
                                        mod, False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync)
             self.display.root.grab_button(
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-                Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor)           
+                Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)           
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, .6*.75]
 
     def handle(self, event):
@@ -87,7 +87,7 @@ class GrabbedMode(Mode):
         Mode.__init__(self, **kw)
         self.display.root.grab_pointer(
             False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, cursor, Xlib.X.CurrentTime)
+            Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor, Xlib.X.CurrentTime)
         self.display.root.grab_keyboard(False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, Xlib.X.CurrentTime)
 
     def exit(self):
@@ -104,7 +104,7 @@ class GrabbedMode(Mode):
                 self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6*.75]
             else:
                 self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., .75]
-            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
@@ -127,11 +127,11 @@ class GrabbedMode(Mode):
                 win["IG_COORDS_ANIMATE"] = coords
                 win["IG_SIZE_ANIMATE"] = size
                 self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
-                display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "IG_COORDS", .5)
-                display.animate_window.send(display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
-                display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
-                display.flush()
-                display.sync()
+                self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_COORDS", .5)
+                self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
+                self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+                self.display.flush()
+                self.display.sync()
         elif event == "KeyPress" and event["XK_Home"]:
             print("ZOOM HOME")
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., .75]
@@ -191,7 +191,7 @@ class ZoomMode(Mode):
             view[3] = view[2] * old_view[3] / old_view[2]
             view[1] -= view[3]
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
-            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (event == "ButtonRelease" and event[5]
                  and (event["ShiftMask"])):
             pass
@@ -267,7 +267,7 @@ class ItemZoomMode(Mode):
                     int(size[1] * coords[3]/screen[3])]
             
             self.window["IG_SIZE_ANIMATE"] = geom
-            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.window, "IG_SIZE", .5)
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.window, "IG_SIZE", .5)
         elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[5])
               or (event == "KeyPress" and event["ShiftMask"] and event["XK_Next"])):
             # zoom_screen_to_1_to_1_to_window
@@ -283,7 +283,7 @@ class ItemZoomMode(Mode):
             screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
 
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
-            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (   (event == "ButtonRelease" and event[4])
               or (event == "KeyPress" and event["XK_Prior"])):
             self.window["IG_SIZE"] = [int(item * 1/1.1) for item in self.window["IG_SIZE"]]
@@ -328,28 +328,31 @@ class ItemPanMode(Mode):
             
             self.window["IG_COORDS"] = coords
         return True
-    
-with InfiniteGlass.Display() as display:
-    font = display.open_font('cursor')
-    cursor = font.create_glyph_cursor(font, Xlib.Xcursorfont.box_spiral, Xlib.Xcursorfont.box_spiral+1, (65535, 65535, 65535), (0, 0, 0))
-    
-    display.notify_motion_window = -1
-    @display.root.require("IG_NOTIFY_MOTION")
-    def notify_motion(root, win):
-        win.change_attributes(event_mask = Xlib.X.PropertyChangeMask)
-        display.notify_motion_window = win
 
-    display.animate_window = -1
-    @display.root.require("IG_ANIMATE")
-    def notify_motion(root, win):
-        display.animate_window = win
+def main(*arg, **kw):
+    with InfiniteGlass.Display() as display:
+        font = display.open_font('cursor')
+        display.input_cursor = font.create_glyph_cursor(
+            font, Xlib.Xcursorfont.box_spiral, Xlib.Xcursorfont.box_spiral+1,
+            (65535, 65535, 65535), (0, 0, 0))
 
-    @display.eventhandlers.append
-    def handle(event):
-        if display.notify_motion_window == -1 or display.animate_window == -1:
-            return False
-        return handle_event(display, event)
+        display.notify_motion_window = -1
+        @display.root.require("IG_NOTIFY_MOTION")
+        def notify_motion(root, win):
+            win.change_attributes(event_mask = Xlib.X.PropertyChangeMask)
+            display.notify_motion_window = win
 
-    push(display, BaseMode)
+        display.animate_window = -1
+        @display.root.require("IG_ANIMATE")
+        def notify_motion(root, win):
+            display.animate_window = win
 
-    print("Input handler started")
+        @display.eventhandlers.append
+        def handle(event):
+            if display.notify_motion_window == -1 or display.animate_window == -1:
+                return False
+            return handle_event(display, event)
+
+        push(display, BaseMode)
+
+        print("Input handler started")

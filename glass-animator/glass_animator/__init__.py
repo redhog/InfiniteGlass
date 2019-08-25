@@ -88,24 +88,25 @@ def animate_geometry(display, window, timeframe):
             yield
     animation = iter(animationfn())
     animations.append(animation)
-    
-with InfiniteGlass.Display() as display:
-    next_event = display.next_event
-    def new_next_event():
-        animate(display)
-        return next_event()
-    display.next_event = new_next_event
 
-    w = display.root.create_window(map=False)
-    display.root["IG_ANIMATE"] = w
+def main(*arg, **kw):
+    with InfiniteGlass.Display() as display:
+        next_event = display.next_event
+        def new_next_event():
+            animate(display)
+            return next_event()
+        display.next_event = new_next_event
 
-    @w.on(client_type="IG_ANIMATE", mask="PropertyChangeMask")
-    def ClientMessage(win, event):
-        window, atom, timeframe = event.parse("WINDOW", "ATOM", "FLOAT")
-        
-        if atom == "__GEOMETRY__":
-            animate_geometry(display, window, timeframe)
-        else:
-            animate_property(display, window, atom, timeframe)
+        w = display.root.create_window(map=False)
+        display.root["IG_ANIMATE"] = w
 
-    print("ANIMATOR STARTED")
+        @w.on(client_type="IG_ANIMATE", mask="PropertyChangeMask")
+        def ClientMessage(win, event):
+            window, atom, timeframe = event.parse("WINDOW", "ATOM", "FLOAT")
+
+            if atom == "__GEOMETRY__":
+                animate_geometry(display, window, timeframe)
+            else:
+                animate_property(display, window, atom, timeframe)
+
+        print("ANIMATOR STARTED")
