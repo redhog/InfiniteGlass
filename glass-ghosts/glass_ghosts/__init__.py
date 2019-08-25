@@ -1,6 +1,7 @@
 import InfiniteGlass, Xlib.X
 import struct
 import array
+import pkg_resources
 
 SET = ("IG_SIZE", "IG_COORDS")
 MATCH = ("WM_CLASS", "WM_NAME")
@@ -46,7 +47,7 @@ class Shadow(object):
         self.window = display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
         
-        with resource_stream("glass-ghosts", "ghost.svg") as f:
+        with pkg_resources.resource_stream("glass-ghosts", "ghost.svg") as f:
             ghost_image = f.read()
         for name, value in self.properties.items():
             key = ("{%s}" % name).encode("utf-8")

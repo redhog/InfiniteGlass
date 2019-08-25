@@ -1,5 +1,6 @@
 import InfiniteGlass, Xlib.X
 import struct
+import pkg_resources
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
@@ -18,7 +19,8 @@ def main(*arg, **kw):
             w.zoom = zoom
             w["IG_LAYER"]="IG_LAYER_OVERLAY"
             w["IG_COORDS"]=[0.01, 0.60+0.05*idx, 0.05, 0.05]
-            w["DISPLAYSVG"]="@fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon
+            with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon) as f:
+                w["DISPLAYSVG"]=f.read()
             @w.on()
             def ButtonPress(win, event):
                 screen = list(display.root["IG_VIEW_DESKTOP_VIEW"])
@@ -35,7 +37,8 @@ def main(*arg, **kw):
         w = display.root.create_window()
         w["IG_LAYER"]="IG_LAYER_OVERLAY"
         w["IG_COORDS"]=[0.01,0.55,0.05,0.05]
-        w["DISPLAYSVG"]="@fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg"
+        with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg") as f:
+            w["DISPLAYSVG"]=f.read()
         @w.on()
         def ButtonPress(win, event):
             display.root.send(display.root,
