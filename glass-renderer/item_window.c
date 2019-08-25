@@ -158,3 +158,30 @@ Item *item_get_from_window(Window window) {
     return item_create(&item_type_window_svg, &args);
   }
 }
+
+
+void items_get_from_toplevel_windows() {
+  XWindowAttributes attr;
+  
+  XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
+
+  XGrabServer(display);
+
+  Window returned_root, returned_parent;
+  Window* top_level_windows;
+  unsigned int num_top_level_windows;
+  XQueryTree(display,
+             root,
+             &returned_root,
+             &returned_parent,
+             &top_level_windows,
+             &num_top_level_windows);
+
+  for (unsigned int i = 0; i < num_top_level_windows; ++i) {
+    if (top_level_windows[i] == motion_notification_window) continue;
+    item_get_from_window(top_level_windows[i]);
+  }
+
+  XFree(top_level_windows);
+  XUngrabServer(display);
+}

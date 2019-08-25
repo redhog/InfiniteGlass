@@ -3,7 +3,8 @@
 #include <limits.h>
 
 Bool debugpicks = False;
- 
+Bool debuglayers = False;
+
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
    float res = 0.0;
@@ -204,6 +205,17 @@ View **view_load_all(void) {
   res[nitems_return] = NULL;
   XFree(prop_return);
 
+  if (debuglayers) {
+    for (View **v = res; *v; v++) {
+     printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
+            XGetAtomName(display, v[0]->layer),
+            v[0]->screen[0],
+            v[0]->screen[1],
+            v[0]->screen[2],
+            v[0]->screen[3]);
+    }
+  }
+  
   return res;
 }
 

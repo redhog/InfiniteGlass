@@ -52,6 +52,13 @@ int glinit(Window window) {
   const GLubyte* renderer = glGetString(GL_RENDERER);
   const GLubyte* version  = glGetString(GL_VERSION);
   const GLubyte* glsl_ver = glGetString(GL_SHADING_LANGUAGE_VERSION);
+
+  unsigned int VAO;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+  
+  glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
+
   printf("OpenGL: %s:%s(%s)\nGLSL: %s\n", vendor, renderer, version, glsl_ver);
   return 1;
 }

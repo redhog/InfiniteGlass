@@ -19,32 +19,7 @@ static Bool debug_positions = False;
 
 Window motion_notification_window;
 View **views;
-
-void initItems() {
-  XWindowAttributes attr;
-  
-  XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
-
-  XGrabServer(display);
-
-  Window returned_root, returned_parent;
-  Window* top_level_windows;
-  unsigned int num_top_level_windows;
-  XQueryTree(display,
-             root,
-             &returned_root,
-             &returned_parent,
-             &top_level_windows,
-             &num_top_level_windows);
-
-  for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    if (top_level_windows[i] == motion_notification_window) continue;
-    item_get_from_window(top_level_windows[i]);
-  }
-
-  XFree(top_level_windows);
-  XUngrabServer(display);
-}
+GLint picking_fb;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
@@ -62,7 +37,6 @@ void draw() {
   glFlush();
   glXSwapBuffers(display, overlay);
 }
-GLint picking_fb;
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
   gl_check_error("pick1");
@@ -121,9 +95,6 @@ int main() {
   
   fprintf(stderr, "Initialized X and GL.\n");
 
-  unsigned int VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
 
   while (!(views = view_load_all())) sleep(1);
 
@@ -131,19 +102,8 @@ int main() {
   
   XChangeProperty(display, root, IG_NOTIFY_MOTION, XA_WINDOW, 32, PropModeReplace, (void *) &motion_notification_window, 1);
   
-  for (View **v = views; *v; v++) {
-   printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
-          XGetAtomName(display, v[0]->layer),
-          v[0]->screen[0],
-          v[0]->screen[1],
-          v[0]->screen[2],
-          v[0]->screen[3]);
-  }
-  
-  initItems();
+  items_get_from_toplevel_windows();
  
-  glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
-
   gl_check_error("start1");
 
   draw();

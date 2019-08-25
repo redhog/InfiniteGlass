@@ -6,6 +6,7 @@
 #include "item.h"
 #include "item_window.h"
 
+extern Window motion_notification_window;
 extern View **views;
 
 extern void draw();
