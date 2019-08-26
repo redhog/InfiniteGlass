@@ -1,8 +1,13 @@
 #include "xapi.h"
 #include "item_window.h"
+#include <sys/types.h>
+#include <unistd.h>
 
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
+
+Bool error_exit = False;
+Bool error_bad_window = False;
 
 int x_default_error_handler(Display* display, XErrorEvent* e) {
   const int MAX_ERROR_TEXT_LENGTH = 1024;
@@ -15,9 +20,11 @@ int x_default_error_handler(Display* display, XErrorEvent* e) {
           error_text,
           e->request_code,
           (uint) e->resourceid);
-  if (e->error_code != BadWindow) {
+  if (e->error_code != BadWindow || error_bad_window) {
     // BadWindow usually just means the window dissappeared under our feet, so no need to get all excited and exit...
-    *((char *) 0) = 0;
+    if (error_exit || fork() == 0) {
+      *((char *) 0) = 0;
+    }
   }
   return 0;
 }
@@ -85,6 +92,9 @@ int x_catch(XErrorEvent *error) {
 
 int xinit() {
   XErrorEvent error;
+
+  error_exit = getenv("GLASS_ERROR_EXIT") != NULL;
+  error_bad_window = getenv("GLASS_ERROR_BAD_WINDOW") != NULL;
 
   display = XOpenDisplay(NULL);
 
