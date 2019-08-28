@@ -268,6 +268,7 @@ int main() {
       XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*nrviews);
       XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
+      printf("Exiting by request");
       exit(1);
     } else {
       print_xevent(display, &e);

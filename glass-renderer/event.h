@@ -3,8 +3,8 @@
 
 #include "xapi.h"
 
-#define event_mask_unset(member) memset(member, 0x00, sizeof(member));
-#define event_mask_set(member) memset(member, 0xff, sizeof(member));
+#define event_mask_unset(member) memset(&member, 0x00, sizeof(member));
+#define event_mask_set(member) memset(&member, 0xff, sizeof(member));
 
 typedef struct EventHandlerStruct EventHandler;
 typedef Bool EventHandlerFunction(EventHandler *handler, XEvent *event);

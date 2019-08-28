@@ -75,10 +75,10 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
 
   event_handler = &selection->event_handler_convert;
   event_handler->event_mask = NoEventMask;
-  event_mask_unset(&event_handler->match_event);
-  event_mask_unset(&event_handler->match_mask);
-  event_mask_set(&event_handler->match_mask.xselectionrequest.type);
-  event_mask_set(&event_handler->match_mask.xselectionrequest.selection);
+  event_mask_unset(event_handler->match_event);
+  event_mask_unset(event_handler->match_mask);
+  event_mask_set(event_handler->match_mask.xselectionrequest.type);
+  event_mask_set(event_handler->match_mask.xselectionrequest.selection);
   event_handler->match_event.xselectionrequest.type = SelectionRequest;
   event_handler->match_event.xselectionrequest.selection = selection->name;
   event_handler->handler = &event_handler_convert;
@@ -87,17 +87,16 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
 
   event_handler = &selection->event_handler_clear;
   event_handler->event_mask = NoEventMask;
-  event_mask_unset(&event_handler->match_event);
-  event_mask_unset(&event_handler->match_mask);
-  event_mask_set(&event_handler->match_mask.xselectionrequest.type);
-  event_mask_set(&event_handler->match_mask.xselectionrequest.selection);
+  event_mask_unset(event_handler->match_event);
+  event_mask_unset(event_handler->match_mask);
+  event_mask_set(event_handler->match_mask.xselectionrequest.type);
+  event_mask_set(event_handler->match_mask.xselectionrequest.selection);
   event_handler->match_event.xselectionrequest.type = SelectionClear;
   event_handler->match_event.xselectionrequest.selection = selection->name;
   event_handler->handler = &event_handler_clear;
   event_handler->data = selection;
   event_handler_install(event_handler);
   
-
   // Generate timestamp
   char dummy;
   XEvent timestamp_event;
