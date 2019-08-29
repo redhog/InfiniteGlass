@@ -17,6 +17,7 @@ extern ErrorHandler *error_handler_pop();
 extern void print_error(XErrorEvent *event);
 extern void try();
 extern int catch(XErrorEvent *error);
+extern void throw(XErrorEvent *error);
 extern void error_init();
 
 #endif

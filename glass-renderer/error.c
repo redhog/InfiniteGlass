@@ -6,13 +6,17 @@
 
 List *error_handlers = NULL;
 
-int x_error_handler(Display* display, XErrorEvent* e) {
+void throw(XErrorEvent *error) {
   for (int i = error_handlers->count - 1; i > 0; i--) {
     ErrorHandler *handler = (ErrorHandler *) error_handlers->entries[i];
-    if (handler->handler && handler->handler(handler, e)) {
+    if (handler->handler && handler->handler(handler, error)) {
       break;
     }
   }
+}
+
+int x_error_handler(Display* display, XErrorEvent* e) {
+  throw(e);
   return 0;
 }
 
@@ -84,7 +88,6 @@ int catch(XErrorEvent *error) {
   free(handler);
   return !res;
 }
-
 
 void error_init() {
   error_handlers = list_create();

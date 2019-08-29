@@ -1,5 +1,7 @@
 #include "view.h"
 #include "xapi.h"
+#include "error.h"
+#include "item_window.h"
 #include <limits.h>
 
 Bool debugpicks = False;
@@ -54,7 +56,22 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 void view_abstract_draw(View *view, Item **items, ItemFilter *filter) {
   for (; items && *items; items++) {
     if (!filter || filter(*items)) {
-      (*items)->type->draw(view, *items);
+      if (item_isinstance(*items, &item_type_window)) {
+        try();
+        (*items)->type->draw(view, *items);
+        XErrorEvent e;
+        if (!catch(&e)) {
+          if (   (   e.error_code == BadWindow
+                  || e.error_code == BadDrawable)
+              && e.resourceid == ((ItemWindow *) *items)->window) {
+            item_remove(*items);
+          } else {
+            throw(&e);
+          }
+        }
+      } else {
+        (*items)->type->draw(view, *items);
+      }     
     }
   }
 }
