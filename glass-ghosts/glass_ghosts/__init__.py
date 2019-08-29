@@ -47,7 +47,7 @@ class Shadow(object):
         self.window = display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
         
-        with pkg_resources.resource_stream("glass-ghosts", "ghost.svg") as f:
+        with pkg_resources.resource_stream("glass_ghosts", "ghost.svg") as f:
             ghost_image = f.read()
         for name, value in self.properties.items():
             key = ("{%s}" % name).encode("utf-8")
