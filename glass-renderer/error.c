@@ -87,6 +87,7 @@ int catch(XErrorEvent *error) {
 
 
 void error_init() {
+  error_handlers = list_create();
   error_handler_push(&error_handler_base);
   XSetErrorHandler(&x_error_handler);
 }
