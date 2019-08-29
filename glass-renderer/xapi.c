@@ -2,104 +2,40 @@
 #include "item_window.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include "error.h"
 
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
 
-Bool error_exit = False;
-Bool error_bad_window = False;
-
-int x_default_error_handler(Display* display, XErrorEvent* e) {
-  const int MAX_ERROR_TEXT_LENGTH = 1024;
-  char error_text[MAX_ERROR_TEXT_LENGTH];
-  XGetErrorText(display, e->error_code, error_text, sizeof(error_text));
-  fprintf(stderr,
-          "%s: %i - %s: request: %i, resource: %u\n",
-          x_get_error_context(),
-          e->error_code,
-          error_text,
-          e->request_code,
-          (uint) e->resourceid);
-  if (e->error_code != BadWindow || error_bad_window) {
-    // BadWindow usually just means the window dissappeared under our feet, so no need to get all excited and exit...
-    if (error_exit || fork() == 0) {
-      *((char *) 0) = 0;
-    }
-  }
-  return 0;
-}
-
-XErrorHandler x_err_handler_stack[20];
-int x_err_handler_stack_pointer = -1;
-
-char *x_err_context_stack[20];
-int x_err_context_stack_pointer = -1;
-
-void x_push_error_handler(XErrorHandler handler) {
-  x_err_handler_stack_pointer++;
-  x_err_handler_stack[x_err_handler_stack_pointer] = handler;
-  XSetErrorHandler(handler);
-}
-
-void x_pop_error_handler() {
-  XSync(display, False);
-
-  x_err_handler_stack_pointer--;
-  XSetErrorHandler(x_err_handler_stack[x_err_handler_stack_pointer]);
-}
-
 void x_push_error_context(char *name) {
   XSync(display, False);
-  x_err_context_stack_pointer++;
-  x_err_context_stack[x_err_context_stack_pointer] = name;
-}
-
-char *x_get_error_context() {
-  return x_err_context_stack[x_err_context_stack_pointer];
+  ErrorHandler *handler = malloc(sizeof(ErrorHandler));
+  handler->handler = NULL;
+  handler->data = NULL;
+  handler->context = name;
+  error_handler_push(handler);
 }
 
 void x_pop_error_context() {
   XSync(display, False);
-  x_err_context_stack_pointer--;
-}
-
-XErrorEvent x_try_error;
-Bool x_try_has_error;
-
-int x_try_error_handler(Display *display, XErrorEvent *e) {
-  x_try_error = *e;
-  x_try_has_error = True;
-  return 0;
+  ErrorHandler *handler = error_handler_pop();
+  free(handler);
 }
 
 void x_try() {
-  x_try_has_error = False;
-  x_push_error_handler(&x_try_error_handler);
+  try();
 }
 
 int x_catch(XErrorEvent *error) {
-  Bool res;
-
-  x_pop_error_handler();
-
-  res = x_try_has_error;
-  *error = x_try_error;
-
-  x_try_has_error = False;
-
-  return !res;
+  return catch(error);
 }
 
 int xinit() {
   XErrorEvent error;
 
-  error_exit = getenv("GLASS_ERROR_EXIT") != NULL;
-  error_bad_window = getenv("GLASS_ERROR_BAD_WINDOW") != NULL;
-
   display = XOpenDisplay(NULL);
 
-  x_push_error_handler(&x_default_error_handler);
-  x_push_error_context("(No context)");
+  error_init();
 
   root = DefaultRootWindow(display);
   WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
