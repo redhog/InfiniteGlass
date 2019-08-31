@@ -75,6 +75,21 @@ void item_type_window_constructor(Item *item, void *args) {
   window_item->base.is_mapped = attr.map_state == IsViewable;
   item_type_window_update_space_pos_from_window(window_item);
 
+  // FIXME: Move wm_hints from item_window_pixmap, since we need it here too...
+  XErrorEvent error;
+  x_try();
+  XWMHints *wm_hints = XGetWMHints(display, window_item->window);
+  if (wm_hints) {
+    if (wm_hints->initial_state != WithdrawnState) {
+     XMapWindow(display, window);
+    }
+    XFree(wm_hints);
+  }
+  if (!x_catch(&error)) {
+    printf("Window does not have any WM_HINTS: %lu", window_item->window);
+  }
+
+  
   XSelectInput(display, window, PointerMotionMask | PropertyChangeMask);
 }
 
