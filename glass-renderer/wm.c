@@ -19,7 +19,7 @@
 static Bool debug_positions = False;
 
 Window motion_notification_window;
-View **views;
+List *views;
 GLint picking_fb;
 
 Atom current_layer;
@@ -31,9 +31,10 @@ void draw() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  for (View **v = views; *v; v++) {
-    current_layer = (*v)->layer;
-    view_draw(0, *v, items_all, &filter_by_layer);
+  for (size_t idx = 0; idx < views->count; idx++) {
+    View *v = (View *) views->entries[idx];
+    current_layer = v->layer;
+    view_draw(0, v, items_all, &filter_by_layer);
   }
   glFlush();
   glXSwapBuffers(display, overlay);
@@ -44,12 +45,13 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  for (View **v = views; *v; v++) {
-    current_layer = (*v)->layer;
-    view_draw_picking(picking_fb, *v, items_all, &filter_by_layer);
+  for (size_t idx = 0; idx < views->count; idx++) {
+    View *v = (View *) views->entries[idx];
+    current_layer = v->layer;
+    view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
   }
   glFlush();
-  view_pick(picking_fb, *views, x, y, winx, winy, item);
+  view_pick(picking_fb, (View *) views->entries[0], x, y, winx, winy, item);
 }
 
 int init_picking() {
@@ -218,13 +220,14 @@ int main() {
         draw();
         handled=True;
       } else {
-        for (View **v = views; *v; v++) {
-          if (e.xproperty.atom == (*v)->attr_layer) {
-            view_load_layer(*v);
+        for (size_t idx = 0; idx < views->count; idx++) {
+          View *v = (View *) views->entries[idx];
+          if (e.xproperty.atom == v->attr_layer) {
+            view_load_layer(v);
             draw();
             handled=True;
-          } else if (e.xproperty.atom == (*v)->attr_view) {
-            view_load_screen(*v);
+          } else if (e.xproperty.atom == v->attr_view) {
+            view_load_screen(v);
             draw();
             handled=True;
           }
@@ -258,15 +261,13 @@ int main() {
           printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
       }
 
-      size_t nrviews = 0;
-      for (View **v = views; *v; v++, nrviews++);
-      float coords[nrviews * 2];
-      for (int i=0; i<nrviews; i++) {
-        view_to_space(views[i],
+      float coords[views->count * 2];
+      for (int i=0; i < views->count; i++) {
+       view_to_space((View *) views->entries[i],
                       e.xmotion.x_root, e.xmotion.y_root,
                       &coords[i*2], &coords[i*2+1]);
       }
-      XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*nrviews);
+      XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
       XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       printf("Exiting by request");

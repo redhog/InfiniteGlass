@@ -203,7 +203,7 @@ View *view_load(Atom name) {
   return view;
 }
 
-View **view_load_all(void) {
+List *view_load_all(void) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
@@ -217,22 +217,22 @@ View **view_load_all(void) {
     return NULL;
   }
   
-  View **res = malloc(sizeof(View *) * (nitems_return + 1));
+  List *res = list_create();
   
   for (int i=0; i < nitems_return; i++) {
-    res[i] = view_load(((Atom *) prop_return)[i]);
+    list_append(res, (void *) view_load(((Atom *) prop_return)[i]));
   }
-  res[nitems_return] = NULL;
   XFree(prop_return);
 
   if (debuglayers) {
-    for (View **v = res; *v; v++) {
+   for (size_t idx = 0; idx < res->count; idx++) {
+     View *v = (View *) res->entries[idx];
      printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
-            XGetAtomName(display, v[0]->layer),
-            v[0]->screen[0],
-            v[0]->screen[1],
-            v[0]->screen[2],
-            v[0]->screen[3]);
+            XGetAtomName(display, v->layer),
+            v->screen[0],
+            v->screen[1],
+            v->screen[2],
+            v->screen[3]);
     }
   }
   
@@ -243,11 +243,11 @@ void view_free(View *view) {
   free(view);
 }
 
-void view_free_all(View **views) {
-  for (View **v = views; *v; v++) {
-    free(*v);
+void view_free_all(List *views) {
+  for (size_t idx = 0; idx < views->count; idx++) {
+    free(views->entries[idx]);
   }
-  free(views);
+  list_destroy(views);
 }
 
 void view_update(View *view) {
@@ -264,10 +264,11 @@ void view_update(View *view) {
   }
 }
 
-View *view_find(View **views, Atom name) {
-  for (View **v = views; *v; v++) {
-    if ((*v)->layer == name) {
-      return *v;
+View *view_find(List *views, Atom name) {
+  for (size_t idx = 0; idx < views->count; idx++) {
+    View *v = (View *) views->entries[idx];   
+    if (v->layer == name) {
+      return v;
     }
   }
   return NULL;
