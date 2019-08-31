@@ -30,6 +30,10 @@ run: $(BINARIES) $(PYTHONAPPS)
 	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &
 	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
 
+run-xorg: $(BINARIES) $(PYTHONAPPS)
+	xinit ./xinitrc -- "$$(whereis -b Xorg | cut -f2 -d' ')" :100 -ac &
+	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
+
 install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
 	mkdir -p $(PREFIX)/share/glass
