@@ -203,8 +203,6 @@ int main() {
       draw();
     } else if (e.type == MapRequest) {
       XMapWindow(display, e.xmaprequest.window);
-    } else if (e.type == ConfigureRequest) {
-      //OnConfigureRequest(e.xconfigurerequest);
     } else if (e.type == PropertyNotify) {
       Bool handled = False;
       if (   (e.xproperty.window == root)
