@@ -4,6 +4,7 @@
 #include "xapi.h"
 #include "glapi.h"
 #include "shader.h"
+#include "list.h"
 #include "view_type.h"
 
 struct ItemTypeStruct;
@@ -52,8 +53,7 @@ struct ItemStruct {
 
 extern ItemType item_type_base;
 
-extern Item **items_all;
-extern size_t items_all_usage;
+extern List *items_all;
 
 Bool item_isinstance(Item *item, ItemType *type);
 Item *item_create(ItemType *type, void *args);

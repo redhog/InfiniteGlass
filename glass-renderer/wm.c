@@ -12,6 +12,7 @@
 #include "item_widget.h"
 #include "event.h"
 #include "selection.h"
+#include "list.h"
 
 #include <SOIL/SOIL.h>
 

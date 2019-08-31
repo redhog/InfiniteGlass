@@ -1,9 +1,8 @@
 #include "event.h"
+#include "list.h"
 #include <string.h>
 
-EventHandler **event_handlers;
-size_t nr_event_handlers;
-size_t event_handlers_size;
+List *event_handlers = NULL;
 
 Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
  char *e = (char *) event;
@@ -19,9 +18,10 @@ Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
 }
 
 Bool event_handle(XEvent *event) {
-  for (int idx = 0; idx < nr_event_handlers; idx++) {
-    if (   event_match(event, &event_handlers[idx]->match_event, &event_handlers[idx]->match_mask)
-        && event_handlers[idx]->handler(event_handlers[idx], event)) {
+  for (int idx = 0; idx < event_handlers->count; idx++) {
+    EventHandler *handler = (EventHandler *) event_handlers->entries[idx];
+    if (   event_match(event, &handler->match_event, &handler->match_mask)
+        && handler->handler(handler, event)) {
       return True;
     }
   }
@@ -29,24 +29,15 @@ Bool event_handle(XEvent *event) {
 }
 
 void event_handler_install(EventHandler *handler) {
-  if (nr_event_handlers+1 >= event_handlers_size) {
-    event_handlers_size = nr_event_handlers + 32;
-    event_handlers = realloc(event_handlers, event_handlers_size * sizeof(EventHandler*));
-  }
-  event_handlers[nr_event_handlers] = handler;
+  if (!event_handlers) event_handlers = list_create();
+  list_append(event_handlers, (void *) handler);
   // Fetch existing mask and OR!!!
   if (handler->match_mask.xany.window) {
     XSelectInput(display, handler->match_event.xany.window, handler->event_mask);
   }
-  nr_event_handlers++;
 }
 
 void event_handler_uninstall(EventHandler *handler) {
-  size_t idx;
-  for (idx = 0; idx < nr_event_handlers && event_handlers[idx] != handler; idx++);
-  if (idx < nr_event_handlers) {
-    memmove(event_handlers + idx, event_handlers + idx+1, nr_event_handlers - idx - 1);
-    nr_event_handlers -= 1;
-  }
+  list_remove(event_handlers, (void *) handler);
 }
 

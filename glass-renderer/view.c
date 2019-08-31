@@ -1,6 +1,7 @@
 #include "view.h"
 #include "xapi.h"
 #include "error.h"
+#include "list.h"
 #include "item_window.h"
 #include <limits.h>
 
@@ -53,30 +54,32 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 
 
 
-void view_abstract_draw(View *view, Item **items, ItemFilter *filter) {
-  for (; items && *items; items++) {
-    if (!filter || filter(*items)) {
-      if (item_isinstance(*items, &item_type_window)) {
+void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
+  if (!items) return;
+  for (size_t idx = 0; idx < items->count; idx++) {
+    Item *item = (Item *) items->entries[idx];
+    if (!filter || filter(item)) {
+      if (item_isinstance(item, &item_type_window)) {
         try();
-        (*items)->type->draw(view, *items);
+        item->type->draw(view, item);
         XErrorEvent e;
         if (!catch(&e)) {
           if (   (   e.error_code == BadWindow
                   || e.error_code == BadDrawable)
-              && e.resourceid == ((ItemWindow *) *items)->window) {
-            item_remove(*items);
+              && e.resourceid == ((ItemWindow *) item)->window) {
+            item_remove(item);
           } else {
             throw(&e);
           }
         }
       } else {
-        (*items)->type->draw(view, *items);
+        item->type->draw(view, item);
       }     
     }
   }
 }
 
-void view_draw(GLint fb, View *view, Item **items, ItemFilter *filter) {
+void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
   gl_check_error("draw0");
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glEnablei(GL_BLEND, 0);
@@ -88,7 +91,7 @@ void view_draw(GLint fb, View *view, Item **items, ItemFilter *filter) {
   gl_check_error("draw2");
 }
 
-void view_draw_picking(GLint fb, View *view, Item **items, ItemFilter *filter) {
+void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
   gl_check_error("view_draw_picking1");
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   view->picking = 1;

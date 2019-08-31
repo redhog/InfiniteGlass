@@ -65,9 +65,7 @@ ItemType item_type_base = {
   &item_type_base_get_shader
 };
 
-Item **items_all = NULL;
-size_t items_all_usage = 0;
-size_t items_all_size = 0;
+List *items_all = NULL;
 size_t items_all_id = 0;
 
 Bool item_isinstance(Item *item, ItemType *type) {
@@ -88,36 +86,21 @@ Item *item_create(ItemType *type, void *args) {
 }
 
 Item *item_get(int id) {
-  Item *item;
-  size_t idx = 0;
-
   if (items_all) {
-    for (; items_all[idx] && items_all[idx]->id != id; idx++);
-    if (items_all[idx]) return items_all[idx];
+    for (size_t idx = 0; idx < items_all->count; idx++) {
+      Item *item = (Item *) items_all->entries[idx];
+      if (item->id == id) return item;
+    }
   }
-
   return NULL;
 }
 
 void item_add(Item *item) {
-  if (items_all_usage+1 > items_all_size) {
-   if (!items_all_size) items_all_size = 8;
-   items_all_size *=2;
-   items_all = realloc(items_all, sizeof(Item *) * items_all_size);
-  }
-
-  item->id = ++items_all_id;
-  items_all[items_all_usage] = item;
-  items_all[items_all_usage+1] = NULL;
-
-  items_all_usage++;
+  if (!items_all) items_all = list_create();
+  item->id = ++items_all_id;  
+  list_append(items_all, (void *) item);
 }
 
 void item_remove(Item *item) {
-  size_t idx;
-
-  for (idx = 0; items_all[idx] && items_all[idx] != item; idx++);
-  if (!items_all[idx]) return;
-  memmove(items_all+idx, items_all+idx+1, sizeof(Item *) * (items_all_size-idx-1));
-  items_all_usage--;
+  list_remove(items_all, (void *) item);
 }

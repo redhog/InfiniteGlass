@@ -128,16 +128,11 @@ ItemType item_type_window = {
 };
 
 Item *item_get_from_window(Window window) {
-  ItemWindow *item;
-  size_t idx = 0;
-
   if (items_all) {
-    for (;
-         items_all[idx]
-         && (   !item_isinstance(items_all[idx], &item_type_window)
-             || ((ItemWindow *) items_all[idx])->window != window);
-         idx++);
-    if (items_all[idx]) return items_all[idx];
+    for (size_t idx = 0; idx < items_all->count; idx++) {
+      ItemWindow *item = (ItemWindow *) items_all->entries[idx];
+      if (item->window == window) return (Item *) item;
+    }
   }
 
   fprintf(stderr, "Adding window %ld\n", window);
