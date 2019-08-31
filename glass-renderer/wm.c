@@ -172,7 +172,7 @@ int main() {
         Item *item = item_get_from_window(e.xproperty.window);
         item->width = ((long *) prop_return)[0];
         item->height = ((long *) prop_return)[1];
-        printf("SIZE CHANGED TO %i,%i\n", item->width, item->height);
+        //printf("SIZE CHANGED TO %i,%i\n", item->width, item->height);
         item->type->update(item);
         draw();
       }
