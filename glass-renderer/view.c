@@ -155,6 +155,13 @@ void view_load_screen(View *view) {
       // So we need to step through the array in chunks of long, not float (which is still 4 bytes)...
       view->screen[i] = *(float *) &((long *) prop_return)[i];
     }
+    if (view->screen[2] == 0.0) {
+      view->screen[2] = view->screen[3] * (float) view->width / (float) view->height;     
+      view_update(view);
+    } else if (view->screen[3] == 0.0) {
+      view->screen[3] = view->screen[2] * (float) view->height / (float) view->width;
+      view_update(view);
+    }
   }
   XFree(prop_return);
 }

@@ -71,7 +71,7 @@ class BaseMode(Mode):
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)           
-        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, .6*.75]
+        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
 
     def handle(self, event):
         if event == "PropertyNotify" and event.window == self.display.notify_motion_window:
@@ -101,9 +101,9 @@ class GrabbedMode(Mode):
         elif event == "KeyPress" and event["XK_Escape"]:
             old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
             if old[0] == 0.:
-                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6*.75]
+                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6 * old[3] / old[2]]
             else:
-                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., .75]
+                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
@@ -134,7 +134,8 @@ class GrabbedMode(Mode):
                 self.display.sync()
         elif event == "KeyPress" and event["XK_Home"]:
             print("ZOOM HOME")
-            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., .75]
+            old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (   (event == "ButtonPress" and event["Mod1Mask"] and event[4])
               or (event == "ButtonPress" and event["Mod1Mask"] and event[5])
