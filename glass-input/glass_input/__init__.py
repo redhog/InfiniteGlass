@@ -135,7 +135,7 @@ class GrabbedMode(Mode):
         elif event == "KeyPress" and event["XK_Home"]:
             print("ZOOM HOME")
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., .75]
-            display.animate_window.send(display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         elif (   (event == "ButtonPress" and event["Mod1Mask"] and event[4])
               or (event == "ButtonPress" and event["Mod1Mask"] and event[5])
               or (event == "KeyPress" and event["Mod1Mask"] and event["XK_Next"])
