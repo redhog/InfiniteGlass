@@ -86,7 +86,6 @@ class Shadow(object):
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
-            print("XXXXXXXXXXXXXXXXXXX", name) 
             try:
                 self.properties[name] = win[name]
             except:
