@@ -27,15 +27,6 @@ class Shadow(object):
         return tuple(tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
     def update_key(self):
-        key = self.key()
-        if key == self.current_key:
-            return
-        if self.current_key is not None:
-            del self.manager.shadows[self.current_key]
-        print("UPDATE KEY from %s to %s" % (self.current_key, key))
-        self.current_key = key
-        self.manager.shadows[self.current_key] = self
-
         if not self.manager.restoring_shadows:
             cur = self.manager.dbconn.cursor()
             dbkey = str(self)
@@ -44,6 +35,15 @@ class Shadow(object):
                   insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
                 """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
             self.manager.dbconn.commit()
+        
+        key = self.key()
+        if key == self.current_key:
+            return
+        if self.current_key is not None:
+            del self.manager.shadows[self.current_key]
+        print("UPDATE KEY from %s to %s" % (self.current_key, key))
+        self.current_key = key
+        self.manager.shadows[self.current_key] = self
             
     def apply(self, window):
         print("SHADOW APPLY", window.__window__(), self)
@@ -86,6 +86,7 @@ class Shadow(object):
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
+            print("XXXXXXXXXXXXXXXXXXX", name) 
             try:
                 self.properties[name] = win[name]
             except:
