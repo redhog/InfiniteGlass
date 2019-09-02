@@ -12,7 +12,7 @@ def tuplify(value):
     if isinstance(value, list):
         return tuple(value)
     return value
-\
+
 
 class Shadow(object):
     def __init__(self, manager, properties):
@@ -73,13 +73,25 @@ class Shadow(object):
         self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
         self.apply(self.window)
 
+        @self.window.on(mask="StructureNotifyMask")
+        def DestroyNotify(win, event):
+            print("SHADOW DELETE", self)
+            self.manager.display.eventhandlers.remove(self.DestroyNotify)
+            self.manager.display.eventhandlers.remove(self.PropertyNotify)
+            self.manager.display.eventhandlers.remove(self.WMDelete)
+            self.manager.shadows.pop(self.key(), None)
+
+            dbkey = str(self)
+            cur = self.manager.dbconn.cursor()
+            cur.execute("""
+                delete from shadows where key = ?
+            """, (dbkey,))
+            self.manager.dbconn.commit()
+            
         @self.window.on(mask="NoEventMask", client_type="WM_PROTOCOLS")
         def ClientMessage(win, event):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
-                print("SHADOW DELETE", self)
                 self.window.destroy()
-                self.manager.display.eventhandlers.remove(self.WMDelete)
-                self.manager.shadows.pop(self.key(), None)
             else:
                 print("%s: Unknown WM_PROTOCOLS message: %s" % (self, event))
 
@@ -93,6 +105,7 @@ class Shadow(object):
             else:
                 self.update_key()
                 
+        self.DestroyNotify = DestroyNotify
         self.WMDelete = ClientMessage
         self.PropertyNotify = PropertyNotify
                 
@@ -102,6 +115,7 @@ class Shadow(object):
         print("SHADOW DEACTIVATE", self)
         if self.window is not None:
             self.window.destroy()
+            self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
             self.manager.display.eventhandlers.remove(self.WMDelete)
         
