@@ -105,6 +105,10 @@ class GrabbedMode(Mode):
             else:
                 self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
+        elif event == "KeyPress" and event["XK_F4"]:
+            win = self.get_active_window()
+            if win and win != self.display.root:
+                win.destroy()
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
