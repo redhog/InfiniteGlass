@@ -2,12 +2,11 @@ import InfiniteGlass, Xlib.X
 import struct
 import array
 import pkg_resources
-
-SET = ("IG_SIZE", "IG_COORDS")
-MATCH = ("WM_CLASS", "WM_NAME")
-
-windows = {}
-shadows = {}
+import sqlite3
+import os.path
+import json
+import array
+import base64
 
 def tuplify(value):
     if isinstance(value, list):
@@ -15,8 +14,8 @@ def tuplify(value):
     return value
 
 class Shadow(object):
-    def __init__(self, display, properties):
-        self.display = display
+    def __init__(self, manager, properties):
+        self.manager = manager
         self.properties = properties
         self.window = None
         self.current_key = None
@@ -24,27 +23,44 @@ class Shadow(object):
         print("SHADOW CREATE", self)
 
     def key(self):
-        return tuple(tuplify(self.properties.get(name, None)) for name in sorted(MATCH))
+        return tuple(tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
     def update_key(self):
         key = self.key()
         if key == self.current_key:
             return
         if self.current_key is not None:
-            del shadows[self.current_key]
+            del self.manager.shadows[self.current_key]
         print("UPDATE KEY from %s to %s" % (self.current_key, key))
         self.current_key = key
-        shadows[self.current_key] = self
-        
+        self.manager.shadows[self.current_key] = self
+
+        if not self.manager.restoring_shadows:
+            cur = self.manager.dbconn.cursor()
+            dbkey = str(self)
+            for name, value in self.properties.items():
+                if isinstance(value, array.array):
+                    value = list(value)
+                elif isinstance(value, bytes):
+                    value = "base64:" + base64.b64encode(value).decode("ascii")
+                try:
+                    value = json.dumps(value)
+                except:
+                    continue
+                cur.execute("""
+                  insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
+                """, (dbkey, name, value))
+            self.manager.dbconn.commit()
+            
     def apply(self, window):
         print("SHADOW APPLY", window.__window__(), self)
-        for key in SET:
+        for key in self.manager.SET:
             if key in self.properties:
                 window[key] = self.properties[key]
         
     def activate(self):
         print("SHADOW ACTIVATE", self)
-        self.window = display.root.create_window(map=False)
+        self.window = self.manager.display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
         
         with pkg_resources.resource_stream("glass_ghosts", "ghost.svg") as f:
@@ -69,14 +85,14 @@ class Shadow(object):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
                 print("SHADOW DELETE", self)
                 self.window.destroy()
-                self.window.display.real_display.eventhandlers.remove(self.WMDelete)
-                shadows.pop(self.key(), None)
+                self.manager.display.eventhandlers.remove(self.WMDelete)
+                self.manager.shadows.pop(self.key(), None)
             else:
                 print("%s: Unknown WM_PROTOCOLS message: %s" % (self, event))
 
         @self.window.on()
         def PropertyNotify(win, event):
-            name = self.window.display.real_display.get_atom_name(event.atom)
+            name = self.manager.display.get_atom_name(event.atom)
             try:
                 self.properties[name] = win[name]
             except:
@@ -93,14 +109,15 @@ class Shadow(object):
         print("SHADOW DEACTIVATE", self)
         if self.window is not None:
             self.window.destroy()
-            self.window.display.real_display.eventhandlers.remove(self.PropertyNotify)
-            self.window.display.real_display.eventhandlers.remove(self.WMDelete)
+            self.manager.display.eventhandlers.remove(self.PropertyNotify)
+            self.manager.display.eventhandlers.remove(self.WMDelete)
         
     def __str__(self):
         return "/".join(str(item) for item in self.key())
             
 class Window(object):
-    def __init__(self, window):
+    def __init__(self, manager, window):
+        self.manager = manager
         self.window = window
         self.id = self.window.__window__()
         self.shadow = None
@@ -112,7 +129,7 @@ class Window(object):
             
         @window.on()
         def PropertyNotify(win, event):
-            name = self.window.display.real_display.get_atom_name(event.atom)
+            name = self.manager.display.get_atom_name(event.atom)
             try:
                 self.properties[name] = win[name]
             except:
@@ -124,22 +141,22 @@ class Window(object):
         def DestroyNotify(win, event):
             print("WINDOW DESTROY", self, event.window.__window__())
             if not self.shadow:
-                self.shadow = Shadow(self.window.display.real_display, self.properties)
+                self.shadow = Shadow(self.manager, self.properties)
             self.shadow.properties.update(self.properties)
             self.shadow.update_key()
             self.shadow.activate()
-            windows.pop(self.id, None)
-            self.window.display.real_display.eventhandlers.remove(PropertyNotify)
-            self.window.display.real_display.eventhandlers.remove(DestroyNotify)
+            self.manager.windows.pop(self.id, None)
+            self.manager.display.eventhandlers.remove(PropertyNotify)
+            self.manager.display.eventhandlers.remove(DestroyNotify)
             
     def key(self):
-        return tuple(tuplify(self.properties.get(name, None)) for name in sorted(MATCH))
+        return tuple(tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
     def match_shadow(self):
         if self.shadow: return
         key = self.key()
-        if key in shadows:
-            self.shadow = shadows[key]
+        if key in self.manager.shadows:
+            self.shadow = self.manager.shadows[key]
             self.shadow.apply(self.window)
             self.shadow.deactivate()
         
@@ -176,23 +193,64 @@ def find_client_window(win):
             return client
         
     return None    
+
+class GhostManager(object):
+    def __init__(self, display, MATCH = ("WM_CLASS", "WM_NAME"), SET = ("IG_SIZE", "IG_COORDS")):
+        self.display = display
+
+        self.MATCH = MATCH
+        self.SET = SET
+
+        self.windows = {}
+        self.shadows = {}
         
+        self.dbdirpath = os.path.expanduser("~/.config/glass")
+        if not os.path.exists(self.dbdirpath):
+            os.makedirs(self.dbdirpath)
+        self.dbpath = os.path.join(self.dbdirpath, "ghosts.sqlite3")
+        dbexists = os.path.exists(self.dbpath)
+        self.dbconn = sqlite3.connect(self.dbpath)
+        if not dbexists:
+            self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
+
+        self.restore_shadows()
+            
+        @display.root.on(mask="SubstructureNotifyMask")
+        def MapNotify(win, event):
+            client_win = find_client_window(event.window)
+            if client_win is None: return
+            try:
+                client_win["IG_GHOST"]
+            except Exception as e:
+                if client_win.__window__() not in self.windows:
+                    self.windows[client_win.__window__()] = Window(self, client_win)
+
+        for child in display.root.query_tree().children:
+            client_win = find_client_window(child)
+            if client_win is None: continue
+            if client_win.__window__() not in self.windows:
+                self.windows[client_win.__window__()] = Window(self, client_win)
+
+        print("Ghosts handler started")
+            
+    def restore_shadows(self):
+        self.restoring_shadows = True
+        cur = self.dbconn.cursor()
+        cur.execute("select * from shadows order by key")
+        properties = {}
+        currentkey = None
+        for key, name, value in cur:
+            if key != currentkey:
+                if currentkey:
+                    Shadow(self, properties)                    
+                properties = {}
+            value = json.loads(value)
+            if isinstance(value, str) and value.startswith("base64:"):
+                value = base64.b64decode(value[len("base64:"):])
+            properties[name] = value
+        if currentkey:
+            Shadow(self, properties)    
+        self.restoring_shadows = False
     
 with InfiniteGlass.Display() as display:
-    @display.root.on(mask="SubstructureNotifyMask")
-    def MapNotify(win, event):
-        client_win = find_client_window(event.window)
-        if client_win is None: return
-        try:
-            client_win["IG_GHOST"]
-        except Exception as e:
-            if client_win.__window__() not in windows:
-                windows[client_win.__window__()] = Window(client_win)
-            
-    for child in display.root.query_tree().children:
-        client_win = find_client_window(child)
-        if client_win is None: continue
-        if client_win.__window__() not in windows:
-            windows[client_win.__window__()] = Window(client_win)
-
-    print("Ghosts handler started")
+    GhostManager(display)
