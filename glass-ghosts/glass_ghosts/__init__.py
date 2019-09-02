@@ -12,6 +12,7 @@ def tuplify(value):
     if isinstance(value, list):
         return tuple(value)
     return value
+\
 
 class Shadow(object):
     def __init__(self, manager, properties):
@@ -39,17 +40,9 @@ class Shadow(object):
             cur = self.manager.dbconn.cursor()
             dbkey = str(self)
             for name, value in self.properties.items():
-                if isinstance(value, array.array):
-                    value = list(value)
-                elif isinstance(value, bytes):
-                    value = "base64:" + base64.b64encode(value).decode("ascii")
-                try:
-                    value = json.dumps(value)
-                except:
-                    continue
                 cur.execute("""
                   insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
-                """, (dbkey, name, value))
+                """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
             self.manager.dbconn.commit()
             
     def apply(self, window):
@@ -142,8 +135,9 @@ class Window(object):
             print("WINDOW DESTROY", self, event.window.__window__())
             if not self.shadow:
                 self.shadow = Shadow(self.manager, self.properties)
-            self.shadow.properties.update(self.properties)
-            self.shadow.update_key()
+            else:
+                self.shadow.properties.update(self.properties)
+                self.shadow.update_key()
             self.shadow.activate()
             self.manager.windows.pop(self.id, None)
             self.manager.display.eventhandlers.remove(PropertyNotify)
@@ -242,15 +236,33 @@ class GhostManager(object):
         for key, name, value in cur:
             if key != currentkey:
                 if currentkey:
-                    Shadow(self, properties)                    
+                    Shadow(self, properties).activate()
                 properties = {}
-            value = json.loads(value)
-            if isinstance(value, str) and value.startswith("base64:"):
-                value = base64.b64decode(value[len("base64:"):])
-            properties[name] = value
+                currentkey = key
+            properties[name] = json.loads(value, object_hook=self.fromjson)
         if currentkey:
-            Shadow(self, properties)    
+            Shadow(self, properties).activate()
         self.restoring_shadows = False
-    
+
+
+    def tojson(self, obj):
+        if isinstance(obj, array.array):
+            return list(obj)
+        if isinstance(obj, bytes):
+            return {"__jsonclass__": ["base64", base64.b64encode(obj).decode("ascii")]}
+        if type(obj).__name__ == "Window":
+            return {"__jsonclass__": ["Window", obj.__window__()]}
+        return obj
+
+    def fromjson(self, obj):
+        if "__jsonclass__" in obj:
+            cls = obj.pop("__jsonclass__")
+            if cls[0] == "base64":
+                return base64.b64decode(cls[1])
+            if cls[0] == "Window":
+                return self.display.create_resource_object("window", cls[1])
+        return obj
+
+        
 with InfiniteGlass.Display() as display:
     GhostManager(display)
