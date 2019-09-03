@@ -188,7 +188,14 @@ int main() {
       Item * item = item_get_from_window(e.xdestroywindow.window);
       item_remove(item);
     } else if (e.type == ReparentNotify) {
-      //OnReparentNotify(e.xreparent);
+      if (e.xreparent.parent == root) {
+        Item * item = item_get_from_window(e.xreparent.window);
+        item->type->update(item);
+      } else {
+        Item * item = item_get_from_window(e.xreparent.window);
+        item_remove(item);
+      }
+      draw();
     } else if (e.type == MapNotify) {
       if (e.xmap.window != overlay) {
         fprintf(stderr, "MapNotify %ld\n", e.xmap.window);
