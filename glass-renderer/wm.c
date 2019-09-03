@@ -13,10 +13,10 @@
 #include "event.h"
 #include "selection.h"
 #include "list.h"
-
+#include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
-static Bool debug_positions = False;
+static Bool debug_positions = True;
 
 Window motion_notification_window;
 List *views;
@@ -115,13 +115,61 @@ int main() {
 
   for (;;) {
     XEvent e;
+    XGenericEventCookie *cookie = &e.xcookie;
     XSync(display, False);
     XNextEvent(display, &e);
-    //print_xevent(display, &e);
-
+    if (e.type != MotionNotify) {
+      print_xevent(display, &e);
+    }
+    
     gl_check_error("loop");
 
-    if (event_handle(&e)) {
+    if (cookie->type == GenericEvent && XGetEventData(display, cookie)) {
+      if (cookie->evtype == XI_RawMotion) {
+        XIRawEvent *re = (XIRawEvent *) cookie->data;
+        Window       root_ret, child_ret;
+        int          root_x, root_y;
+        int          win_x, win_y;
+        unsigned int mask;
+        XQueryPointer(display, root,
+                      &root_ret, &child_ret, &root_x, &root_y, &win_x, &win_y, &mask);
+
+        int winx, winy;
+        Item *item;
+        Window win = root;
+        pick(root_x, root_y, &winx, &winy, &item);
+        if (item && item_isinstance(item, &item_type_window)) {
+          ItemWindow *window_item = (ItemWindow *) item;
+          win = window_item->window;
+
+          XWindowChanges values;
+          values.x = root_x - winx;
+          values.y = root_y - winy;
+          values.stack_mode = Above;
+          if (values.x != window_item->x || values.y != window_item->y) {
+            XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
+            window_item->x = values.x;
+            window_item->y = values.y;
+          }
+          
+          if (debug_positions)
+            printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
+        } else {
+          if (debug_positions)
+            printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
+        }
+
+        float coords[views->count * 2];
+        for (int i=0; i < views->count; i++) {
+         view_to_space((View *) views->entries[i],
+                        e.xmotion.x_root, e.xmotion.y_root,
+                        &coords[i*2], &coords[i*2+1]);
+        }
+        XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
+        XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
+      }
+      XFreeEventData(display, cookie);
+    } else if (event_handle(&e)) {
      // Already handled
     } else if (e.type == damage_event + XDamageNotify) {
       XErrorEvent error;
@@ -245,35 +293,6 @@ int main() {
     } else if (e.type == MotionNotify) {
       while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
 
-      int winx, winy;
-      Item *item;
-      Window win = root;
-      pick(e.xmotion.x_root, e.xmotion.y_root, &winx, &winy, &item);
-      if (item && item_isinstance(item, &item_type_window)) {
-        ItemWindow *window_item = (ItemWindow *) item;
-        win = window_item->window;
-
-        XWindowChanges values;
-        values.x = e.xmotion.x_root - winx;
-        values.y = e.xmotion.y_root - winy;
-        values.stack_mode = Above;
-        XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
-
-        if (debug_positions)
-          printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
-      } else {
-        if (debug_positions)
-          printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
-      }
-
-      float coords[views->count * 2];
-      for (int i=0; i < views->count; i++) {
-       view_to_space((View *) views->entries[i],
-                      e.xmotion.x_root, e.xmotion.y_root,
-                      &coords[i*2], &coords[i*2+1]);
-      }
-      XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
-      XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
       printf("DEBUG LIST ITEMS\n");
       for (size_t idx = 0; idx < items_all->count; idx++) {

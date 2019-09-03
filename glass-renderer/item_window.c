@@ -11,8 +11,8 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   XWindowAttributes attr;
   XGetWindowAttributes(display, item->window, &attr);
 
-  int x                     = attr.x;
-  int y                     = attr.y;
+  item->x                   = attr.x;
+  item->y                   = attr.y;
   int width                 = attr.width;
   int height                = attr.height;
   // fprintf(stderr, "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, x, y, width, height);
@@ -34,8 +34,8 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
     }
     XFree(prop_return);
   } else {
-    item->base.coords[0] = ((float) (x - overlay_attr.x)) / (float) overlay_attr.width;
-    item->base.coords[1] = ((float) (overlay_attr.height - y - overlay_attr.y)) / (float) overlay_attr.width;
+    item->base.coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
+    item->base.coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
     item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
     item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
   }

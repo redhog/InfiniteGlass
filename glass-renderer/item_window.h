@@ -6,7 +6,9 @@
 
 typedef struct {
   Item base;
- 
+
+  int x;
+  int y;
   Window window;
 } ItemWindow;
 

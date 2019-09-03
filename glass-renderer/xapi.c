@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "error.h"
+#include <X11/extensions/XInput2.h>
 
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
@@ -110,6 +111,33 @@ int xinit() {
   XDamageQueryExtension(display, &damage_event, &damage_error);
   XShapeQueryExtension(display, &shape_event, &shape_error);
 
+
+  int ximajor = 2;
+  int ximinor = 2;
+  int xiret;
+
+  xiret = XIQueryVersion(display, &ximajor, &ximinor);
+  if (xiret == BadRequest) {
+    printf("No XI2 support. Server supports version %d.%d only.\n", ximajor, ximinor);
+    return 0;
+  } else if (xiret != Success) {
+    fprintf(stderr, "Internal Error! This is a bug in Xlib.\n");
+  }
+  
+
+  XIEventMask evmasks[1];
+  unsigned char mask1[(XI_LASTEVENT + 7)/8];
+
+  memset(mask1, 0, sizeof(mask1));
+  XISetMask(mask1, XI_RawMotion);
+
+  evmasks[0].deviceid = XIAllMasterDevices;
+  evmasks[0].mask_len = sizeof(mask1);
+  evmasks[0].mask = mask1;
+
+  XISelectEvents(display, root, evmasks, 1);
+  XFlush(display);
+  
   XSync(display, False);
 
   fprintf(stderr, "root=%ld, overlay=%ld\n", root, overlay);

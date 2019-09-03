@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-ggdb $(shell pkg-config --cflags librsvg-2.0 pangocairo cairo)
-
-LIBS=-lX11 -lGL -lGLU -lGLEW -lXrender -lXcomposite -lXtst -lXdamage -lXext -lXfixes -lXrandr -lSOIL $(shell pkg-config --libs librsvg-2.0 pangocairo cairo)
+PACKAGES=librsvg-2.0 pangocairo cairo xi x11 gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
+CFLAGS=-ggdb $(shell pkg-config --cflags $(PACKAGES))
+LIBS=-lSOIL $(shell pkg-config --libs $(PACKAGES))
 
 BUILD=../build
 
