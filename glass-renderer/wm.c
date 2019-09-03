@@ -16,7 +16,7 @@
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
-static Bool debug_positions = True;
+static Bool debug_positions = False;
 
 Window motion_notification_window;
 List *views;
@@ -290,9 +290,6 @@ int main() {
         print_xevent(display, &e);
         fprintf(stderr, "Ignored event\n"); fflush(stderr);
       }
-    } else if (e.type == MotionNotify) {
-      while (XCheckTypedWindowEvent(display, e.xmotion.window, MotionNotify, &e)) {}
-
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
       printf("DEBUG LIST ITEMS\n");
       for (size_t idx = 0; idx < items_all->count; idx++) {

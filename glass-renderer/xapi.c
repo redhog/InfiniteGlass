@@ -62,8 +62,7 @@ int xinit() {
   XSelectInput(display, root,
                SubstructureRedirectMask |
                SubstructureNotifyMask |
-               PropertyChangeMask |
-               PointerMotionMask);
+               PropertyChangeMask);
   if (!x_catch(&error)) {
     fprintf(stderr, "Another window manager is already running"); fflush(stderr);
     return 0;

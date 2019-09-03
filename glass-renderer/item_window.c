@@ -89,8 +89,7 @@ void item_type_window_constructor(Item *item, void *args) {
     printf("Window does not have any WM_HINTS: %lu", window_item->window);
   }
 
-  
-  XSelectInput(display, window, PointerMotionMask | PropertyChangeMask);
+  XSelectInput(display, window, PropertyChangeMask);
 }
 
 void item_type_window_destructor(Item *item) {
