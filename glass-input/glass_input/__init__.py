@@ -105,6 +105,11 @@ class GrabbedMode(Mode):
             else:
                 self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
+        elif event == "KeyPress" and event["XK_F1"]:
+            print("SENDING DEBUG")
+            self.display.root.send(
+                self.display.root, "IG_DEBUG",
+                event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif event == "KeyPress" and event["XK_F4"]:
             win = self.get_active_window()
             if win and win != self.display.root:
@@ -178,6 +183,7 @@ class GrabbedMode(Mode):
                 win = self.get_active_window()
             else:
                 win = self.display.get_input_focus().focus
+            print("BUTTON PRESS", win)
             if win and win != self.display.root:
                 push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
                 handle_event(self.display, event)
