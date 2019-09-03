@@ -274,6 +274,13 @@ int main() {
       }
       XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
       XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
+    } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
+      printf("DEBUG LIST ITEMS\n");
+      for (size_t idx = 0; idx < items_all->count; idx++) {
+        Item *item = (Item *) items_all->entries[idx];
+        item->type->print(item);
+      }
+      printf("DEBUG LIST ITEMS END\n");
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
       printf("Exiting by request");
       exit(1);

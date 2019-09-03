@@ -49,6 +49,7 @@ int xinit() {
   IG_LAYER_MENU = XInternAtom(display, "IG_LAYER_MENU", False);
   IG_COORDS = XInternAtom(display, "IG_COORDS", False);
   IG_SIZE = XInternAtom(display, "IG_SIZE", False);
+  IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   XA_FLOAT = XInternAtom(display, "FLOAT", False);
   IG_NOTIFY_MOTION = XInternAtom(display, "IG_NOTIFY_MOTION", False);
