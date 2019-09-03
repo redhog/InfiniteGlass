@@ -125,12 +125,18 @@ Shader *item_type_window_pixmap_get_shader(Item *item) {
   return (Shader *) item_window_shader_get();
 }
 
+void item_type_window_pixmap_print(Item *item) {
+  item_type_window_pixmap.base->print(item);
+}
+
 ItemType item_type_window_pixmap = {
   &item_type_window,
   sizeof(ItemWindowPixmap),
+  "ItemWindowPixmap",
   &item_type_window_pixmap_constructor,
   &item_type_window_pixmap_destructor,
   &item_type_window_pixmap_draw,
   &item_type_window_pixmap_update,
-  &item_type_window_pixmap_get_shader
+  &item_type_window_pixmap_get_shader,
+  &item_type_window_pixmap_print
 };

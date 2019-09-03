@@ -182,12 +182,19 @@ Shader *item_type_window_svg_get_shader(Item *item) {
   return (Shader *) item_widget_shader_get();
 }
 
+void item_type_window_svg_print(Item *item) {
+  item_type_window_svg.base->print(item);
+}
+
+
 ItemType item_type_window_svg = {
   &item_type_window,
   sizeof(ItemWindowSVG),
+  "ItemWindowSVG",
   &item_type_window_svg_constructor,
   &item_type_window_svg_destructor,
   &item_type_window_svg_draw,
   &item_type_window_svg_update,
-  &item_type_window_svg_get_shader
+  &item_type_window_svg_get_shader,
+  &item_type_window_svg_print
 };

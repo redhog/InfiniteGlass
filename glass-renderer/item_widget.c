@@ -225,14 +225,21 @@ Shader *item_type_widget_get_shader(Item *item) {
   return (Shader *) item_widget_shader_get();
 }
 
+void item_type_widget_print(Item *item) {
+  item_type_widget.base->print(item);
+  printf("    label=%s\n", ((ItemWidget *) item)->label);
+}
+
 ItemType item_type_widget = {
   &item_type_base,
   sizeof(ItemWidget),
+  "ItemWidget",
   &item_type_widget_constructor,
   &item_type_widget_destructor,
   &item_type_widget_draw,
   &item_type_widget_update,
-  &item_type_widget_get_shader
+  &item_type_widget_get_shader,
+  &item_type_widget_print
 };
 
 Item *item_get_widget(char *label) {

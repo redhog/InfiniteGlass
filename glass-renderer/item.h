@@ -18,15 +18,18 @@ typedef void ItemTypeDestructor(Item *item);
 typedef void ItemTypeDraw(View *view, Item *item);
 typedef void ItemTypeUpdate(Item *item);
 typedef Shader *ItemTypeGetShader(Item *);
+typedef void ItemTypePrint(Item *);
 
 struct ItemTypeStruct {
   ItemType *base;
   size_t size;
+  char *name;
   ItemTypeConstructor *init;
   ItemTypeDestructor *destroy;
   ItemTypeDraw *draw;
   ItemTypeUpdate *update;
   ItemTypeGetShader *get_shader;
+  ItemTypePrint *print;
 };
 
 struct ItemStruct {

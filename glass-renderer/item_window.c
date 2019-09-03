@@ -132,14 +132,21 @@ Shader *item_type_window_get_shader(Item *item) {
   return (Shader *) item_window_shader_get();
 }
 
+void item_type_window_print(Item *item) {
+  item_type_window.base->print(item);
+  printf("    window=%ld\n", ((ItemWindow *) item)->window);
+}
+
 ItemType item_type_window = {
   &item_type_base,
   sizeof(ItemWindow),
+  "ItemWindow",
   &item_type_window_constructor,
   &item_type_window_destructor,
   &item_type_window_draw,
   &item_type_window_update,
-  &item_type_window_get_shader
+  &item_type_window_get_shader,
+  &item_type_window_print
 };
 
 Item *item_get_from_window(Window window) {

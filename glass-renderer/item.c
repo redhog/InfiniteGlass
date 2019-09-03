@@ -44,7 +44,8 @@ Shader *item_type_base_get_shader(Item *item) {
 }
 
 void item_type_base_print(Item *item) {
-  printf("%d:%s [%d,%d] @ %f,%f,%f,%f",
+  printf("%s(%d):%s [%d,%d] @ %f,%f,%f,%f\n",
+         item->type->name,
          item->id,
          item->is_mapped ? "" : " invisible",
          item->width,
@@ -58,11 +59,13 @@ void item_type_base_print(Item *item) {
 ItemType item_type_base = {
   NULL,
   sizeof(Item),
+  "ItemBase",
   &item_type_base_constructor,
   &item_type_base_destructor,
   &item_type_base_draw,
   &item_type_base_update,
-  &item_type_base_get_shader
+  &item_type_base_get_shader,
+  &item_type_base_print
 };
 
 List *items_all = NULL;
