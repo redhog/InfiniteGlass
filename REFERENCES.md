@@ -7,6 +7,8 @@
 * Graphics
   * [Xlib](https://www.x.org/releases/X11R7.7/doc/libX11/libX11/libX11.html)
   * [glX](https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/#glX)
+* Event handling
+  * [Cursor tracking using XInput2](https://keithp.com/blogs/Cursor_tracking/)
 * Window manager protocols
   * [ICCCM](https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html)
   * [ewmh](https://www.freedesktop.org/wiki/Specifications/wm-spec/)
