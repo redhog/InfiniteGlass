@@ -138,7 +138,7 @@ int main() {
         Item *item;
         Window win = root;
         pick(root_x, root_y, &winx, &winy, &item);
-        if (item && item_isinstance(item, &item_type_window)) {
+        if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_window)) {
           ItemWindow *window_item = (ItemWindow *) item;
           win = window_item->window;
 
@@ -208,6 +208,7 @@ int main() {
         item->type->update(item);
         draw();
       }
+      // FIXME: Update width/height regardless of window type...
     } else if (e.type == PropertyNotify && e.xproperty.atom == IG_SIZE) {
       Atom type_return;
       int format_return;
