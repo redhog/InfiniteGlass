@@ -25,10 +25,11 @@ void list_append(List *list, void *entry) {
 void list_remove(List *list, void *entry) {
   size_t idx;
   for (idx = 0; idx < list->count && list->entries[idx] != entry; idx++);
-  if (idx < list->count) {
-    memmove(list->entries + idx, list->entries + idx+1, list->count - idx - 1);
-    list->count -= 1;
+  if (idx >= list->count) {
+    *(char *) NULL = 0;
   }
+  memmove(&list->entries[idx], &list->entries[idx+1], sizeof(void *) * (list->count - idx - 1));
+  list->count -= 1;
 }
 
 void *list_pop(List *list) {

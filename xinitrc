@@ -1,6 +1,8 @@
 #! /bin/bash
 
 export GLASS_SHADER_PATH=build
+export MALLOC_CHECK_=2
+
 . ./build/env/bin/activate
 
 glass-input &

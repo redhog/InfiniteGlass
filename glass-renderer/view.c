@@ -55,6 +55,7 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 
 
 void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
+  List *to_delete = NULL;
   if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
@@ -67,7 +68,8 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
           if (   (   e.error_code == BadWindow
                   || e.error_code == BadDrawable)
               && e.resourceid == ((ItemWindow *) item)->window) {
-            item_remove(item);
+            if (!to_delete) to_delete = list_create();
+            list_append(to_delete, item);
           } else {
             throw(&e);
           }
@@ -76,6 +78,12 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
         item->type->draw(view, item);
       }     
     }
+  }
+  if (to_delete) {
+    for (size_t idx = 0; idx < to_delete->count; idx++) {
+      item_remove((Item *) to_delete->entries[idx]);
+    }
+    list_destroy(to_delete);
   }
 }
 
