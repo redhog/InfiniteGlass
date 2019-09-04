@@ -1,5 +1,18 @@
 all: run
 
+XSERVER=Xephyr
+GLASS_DEBUG=gdb
+
+ifeq ($(XSERVEROPTS),)
+  ifeq ($(XSERVER),Xephyr)
+    XSERVEROPTS= :100 -ac -screen 1024x768 -host-cursor
+  else
+    XSERVEROPTS= :100 -ac
+  endif
+endif
+
+XSERVERPATH=$(shell whereis -b $(XSERVER) | cut -f2 -d' ')
+
 BUILD=build
 PREFIX=/usr/local
 
@@ -27,12 +40,7 @@ $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
 run: $(BINARIES) $(PYTHONAPPS)
-	xinit ./xinitrc -- "$$(whereis -b Xephyr | cut -f2 -d' ')" :100 -ac -screen 1024x768 -host-cursor &
-	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
-
-run-xorg: $(BINARIES) $(PYTHONAPPS)
-	xinit ./xinitrc -- "$$(whereis -b Xorg | cut -f2 -d' ')" :100 -ac &
-	gdb -ex "target remote localhost:2048" -ex "continue" ./$(BUILD)/wm
+	GLASS_DEBUG="$(GLASS_DEBUG)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" ./xstartup.sh
 
 install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
