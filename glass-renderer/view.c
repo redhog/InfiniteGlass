@@ -154,6 +154,7 @@ void view_load_screen(View *view) {
       // Yes, on 64bit linux, long is 8 bytes, and XGetWindowProperty inserts a bunch of zeroes!
       // So we need to step through the array in chunks of long, not float (which is still 4 bytes)...
       view->screen[i] = *(float *) &((long *) prop_return)[i];
+      view->_screen[i] = *(float *) &((long *) prop_return)[i];
     }
     if (view->screen[2] == 0.0) {
       view->screen[2] = view->screen[3] * (float) view->width / (float) view->height;     

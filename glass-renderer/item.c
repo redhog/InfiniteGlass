@@ -79,8 +79,22 @@ Bool item_isinstance(Item *item, ItemType *type) {
 
 Item *item_create(ItemType *type, void *args) {
   Item *item = (Item *) malloc(type->size);
+
+  item->_width = 0;
+  item->_height = 0;
+  item->width = 0;
+  item->height = 0;
+  item->_coords[0] = 0.0;
+  item->_coords[1] = 0.0;
+  item->_coords[2] = 0.0;
+  item->_coords[3] = 0.0;
+  item->coords[0] = 0.0;
+  item->coords[1] = 0.0;
+  item->coords[2] = 0.0;
+  item->coords[3] = 0.0;
   item->coords_vbo = -1;
   item->is_mapped = False;
+  item->_is_mapped = False;
   item->type = type;
   item->type->init(item, args);
   item_add(item);
