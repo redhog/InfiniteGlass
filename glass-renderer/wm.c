@@ -118,57 +118,63 @@ int main() {
     XGenericEventCookie *cookie = &e.xcookie;
     XSync(display, False);
     XNextEvent(display, &e);
-    if (e.type != MotionNotify) {
+    if (e.type != MotionNotify && e.type != GenericEvent) {
       print_xevent(display, &e);
     }
     
     gl_check_error("loop");
 
-    if (cookie->type == GenericEvent && XGetEventData(display, cookie)) {
-      if (cookie->evtype == XI_RawMotion) {
-        XIRawEvent *re = (XIRawEvent *) cookie->data;
-        Window       root_ret, child_ret;
-        int          root_x, root_y;
-        int          win_x, win_y;
-        unsigned int mask;
-        XQueryPointer(display, root,
-                      &root_ret, &child_ret, &root_x, &root_y, &win_x, &win_y, &mask);
+    if (cookie->type == GenericEvent) {
+      if (XGetEventData(display, cookie)) {
+        if (cookie->evtype == XI_RawMotion) {
+          XIRawEvent *re = (XIRawEvent *) cookie->data;
+          Window       root_ret, child_ret;
+          int          root_x, root_y;
+          int          win_x, win_y;
+          unsigned int mask;
+          XQueryPointer(display, root,
+                        &root_ret, &child_ret, &root_x, &root_y, &win_x, &win_y, &mask);
 
-        int winx, winy;
-        Item *item;
-        Window win = root;
-        pick(root_x, root_y, &winx, &winy, &item);
-        if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_window)) {
-          ItemWindow *window_item = (ItemWindow *) item;
-          win = window_item->window;
+          int winx, winy;
+          Item *item;
+          Window win = root;
+          pick(root_x, root_y, &winx, &winy, &item);
+          if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_window)) {
+            ItemWindow *window_item = (ItemWindow *) item;
+            win = window_item->window;
 
-          XWindowChanges values;
-          values.x = root_x - winx;
-          values.y = root_y - winy;
-          values.stack_mode = Above;
-          if (values.x != window_item->x || values.y != window_item->y) {
-            XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
-            window_item->x = values.x;
-            window_item->y = values.y;
+            XWindowChanges values;
+            values.x = root_x - winx;
+            values.y = root_y - winy;
+            values.stack_mode = Above;
+            if (values.x != window_item->x || values.y != window_item->y) {
+              XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
+              window_item->x = values.x;
+              window_item->y = values.y;
+            }
+
+            if (debug_positions)
+              printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
+          } else {
+            if (debug_positions)
+              printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
           }
-          
-          if (debug_positions)
-            printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
-        } else {
-          if (debug_positions)
-            printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
-        }
 
-        float coords[views->count * 2];
-        for (int i=0; i < views->count; i++) {
-         view_to_space((View *) views->entries[i],
-                        e.xmotion.x_root, e.xmotion.y_root,
-                        &coords[i*2], &coords[i*2+1]);
+          float coords[views->count * 2];
+          for (int i=0; i < views->count; i++) {
+           view_to_space((View *) views->entries[i],
+                          e.xmotion.x_root, e.xmotion.y_root,
+                          &coords[i*2], &coords[i*2+1]);
+          }
+          XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
+          XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
+        } else {
+          printf("Unknown XGenericEventCookie\n");
         }
-        XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
-        XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
+        XFreeEventData(display, cookie);
+      } else {
+        printf("Unknown GenericEvent without EventData\n");
       }
-      XFreeEventData(display, cookie);
     } else if (event_handle(&e)) {
      // Already handled
     } else if (e.type == damage_event + XDamageNotify) {
