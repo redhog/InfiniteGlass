@@ -38,10 +38,6 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
     item->base.coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
     item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
     item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
-    item->base._coords[0] = item->base.coords[0];
-    item->base._coords[1] = item->base.coords[1];
-    item->base._coords[2] = item->base.coords[2];
-    item->base._coords[3] = item->base.coords[3];
   }
 }
 
@@ -78,20 +74,6 @@ void item_type_window_constructor(Item *item, void *args) {
   XGetWindowAttributes(display, window, &attr);
   window_item->base.is_mapped = attr.map_state == IsViewable;
   item_type_window_update_space_pos_from_window(window_item);
-
-  // FIXME: Move wm_hints from item_window_pixmap, since we need it here too...
-  XErrorEvent error;
-  x_try();
-  XWMHints *wm_hints = XGetWMHints(display, window_item->window);
-  if (wm_hints) {
-    if (wm_hints->initial_state != WithdrawnState) {
-     XMapWindow(display, window);
-    }
-    XFree(wm_hints);
-  }
-  if (!x_catch(&error)) {
-    printf("Window does not have any WM_HINTS: %lu", window_item->window);
-  }
 
   XSelectInput(display, window, PropertyChangeMask);
 }
