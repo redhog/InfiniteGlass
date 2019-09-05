@@ -120,4 +120,5 @@ void item_add(Item *item) {
 
 void item_remove(Item *item) {
   list_remove(items_all, (void *) item);
+  item->type->destroy(item);
 }
