@@ -22,10 +22,14 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   x2 = (view->screen[0] + view->screen[2] - item->base.base.coords[0]) / item->base.base.coords[2];
   y2 = (item->base.base.coords[1] - view->screen[1]) / item->base.base.coords[3];
   
-  if (x1 < 0.) x1 = 0.; if (x1 > 1.) x1 = 1.;
-  if (y1 < 0.) y1 = 0.; if (y1 > 1.) y1 = 1.;
-  if (x2 < 0.) x2 = 0.; if (x2 > 1.) x2 = 1.;
-  if (y2 < 0.) y2 = 0.; if (y2 > 1.) y2 = 1.;
+  if (x1 < 0.) x1 = 0.;
+  if (x1 > 1.) x1 = 1.;
+  if (y1 < 0.) y1 = 0.;
+  if (y1 > 1.) y1 = 1.;
+  if (x2 < 0.) x2 = 0.;
+  if (x2 > 1.) x2 = 1.;
+  if (y2 < 0.) y2 = 0.;
+  if (y2 > 1.) y2 = 1.;
   
   // When screen to window is 1:1 this holds:
   // item->coords[2] = item->width * view->screen[2] / view->width;
@@ -46,17 +50,12 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   item->drawing.itemwidth = itempixelwidth;
   item->drawing.itemheight = itempixelheight;
 
-  float transform[4] = {(float) item->drawing.x / (float) item->drawing.itemwidth,
-                        (float) item->drawing.y / (float) item->drawing.itemheight,
-                        (float) item->drawing.width / (float) item->drawing.itemwidth,
-                        (float) item->drawing.height / (float) item->drawing.itemheight};
-
   // Actually generate the drawing
   
   GError *error;
   RsvgDimensionData dimension;
 
-  RsvgHandle *rsvg = rsvg_handle_new_from_data(item->source, strlen(item->source), &error);
+  RsvgHandle *rsvg = rsvg_handle_new_from_data((unsigned char *) item->source, strlen(item->source), &error);
   if (!rsvg) {
     printf("Unable to load svg: %s\n",  error->message);
     fflush(stdout);
@@ -168,7 +167,7 @@ void item_type_window_svg_update(Item *item) {
   GError *error;
   RsvgDimensionData dimension;
 
-  RsvgHandle *rsvg = rsvg_handle_new_from_data(((ItemWindowSVG *) item)->source, strlen(((ItemWindowSVG *) item)->source), &error);
+  RsvgHandle *rsvg = rsvg_handle_new_from_data((unsigned char *) ((ItemWindowSVG *) item)->source, strlen(((ItemWindowSVG *) item)->source), &error);
   rsvg_handle_get_dimensions(rsvg, &dimension);
   g_object_unref(rsvg);
 

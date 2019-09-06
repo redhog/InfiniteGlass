@@ -10,4 +10,5 @@ int item_shader_load(ItemShader *shader) {
 
   shader->picking_mode_attr = glGetUniformLocation(shader->base.program, "picking_mode");
   shader->window_id_attr = glGetUniformLocation(shader->base.program, "window_id");
+  return 1;
 }

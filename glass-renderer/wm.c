@@ -20,7 +20,7 @@ static Bool debug_positions = False;
 
 Window motion_notification_window;
 List *views;
-GLint picking_fb;
+GLuint picking_fb;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
@@ -56,7 +56,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
 
 int init_picking() {
   GLuint color_tex;
-  GLint depth_rb;
+  GLuint depth_rb;
   
   glGenTextures(1, &color_tex);
   glBindTexture(GL_TEXTURE_2D, color_tex);
@@ -91,10 +91,10 @@ int main() {
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
 
-  Selection *Sn = manager_selection_create(XInternAtom(display, "WM_S0", False),
-                                           &selection_sn_handler,
-                                           &selection_sn_clear,
-                                           NULL, True, 0, 0);
+  manager_selection_create(XInternAtom(display, "WM_S0", False),
+                           &selection_sn_handler,
+                           &selection_sn_clear,
+                           NULL, True, 0, 0);
   
   fprintf(stderr, "Initialized X and GL.\n");
 
@@ -127,7 +127,7 @@ int main() {
     if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
         if (cookie->evtype == XI_RawMotion) {
-          XIRawEvent *re = (XIRawEvent *) cookie->data;
+          //XIRawEvent *re = (XIRawEvent *) cookie->data;
           Window       root_ret, child_ret;
           int          root_x, root_y;
           int          win_x, win_y;
@@ -153,11 +153,13 @@ int main() {
               window_item->y = values.y;
             }
 
-            if (debug_positions)
+            if (debug_positions) {
               printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
+            }
           } else {
-            if (debug_positions)
+            if (debug_positions) {
               printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
+            }
           }
 
           float coords[views->count * 2];
@@ -189,7 +191,7 @@ int main() {
       x_catch(&error);
     } else if (e.type == shape_event + ShapeNotify) {
      //fprintf(stderr, "Received ShapeNotify\n");
-      XShapeEvent *event = (XShapeEvent*) &e;
+     //XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureRequest) {
       XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
       Item *item = item_get_from_window(event->window);

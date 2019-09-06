@@ -102,7 +102,7 @@ void item_type_window_pixmap_update(Item *item) {
   unsigned int border_width_return;
   unsigned int depth_return;
   
-  Status res = XGetGeometry(display, pixmap_item->window_pixmap, &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
+  XGetGeometry(display, pixmap_item->window_pixmap, &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
   /*
   printf("XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
          pixmap_item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);

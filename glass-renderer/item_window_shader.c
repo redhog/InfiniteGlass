@@ -16,6 +16,7 @@ int item_window_shader_load(ItemWindowShader *shader) {
   shader->icon_mask_sampler_attr = glGetUniformLocation(shader->base.base.program, "icon_mask_sampler");
   shader->has_icon_attr = glGetUniformLocation(shader->base.base.program, "has_icon");
   shader->has_icon_mask_attr = glGetUniformLocation(shader->base.base.program, "has_icon_mask");
+  return 1;
 }
 
 int item_window_shader_initialized = 0;

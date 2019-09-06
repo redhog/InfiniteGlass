@@ -86,10 +86,14 @@ ItemWidgetTile *item_type_widget_get_tile(View *view, ItemWidget *item) {
   x2 = (view->screen[0] + view->screen[2] - item->base.coords[0]) / item->base.coords[2];
   y2 = (item->base.coords[1] - view->screen[1]) / item->base.coords[3];
   
-  if (x1 < 0.) x1 = 0.; if (x1 > 1.) x1 = 1.;
-  if (y1 < 0.) y1 = 0.; if (y1 > 1.) y1 = 1.;
-  if (x2 < 0.) x2 = 0.; if (x2 > 1.) x2 = 1.;
-  if (y2 < 0.) y2 = 0.; if (y2 > 1.) y2 = 1.;
+  if (x1 < 0.) x1 = 0.;
+  if (x1 > 1.) x1 = 1.;
+  if (y1 < 0.) y1 = 0.;
+  if (y1 > 1.) y1 = 1.;
+  if (x2 < 0.) x2 = 0.;
+  if (x2 > 1.) x2 = 1.;
+  if (y2 < 0.) y2 = 0.;
+  if (y2 > 1.) y2 = 1.;
   
   // When screen to window is 1:1 this holds:
   // item->coords[2] = item->width * view->screen[2] / view->width;
@@ -111,26 +115,6 @@ ItemWidgetTile *item_type_widget_get_tile(View *view, ItemWidget *item) {
   tile->itemwidth = itempixelwidth;
   tile->itemheight = itempixelheight;
 
-  float transform[4] = {(float) tile->x / (float) tile->itemwidth,
-                        (float) tile->y / (float) tile->itemheight,
-                        (float) tile->width / (float) tile->itemwidth,
-                        (float) tile->height / (float) tile->itemheight};
-
-  /*
-  printf("TILE %d,%d[%d,%d]/[%d,%d] => %f,%f/%f,%f\n",
-         tile->x,
-         tile->y,
-         tile->width,
-         tile->height,
-         tile->itemwidth,
-         tile->itemheight,
-         transform[0],
-         transform[1],
-         transform[2],
-         transform[3]
-         );
-  */
-  
   item_type_widget_update_tile(item, tile);
   
   return tile;
@@ -167,7 +151,7 @@ void item_type_widget_destructor(Item *item) {
 }
 
 void item_type_widget_draw(View *view, Item *item) {
-  ItemWidget *item_widget = (ItemWidget *) item;
+  //ItemWidget *item_widget = (ItemWidget *) item;
 
   ItemWidgetShader *shader = (ItemWidgetShader *) item->type->get_shader(item);
 
@@ -243,7 +227,5 @@ ItemType item_type_widget = {
 };
 
 Item *item_get_widget(char *label) {
-  ItemWidget *item;
-  
   return item_create(&item_type_widget, label);
 }

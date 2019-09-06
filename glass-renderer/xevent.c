@@ -81,11 +81,10 @@ do_KeyPress(Display *display, XEvent *eventp)
     KeyCode kc = 0;
     Bool kc_set = False;
     const char *ksname;
-    int nbytes, nmbbytes = 0;
+    int nbytes = 0;
     char str[256 + 1];
     static char *buf = NULL;
     static int bsize = 8;
-    Status status;
 
     if (buf == NULL)
         buf = malloc(bsize);

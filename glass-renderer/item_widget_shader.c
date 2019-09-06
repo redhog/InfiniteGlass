@@ -13,6 +13,7 @@ int item_widget_shader_load(ItemWidgetShader *shader) {
     
   shader->texture_attr = glGetUniformLocation(shader->base.base.program, "texture_sampler");
   shader->transform_attr = glGetUniformLocation(shader->base.base.program, "transform");
+  return 1;
 }
 
 int item_widget_shader_initialized = 0;

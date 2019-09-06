@@ -1,11 +1,13 @@
 #include "list.h"
 #include <string.h>
+#include <stdlib.h>
 
 List *list_create() {
   List *list = malloc(sizeof(List));
   list->entries = NULL;
   list->count = 0;
   list->size = 0;
+  return list;
 }
 
 void list_destroy(List *list) {

@@ -156,15 +156,13 @@ Item *item_get_from_window(Window window) {
     return item_create(&item_type_window_pixmap, &window);
   } else {
     XGetWindowProperty(display, window, DISPLAYSVG, 0, bytes_after_return, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-    ItemWindowSVGArgs args = {window, prop_return};
+    ItemWindowSVGArgs args = {window, (char *) prop_return};
     return item_create(&item_type_window_svg, &args);
   }
 }
 
 
 void items_get_from_toplevel_windows() {
-  XWindowAttributes attr;
-  
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
   XGrabServer(display);

@@ -23,7 +23,7 @@ int gl_check_error(char *msg) {
 
 int glinit(Window window) { 
   int elements;
-  int attrib_list[] = {GLX_X_RENDERABLE, True, NULL};
+  int attrib_list[] = {GLX_X_RENDERABLE, True, 0};
   configs = glXChooseFBConfig(display, 0, attrib_list, &elements);
 
   int context_attribs[] = {GLX_CONTEXT_MAJOR_VERSION_ARB, 3,

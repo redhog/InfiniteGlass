@@ -101,7 +101,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   char dummy;
   XEvent timestamp_event;
   XSelectInput(display, selection->owner, PropertyChangeMask);
-  XChangeProperty(display, selection->owner, selection->name, XA_STRING, 8, PropModeAppend, &dummy, 0);
+  XChangeProperty(display, selection->owner, selection->name, XA_STRING, 8, PropModeAppend, (void *) &dummy, 0);
   printf("Waiting for timestamp\n");
   XWindowEvent(display, selection->owner, PropertyChangeMask, &timestamp_event);
 
