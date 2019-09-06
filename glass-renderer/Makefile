@@ -1,7 +1,12 @@
 CC=gcc
 PACKAGES=librsvg-2.0 pangocairo cairo xi x11 gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
 CFLAGS=-ggdb $(shell pkg-config --cflags $(PACKAGES))
-LIBS=-lSOIL $(shell pkg-config --libs $(PACKAGES))
+LIBS:=-lSOIL $(shell pkg-config --libs $(PACKAGES))
+
+ifeq ($(GLASS_DMALLOC),)
+else
+  LIBS:=$(LIBS) -ldmalloc
+endif
 
 BUILD=../build
 

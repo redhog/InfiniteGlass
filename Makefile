@@ -29,7 +29,7 @@ $(BUILD):
 
 .PHONY: $(BINARIES)
 $(BINARIES):
-	$(MAKE) -C $(notdir $@)
+	$(MAKE) GLASS_DMALLOC="$(GLASS_DMALLOC)" -C $(notdir $@)
 
 $(BUILD)/env:
 	virtualenv --python=python3 $@
