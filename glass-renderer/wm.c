@@ -29,6 +29,7 @@ Bool filter_by_layer(Item *item) {
 
 void draw() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glDisable(GL_SCISSOR_TEST);
   glClearColor(1.0, 1.0, 0.5, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   for (size_t idx = 0; idx < views->count; idx++) {
@@ -41,8 +42,11 @@ void draw() {
 }
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
+  View *view = (View *) views->entries[0];
   gl_check_error("pick1");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(x, view->height - y, 1, 1);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   for (size_t idx = 0; idx < views->count; idx++) {
@@ -51,7 +55,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
     view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
   }
   glFlush();
-  view_pick(picking_fb, (View *) views->entries[0], x, y, winx, winy, item);
+  view_pick(picking_fb, view, x, y, winx, winy, item);
 }
 
 int init_picking() {
