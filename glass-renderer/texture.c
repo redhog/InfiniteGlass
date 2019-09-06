@@ -39,8 +39,11 @@ void texture_from_glpixmap(Texture *texture) {
 }
 
 void texture_from_pixmap(Texture *texture, Pixmap pixmap) {
-  if (texture->glxpixmap) glXDestroyGLXPixmap(display, texture->glxpixmap);
-
+  if (texture->glxpixmap) {
+    glXDestroyGLXPixmap(display, texture->glxpixmap);
+    texture->glxpixmap = 0;
+  }
+  
   const int pixmap_attribs[] = {
     GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
     GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
@@ -59,7 +62,12 @@ void texture_initialize(Texture *texture) {
 }
 
 void texture_destroy(Texture *texture) {
-  if (texture->glxpixmap) glXDestroyGLXPixmap(display, texture->glxpixmap);
-  if (texture->texture_id) glDeleteTextures(1, &texture->texture_id);
-  texture_initialize(texture);
+  if (texture->glxpixmap) {
+    glXDestroyGLXPixmap(display, texture->glxpixmap);
+    texture->glxpixmap = 0;
+  }
+  if (texture->texture_id) {
+    glDeleteTextures(1, &texture->texture_id);
+    texture->texture_id = 0;
+  }
 }
