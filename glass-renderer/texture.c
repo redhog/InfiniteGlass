@@ -51,6 +51,20 @@ void texture_from_pixmap(Texture *texture, Pixmap pixmap) {
   };
   gl_check_error("texture_from_pixmap1");
 
+  // Make sure to generate a BadDrawable here if the pixmap is broken,
+  // as glXBindTexImageEXT will SIGSEGV if that happens...!
+  Window root_return;
+  int x_return;
+  int y_return;
+  unsigned int width_return;
+  unsigned int height_return;
+  unsigned int border_width_return;
+  unsigned int depth_return;
+  if (!XGetGeometry(display, pixmap, &root_return,
+                    &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return)) {
+    return;
+  }
+  
   texture->glxpixmap = glXCreatePixmap(display, configs[0], pixmap, pixmap_attribs);
 
   texture_from_glpixmap(texture);
