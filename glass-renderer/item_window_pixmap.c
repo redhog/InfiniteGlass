@@ -49,7 +49,7 @@ void item_type_window_pixmap_draw(View *view, Item *item) {
     ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
 
     ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
-    
+
     texture_from_pixmap(&pixmap_item->window_texture, pixmap_item->window_pixmap);
 
     glUniform1i(shader->window_sampler_attr, 0);
@@ -92,6 +92,9 @@ void item_type_window_pixmap_update(Item *item) {
   
   // FIXME: free all other stuff if already created
 
+  if (pixmap_item->window_pixmap) {
+    XFreePixmap(display, pixmap_item->window_pixmap);
+  }
   pixmap_item->window_pixmap = XCompositeNameWindowPixmap(display, window_item->window);
 
   Window root_return;
