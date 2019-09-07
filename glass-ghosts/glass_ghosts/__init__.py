@@ -222,22 +222,25 @@ class GhostManager(object):
             self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
 
         self.restore_shadows()
+
+        def map_window(win):
+            if win.get_attributes().override_redirect:
+                return
             
-        @display.root.on(mask="SubstructureNotifyMask")
-        def MapNotify(win, event):
-            client_win = find_client_window(event.window)
+            client_win = find_client_window(win)
             if client_win is None: return
             try:
                 client_win["IG_GHOST"]
             except Exception as e:
                 if client_win.__window__() not in self.windows:
                     self.windows[client_win.__window__()] = Window(self, client_win)
-
+        
+        @display.root.on(mask="SubstructureNotifyMask")
+        def MapNotify(win, event):
+            map_window(event.window)
+            
         for child in display.root.query_tree().children:
-            client_win = find_client_window(child)
-            if client_win is None: continue
-            if client_win.__window__() not in self.windows:
-                self.windows[client_win.__window__()] = Window(self, client_win)
+            map_window(child)
 
         print("Ghosts handler started")
             
