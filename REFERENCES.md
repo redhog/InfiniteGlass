@@ -12,3 +12,7 @@
 * Window manager protocols
   * [ICCCM](https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html)
   * [ewmh](https://www.freedesktop.org/wiki/Specifications/wm-spec/)
+* Session manager protocols
+  * [XSMP](https://www.x.org/releases/X11R7.7/doc/libSM/xsmp.html)
+  * [ICE](https://www.x.org/releases/X11R7.6/doc/libICE/ice.html)
+  
