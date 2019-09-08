@@ -122,7 +122,7 @@ int main() {
     XGenericEventCookie *cookie = &e.xcookie;
     XSync(display, False);
     XNextEvent(display, &e);
-    if (e.type != MotionNotify && e.type != GenericEvent) {
+    if (e.type != MotionNotify && e.type != GenericEvent && e.type != damage_event + XDamageNotify) {
       print_xevent(display, &e);
     }
     
