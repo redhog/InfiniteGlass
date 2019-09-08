@@ -10,6 +10,11 @@ typedef struct {
   int x;
   int y;
   Window window;
+
+  int width_property;
+  int height_property;
+  int width_window;
+  int height_window;
 } ItemWindow;
 
 extern ItemType item_type_window;

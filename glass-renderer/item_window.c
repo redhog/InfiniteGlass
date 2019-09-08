@@ -46,6 +46,10 @@ void item_type_window_constructor(Item *item, void *args) {
   Window window = *(Window *) args;
   
   window_item->window = window;
+  window_item->width_property = 0;
+  window_item->height_property = 0;
+  window_item->width_window = 0;
+  window_item->height_window = 0;
 
   Atom type_return;
   int format_return;
@@ -101,17 +105,20 @@ void item_type_window_update(Item *item) {
     }
     XChangeProperty(display, window_item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
-  if (item->width != item->_width || item->height != item->_height) {
+  if (item->width != window_item->width_window || item->height != window_item->height_window) {
     XWindowChanges values;
     values.width = item->width;
     values.height = item->height;
     XConfigureWindow(display, window_item->window, CWWidth | CWHeight, &values);
+    window_item->width_window = item->width;
+    window_item->height_window = item->height;
+  }
+  if (item->width != window_item->width_property || item->height != window_item->height_property) {
     long arr[2] = {item->width, item->height};
     XChangeProperty(display, window_item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-    item->_width = item->width;
-    item->_height = item->height;
- }
-  
+    window_item->width_property = item->width;
+    window_item->height_property = item->height;
+  }
   item_type_window.base->update(item);
 }
 

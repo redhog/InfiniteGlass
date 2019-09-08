@@ -30,8 +30,6 @@ void item_type_base_update(Item *item) {
   glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(item->coords), item->coords, GL_STATIC_DRAW);
 
-  item->_width = item->width;
-  item->_height = item->height;
   item->_coords[0] = item->coords[0];
   item->_coords[1] = item->coords[1];
   item->_coords[2] = item->coords[2];
@@ -80,8 +78,6 @@ Bool item_isinstance(Item *item, ItemType *type) {
 Item *item_create(ItemType *type, void *args) {
   Item *item = (Item *) malloc(type->size);
 
-  item->_width = 0;
-  item->_height = 0;
   item->width = 0;
   item->height = 0;
   item->_coords[0] = 0.0;
