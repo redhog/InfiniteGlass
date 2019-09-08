@@ -7,6 +7,7 @@ import struct
 import contextlib
 import importlib
 import array
+import traceback
 
 from Xlib.display import Display
 
@@ -232,8 +233,12 @@ def display_exit(self, exctype, exc, tr):
     while self.eventhandlers:
         event = self.next_event()
         for handler in self.eventhandlers:
-            if handler(event):
-                break
+            try:
+                if handler(event):
+                    break
+            except Exception as e:
+                print(e)
+                traceback.print_exc()
         self.flush()
     self.eventhandlers = self.eventhandlerstack.pop()
 Xlib.display.Display.__exit__ = display_exit
