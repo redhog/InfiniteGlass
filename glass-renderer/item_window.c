@@ -38,6 +38,9 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
     item->base.coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
     item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
     item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
+    for (int i = 0; i < 4; i++) {
+     item->base._coords[i] = 0.0;
+    }
   }
 }
 
