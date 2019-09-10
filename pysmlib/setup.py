@@ -3,8 +3,8 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 smlib_extension = Extension(
-    name="pysmlib",
-    sources=["pysmlib.pyx"],
+    name="pysmlib.client",
+    sources=["pysmlib/client.pyx"],
     libraries=["SM", "ICE"]
 #    library_dirs=["lib"],
 #    include_dirs=["lib"]

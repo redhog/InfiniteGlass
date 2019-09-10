@@ -112,11 +112,6 @@ cdef extern from "X11/SM/SMlib.h":
         int severity,
         IcePointer values);
 
-    ctypedef void (*SmcSaveYourselfPhase2Proc) (
-        SmcConn,
-        SmPointer
-    );
-
     SmcConn SmcOpenConnection(char *network_ids_list, SmPointer context, int xsmp_major_rev, int xsmp_minor_rev, unsigned long mask, SmcCallbacks *callbacks, char *previous_id, char **client_id_ret, int error_length, char *error_string_ret)
     int SmcCloseConnection(SmcConn smc_conn, int count, char **reason_msgs)
     void SmcSetProperties(SmcConn smc_conn, int num_props, SmProp **props)
