@@ -18,12 +18,21 @@ cdef extern from "X11/ICE/ICElib.h":
     ctypedef int Bool
 
     int IceProcessMessages(IceConn ice_conn, IceReplyWaitInfo *reply_wait, Bool *reply_ready_ret)
+
+    ctypedef Bool (*IceHostBasedAuthProc) (char *)
+
+    ctypedef void (*IcePingReplyProc)(IceConn ice_conn, IcePointer client_data)
+    void IcePing(IceConn ice_conn, IcePingReplyProc ping_reply_proc, IcePointer client_data)
+
     
 cdef extern from "X11/SM/SMlib.h":
     ctypedef void * SmPointer
     struct _SmcConn:
         pass
-    ctypedef _SmcConn * SmcConn
+    struct _SmsConn:
+        pass
+    ctypedef _SmcConn *SmcConn
+    ctypedef _SmsConn *SmsConn
 
     ctypedef int Status
 
@@ -128,3 +137,107 @@ cdef extern from "X11/SM/SMlib.h":
     IceConn SmcGetIceConnection(SmcConn smc_conn);
     
     SmcErrorHandler SmcSetErrorHandler(SmcErrorHandler handler);
+    ctypedef Status (*SmsRegisterClientProc)(SmsConn sms_conn, SmPointer manager_data, char *previous_id);
+    ctypedef void (*SmsInteractRequestProc)(SmsConn sms_conn, SmPointer manager_data, int dialog_type);
+    ctypedef void (*SmsInteractDoneProc)(SmsConn sms_conn, SmPointer manager_data, Bool cancel_shutdown);
+    ctypedef void (*SmsSaveYourselfRequestProc)(SmsConn sms_conn, SmPointer manager_data, int save_type, Bool shutdown, int interact_style, Bool fast, Bool glb);
+    ctypedef void (*SmsSaveYourselfPhase2RequestProc)(SmsConn sms_conn, SmPointer manager_data);
+    ctypedef void (*SmsSaveYourselfDoneProc)(SmsConn sms_conn, SmPointer manager_data, Bool success);
+    ctypedef void (*SmsCloseConnectionProc)(SmsConn sms_conn, SmPointer manager_data, int count, char **reason_msgs);
+    ctypedef void (*SmsSetPropertiesProc)(SmsConn sms_conn, SmPointer manager_data, int num_props, SmProp **props);
+    ctypedef void (*SmsDeletePropertiesProc)(SmsConn sms_conn, SmPointer manager_data, int num_props, char **prop_names);
+    ctypedef void (*SmsGetPropertiesProc)(SmsConn sms_conn, SmPointer manager_data);
+
+    struct sms_register_client:
+        SmsRegisterClientProc callback
+        SmPointer manager_data
+
+    struct sms_interact_request:
+        SmsInteractRequestProc callback
+        SmPointer manager_data
+
+    struct sms_interact_done:
+        SmsInteractDoneProc callback
+        SmPointer manager_data
+
+    struct sms_save_yourself_request:
+        SmsSaveYourselfRequestProc callback
+        SmPointer manager_data
+
+    struct sms_save_yourself_phase2_request:
+        SmsSaveYourselfPhase2RequestProc callback
+        SmPointer manager_data
+
+    struct sms_save_yourself_done:
+        SmsSaveYourselfDoneProc callback
+        SmPointer manager_data
+
+    struct sms_close_connection:
+        SmsCloseConnectionProc callback;
+        SmPointer manager_data;
+
+    struct sms_set_properties:
+        SmsSetPropertiesProc callback
+        SmPointer manager_data
+
+    struct sms_delete_properties:
+        SmsDeletePropertiesProc callback
+        SmPointer manager_data
+
+    struct sms_get_properties:
+        SmsGetPropertiesProc callback
+        SmPointer manager_data
+
+    struct SmsCallbacks:
+        sms_register_client register_client
+        sms_interact_request interact_request
+        sms_interact_done interact_done
+        sms_save_yourself_request save_yourself_request
+        sms_save_yourself_phase2_request save_yourself_phase2_request
+        sms_save_yourself_done save_yourself_done
+        sms_close_connection close_connection
+        sms_set_properties set_properties
+        sms_delete_properties delete_properties
+        sms_get_properties get_properties
+     
+    ctypedef Status (*SmsNewClientProc)(
+        SmsConn sms_conn,
+        SmPointer manager_data,
+        unsigned long *mask_ret,
+        SmsCallbacks *callbacks_ret,
+        char **failure_reason_ret);
+
+    ctypedef void (*SmsErrorHandler)(
+        SmsConn sms_conn,
+        Bool swap,
+        int offending_minor_opcode,
+        unsigned long offending_sequence_num,
+        int error_class,
+        int severity,
+        IcePointer values);
+
+    Status SmsInitialize(
+        char *vendor, char *release,
+        SmsNewClientProc new_client_proc,
+        SmPointer manager_data,
+        IceHostBasedAuthProc host_based_auth_proc,
+        int error_length,
+        char *error_string_ret);
+
+    Status SmsRegisterClientReply(SmsConn sms_conn, char *client_id);
+    char *SmsGenerateClientID(SmsConn sms_conn);
+    void SmsSaveYourself(SmsConn sms_conn, int save_type, Bool shutdown, int interact_style, Bool fast);
+    void SmsSaveYourselfPhase2(SmsConn sms_conn);
+    void SmsInteract(SmsConn sms_conn);
+    void SmsSaveComplete(SmsConn sms_conn);
+    void SmsDie(SmsConn sms_conn);
+    void SmsShutdownCancelled(SmsConn sms_conn);
+    void SmsReturnProperties(SmsConn sms_conn, int num_props, SmProp **props);
+    void SmsCleanUp(SmsConn sms_conn);
+    int SmsProtocolVersion(SmsConn sms_conn);
+    int SmsProtocolRevision(SmsConn sms_conn);
+    char *SmsClientID(SmsConn sms_conn);
+    char *SmsClientHostName(SmsConn sms_conn);
+    IceConn SmsGetIceConnection(SmsConn sms_conn);
+    SmsErrorHandler SmsSetErrorHandler(SmsErrorHandler handler);
+
