@@ -1,6 +1,7 @@
 from libc.stdlib cimport malloc, free
 import os
 from pysmlib.pysmlib cimport *
+from pysmlib.helpers cimport *
 
 SmcSaveYourselfProcMask      = (1L << 0)
 SmcDieProcMask               = (1L << 1)
@@ -45,15 +46,7 @@ cdef void error_handler(
         
 cdef void prop_reply_proc_wrapper(SmcConn smcConn, SmPointer client_data, int numProps, SmProp **props):
     self = <Connection> client_data
-
-    propdict = {}
-    for idx in range(numProps):
-        values = []
-        for valueidx in range(props[idx].num_vals):
-            values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length).decode("utf-8"))
-        propdict[bytes(props[idx].name).decode("utf-8")] = (bytes(props[idx].type).decode("utf-8"), values)
-
-    self.prop_reply_proc(propdict)
+    self.prop_reply_proc(smprops_to_dict(numProps, props))
 
 cdef class Connection(object):
     cdef SmcConn conn
@@ -148,28 +141,11 @@ cdef class Connection(object):
         return bytes(SmcRelease(self.conn)).decode("utf-8")
     
     def __setitem__(self, name, value):
-        cdef SmProp prop
-        cdef SmProp *props = &prop
-
-        name = name.encode("utf-8")
-        prop.name = name
-        if isinstance(value, (tuple, list)):
-            prop.type = b"SmLISTofARRAY8"
-            prop.num_vals = len(value)
-
-        else:
-            prop.type = b"SmARRAY8"
-            prop.num_vals = 1
-            value = [value]
-
-        value = [val.encode("utf-8") for val in value]
-            
-        prop.vals = <SmPropValue*> malloc(sizeof(SmPropValue) * len(value))
-        for idx in range(0, len(value)):
-            prop.vals[idx].length = len(value[idx])
-            prop.vals[idx].value = <char*> value[idx]
-        SmcSetProperties(self.conn, 1, &props)
-        free(prop.vals)
+        cdef int numProps
+        cdef SmProp **props
+        dict_to_smprops({name:value}, &numProps, &props)
+        SmcSetProperties(self.conn, numProps, props)
+        free_smprops(numProps, props)
         
     def __delitem__(self, name):
         cdef char *namestr = name
