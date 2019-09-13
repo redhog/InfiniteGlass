@@ -4,6 +4,7 @@ import os
 from pysmlib.SMlib cimport *
 from pysmlib.Python cimport *
 from pysmlib.helpers cimport *
+from pysmlib.ice cimport *
 
 SmsRegisterClientProcMask               = 1L << 0
 SmsInteractRequestProcMask              = 1L << 1
@@ -17,66 +18,60 @@ SmsDeletePropertiesProcMask             = 1L << 8
 SmsGetPropertiesProcMask                = 1L << 9
 
 cdef Status register_client_wrapper(SmsConn sms_conn, SmPointer manager_data, char *previous_id):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.register_client:
         return self.register_client(previous_id)
     return 0
     
 cdef void interact_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int dialog_type):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.interact_request:
         self.interact_request(dialog_type)
 
 cdef void interact_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool cancel_shutdown):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.interact_done:
         self.interact_done(cancel_shutdown)
 
 cdef void save_yourself_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int save_type, Bool shutdown, int interact_style, Bool fast, Bool glb):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.save_yourself_request:
         self.save_yourself_request(save_type, shutdown, interact_style, fast, glb)
 
 cdef void save_yourself_phase2_request_wrapper(SmsConn sms_conn, SmPointer manager_data):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.save_yourself_phase2_request:
         self.save_yourself_phase2_request()
 
 cdef void save_yourself_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool success):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.save_yourself_done:
         self.save_yourself_done(success)
 
 cdef void close_connection_wrapper(SmsConn sms_conn, SmPointer manager_data, int count, char **reason_msgs):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.close_connection:
         self.close_connection([bytes(reason_msgs[idx]).decode("utf-8") for idx in range(count)])
 
 cdef void set_properties_wrapper(SmsConn sms_conn, SmPointer manager_data, int num_props, SmProp **props):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.set_properties:
         self.set_properties(smprops_to_dict(num_props, props))
 
 cdef void delete_properties_wrapper(SmsConn sms_conn, SmPointer manager_data, int num_props, char **prop_names):
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.delete_properties:
         self.delete_properties([bytes(prop_names[idx]).decode("utf-8") for idx in range(num_props)])
 
 cdef void get_properties_wrapper(SmsConn sms_conn, SmPointer manager_data):
     cdef int numProps
     cdef SmProp **props
-    self = <Connection>manager_data;
+    self = <PySmsConn>manager_data;
     if self.get_properties:
         dict_to_smprops(self.get_properties(), &numProps, &props)
         SmsReturnProperties(sms_conn, numProps, props);
         free_smprops(numProps, props)
     
-
-cdef class SmsConnection(object):
-    cdef SmsConn conn
-    cdef set_conn(self, SmsConn conn):
-        self.conn = conn
-
 cdef Bool new_client(
     SmsConn sms_conn,
     SmPointer manager_data,
@@ -90,10 +85,8 @@ cdef Bool new_client(
         strcpy(failure_reason_ret[0], "Manager does not define new_client()")
         return 0
 
-    cdef SmsConnection connw = SmsConnection()
-    connw.set_conn(sms_conn)
     try:
-        conn = self.Connection(self, connw)
+        conn = (<PySmsConn?> self.Connection(self)).init(sms_conn)
     except Exception as e:
         failure_reason_ret[0] = <char *> malloc(1024)
         strcpy(failure_reason_ret[0], str(e).encode("utf-8"))
@@ -125,13 +118,10 @@ cdef Bool new_client(
  
     return 1
 
-cdef void ice_ping_reply_wrapper(IceConn ice_conn, IcePointer client_data):
-    self = <Connection> client_data
-    self.ice_ping_reply()
 
-cdef class Connection(object):
+
+cdef class PySmsConn(object):
     cdef SmsConn conn
-    cdef IceConn iceconn
 
     manager = None
     connection = None
@@ -147,65 +137,46 @@ cdef class Connection(object):
     get_properties = None
     ice_ping_reply = None
 
-    def __init__(self, manager, SmsConnection conn, **kw):
+    def __init__(self, manager, **kw):
         self.manager = manager
-        self.connection = conn
-        self.conn = conn.conn
-        self.iceconn = SmsGetIceConnection(self.conn)
         for name, value in kw.items():
             setattr(self, name, value)
-
-        
-    def process(self):
-        res = IceProcessMessages(self.iceconn, NULL, NULL)
-        if res != 0:
-            raise Exception(
-                ["IceProcessMessagesSuccess",
-                 "IceProcessMessagesIOError",
-                 "IceProcessMessagesConnectionClosed"][res])
-
-    def close(self):
+    cdef init(self, SmsConn conn):
+        self.conn = conn    
+    def SmsGetIceConnection(self):
+        return PyIceConn().init(SmsGetIceConnection(self.conn))
+    def SmsCleanUp(self):
         SmsCleanUp(self.conn)
-
-    def save_yourself(self, save_type, shutdown, interact_style, fast):
+    def SmsSaveYourself(self, save_type, shutdown, interact_style, fast):
         SmsSaveYourself(self.conn, save_type, shutdown, interact_style, fast)
-       
-    def save_yourself_phase2(self):
+    def SmsSaveYourselfPhase2(self):
         SmsSaveYourselfPhase2(self.conn)
-
-    def interact(self):
+    def SmsInteract(self):
         SmsInteract(self.conn)
-
-    def save_complete(self):
+    def SmsSaveComplete(self):
         SmsSaveComplete(self.conn)
-
-    def die(self):
+    def SmsDie(self):
         SmsDie(self.conn)
-
-    def shutdown_cancelled(self):
+    def SmsShutdownCancelled(self):
         SmsShutdownCancelled(self.conn)
-
-    def ping(self):
-        IcePing(self.iceconn, &ice_ping_reply_wrapper, <IcePointer> self)
-
-    def version(self):
-        return (SmsProtocolVersion(self.conn), SmsProtocolRevision(self.conn))
-
-    def client_id(self):
+    def SmsProtocolVersion(self):
+        return SmsProtocolVersion(self.conn)
+    def SmsProtocolRevision(self):
+        return SmsProtocolRevision(self.conn)
+    def SmsClientID(self):
         return bytes(SmsClientID(self.conn)).decode("utf-8")
-
-    def client_hostname(self):
+    def SmsClientHostName(self):
         return bytes(SmsClientHostName(self.conn)).decode("utf-8")
 
 
 cdef Bool auth_failed_proc(char *hostname):
-    return 0        
-        
+    return 0
+
 cdef class Server(object):
     vendor = b"pysmlib"
     release = b"0.1"
 
-    Connection = Connection
+    Connection = PySmsConn
     filenos = []
     
     def __init__(self):
@@ -220,11 +191,15 @@ cdef class Server(object):
                 error_string_ret):
             raise Exception("SmsInitialize failed: %s" % error_string_ret)
 
-        cdef IceListenObj *listen_objs_ret
+    def IceListenForConnections(self):
+        cdef IceListenObj *listen_objs_ret = NULL
         cdef int count_ret
-        
+        cdef char error_string_ret[1024]
+
         if not IceListenForConnections(&count_ret, &listen_objs_ret, 1024, error_string_ret):
             raise Exception("SmsInitialize failed: %s" % error_string_ret)
-        
-        self.filenos = [IceGetListenConnectionNumber(listen_objs_ret[idx]) for idx in range(count_ret)]
+
+        res = [PyIceListenObj().init(listen_objs_ret[idx]) for idx in range(count_ret)]
+        free(listen_objs_ret)
+        return res
 
