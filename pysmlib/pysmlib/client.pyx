@@ -1,6 +1,7 @@
 from libc.stdlib cimport malloc, free
 import os
 from pysmlib.SMlib cimport *
+from pysmlib.ice cimport *
 from pysmlib.helpers cimport *
 
 SmcSaveYourselfProcMask      = (1L << 0)
@@ -9,61 +10,51 @@ SmcSaveCompleteProcMask      = (1L << 2)
 SmcShutdownCancelledProcMask = (1L << 3)
 
 cdef void save_yourself_wrapper(SmcConn smc_conn, SmPointer client_data, int save_type, Bool shutdown, int interact_style, Bool fast):
-    self = <Connection> client_data
+    self = <PySmcConn> client_data
     if self.save_yourself:
         self.save_yourself(save_type, shutdown, interact_style, fast)
 
 cdef void die_wrapper(SmcConn smcConn, SmPointer client_data):
-    self = <Connection> client_data
+    self = <PySmcConn> client_data
     if self.die:
         self.die()
      
 cdef void shutdown_cancelled_wrapper(SmcConn smcConn, SmPointer client_data):
-    self = <Connection> client_data
+    self = <PySmcConn> client_data
     if self.shutdown_cancelled:
         self.shutdown_cancelled()
      
 cdef void save_complete_wrapper(SmcConn smcConn, SmPointer client_data):
-    self = <Connection> client_data
+    self = <PySmcConn> client_data
     if self.save_complete:
         self.save_complete()
 
 cdef void save_yourself_phase2_wrapper(SmcConn smcConn, SmPointer client_data):
-    self = <Connection> client_data
-    if self.save_yourself_phase2:
-        self.save_yourself_phase2()
-        
-cdef void error_handler(
-    SmcConn smc_conn,
-    Bool swap,
-    int offending_minor_opcode,
-    unsigned long offending_sequence_num,
-    int error_class,
-    int severity,
-    IcePointer values):
-    pass
-
+    data = <PySmcConn> client_data
+    (self, proc) = data
+    proc()
+    del self.refs[id(data)]
         
 cdef void prop_reply_proc_wrapper(SmcConn smcConn, SmPointer client_data, int numProps, SmProp **props):
-    self = <Connection> client_data
-    self.prop_reply_proc(smprops_to_dict(numProps, props))
+    data = <PySmcConn> client_data
+    (self, proc) = data
+    proc(smprops_to_dict(numProps, props))
+    del self.refs[id(data)]
 
-cdef class Connection(object):
+cdef class PySmcConn(object):
     cdef SmcConn conn
-    cdef IceConn iceconn
+    cdef public PyIceConn iceconn
     cdef public str network_ids_list
 
     cdef public char *client_id
     cdef SmcCallbacks callbacks
 
-    cdef object save_yourself
-    cdef object die
-    cdef object save_complete
-    cdef object shutdown_cancelled
-    cdef object save_yourself_phase2
-
-    cdef object propdict
-    
+    cdef public object save_yourself
+    cdef public object die
+    cdef public object save_complete
+    cdef public object shutdown_cancelled
+    cdef object refs
+        
     def __init__(self,
                  str network_ids_list = None,
                  object context = None,
@@ -74,9 +65,10 @@ cdef class Connection(object):
                  save_yourself = None,
                  die = None,
                  save_complete = None,
-                 shutdown_cancelled = None,
-                 save_yourself_phase2 = None):
+                 shutdown_cancelled = None):
 
+        self.refs = {}
+        
         self.network_ids_list = network_ids_list or os.environ["SESSION_MANAGER"]
         
         cdef char error_string_ret[1024]
@@ -88,7 +80,6 @@ cdef class Connection(object):
         if die: self.die = die
         if save_complete: self.save_complete = save_complete
         if shutdown_cancelled: self.shutdown_cancelled = shutdown_cancelled
-        if save_yourself_phase2: self.save_yourself_phase2 = save_yourself_phase2
         
         self.callbacks.save_yourself.callback = save_yourself_wrapper
         self.callbacks.die.callback = die_wrapper
@@ -111,12 +102,12 @@ cdef class Connection(object):
             &self.client_id,
             1024,
             error_string_ret)
-        self.iceconn = SmcGetIceConnection(self.conn)
+        self.iceconn = PyIceConn().init(SmcGetIceConnection(self.conn))
  
         if self.conn == NULL:
             raise Exception(error_string_ret)
 
-    def close(self, reasons = []):
+    def SmcCloseConnection(self, reasons = []):
         cdef char **reasons_arr = <char **> malloc(sizeof(char *) * len(reasons))
         reasons = [reason.encode("utf-8") for reason in reasons]
         
@@ -128,57 +119,63 @@ cdef class Connection(object):
                 "SmcClosedASAP",
                 "SmcConnectionInUse"][res]
 
-    @property
-    def protocol_version(self):
-        return SmcProtocolVersion(self.conn), SmcProtocolRevision(self.conn)
-
-    @property
-    def vendor(self):
+    def SmcProtocolVersion(self):
+        return SmcProtocolVersion(self.conn)
+    def SmcProtocolRevision(self):
+        return SmcProtocolRevision(self.conn)
+    def SmcVendor(self):
         return bytes(SmcVendor(self.conn)).decode("utf-8")
-
-    @property
-    def vendor(self):
+    def SmcRelease(self):
         return bytes(SmcRelease(self.conn)).decode("utf-8")
     
-    def __setitem__(self, name, value):
+    def SmcSetProperties(self, prop_dict):
         cdef int numProps
         cdef SmProp **props
-        dict_to_smprops({name:value}, &numProps, &props)
+        dict_to_smprops(prop_dict, &numProps, &props)
         SmcSetProperties(self.conn, numProps, props)
         free_smprops(numProps, props)
         
-    def __delitem__(self, name):
-        cdef char *namestr = name
-        SmcDeleteProperties(self.conn, 1, &namestr)
+    def SmcDeleteProperties(self, prop_names):
+        cdef char **namestr = <char **>malloc(sizeof(char *) * len(prop_names))
+        prop_names = [name.encode("utf-8") for name in prop_names]
+        for idx, name in enumerate(prop_names):
+            namestr[idx] = name
+        SmcDeleteProperties(self.conn, len(prop_names), namestr)
+        free(namestr)
 
-    def save_yourself_done(self, success):
+    def SmcSaveYourselfDone(self, success):
         SmcSaveYourselfDone(self.conn, success);
 
-    def request_save_yourself_phase2(self):
-        if not SmcRequestSaveYourselfPhase2(self.conn, &save_yourself_phase2_wrapper, <SmPointer> self):
+    def SmcRequestSaveYourselfPhase2(self, save_yourself_phase2):
+        data = (self, save_yourself_phase2)
+        self.refs[id(data)] = data
+        if not SmcRequestSaveYourselfPhase2(self.conn, &save_yourself_phase2_wrapper, <SmPointer> data):
             raise Exception("Error calling SmcRequestSaveYourselfPhase2")
-        
-    def prop_reply_proc(self, propdict):
-        self.propdict = propdict
 
-    def process(self):
-        res = IceProcessMessages(self.iceconn, NULL, NULL)
-        if res != 0:
-            raise Exception(
-                ["IceProcessMessagesSuccess",
-                 "IceProcessMessagesIOError",
-                 "IceProcessMessagesConnectionClosed"][res])
+    def SmcGetProperties(self, prop_reply_proc):
+        data = (self, prop_reply_proc)
+        self.refs[id(data)] = data
         
-    def properties(self):
-        self.propdict = None
-        
-        if not SmcGetProperties(self.conn, &prop_reply_proc_wrapper, <SmPointer> self):
+        if not SmcGetProperties(self.conn, &prop_reply_proc_wrapper, <SmPointer> data):
             raise Exception("Error in SmcGetProperties")
 
-        while self.propdict is None:
-            self.process()
+    def __setitem__(self, name, value):
+        self.SmcSetProperties({name:value})
 
-        return self.propdict
+    def __delitem__(self, name):
+        self.SmcDeleteProperties([name])
+
+    def properties(self):
+        res = []
+        
+        @self.SmcGetProperties
+        def properties(propdict):
+            res.append(propdict)
+
+        while not res:
+            self.iceconn.IceProcessMessages()
+
+        return res[0]
 
     def items(self):
         return self.properties().items()
@@ -187,7 +184,7 @@ cdef class Connection(object):
         return self.properties()[name]
 
 def main():
-    class MyConnection(Connection):
+    class MyConnection(PySmcConn):
         def signal_save_yourself(self, *arg):
             print("SAVE_YOURSELF", arg)
             self.save_yourself_done()
@@ -198,9 +195,9 @@ def main():
         def signal_shutdown_cancelled(self, *arg):
             print("SHUTDOWN_CANCELLED", arg)
 
-    c = Connection()
+    c = MyConnection()
     try:
         while True:
-            c.process()
+            c.iceconn.IceProcessMessages()
     finally:
-        c.close()
+        c.SmcCloseConnection()

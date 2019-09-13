@@ -5,9 +5,11 @@ from pysmlib.SMlib cimport *
 
 cedf class PyIceConn(object):
     cdef IceConn conn
-    def __init__(self, IceConn conn):
+    
+    cdef PyIceConn init(self, IceConn conn):
         self.conn = conn
-
+        return self
+        
     def IceProcessMessages(self):
         res = IceProcessMessages(self.conn, NULL, NULL)
         if res != 0:
