@@ -1,6 +1,6 @@
 from libc.stdlib cimport malloc, free
 import os
-from pysmlib.pysmlib cimport *
+from pysmlib.SMlib cimport *
 from pysmlib.helpers cimport *
 
 SmcSaveYourselfProcMask      = (1L << 0)

@@ -8,7 +8,7 @@ client = Extension(
     libraries=["SM", "ICE"]
 )
 server = Extension(
-    name="pysmlib.client",
+    name="pysmlib.server",
     sources=["pysmlib/server.pyx"],
     libraries=["SM", "ICE"]
 )

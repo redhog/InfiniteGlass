@@ -1,4 +1,5 @@
-from pysmlib.pysmlib cimport *
+from pysmlib.SMlib cimport *
+from pysmlib.Python cimport *
 from pysmlib.helpers cimport *
 from libc.stdlib cimport malloc, free
 
