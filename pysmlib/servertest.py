@@ -1,6 +1,6 @@
 import pysmlib.server
 import pysmlib.ice
-import iceauth
+import pysmlib.iceauth
 import select
 import uuid
 
@@ -54,7 +54,7 @@ class Server(pysmlib.server.Server):
 server = Server()
 conns = server.IceListenForConnections()
 print("Listening to %s" % (",".join(conn.IceGetListenConnectionString().decode("utf-8") for conn in conns)))
-iceauth.SetAuthentication(conns)
+pysmlib.iceauth.SetAuthentication(conns)
 
 listeners = {conn.IceGetListenConnectionNumber(): conn for conn in conns}
 

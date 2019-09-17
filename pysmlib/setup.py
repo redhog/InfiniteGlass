@@ -1,28 +1,38 @@
-from distutils.core import setup
-from distutils.extension import Extension
+import setuptools
 from Cython.Build import cythonize
 
-client = Extension(
+client = setuptools.Extension(
     name="pysmlib.client",
     sources=["pysmlib/client.pyx"],
     libraries=["SM", "ICE"]
 )
-server = Extension(
+server = setuptools.Extension(
     name="pysmlib.server",
     sources=["pysmlib/server.pyx"],
     libraries=["SM", "ICE"]
 )
-ice = Extension(
+ice = setuptools.Extension(
     name="pysmlib.ice",
     sources=["pysmlib/ice.pyx"],
     libraries=["SM", "ICE"]
 )
-helpers = Extension(
+helpers = setuptools.Extension(
     name="pysmlib.helpers",
     sources=["pysmlib/helpers.pyx"],
     libraries=["SM", "ICE"]
 )
-setup(
+setuptools.setup(
     name="pysmlib",
-    ext_modules=cythonize([client, server, ice, helpers], language_level=3)
+
+    version='0.1',
+    description='A python binding for X11 SMlib and ICElib',
+    long_description="""A python binding for the session management protocol for X11 as well as some of the Inter Client Exchange protocol.""",
+    long_description_content_type="text/markdown",
+    author='Egil Moeller',
+    author_email='redhog@redhog.org',
+    url='https://github.com/redhog/InfiniteGlass',
+    packages=setuptools.find_packages(),
+    install_requires=[],
+    ext_modules=cythonize([client, server, ice, helpers], language_level=3),
+    include_package_data=True
 )
