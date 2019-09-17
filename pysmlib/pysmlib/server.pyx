@@ -19,6 +19,15 @@ SmsSetPropertiesProcMask                = 1L << 7
 SmsDeletePropertiesProcMask             = 1L << 8
 SmsGetPropertiesProcMask                = 1L << 9
 
+SmInteractStyleNone   = 0
+SmInteractStyleErrors = 1
+SmInteractStyleAny    = 2
+
+SmSaveGlobal = 0
+SmSaveLocal  = 1
+SmSaveBoth   = 2
+
+
 cdef Status register_client_wrapper(SmsConn sms_conn, SmPointer manager_data, char *previous_id):
     self = <PySmsConn>manager_data;
     if self.register_client:
@@ -156,6 +165,8 @@ cdef class PySmsConn(object):
         return self
     def SmsGetIceConnection(self):
         return PyIceConn().init(SmsGetIceConnection(self.conn))
+    def SmsRegisterClientReply(self, client_id):
+        return SmsRegisterClientReply(self.conn, client_id)
     def SmsCleanUp(self):
         SmsCleanUp(self.conn)
         del self.manager.connections[id(self)]

@@ -12,6 +12,7 @@ class MyConnection(pysmlib.client.PySmcConn):
         print("SHUTDOWN_CANCELLED", arg)
 
 c = MyConnection()
+print("Connection established. ID: ", c.client_id)
 try:
     while True:
         c.iceconn.IceProcessMessages()

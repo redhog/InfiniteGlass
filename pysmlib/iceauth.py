@@ -1,4 +1,6 @@
-# Based on
+# Based on https://github.com/freedesktop/xorg-xsm/blob/52016a5efdf549ffb2a3fb54ce0d0e4e110957f2/auth.c
+#
+# Python translation copyright 2019, Egil Moeller
 #
 # $Xorg: auth.c,v 1.4 2001/02/09 02:05:59 xorgcvs Exp $ */
 #

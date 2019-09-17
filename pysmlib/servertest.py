@@ -2,14 +2,19 @@ import pysmlib.server
 import pysmlib.ice
 import iceauth
 import select
+import uuid
 
 pysmlib.ice.PyIceSetPaAuthData([])
 
 class Server(pysmlib.server.Server):
     class Connection(pysmlib.server.PySmsConn):
-    
         def register_client(self, *arg, **kw):
             print("register_client", arg, kw)
+            self.id = uuid.uuid4().hex.encode("ascii")
+            self.SmsRegisterClientReply(self.id)
+            self.SmsDie()
+            print("Sent die")
+            #self.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
             return 1
 
         def interact_request(self, *arg, **kw):
@@ -19,6 +24,10 @@ class Server(pysmlib.server.Server):
             print("interact_done", arg, kw)
 
         def save_yourself_request(self, *arg, **kw):
+            for conn in self.manager.connections.values():
+                if conn != self:
+                    conn.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
+                    
             print("save_yourself_request", arg, kw)
 
         def save_yourself_phase2_request(self, *arg, **kw):

@@ -10,24 +10,23 @@ SmcSaveCompleteProcMask      = (1L << 2)
 SmcShutdownCancelledProcMask = (1L << 3)
 
 cdef void save_yourself_wrapper(SmcConn smc_conn, SmPointer client_data, int save_type, Bool shutdown, int interact_style, Bool fast):
+    print("save_yourself_wrapper")
     self = <PySmcConn> client_data
-    if self.save_yourself:
-        self.save_yourself(save_type, shutdown, interact_style, fast)
+    self.signal_save_yourself(save_type, shutdown, interact_style, fast)
 
 cdef void die_wrapper(SmcConn smcConn, SmPointer client_data):
+    print("die_wrapper")
     self = <PySmcConn> client_data
-    if self.die:
-        self.die()
+    self.signal_die()
      
 cdef void shutdown_cancelled_wrapper(SmcConn smcConn, SmPointer client_data):
+    print("shutdown_cancelled_wrapper")
     self = <PySmcConn> client_data
-    if self.shutdown_cancelled:
-        self.shutdown_cancelled()
+    self.signal_shutdown_cancelled()
      
 cdef void save_complete_wrapper(SmcConn smcConn, SmPointer client_data):
     self = <PySmcConn> client_data
-    if self.save_complete:
-        self.save_complete()
+    self.signal_save_complete()
 
 cdef void save_yourself_phase2_wrapper(SmcConn smcConn, SmPointer client_data):
     data = <PySmcConn> client_data
@@ -49,10 +48,6 @@ cdef class PySmcConn(object):
     cdef public char *client_id
     cdef SmcCallbacks callbacks
 
-    cdef public object save_yourself
-    cdef public object die
-    cdef public object save_complete
-    cdef public object shutdown_cancelled
     cdef object refs
         
     def __init__(self,
@@ -60,12 +55,7 @@ cdef class PySmcConn(object):
                  object context = None,
                  int xsmp_major_rev = 1,
                  int xsmp_minor_rev = 0,
-                 bytes previous_id = None,
-
-                 save_yourself = None,
-                 die = None,
-                 save_complete = None,
-                 shutdown_cancelled = None):
+                 bytes previous_id = None):
 
         self.refs = {}
         
@@ -74,13 +64,7 @@ cdef class PySmcConn(object):
         cdef char error_string_ret[1024]
 
         cdef unsigned long mask = 0
-        
-
-        if save_yourself: self.save_yourself = save_yourself
-        if die: self.die = die
-        if save_complete: self.save_complete = save_complete
-        if shutdown_cancelled: self.shutdown_cancelled = shutdown_cancelled
-        
+                
         self.callbacks.save_yourself.callback = save_yourself_wrapper
         self.callbacks.die.callback = die_wrapper
         self.callbacks.save_complete.callback = save_complete_wrapper
@@ -107,6 +91,11 @@ cdef class PySmcConn(object):
             raise Exception(error_string_ret)
 
         self.iceconn = PyIceConn().init(SmcGetIceConnection(self.conn))
+
+    def signal_save_yourself(self, *arg): pass
+    def signal_die(self, *arg): pass
+    def signal_save_complete(self, *arg): pass
+    def signal_shutdown_cancelled(self, *arg): pass
 
     def SmcCloseConnection(self, reasons = []):
         cdef char **reasons_arr = <char **> malloc(sizeof(char *) * len(reasons))
