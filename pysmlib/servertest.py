@@ -12,9 +12,7 @@ class Server(pysmlib.server.Server):
             print("register_client", arg, kw)
             self.id = uuid.uuid4().hex.encode("ascii")
             self.SmsRegisterClientReply(self.id)
-            self.SmsDie()
-            print("Sent die")
-            #self.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
+            self.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
             return 1
 
         def interact_request(self, *arg, **kw):
