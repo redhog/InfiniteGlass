@@ -12,6 +12,11 @@ server = Extension(
     sources=["pysmlib/server.pyx"],
     libraries=["SM", "ICE"]
 )
+ice = Extension(
+    name="pysmlib.ice",
+    sources=["pysmlib/ice.pyx"],
+    libraries=["SM", "ICE"]
+)
 helpers = Extension(
     name="pysmlib.helpers",
     sources=["pysmlib/helpers.pyx"],
@@ -19,5 +24,5 @@ helpers = Extension(
 )
 setup(
     name="pysmlib",
-    ext_modules=cythonize([client, server, helpers], language_level=3)
+    ext_modules=cythonize([client, server, ice, helpers], language_level=3)
 )

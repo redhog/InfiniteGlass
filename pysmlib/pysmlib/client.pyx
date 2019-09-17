@@ -102,10 +102,11 @@ cdef class PySmcConn(object):
             &self.client_id,
             1024,
             error_string_ret)
-        self.iceconn = PyIceConn().init(SmcGetIceConnection(self.conn))
  
         if self.conn == NULL:
             raise Exception(error_string_ret)
+
+        self.iceconn = PyIceConn().init(SmcGetIceConnection(self.conn))
 
     def SmcCloseConnection(self, reasons = []):
         cdef char **reasons_arr = <char **> malloc(sizeof(char *) * len(reasons))
@@ -183,21 +184,3 @@ cdef class PySmcConn(object):
     def __getitem__(self, name):
         return self.properties()[name]
 
-def main():
-    class MyConnection(PySmcConn):
-        def signal_save_yourself(self, *arg):
-            print("SAVE_YOURSELF", arg)
-            self.save_yourself_done()
-        def signal_die(self, *arg):
-            print("DIE", arg)
-        def signal_save_complete(self, *arg):
-            print("SAVE_COMPLETE", arg)
-        def signal_shutdown_cancelled(self, *arg):
-            print("SHUTDOWN_CANCELLED", arg)
-
-    c = MyConnection()
-    try:
-        while True:
-            c.iceconn.IceProcessMessages()
-    finally:
-        c.SmcCloseConnection()

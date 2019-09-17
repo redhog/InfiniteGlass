@@ -5,6 +5,8 @@ from pysmlib.SMlib cimport *
 from pysmlib.Python cimport *
 from pysmlib.helpers cimport *
 from pysmlib.ice cimport *
+import sys
+from libc.stdio cimport printf, stdout, fflush
 
 SmsRegisterClientProcMask               = 1L << 0
 SmsInteractRequestProcMask              = 1L << 1
@@ -20,16 +22,18 @@ SmsGetPropertiesProcMask                = 1L << 9
 cdef Status register_client_wrapper(SmsConn sms_conn, SmPointer manager_data, char *previous_id):
     self = <PySmsConn>manager_data;
     if self.register_client:
-        return self.register_client(previous_id)
+        return self.register_client(previous_id if previous_id != NULL else None)
     return 0
     
 cdef void interact_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int dialog_type):
+    sys.stdout.flush()
     self = <PySmsConn>manager_data;
     if self.interact_request:
         self.interact_request(dialog_type)
 
 cdef void interact_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool cancel_shutdown):
     self = <PySmsConn>manager_data;
+    sys.stdout.flush()
     if self.interact_done:
         self.interact_done(cancel_shutdown)
 
@@ -85,13 +89,19 @@ cdef Bool new_client(
         strcpy(failure_reason_ret[0], "Manager does not define new_client()")
         return 0
 
+    print("NEW CONN", self)
+    sys.stdout.flush()
     try:
         conn = (<PySmsConn?> self.Connection(self)).init(sms_conn)
     except Exception as e:
         failure_reason_ret[0] = <char *> malloc(1024)
         strcpy(failure_reason_ret[0], str(e).encode("utf-8"))
         return 0
-    
+    self.connections[id(conn)] = conn
+
+    print("NEW CONN DONE", self, id(conn), self.connections, <long>sms_conn, <long><SmPointer>conn)
+
+
     mask_ret[0] = SmsRegisterClientProcMask | SmsInteractRequestProcMask | SmsInteractDoneProcMask | SmsSaveYourselfRequestProcMask | SmsSaveYourselfP2RequestProcMask | SmsSaveYourselfDoneProcMask | SmsCloseConnectionProcMask | SmsSetPropertiesProcMask | SmsDeletePropertiesProcMask | SmsGetPropertiesProcMask
     
     callbacks_ret.register_client.callback = register_client_wrapper
@@ -142,11 +152,13 @@ cdef class PySmsConn(object):
         for name, value in kw.items():
             setattr(self, name, value)
     cdef init(self, SmsConn conn):
-        self.conn = conn    
+        self.conn = conn
+        return self
     def SmsGetIceConnection(self):
         return PyIceConn().init(SmsGetIceConnection(self.conn))
     def SmsCleanUp(self):
         SmsCleanUp(self.conn)
+        del self.manager.connections[id(self)]
     def SmsSaveYourself(self, save_type, shutdown, interact_style, fast):
         SmsSaveYourself(self.conn, save_type, shutdown, interact_style, fast)
     def SmsSaveYourselfPhase2(self):
@@ -170,7 +182,7 @@ cdef class PySmsConn(object):
 
 
 cdef Bool auth_failed_proc(char *hostname):
-    return 0
+    return 1
 
 cdef class Server(object):
     vendor = b"pysmlib"
@@ -178,6 +190,7 @@ cdef class Server(object):
 
     Connection = PySmsConn
     filenos = []
+    connections = {}
     
     def __init__(self):
         cdef char error_string_ret[1024]

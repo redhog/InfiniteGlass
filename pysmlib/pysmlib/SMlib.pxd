@@ -1,3 +1,17 @@
+cdef extern from "/usr/include/X11/ICE/ICElib.h":
+    pass
+
+cdef extern from "/usr/include/X11/ICE/ICEutil.h":
+    struct _IceAuthDataEntry:
+        char            *protocol_name
+        char            *network_id
+        char            *auth_name
+        unsigned short  auth_data_length
+        char            *auth_data
+    ctypedef _IceAuthDataEntry IceAuthDataEntry
+
+    void IceSetPaAuthData(int numEntries, IceAuthDataEntry *entries)
+    char *IceGenerateMagicCookie(int length);
 
 cdef extern from "/usr/include/X11/ICE/ICElib.h":
     struct _IceListenObj:
@@ -391,3 +405,16 @@ cdef extern from "/usr/include/X11/SM/SMlib.h":
     void SmFreeProperty(SmProp*)
 
     void SmFreeReasons(int, char**)
+
+
+###################
+
+cdef struct A:
+    char a
+    char b
+    IceConn             iceConn
+    int                 proto_major_version
+    int                 proto_minor_version
+    char                *client_id
+    SmsCallbacks        callbacks
+    char                interaction_allowed
