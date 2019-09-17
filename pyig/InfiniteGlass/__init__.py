@@ -8,6 +8,7 @@ import contextlib
 import importlib
 import array
 import traceback
+import select
 
 from Xlib.display import Display
 
@@ -221,9 +222,47 @@ def window_on_event(self, event=None, mask=None, **kw):
     return wrapper
 Xlib.xobject.drawable.Window.on = window_on_event
 
+class MainLoop(object):
+    def __init__(self):
+        self.handlers = {}
+
+    def add(self, fd, handler = None):
+        if handler is None:
+            def wrapper(handler):
+                self.add(fd, handler)
+            return wrapper
+        self.handlers[fd] = handler
+        return fd
+
+    def remove(self, fd):
+        del self.handlers[fd]
+        
+    def do(self):
+        rlist, wlist, xlist = select.select(self.handlers.keys(), [], [])
+        for fd in rlist:
+            try:
+                self.handlers[fd](fd)
+            except Exception as e:
+                print(e)
+                traceback.print_exc()        
+
 def display_enter(self):
     self.eventhandlerstack.append(self.eventhandlers)
     self.eventhandlers = []
+    if not hasattr(self, "mainloop"):
+        self.mainloop = MainLoop()
+        @self.mainloop.add(self.fileno())
+        def handle_x_event(fd):
+            for idx in range(self.pending_events()):
+                event = self.next_event()
+                for handler in self.eventhandlers:
+                    try:
+                        if handler(event):
+                            break
+                    except Exception as e:
+                        print(e)
+                        traceback.print_exc()
+                self.flush()
     return self
 Xlib.display.Display.__enter__ = display_enter
 def display_exit(self, exctype, exc, tr):
@@ -231,15 +270,7 @@ def display_exit(self, exctype, exc, tr):
         raise exc
     self.flush()
     while self.eventhandlers:
-        event = self.next_event()
-        for handler in self.eventhandlers:
-            try:
-                if handler(event):
-                    break
-            except Exception as e:
-                print(e)
-                traceback.print_exc()
-        self.flush()
+        self.mainloop.do()
     self.eventhandlers = self.eventhandlerstack.pop()
 Xlib.display.Display.__exit__ = display_exit
 
