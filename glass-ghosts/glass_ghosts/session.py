@@ -3,6 +3,7 @@ import pysmlib.ice
 import pysmlib.iceauth
 import select
 import uuid
+import glass_ghosts.client
 
 class Server(pysmlib.server.Server):
     def __init__(self, display, manager):
@@ -10,6 +11,8 @@ class Server(pysmlib.server.Server):
         self.manager = manager
         pysmlib.server.Server.__init__(self)
 
+        self.clients = {}
+        
         self.listeners = self.IceListenForConnections()
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
@@ -22,11 +25,15 @@ class Server(pysmlib.server.Server):
             self.fd = self.iceconn.IceConnectionNumber()
             self.manager.display.mainloop.add(self.fd, lambda fd: self.iceconn.IceProcessMessages())
             
-        def register_client(self, *arg, **kw):
-            print("register_client", arg, kw)
-            self.id = uuid.uuid4().hex.encode("ascii")
-            self.SmsRegisterClientReply(self.id)
-            self.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
+        def register_client(self, previous_id):
+            print("register_client", previous_id)
+            if previous_id is not None and previous_id in self.clients:
+                client = self.clients[previous_id]
+            else:
+                client = glass_ghosts.client.Client(self, previous_id)
+                self.clients[client.id] = client            
+            self.client = client
+            self.SmsRegisterClientReply(self.client.id)
             return 1
 
         def interact_request(self, *arg, **kw):
@@ -39,8 +46,6 @@ class Server(pysmlib.server.Server):
             for conn in self.manager.connections.values():
                 if conn != self:
                     conn.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
-                    
-            print("save_yourself_request", arg, kw)
 
         def save_yourself_phase2_request(self, *arg, **kw):
             print("save_yourself_phase2_request", arg, kw)
@@ -50,15 +55,17 @@ class Server(pysmlib.server.Server):
 
         def close_connection(self, *arg, **kw):
             print("close_connection", arg, kw)
+            self.manager.display.mainloop.remove(self.fd)
 
-        def set_properties(self, *arg, **kw):
-            print("set_properties", arg, kw)
+        def set_properties(self, props):
+            self.client.update(props)
 
-        def delete_properties(self, *arg, **kw):
-            print("delete_properties", arg, kw)
+        def delete_properties(self, names):
+            for name in names:
+                del self.client[name]
 
-        def get_properties(self, *arg, **kw):
-            print("get_properties", arg, kw)
+        def get_properties(self):
+            return self.client.properties
 
         def ice_ping_reply(self, *arg, **kw):
             print("ice_ping_reply", arg, kw)
