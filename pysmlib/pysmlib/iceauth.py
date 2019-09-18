@@ -37,8 +37,6 @@ def write_iceauth(addfp, removefp, entry):
     entry = dict(entry)
     entry[b"auth_data"] = entry[b"auth_data"].hex().encode("ascii")
 
-    print(repr(entry))
-    
     addfp.write(b"add %(protocol_name)s \"\" %(network_id)s %(auth_name)s %(auth_data)s\n" % entry)
     removefp.write(b"remove protoname=%(protocol_name)s protodata=\"\" netid=%(network_id)s authname=%(auth_name)s\n" % entry)
 

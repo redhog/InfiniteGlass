@@ -1,6 +1,7 @@
 import InfiniteGlass
 import glass_ghosts.manager
 import glass_ghosts.session
+import sys
 
 class Manager(object):
     def __init__(self, display):
@@ -10,6 +11,8 @@ class Manager(object):
     
 with InfiniteGlass.Display() as display:
     manager = Manager(display)
-    print("Session manager listening to %s" % (
-        ",".join(listener.IceGetListenConnectionString().decode("utf-8")
-                 for listener in manager.session.listeners)))
+    sys.stdout.write("%s\n" % manager.session.listen_address())
+    sys.stdout.flush()
+    sys.stderr.write("Session manager listening to %s\n" % manager.session.listen_address())
+    sys.stderr.flush()
+    

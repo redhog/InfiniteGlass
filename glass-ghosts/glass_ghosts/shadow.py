@@ -8,6 +8,7 @@ import json
 import array
 import base64
 import glass_ghosts.helpers
+import sys
 
 class Shadow(object):
     def __init__(self, manager, properties):
@@ -16,7 +17,7 @@ class Shadow(object):
         self.window = None
         self.current_key = None
         self.update_key()
-        print("SHADOW CREATE", self)
+        sys.stderr.write("SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
     def key(self):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
@@ -36,18 +37,18 @@ class Shadow(object):
             return
         if self.current_key is not None:
             del self.manager.shadows[self.current_key]
-            print("UPDATE KEY from %s to %s" % (self.current_key, key))
+            sys.stderr.write("UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
             self.current_key = key
             self.manager.shadows[self.current_key] = self
             
     def apply(self, window):
-        print("SHADOW APPLY", window.__window__(), self)
+        sys.stderr.write("SHADOW APPLY %s %s\n" % (window.__window__(), self)); sys.stderr.flush()
         for key in self.manager.SET:
             if key in self.properties:
                 window[key] = self.properties[key]
                 
     def activate(self):
-        print("SHADOW ACTIVATE", self)
+        sys.stderr.write("SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
         self.window = self.manager.display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
         
@@ -70,7 +71,7 @@ class Shadow(object):
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            print("SHADOW DELETE", self)
+            sys.stderr.write("SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
             self.manager.display.eventhandlers.remove(self.WMDelete)
@@ -88,7 +89,7 @@ class Shadow(object):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
                 self.window.destroy()
             else:
-                print("%s: Unknown WM_PROTOCOLS message: %s" % (self, event))
+                sys.stderr.write("%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
 
         @self.window.on()
         def PropertyNotify(win, event):
@@ -107,7 +108,7 @@ class Shadow(object):
         self.window.map()
 
     def deactivate(self):
-        print("SHADOW DEACTIVATE", self)
+        sys.stderr.write("SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
             self.window.destroy()
             self.manager.display.eventhandlers.remove(self.DestroyNotify)

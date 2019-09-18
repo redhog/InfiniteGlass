@@ -9,7 +9,8 @@ import array
 import base64
 import glass_ghosts.shadow
 import glass_ghosts.helpers
-            
+import sys
+
 class Window(object):
     def __init__(self, manager, window):
         self.manager = manager
@@ -19,7 +20,7 @@ class Window(object):
         self.properties = {}
         for name in self.window.keys():
             self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
-        print("WINDOW CREATE", self)
+        sys.stderr.write("WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
         self.match_shadow()
             
         @window.on()
@@ -34,7 +35,7 @@ class Window(object):
             
         @window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            print("WINDOW DESTROY", self, event.window.__window__())
+            sys.stderr.write("WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             if not self.shadow:
                 self.shadow = glass_ghosts.shadow.Shadow(self.manager, self.properties)
             else:

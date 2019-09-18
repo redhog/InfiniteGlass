@@ -9,6 +9,7 @@ import array
 import base64
 import glass_ghosts.shadow
 import glass_ghosts.window
+import sys
 
 def find_client_window(win):
     try:
@@ -77,7 +78,7 @@ class GhostManager(object):
         for child in display.root.query_tree().children:
             map_window(child)
 
-        print("Ghosts handler started")
+        sys.stderr.write("Ghosts handler started\n"); sys.stderr.flush()
             
     def restore_shadows(self):
         self.restoring_shadows = True
