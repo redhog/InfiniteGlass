@@ -24,12 +24,15 @@ class Server(pysmlib.server.Server):
 
     def accept_connection(self, listener):
         conn = listener.IceAcceptConnection()
-        self.display.mainloop.add(conn.IceConnectionNumber(), lambda fd: conn.IceProcessMessages())
+        def process(fd):
+            print("PROCESS", conn)
+            conn.IceProcessMessages()
+        self.display.mainloop.add(conn.IceConnectionNumber(), process) #lambda fd: conn.IceProcessMessages())
              
     class Connection(pysmlib.server.PySmsConn):
         def __init__(self, *arg, **kw):
             pysmlib.server.PySmsConn.__init__(self, *arg, **kw)
-            self.fd = self.iceconn.IceConnectionNumber()
+            self.fd = self.SmsGetIceConnection().IceConnectionNumber()
             
         def register_client(self, previous_id):
             print("register_client", previous_id)
@@ -37,9 +40,10 @@ class Server(pysmlib.server.Server):
                 client = self.clients[previous_id]
             else:
                 client = glass_ghosts.client.Client(self, previous_id)
-                self.clients[client.id] = client            
+                self.manager.clients[client.client_id] = client            
             self.client = client
-            self.SmsRegisterClientReply(self.client.id)
+            print("REGISTER DONE")
+            self.SmsRegisterClientReply(self.client.client_id)
             return 1
 
         def interact_request(self, *arg, **kw):
