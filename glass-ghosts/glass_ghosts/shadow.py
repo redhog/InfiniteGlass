@@ -30,27 +30,24 @@ class Shadow(object):
         if not self.manager.restoring_shadows:
             cur = self.manager.dbconn.cursor()
             dbkey = "/".join(str(item) for item in key)
-            changes = False
             for name, value in self.properties.items():
                 if self._properties.get(name, NoValue) != value:
                     cur.execute("""
                       insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
                     """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
-                    changes = True
+                    self.manager.changes = True
             for name, value in self._properties.items():
                 if name not in self.properties:
                     cur.execute("""
                       delete from shadows where key=? and name=?
                     """, (dbkey, name))
-                    changes = True
+                    self.manager.changes = True
             if key != self.current_key and self.current_key is not None:
                 current_dbkey = "/".join(str(item) for item in self.current_key)
                 cur.execute("""
                   update shadows set key=? where key=?
                     """, (dbkey, current_dbkey))
-                changes = True
-            if changes:
-                self.manager.dbconn.commit()
+                self.manager.changes = True
                 
         if key == self.current_key:
             return

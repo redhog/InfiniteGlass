@@ -45,6 +45,7 @@ class GhostManager(object):
         self.MATCH = MATCH
         self.SET = SET
 
+        self.changes = False
         self.windows = {}
         self.shadows = {}
         
@@ -70,7 +71,9 @@ class GhostManager(object):
             except Exception as e:
                 if client_win.__window__() not in self.windows:
                     self.windows[client_win.__window__()] = glass_ghosts.window.Window(self, client_win)
-        
+
+        display.mainloop.add_interval(0.5)(self.save_shadows)
+                    
         @display.root.on(mask="SubstructureNotifyMask")
         def MapNotify(win, event):
             map_window(event.window)
@@ -79,7 +82,14 @@ class GhostManager(object):
             map_window(child)
 
         sys.stderr.write("Ghosts handler started\n"); sys.stderr.flush()
-            
+
+    def save_shadows(self, current_time, idx):
+        if self.changes:
+            print("Committing...")
+            sys.stdout.flush()
+            self.dbconn.commit()
+            self.changes = False
+    
     def restore_shadows(self):
         self.restoring_shadows = True
         cur = self.dbconn.cursor()
