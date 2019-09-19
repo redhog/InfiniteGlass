@@ -4,6 +4,7 @@ import pysmlib.iceauth
 import select
 import uuid
 import glass_ghosts.client
+import sys
 
 class Server(pysmlib.server.Server):
     def __init__(self, display, manager):
@@ -17,15 +18,24 @@ class Server(pysmlib.server.Server):
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
         def accepter(listener):
+            print("LISTENING TO", listener, listener.IceGetListenConnectionNumber())
+            sys.stdout.flush()
             self.display.mainloop.add(listener.IceGetListenConnectionNumber(), lambda fd: self.accept_connection(listener))
             
         for listener in self.listeners:
             accepter(listener)
 
     def accept_connection(self, listener):
+        print("ACCEPTING CONNECTION FROM", listener)
+        sys.stdout.flush()
         conn = listener.IceAcceptConnection()
+        print("ACCEPTED CONNECTION", listener, conn)
+        sys.stdout.flush()
+        print("ACCEPTED CONNECTION", conn, conn.IceConnectionNumber())
+        sys.stdout.flush()
         def process(fd):
-            print("PROCESS", conn)
+            print("PROCESS", fd, conn)
+            sys.stdout.flush()
             conn.IceProcessMessages()
         self.display.mainloop.add(conn.IceConnectionNumber(), process) #lambda fd: conn.IceProcessMessages())
              
@@ -36,6 +46,7 @@ class Server(pysmlib.server.Server):
             
         def register_client(self, previous_id):
             print("register_client", previous_id)
+            sys.stdout.flush()
             if previous_id is not None and previous_id in self.clients:
                 client = self.clients[previous_id]
             else:
@@ -43,6 +54,7 @@ class Server(pysmlib.server.Server):
                 self.manager.clients[client.client_id] = client            
             self.client = client
             print("REGISTER DONE")
+            sys.stdout.flush()
             self.SmsRegisterClientReply(self.client.client_id)
             return 1
 
