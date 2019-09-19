@@ -10,9 +10,12 @@ import base64
 import glass_ghosts.helpers
 import sys
 
+class NoValue: pass
+
 class Shadow(object):
     def __init__(self, manager, properties):
         self.manager = manager
+        self._properties = {}
         self.properties = properties
         self.window = None
         self.current_key = None
@@ -23,16 +26,32 @@ class Shadow(object):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
     def update_key(self):
+        key = self.key()
         if not self.manager.restoring_shadows:
             cur = self.manager.dbconn.cursor()
-            dbkey = str(self)
+            dbkey = "/".join(str(item) for item in key)
+            changes = False
             for name, value in self.properties.items():
+                if self._properties.get(name, NoValue) != value:
+                    cur.execute("""
+                      insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
+                    """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
+                    changes = True
+            for name, value in self._properties.items():
+                if name not in self.properties:
+                    cur.execute("""
+                      delete from shadows where key=? and name=?
+                    """, (dbkey, name))
+                    changes = True
+            if key != self.current_key and self.current_key is not None:
+                current_dbkey = "/".join(str(item) for item in self.current_key)
                 cur.execute("""
-                  insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
-                """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
+                  update shadows set key=? where key=?
+                    """, (dbkey, current_dbkey))
+                changes = True
+            if changes:
                 self.manager.dbconn.commit()
                 
-        key = self.key()
         if key == self.current_key:
             return
         if self.current_key is not None:
