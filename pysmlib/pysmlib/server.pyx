@@ -7,6 +7,7 @@ from pysmlib.helpers cimport *
 from pysmlib.ice cimport *
 import sys
 from libc.stdio cimport printf, stdout, fflush
+import traceback
 
 SmsRegisterClientProcMask               = 1L << 0
 SmsInteractRequestProcMask              = 1L << 1
@@ -101,14 +102,20 @@ cdef Bool new_client(
     print("NEW CONN", self)
     sys.stdout.flush()
     try:
-        conn = (<PySmsConn?> self.Connection(self)).init(sms_conn)
+        # Split up object construction so that PySmsConn.conn is available in __init__()
+        conn = self.Connection.__new__(self.Connection, self)
+        (<PySmsConn?> conn).init(sms_conn)
+        conn.__init__(self)
     except Exception as e:
+        print("NEW CONN ERR", e)
+        traceback.print_exc()
         failure_reason_ret[0] = <char *> malloc(1024)
         strcpy(failure_reason_ret[0], str(e).encode("utf-8"))
         return 0
     self.connections[id(conn)] = conn
 
     print("NEW CONN DONE", self, id(conn), self.connections, <long>sms_conn, <long><SmPointer>conn)
+    sys.stdout.flush()
 
 
     mask_ret[0] = SmsRegisterClientProcMask | SmsInteractRequestProcMask | SmsInteractDoneProcMask | SmsSaveYourselfRequestProcMask | SmsSaveYourselfP2RequestProcMask | SmsSaveYourselfDoneProcMask | SmsCloseConnectionProcMask | SmsSetPropertiesProcMask | SmsDeletePropertiesProcMask | SmsGetPropertiesProcMask
@@ -140,7 +147,7 @@ cdef Bool new_client(
 
 
 cdef class PySmsConn(object):
-    cdef SmsConn conn
+    cdef SmsConn _conn
 
     manager = None
     connection = None
@@ -161,35 +168,40 @@ cdef class PySmsConn(object):
         for name, value in kw.items():
             setattr(self, name, value)
     cdef init(self, SmsConn conn):
-        self.conn = conn
+        self._conn = conn
         return self
+    cdef SmsConn conn(self):
+        if self._conn == NULL:
+            raise AttributeError("conn not available from __new__(), or after SmsCleanUp()")
+        return self._conn
     def SmsGetIceConnection(self):
-        return PyIceConn().init(SmsGetIceConnection(self.conn))
+        return PyIceConn().init(SmsGetIceConnection(self.conn()))
     def SmsRegisterClientReply(self, client_id):
-        return SmsRegisterClientReply(self.conn, client_id)
+        return SmsRegisterClientReply(self.conn(), client_id)
     def SmsCleanUp(self):
-        SmsCleanUp(self.conn)
+        SmsCleanUp(self.conn())
+        self._conn = NULL
         del self.manager.connections[id(self)]
     def SmsSaveYourself(self, save_type, shutdown, interact_style, fast):
-        SmsSaveYourself(self.conn, save_type, shutdown, interact_style, fast)
+        SmsSaveYourself(self.conn(), save_type, shutdown, interact_style, fast)
     def SmsSaveYourselfPhase2(self):
-        SmsSaveYourselfPhase2(self.conn)
+        SmsSaveYourselfPhase2(self.conn())
     def SmsInteract(self):
-        SmsInteract(self.conn)
+        SmsInteract(self.conn())
     def SmsSaveComplete(self):
-        SmsSaveComplete(self.conn)
+        SmsSaveComplete(self.conn())
     def SmsDie(self):
-        SmsDie(self.conn)
+        SmsDie(self.conn())
     def SmsShutdownCancelled(self):
-        SmsShutdownCancelled(self.conn)
+        SmsShutdownCancelled(self.conn())
     def SmsProtocolVersion(self):
-        return SmsProtocolVersion(self.conn)
+        return SmsProtocolVersion(self.conn())
     def SmsProtocolRevision(self):
-        return SmsProtocolRevision(self.conn)
+        return SmsProtocolRevision(self.conn())
     def SmsClientID(self):
-        return bytes(SmsClientID(self.conn)).decode("utf-8")
+        return bytes(SmsClientID(self.conn())).decode("utf-8")
     def SmsClientHostName(self):
-        return bytes(SmsClientHostName(self.conn)).decode("utf-8")
+        return bytes(SmsClientHostName(self.conn())).decode("utf-8")
 
 
 cdef Bool auth_failed_proc(char *hostname):
