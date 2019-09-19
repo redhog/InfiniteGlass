@@ -7,12 +7,10 @@ import glass_ghosts.client
 import sys
 
 class Server(pysmlib.server.Server):
-    def __init__(self, display, manager):
+    def __init__(self, manager, display):
         self.display = display
         self.manager = manager
         pysmlib.server.Server.__init__(self)
-
-        self.clients = {}
         
         self.listeners = self.IceListenForConnections()
         pysmlib.iceauth.SetAuthentication(self.listeners)
@@ -50,8 +48,8 @@ class Server(pysmlib.server.Server):
             if previous_id is not None and previous_id in self.clients:
                 client = self.clients[previous_id]
             else:
-                client = glass_ghosts.client.Client(self, previous_id)
-                self.manager.clients[client.client_id] = client            
+                client = glass_ghosts.client.Client(self.manager.manager, previous_id)
+                self.manager.manager.clients[client.client_id] = client            
             self.client = client
             print("REGISTER DONE")
             sys.stdout.flush()

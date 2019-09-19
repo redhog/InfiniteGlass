@@ -9,34 +9,9 @@ import array
 import base64
 import glass_ghosts.shadow
 import glass_ghosts.window
+import glass_ghosts.rootwindow
+import glass_ghosts.session
 import sys
-
-def find_client_window(win):
-    try:
-        win["WM_STATE"]
-    except KeyError:
-        pass
-    else:
-        return win
-
-    tree = win.query_tree()
-
-    for child in tree.children:
-        try:
-            child["WM_STATE"]
-        except KeyError:
-            pass
-        else:
-            return child
-    
-    for child in tree.children:
-        attrs = child.get_attributes()
-        if attrs.win_class != Xlib.X.InputOutput or attrs.map_state != Xlib.X.IsViewable: continue
-        client = find_client_window(child)
-        if client is not None:
-            return client
-        
-    return None    
 
 class GhostManager(object):
     def __init__(self, display, MATCH = ("WM_CLASS", "WM_NAME"), SET = ("IG_SIZE", "IG_COORDS")):
@@ -48,6 +23,7 @@ class GhostManager(object):
         self.changes = False
         self.windows = {}
         self.shadows = {}
+        self.clients = {}
         
         self.dbdirpath = os.path.expanduser("~/.config/glass")
         if not os.path.exists(self.dbdirpath):
@@ -57,29 +33,15 @@ class GhostManager(object):
         self.dbconn = sqlite3.connect(self.dbpath)
         if not dbexists:
             self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
+            self.dbconn.execute("create table clients (key text, name text, value text, primary key (key, name))")
 
         self.restore_shadows()
+        self.restore_clients()
 
-        def map_window(win):
-            if win.get_attributes().override_redirect:
-                return
-            
-            client_win = find_client_window(win)
-            if client_win is None: return
-            try:
-                client_win["IG_GHOST"]
-            except Exception as e:
-                if client_win.__window__() not in self.windows:
-                    self.windows[client_win.__window__()] = glass_ghosts.window.Window(self, client_win)
-
+        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
+        self.session = glass_ghosts.session.Server(self, display)
+        
         display.mainloop.add_interval(0.5)(self.save_shadows)
-                    
-        @display.root.on(mask="SubstructureNotifyMask")
-        def MapNotify(win, event):
-            map_window(event.window)
-            
-        for child in display.root.query_tree().children:
-            map_window(child)
 
         sys.stderr.write("Ghosts handler started\n"); sys.stderr.flush()
 
@@ -107,6 +69,23 @@ class GhostManager(object):
             glass_ghosts.shadow.Shadow(self, properties).activate()
         self.restoring_shadows = False
 
+    def restore_clients(self):
+        self.restoring_clients = True
+        cur = self.dbconn.cursor()
+        cur.execute("select * from clients order by key")
+        properties = {}
+        currentkey = None
+        for key, name, value in cur:
+            if key != currentkey:
+                if currentkey:
+                    glass_ghosts.client.Client(self, currentkey, properties)
+                properties = {}
+                currentkey = key
+            properties[name] = json.loads(value, object_hook=self.fromjson)
+        if currentkey:
+            glass_ghosts.client.Client(self, currentkey, properties)
+        self.restoring_clients = False
+        
 
     def tojson(self, obj):
         if isinstance(obj, array.array):
