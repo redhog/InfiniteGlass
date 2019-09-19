@@ -9,6 +9,8 @@ import importlib
 import array
 import traceback
 import select
+import time
+import math
 
 from Xlib.display import Display
 
@@ -19,12 +21,87 @@ keysyms = {keyname: getattr(dictionary, keyname)
            for keyname in dir(dictionary)
            if not keyname.startswith("_")}
 
+class MainLoop(object):
+    def __init__(self):
+        self.handlers = {}
+        self.timeouts = {}
+        
+    def add(self, fd, handler = None):
+        if handler is None:
+            def wrapper(handler):
+                self.add(fd, handler)
+            return wrapper
+        self.handlers[fd] = handler
+        return fd
+
+    def add_timeout(self, timestamp, handler = None):
+        if handler is None:
+            def wrapper(handler):
+                self.add_timeout(timestamp, handler)
+            return wrapper
+        self.timeouts[timestamp] = handler
+        return timestamp
+
+    def add_interval(self, interval, handler = None):
+        start = time.time()
+        if handler is None:
+            def wrapper(handler):
+                self.add_interval(interval, handler)
+            return wrapper
+        def timeout_handler(timestamp):
+            idx = math.floor((timestamp - start) / interval)
+            try:
+                handler(timestamp, idx)
+            except StopIteration:
+                pass
+            else:
+                self.add_timeout(interval * (idx + 1), timeout_handler)
+        timeout_handler(start)
+
+    def remove(self, fd):
+        del self.handlers[fd]
+        
+    def do(self):
+        keys = self.handlers.keys()
+        #print("Mainloop(%s)" % (keys,))
+        #sys.stdout.flush()
+        rlist, wlist, xlist = select.select(keys, [], [], 0.01)
+        #print("Mainloop => %s" % (rlist,))
+        #sys.stdout.flush()
+        timestamp = time.time()
+        for timeout in self.timeouts.keys():
+            if timeout < timestamp:
+                try:
+                    self.timeouts.pop(timeout)(timestamp)
+                except Exception as e:
+                    print(e)
+                    traceback.print_exc()                    
+        for fd in rlist:
+            try:
+                self.handlers[fd](fd)
+            except Exception as e:
+                print(e)
+                traceback.print_exc()        
+
 orig_display_init = Xlib.display.Display.__init__
 def display_init(self, *arg, **kw):
     self.eventhandlers = []
     self.eventhandlerstack = []
     orig_display_init(self, *arg, **kw)
     self.display.real_display = self
+    self.mainloop = MainLoop()
+    @self.mainloop.add(self.fileno())
+    def handle_x_event(fd):
+        for idx in range(self.pending_events()):
+            event = self.next_event()
+            for handler in self.eventhandlers:
+                try:
+                    if handler(event):
+                        break
+                except Exception as e:
+                    print(e)
+                    traceback.print_exc()
+            self.flush()
 Xlib.display.Display.__init__ = display_init
         
 def parse_value(self, value):
@@ -222,47 +299,9 @@ def window_on_event(self, event=None, mask=None, **kw):
     return wrapper
 Xlib.xobject.drawable.Window.on = window_on_event
 
-class MainLoop(object):
-    def __init__(self):
-        self.handlers = {}
-
-    def add(self, fd, handler = None):
-        if handler is None:
-            def wrapper(handler):
-                self.add(fd, handler)
-            return wrapper
-        self.handlers[fd] = handler
-        return fd
-
-    def remove(self, fd):
-        del self.handlers[fd]
-        
-    def do(self):
-        rlist, wlist, xlist = select.select(self.handlers.keys(), [], [])
-        for fd in rlist:
-            try:
-                self.handlers[fd](fd)
-            except Exception as e:
-                print(e)
-                traceback.print_exc()        
-
 def display_enter(self):
     self.eventhandlerstack.append(self.eventhandlers)
     self.eventhandlers = []
-    if not hasattr(self, "mainloop"):
-        self.mainloop = MainLoop()
-        @self.mainloop.add(self.fileno())
-        def handle_x_event(fd):
-            for idx in range(self.pending_events()):
-                event = self.next_event()
-                for handler in self.eventhandlers:
-                    try:
-                        if handler(event):
-                            break
-                    except Exception as e:
-                        print(e)
-                        traceback.print_exc()
-                self.flush()
     return self
 Xlib.display.Display.__enter__ = display_enter
 def display_exit(self, exctype, exc, tr):
