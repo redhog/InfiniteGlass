@@ -63,25 +63,23 @@ class MainLoop(object):
         
     def do(self):
         keys = self.handlers.keys()
-        #print("Mainloop(%s)" % (keys,))
-        #sys.stdout.flush()
         rlist, wlist, xlist = select.select(keys, [], [], 0.01)
-        #print("Mainloop => %s" % (rlist,))
-        #sys.stdout.flush()
         timestamp = time.time()
         for timeout in self.timeouts.keys():
             if timeout < timestamp:
                 try:
                     self.timeouts.pop(timeout)(timestamp)
                 except Exception as e:
-                    print(e)
-                    traceback.print_exc()                    
+                    sys.stderr.write("%s\n" % e)
+                    traceback.print_exc(file=sys.stderr)
+                    sys.stderr.flush()
         for fd in rlist:
             try:
                 self.handlers[fd](fd)
             except Exception as e:
-                print(e)
-                traceback.print_exc()        
+                sys.stderr.write("%s\n" % e)
+                traceback.print_exc(file=sys.stderr)
+                sys.stderr.flush()
 
 orig_display_init = Xlib.display.Display.__init__
 def display_init(self, *arg, **kw):
@@ -99,8 +97,9 @@ def display_init(self, *arg, **kw):
                     if handler(event):
                         break
                 except Exception as e:
-                    print(e)
-                    traceback.print_exc()
+                    sys.stderr.write("%s\n" % e)
+                    traceback.print_exc(file=sys.stderr)
+                    sys.stderr.flush()
             self.flush()
 Xlib.display.Display.__init__ = display_init
         
@@ -391,20 +390,3 @@ def keybutton_getitem(self, item):
     else:
         return self.detail == item
 Xlib.protocol.event.KeyButtonPointer.__getitem__ = keybutton_getitem
-
-
-# with Display() as display:
-#     root = display.root
-
-#     root["NANANANA1"] = [1, 2, 3]
-
-#     print(root["NANANANA1"])
-    
-#     window = root.create_window()
-
-#     window["FOOOOO"] = ["BAR", "HEHE"]
-#     window["FIEEEE"] = 34.56
-
-#     @window.on()
-#     def ButtonPress(event):
-#         print("XXXXXXXXXXXXXXX", event)
