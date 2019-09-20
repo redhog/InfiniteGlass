@@ -10,7 +10,8 @@ import base64
 import uuid
 import glass_ghosts.shadow
 import glass_ghosts.helpers
-            
+
+
 class Client(object):
     def __init__(self, manager, client_id = None, properties = None):
         self.manager = manager
@@ -47,3 +48,8 @@ class Client(object):
                   delete from shadows where key=? and name=?
                 """, (self.client_id, name))
                 self.manager.changes = True
+
+    def restart(self):
+        assert "SmRestartCommand" in self.properties, "Session client did not provide a restart command"
+        if os.fork() == 0:
+            os.execl(self.properties["SmRestartCommand"])

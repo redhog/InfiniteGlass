@@ -35,20 +35,21 @@ class GhostManager(object):
             self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
             self.dbconn.execute("create table clients (key text, name text, value text, primary key (key, name))")
 
+        self.session = glass_ghosts.session.Server(self, display)
+        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
+
         self.restore_shadows()
         self.restore_clients()
-
-        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
-        self.session = glass_ghosts.session.Server(self, display)
         
         display.mainloop.add_interval(0.5)(self.save_shadows)
 
         sys.stderr.write("Ghosts handler started\n"); sys.stderr.flush()
+        sys.stderr.flush()
 
     def save_shadows(self, current_time, idx):
         if self.changes:
-            print("Committing...")
-            sys.stdout.flush()
+            sys.stderr.write("Committing...\n")
+            sys.stderr.flush()
             self.dbconn.commit()
             self.changes = False
     

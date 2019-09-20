@@ -117,17 +117,23 @@ class Shadow(object):
                 pass
             else:
                 self.update_key()
+
+        @self.window.on()
+        def ButtonPress(win, event):
+            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
                 
         self.DestroyNotify = DestroyNotify
         self.WMDelete = ClientMessage
         self.PropertyNotify = PropertyNotify
-                
+        self.ButtonPress = ButtonPress
+        
         self.window.map()
 
     def deactivate(self):
         sys.stderr.write("SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
             self.window.destroy()
+            self.manager.display.eventhandlers.remove(self.ButtonPress)
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
             self.manager.display.eventhandlers.remove(self.WMDelete)

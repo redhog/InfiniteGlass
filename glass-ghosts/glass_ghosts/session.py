@@ -16,24 +16,24 @@ class Server(pysmlib.server.Server):
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
         def accepter(listener):
-            print("LISTENING TO", listener, listener.IceGetListenConnectionNumber())
-            sys.stdout.flush()
+            sys.stderr.write("LISTENING TO %s @ %s\n" % (listener, listener.IceGetListenConnectionNumber()))
+            sys.stderr.flush()
             self.display.mainloop.add(listener.IceGetListenConnectionNumber(), lambda fd: self.accept_connection(listener))
             
         for listener in self.listeners:
             accepter(listener)
 
     def accept_connection(self, listener):
-        print("ACCEPTING CONNECTION FROM", listener)
-        sys.stdout.flush()
+        sys.stderr.write("ACCEPTING CONNECTION FROM %s\n" % (listener,))
+        sys.stderr.flush()
         conn = listener.IceAcceptConnection()
-        print("ACCEPTED CONNECTION", listener, conn)
-        sys.stdout.flush()
-        print("ACCEPTED CONNECTION", conn, conn.IceConnectionNumber())
-        sys.stdout.flush()
+        sys.stderr.write("ACCEPTED CONNECTION %s %s\n" % (listener, conn))
+        sys.stderr.flush()
+        sys.stderr.write("ACCEPTED CONNECTION %s @ %s\n" % (conn, conn.IceConnectionNumber()))
+        sys.stderr.flush()
         def process(fd):
-            print("PROCESS", fd, conn)
-            sys.stdout.flush()
+            sys.stderr.write("PROCESS %s %s\n" % (fd, conn))
+            sys.stderr.flush()
             conn.IceProcessMessages()
         self.display.mainloop.add(conn.IceConnectionNumber(), process) #lambda fd: conn.IceProcessMessages())
              
@@ -41,26 +41,38 @@ class Server(pysmlib.server.Server):
         def __init__(self, *arg, **kw):
             pysmlib.server.PySmsConn.__init__(self, *arg, **kw)
             self.fd = self.SmsGetIceConnection().IceConnectionNumber()
+            self.windows = {}
+
+        def add_window(self, window):
+            self.windows[window.id] = window
+
+        def remove_window(self, window):
+            self.windows.pop(window.id)
+
+        def sleep(self):
+            self.SmsSaveYourself(pysmlib.server.SmSaveBoth, False, pysmlib.server.SmInteractStyleAny, False)
             
         def register_client(self, previous_id):
-            print("register_client", previous_id)
-            sys.stdout.flush()
+            sys.stderr.write("register_client %s\n" % (previous_id,))
+            sys.stderr.flush()
             if previous_id is not None and previous_id in self.clients:
                 client = self.clients[previous_id]
             else:
                 client = glass_ghosts.client.Client(self.manager.manager, previous_id)
                 self.manager.manager.clients[client.client_id] = client            
             self.client = client
-            print("REGISTER DONE")
-            sys.stdout.flush()
+            sys.stderr.write("REGISTER DONE\n")
+            sys.stderr.flush()
             self.SmsRegisterClientReply(self.client.client_id)
             return 1
 
         def interact_request(self, *arg, **kw):
-            print("interact_request", arg, kw)
+            sys.stderr.write("interact_request %s %s\n" % (arg, kw))
+            sys.stderr.flush()
 
         def interact_done(self, *arg, **kw):
-            print("interact_done", arg, kw)
+            sys.stderr.write("interact_done %s %s\n" % (arg, kw))
+            sys.stderr.flush()
 
         def save_yourself_request(self, *arg, **kw):
             for conn in self.manager.connections.values():
@@ -68,13 +80,16 @@ class Server(pysmlib.server.Server):
                     conn.SmsSaveYourself(pysmlib.server.SmSaveGlobal, 0, pysmlib.server.SmInteractStyleAny, 1)
 
         def save_yourself_phase2_request(self, *arg, **kw):
-            print("save_yourself_phase2_request", arg, kw)
+            print("save_yourself_phase2_request %s %s\n" % (arg, kw))
+            sys.stderr.flush()
 
         def save_yourself_done(self, *arg, **kw):
-            print("save_yourself_done", arg, kw)
+            print("save_yourself_done %s %s\n" % (arg, kw))
+            sys.stderr.flush()
 
         def close_connection(self, *arg, **kw):
-            print("close_connection", arg, kw)
+            print("close_connection %s %s\n" % (arg, kw))
+            sys.stderr.flush()
             self.manager.display.mainloop.remove(self.fd)
 
         def set_properties(self, props):

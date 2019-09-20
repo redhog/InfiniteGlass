@@ -17,11 +17,12 @@ class Window(object):
         self.window = window
         self.id = self.window.__window__()
         self.shadow = None
+        self.connection = None
         self.properties = {}
         for name in self.window.keys():
             self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
         sys.stderr.write("WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
-        self.match_shadow()
+        self.match()
             
         @window.on()
         def PropertyNotify(win, event):
@@ -31,24 +32,39 @@ class Window(object):
             except:
                 pass
             else:
-                self.match_shadow()
-            
+                self.match()
+
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
+        def ClientMessage(win, event):
+            print("RECEIVED SLEEP", win, event, self.connection)
+            if self.connection:
+                self.connection.sleep()
+
         @window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
             sys.stderr.write("WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
-            if not self.shadow:
-                self.shadow = glass_ghosts.shadow.Shadow(self.manager, self.properties)
-            else:
-                self.shadow.properties.update(self.properties)
-                self.shadow.update_key()
-            self.shadow.activate()
-            self.manager.windows.pop(self.id, None)
-            self.manager.display.eventhandlers.remove(PropertyNotify)
-            self.manager.display.eventhandlers.remove(DestroyNotify)
+            self.destroy()
             
     def key(self):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
+    def destroy(self):
+        if not self.shadow:
+            self.shadow = glass_ghosts.shadow.Shadow(self.manager, self.properties)
+        else:
+            self.shadow.properties.update(self.properties)
+            self.shadow.update_key()
+        self.shadow.activate()
+        self.manager.windows.pop(self.id, None)
+        self.manager.display.eventhandlers.remove(PropertyNotify)
+        self.manager.display.eventhandlers.remove(DestroyNotify)
+        if self.connection:
+            self.connection.remove_window(self)
+    
+    def match(self):
+        self.match_shadow()
+        self.match_client()
+        
     def match_shadow(self):
         if self.shadow: return
         key = self.key()
@@ -56,6 +72,14 @@ class Window(object):
             self.shadow = self.manager.shadows[key]
             self.shadow.apply(self.window)
             self.shadow.deactivate()
+
+    def match_client(self):
+        if self.connection: return
+        if "SM_CLIENT_ID" not in self.properties: return
+        client_id = self.properties["SM_CLIENT_ID"]
+        if client_id not in self.manager.session.connections: return
+        self.connection = self.manager.session.connections[client_id]
+        self.connection.add_window(self)
         
     def __str__(self):
         res = str(self.window.__window__())
