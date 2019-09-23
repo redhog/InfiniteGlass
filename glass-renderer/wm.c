@@ -244,6 +244,12 @@ int main() {
         draw();
       }
       XFree(prop_return);
+    } else if (e.type == PropertyNotify && e.xproperty.atom == DISPLAYSVG) {
+      Item * item = item_get_from_window(e.xproperty.window);
+      // FIXME: Handle updates of existign item later
+      // if (!item_isinstance(item, &item_type_window_svg)) {
+      item_remove(item);
+      item = item_get_from_window(e.xproperty.window);
     } else if (e.type == CreateNotify) {
       if (e.xcreatewindow.window != overlay && e.xcreatewindow.window != motion_notification_window) {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
