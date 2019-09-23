@@ -12,6 +12,7 @@ fi
 glass-input &
 glass-widgets &
 glass-animator &
+glass-wintest &
 
 if ! [ "$GLASS_NOGHOSTS" ]; then
   glass-ghosts &
