@@ -44,7 +44,11 @@ class Window(object):
         def DestroyNotify(win, event):
             sys.stderr.write("WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             self.destroy()
-            
+
+        self.DestroyNotify = DestroyNotify
+        self.SleepMessage = ClientMessage
+        self.PropertyNotify = PropertyNotify
+        
     def key(self):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
@@ -56,8 +60,9 @@ class Window(object):
             self.shadow.update_key()
         self.shadow.activate()
         self.manager.windows.pop(self.id, None)
-        self.manager.display.eventhandlers.remove(PropertyNotify)
-        self.manager.display.eventhandlers.remove(DestroyNotify)
+        self.manager.display.eventhandlers.remove(self.PropertyNotify)
+        self.manager.display.eventhandlers.remove(self.SleepMessage)
+        self.manager.display.eventhandlers.remove(self.DestroyNotify)
         if self.connection:
             self.connection.remove_window(self)
     

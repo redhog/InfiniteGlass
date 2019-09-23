@@ -40,9 +40,23 @@ class Server(pysmlib.server.Server):
     class Connection(pysmlib.server.PySmsConn):
         def __init__(self, *arg, **kw):
             pysmlib.server.PySmsConn.__init__(self, *arg, **kw)
-            self.fd = self.SmsGetIceConnection().IceConnectionNumber()
+            self.ice_conn = self.SmsGetIceConnection()
+            self.ice_conn.error_handler = self.error_handler
+            self.ice_conn.io_error_handler = self.io_error_handler
+            self.fd = self.ice_conn.IceConnectionNumber()
             self.windows = {}
 
+        def error_handler(self, swap, offendingMinorOpcode, offendingSequence, errorClass, severity):
+            sys.stderr.write("Error: %s: swap=%s, offendingMinorOpcode=%s, offendingSequence=%s, errorClass=%s, severity=%s)\n" %
+                             (self, swap, offendingMinorOpcode, offendingSequence, errorClass, severity))
+            sys.stderr.flush()
+            self.close_connection()
+
+        def io_error_handler(self):
+            sys.stderr.write("IO Error: %s\n" % (self,))
+            sys.stderr.flush()
+            self.close_connection()
+            
         def add_window(self, window):
             self.windows[window.id] = window
 

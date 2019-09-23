@@ -175,7 +175,9 @@ cdef class PySmsConn(object):
             raise AttributeError("conn not available from __new__(), or after SmsCleanUp()")
         return self._conn
     def SmsGetIceConnection(self):
-        return PyIceConn().init(SmsGetIceConnection(self.conn()))
+        ice_conn = create_py_ice_conn(SmsGetIceConnection(self.conn()))
+        ice_conn.sm_conn = self
+        return ice_conn
     def SmsRegisterClientReply(self, client_id):
         return SmsRegisterClientReply(self.conn(), client_id)
     def SmsCleanUp(self):

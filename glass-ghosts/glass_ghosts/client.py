@@ -11,6 +11,7 @@ import uuid
 import glass_ghosts.shadow
 import glass_ghosts.helpers
 
+class NoValue(object): pass
 
 class Client(object):
     def __init__(self, manager, client_id = None, properties = None):
