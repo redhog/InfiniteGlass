@@ -74,3 +74,15 @@ ClientMessage with the following properties:
     data[0] window = window with the property to animate
     data[1] atom = the property to animate, 'prop'
     data[2] float = animation time in seconds
+
+# About the FLOAT datatype
+
+The FLOAT datatype is encoded as a 32 bit float stored in a 32 bit item in properties and events according to the normal 32 bit item rules of XGetWindowProperty etc - that is, it is stored on the X server in network byte order, and converted to/from local byte order by Xlib. Note: On 64 bit platforms, XGetWindowProperty returns an array of long, which are 64, not 32 bits each. That means that the whole array CAN NOT be casted to an array of float, but each array item must be reinterpreted separately:
+
+    float items[nr_items];
+    XGetWindowProperty(display, window, property_name_atom, 0, sizeof(float)*nr_items, 0, AnyPropertyType,
+                       &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+    if (type_return != Success) return NULL;
+    for (int i = 0; i < nr_items; i++) {
+     items[i] = *(float *) (i + (long *) prop_return);
+    }
