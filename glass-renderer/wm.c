@@ -122,9 +122,9 @@ int main() {
     XGenericEventCookie *cookie = &e.xcookie;
     XSync(display, False);
     XNextEvent(display, &e);
-    if (e.type != MotionNotify && e.type != GenericEvent && e.type != damage_event + XDamageNotify) {
-      print_xevent(display, &e);
-    }
+//    if (e.type != MotionNotify && e.type != GenericEvent && e.type != damage_event + XDamageNotify) {
+//      print_xevent(display, &e);
+//    }
     
     gl_check_error("loop");
 
@@ -166,13 +166,13 @@ int main() {
             }
           }
 
-          float coords[views->count * 2];
+          long coords[views->count * 2];
           for (int i=0; i < views->count; i++) {
-           view_to_space((View *) views->entries[i],
-                          e.xmotion.x_root, e.xmotion.y_root,
-                          &coords[i*2], &coords[i*2+1]);
+            view_to_space((View *) views->entries[i],
+                          root_x, root_y - ((View *) views->entries[i])->height,
+                          (float *) &coords[i*2], (float *) &coords[i*2+1]);
           }
-          XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) &coords, 2*views->count);
+          XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) coords, 2*views->count);
           XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
         } else {
           printf("Unknown XGenericEventCookie\n");
@@ -320,8 +320,8 @@ int main() {
       printf("Exiting by request");
       exit(1);
     } else {
-      print_xevent(display, &e);
-      fprintf(stderr, "Ignored event\n"); fflush(stderr);
+//      print_xevent(display, &e);
+//      fprintf(stderr, "Ignored event\n"); fflush(stderr);
     }
   }
   return 0;
