@@ -2,7 +2,7 @@
 
 import setuptools
 
-setuptools.setup(name='InfiniteGlass',
+setuptools.setup(name='glass-lib',
       version='0.1',
       description='A simplification layer on top of Xlib',
       long_description="""A simplification layer on top of Xlib mainly intended for writing InfiniteGlass clients/modules.""",
@@ -12,6 +12,7 @@ setuptools.setup(name='InfiniteGlass',
       url='https://github.com/redhog/InfiniteGlass',
       packages=setuptools.find_packages(),
       install_requires=[
+          "numpy",
           "python-xlib>=0.25"
       ],
       include_package_data=True
