@@ -33,8 +33,7 @@ $(BINARIES):
 
 $(BUILD)/env:
 	virtualenv --python=python3 $@
-	. $@/bin/activate; cd pyig; pip install numpy
-	. $@/bin/activate; cd pyig; python setup.py develop
+	. $@/bin/activate; cd glass-lib; python setup.py develop
 
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop

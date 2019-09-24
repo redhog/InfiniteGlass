@@ -14,6 +14,7 @@ session_content() {
   glass-input &
   glass-widgets &
   glass-animator &
+  glass-wintest &
 
   if [ "$GLASS_DEBUG" = "valgrind" ]; then
     echo "Debugging using Valgrind..."
