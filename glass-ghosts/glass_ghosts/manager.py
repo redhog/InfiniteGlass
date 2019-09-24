@@ -48,8 +48,8 @@ class GhostManager(object):
 
     def save_shadows(self, current_time, idx):
         if self.changes:
-            sys.stderr.write("Committing...\n")
-            sys.stderr.flush()
+            #sys.stderr.write("Committing...\n")
+            #sys.stderr.flush()
             self.dbconn.commit()
             self.changes = False
     

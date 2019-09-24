@@ -24,16 +24,12 @@ class Server(pysmlib.server.Server):
             accepter(listener)
 
     def accept_connection(self, listener):
-        sys.stderr.write("ACCEPTING CONNECTION FROM %s\n" % (listener,))
-        sys.stderr.flush()
         conn = listener.IceAcceptConnection()
         sys.stderr.write("ACCEPTED CONNECTION %s %s\n" % (listener, conn))
         sys.stderr.flush()
-        sys.stderr.write("ACCEPTED CONNECTION %s @ %s\n" % (conn, conn.IceConnectionNumber()))
-        sys.stderr.flush()
         def process(fd):
-            sys.stderr.write("PROCESS %s %s\n" % (fd, conn))
-            sys.stderr.flush()
+            #sys.stderr.write("PROCESS %s %s\n" % (fd, conn))
+            #sys.stderr.flush()
             conn.IceProcessMessages()
         self.display.mainloop.add(conn.IceConnectionNumber(), process) #lambda fd: conn.IceProcessMessages())
              
@@ -73,13 +69,14 @@ class Server(pysmlib.server.Server):
             sys.stderr.write("register_client %s\n" % (previous_id,))
             sys.stderr.flush()
             if previous_id is not None and previous_id in self.manager.manager.clients:
-                client = self.clients[previous_id]
+                client = self.manager.manager.clients[previous_id]
             else:
+                print("REGISTERING", previous_id)
                 client = glass_ghosts.client.Client(self.manager.manager, previous_id)
                 self.manager.manager.clients[client.client_id] = client            
             self.client = client
             self.client.conn = self
-            sys.stderr.write("REGISTER DONE\n")
+            sys.stderr.write("REGISTER DONE %s\n" % client.client_id)
             sys.stderr.flush()
             self.SmsRegisterClientReply(self.client.client_id)
             return 1

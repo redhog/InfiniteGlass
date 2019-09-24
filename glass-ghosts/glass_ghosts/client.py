@@ -60,4 +60,4 @@ class Client(object):
         env["SESSION_MANAGER"] = self.manager.session.listen_address()
 
         if os.fork() == 0:
-            os.execlpe(*self.properties["RestartCommand"][1], env)
+            os.execlpe(self.properties["RestartCommand"][1][0], *self.properties["RestartCommand"][1], env)

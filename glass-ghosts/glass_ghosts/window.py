@@ -83,6 +83,8 @@ class Window(object):
         if "SM_CLIENT_ID" not in self.properties: return
         client_id = self.properties["SM_CLIENT_ID"]
         if client_id not in self.manager.clients: return
+        sys.stderr.write("MATCH CLIENT %s %s\n" % (self.id, client_id))
+        sys.stderr.flush()
         self.client = self.manager.clients[client_id]
         self.client.conn.add_window(self)
         
