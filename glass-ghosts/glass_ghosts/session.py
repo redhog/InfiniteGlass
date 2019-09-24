@@ -39,13 +39,15 @@ class Server(pysmlib.server.Server):
              
     class Connection(pysmlib.server.PySmsConn):
         def __init__(self, *arg, **kw):
+            self.client = None
+            self.windows = {}
             pysmlib.server.PySmsConn.__init__(self, *arg, **kw)
             self.ice_conn = self.SmsGetIceConnection()
             self.ice_conn.error_handler = self.error_handler
             self.ice_conn.io_error_handler = self.io_error_handler
             self.fd = self.ice_conn.IceConnectionNumber()
-            self.windows = {}
-
+            self.do_sleep = False
+            
         def error_handler(self, swap, offendingMinorOpcode, offendingSequence, errorClass, severity):
             sys.stderr.write("Error: %s: swap=%s, offendingMinorOpcode=%s, offendingSequence=%s, errorClass=%s, severity=%s)\n" %
                              (self, swap, offendingMinorOpcode, offendingSequence, errorClass, severity))
@@ -64,17 +66,19 @@ class Server(pysmlib.server.Server):
             self.windows.pop(window.id)
 
         def sleep(self):
+            self.do_sleep = True
             self.SmsSaveYourself(pysmlib.server.SmSaveBoth, False, pysmlib.server.SmInteractStyleAny, False)
             
         def register_client(self, previous_id):
             sys.stderr.write("register_client %s\n" % (previous_id,))
             sys.stderr.flush()
-            if previous_id is not None and previous_id in self.clients:
+            if previous_id is not None and previous_id in self.manager.manager.clients:
                 client = self.clients[previous_id]
             else:
                 client = glass_ghosts.client.Client(self.manager.manager, previous_id)
                 self.manager.manager.clients[client.client_id] = client            
             self.client = client
+            self.client.conn = self
             sys.stderr.write("REGISTER DONE\n")
             sys.stderr.flush()
             self.SmsRegisterClientReply(self.client.client_id)
@@ -99,12 +103,18 @@ class Server(pysmlib.server.Server):
 
         def save_yourself_done(self, *arg, **kw):
             print("save_yourself_done %s %s\n" % (arg, kw))
+
+            if self.do_sleep:
+                self.SmsDie()
+            
             sys.stderr.flush()
 
         def close_connection(self, *arg, **kw):
             print("close_connection %s %s\n" % (arg, kw))
             sys.stderr.flush()
             self.manager.display.mainloop.remove(self.fd)
+            if self.client:
+                self.client.conn = None
 
         def set_properties(self, props):
             self.client.update(props)

@@ -79,14 +79,15 @@ class GhostManager(object):
         for key, name, value in cur:
             if key != currentkey:
                 if currentkey:
-                    glass_ghosts.client.Client(self, currentkey, properties)
+                    client = glass_ghosts.client.Client(self, currentkey, properties)
+                    self.clients[client.client_id] = client
                 properties = {}
                 currentkey = key
             properties[name] = json.loads(value, object_hook=self.fromjson)
         if currentkey:
-            glass_ghosts.client.Client(self, currentkey, properties)
+            client = glass_ghosts.client.Client(self, currentkey, properties)
+            self.clients[client.client_id] = client
         self.restoring_clients = False
-        
 
     def tojson(self, obj):
         if isinstance(obj, array.array):

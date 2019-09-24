@@ -10,6 +10,7 @@ import base64
 import uuid
 import glass_ghosts.shadow
 import glass_ghosts.helpers
+import sys
 
 class NoValue(object): pass
 
@@ -51,6 +52,12 @@ class Client(object):
                 self.manager.changes = True
 
     def restart(self):
-        assert "SmRestartCommand" in self.properties, "Session client did not provide a restart command"
+        assert "RestartCommand" in self.properties, "Session client did not provide a restart command"
+        sys.stderr.write("Restarting %s by running %s\n" % (self.client_id, " ".join(self.properties["RestartCommand"][1])))
+        sys.stderr.flush()
+
+        env = dict(os.environ)
+        env["SESSION_MANAGER"] = self.manager.session.listen_address()
+
         if os.fork() == 0:
-            os.execl(self.properties["SmRestartCommand"])
+            os.execlpe(*self.properties["RestartCommand"][1], env)

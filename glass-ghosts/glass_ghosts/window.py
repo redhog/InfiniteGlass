@@ -17,7 +17,7 @@ class Window(object):
         self.window = window
         self.id = self.window.__window__()
         self.shadow = None
-        self.connection = None
+        self.client = None
         self.properties = {}
         for name in self.window.keys():
             self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
@@ -36,9 +36,9 @@ class Window(object):
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
         def ClientMessage(win, event):
-            print("RECEIVED SLEEP", win, event, self.connection)
-            if self.connection:
-                self.connection.sleep()
+            print("RECEIVED SLEEP", win, event, self.client)
+            if self.client:
+                self.client.conn.sleep()
 
         @window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
@@ -63,8 +63,8 @@ class Window(object):
         self.manager.display.eventhandlers.remove(self.PropertyNotify)
         self.manager.display.eventhandlers.remove(self.SleepMessage)
         self.manager.display.eventhandlers.remove(self.DestroyNotify)
-        if self.connection:
-            self.connection.remove_window(self)
+        if self.client and self.client.conn:
+            self.client.conn.remove_window(self)
     
     def match(self):
         self.match_shadow()
@@ -79,12 +79,12 @@ class Window(object):
             self.shadow.deactivate()
 
     def match_client(self):
-        if self.connection: return
+        if self.client: return
         if "SM_CLIENT_ID" not in self.properties: return
         client_id = self.properties["SM_CLIENT_ID"]
-        if client_id not in self.manager.session.connections: return
-        self.connection = self.manager.session.connections[client_id]
-        self.connection.add_window(self)
+        if client_id not in self.manager.clients: return
+        self.client = self.manager.clients[client_id]
+        self.client.conn.add_window(self)
         
     def __str__(self):
         res = str(self.window.__window__())
