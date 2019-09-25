@@ -51,13 +51,19 @@ class RootWindow(object):
             self.map_window(child)
 
     def map_window(self, win):
-        if win.get_attributes().override_redirect:
-            return
-
-        client_win = find_client_window(win)
-        if client_win is None: return
         try:
-            client_win["IG_GHOST"]
-        except Exception as e:
+            if win.get_attributes().override_redirect:
+                return
+
+            client_win = find_client_window(win)
+            if client_win is None: return
+            try:
+                client_win["IG_GHOST"]
+                return
+            except:
+                pass
             if client_win.__window__() not in self.manager.windows:
                 self.manager.windows[client_win.__window__()] = glass_ghosts.window.Window(self.manager, client_win)
+        except Xlib.error.BadWindow:
+            pass
+        

@@ -30,7 +30,11 @@ class Server(pysmlib.server.Server):
         def process(fd):
             #sys.stderr.write("PROCESS %s %s\n" % (fd, conn))
             #sys.stderr.flush()
-            conn.IceProcessMessages()
+            try:
+                conn.IceProcessMessages()
+            except Exception as e:
+                print(e)
+                self.display.mainloop.remove(conn.IceConnectionNumber())
         self.display.mainloop.add(conn.IceConnectionNumber(), process) #lambda fd: conn.IceProcessMessages())
              
     class Connection(pysmlib.server.PySmsConn):

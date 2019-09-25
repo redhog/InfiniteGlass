@@ -44,7 +44,7 @@ class Window(object):
         def DestroyNotify(win, event):
             sys.stderr.write("WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             self.destroy()
-
+            
         self.DestroyNotify = DestroyNotify
         self.SleepMessage = ClientMessage
         self.PropertyNotify = PropertyNotify
@@ -86,6 +86,7 @@ class Window(object):
         sys.stderr.write("MATCH CLIENT %s %s\n" % (self.id, client_id))
         sys.stderr.flush()
         self.client = self.manager.clients[client_id]
+        if not self.client.conn: return
         self.client.conn.add_window(self)
         
     def __str__(self):

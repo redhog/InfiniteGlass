@@ -59,6 +59,7 @@ class MainLoop(object):
         timeout_handler(start)
 
     def remove(self, fd):
+        if fd not in self.handlers: return
         del self.handlers[fd]
         
     def do(self):

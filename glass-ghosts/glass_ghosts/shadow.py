@@ -26,8 +26,12 @@ class Shadow(object):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
     def update_key(self):
-        if self.manager.restoring_shadows: return
         key = self.key()
+        
+        if self.manager.restoring_shadows:
+            self.current_key = key
+            self.manager.shadows[self.current_key] = self
+            return
         
         cur = self.manager.dbconn.cursor()
         dbkey = "/".join(str(item) for item in key)
@@ -84,7 +88,7 @@ class Shadow(object):
                 ghost_image = ghost_image.replace(key, value)
                 self.window["DISPLAYSVG"] = ghost_image
                 self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
-                self.apply(self.window)
+        self.apply(self.window)
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
@@ -121,14 +125,31 @@ class Shadow(object):
         @self.window.on()
         def ButtonPress(win, event):
             self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
-                
+
+        @self.window.on()
+        def Expose(win, event):
+            self.redraw()
+        
+        self.Expose = Expose
         self.DestroyNotify = DestroyNotify
         self.WMDelete = ClientMessage
         self.PropertyNotify = PropertyNotify
         self.ButtonPress = ButtonPress
         
         self.window.map()
+        self.redraw()
 
+    def redraw(self):
+        gcbg = self.manager.display.root.create_gc(foreground = self.manager.display.screen(0).white_pixel,
+                                                   background = self.manager.display.screen(0).black_pixel)
+        gcfg = self.manager.display.root.create_gc(foreground = self.manager.display.screen(0).black_pixel,
+                                                   background = self.manager.display.screen(0).white_pixel)
+        geom = self.window.get_geometry()
+        self.window.fill_rectangle(gcbg, 0, 0, geom.width, geom.height)
+        self.window.draw_text(gcfg, 10, 10, str(self.properties.get("WM_NAME", "")))
+        self.window.draw_text(gcfg, 10, 30, str(self.properties.get("WM_CLASS", "")))
+        self.manager.display.flush()
+        
     def deactivate(self):
         sys.stderr.write("SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
@@ -137,6 +158,7 @@ class Shadow(object):
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
             self.manager.display.eventhandlers.remove(self.WMDelete)
+            self.manager.display.eventhandlers.remove(self.Expose)
         
     def __str__(self):
         return "/".join(str(item) for item in self.key())
