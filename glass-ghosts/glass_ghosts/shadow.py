@@ -28,39 +28,37 @@ class Shadow(object):
     def update_key(self):
         key = self.key()
         
-        if self.manager.restoring_shadows:
-            self.current_key = key
-            self.manager.shadows[self.current_key] = self
-            return
-        
-        cur = self.manager.dbconn.cursor()
-        dbkey = "/".join(str(item) for item in key)
-        for name, value in self.properties.items():
-            if self._properties.get(name, NoValue) != value:
+        if not self.manager.restoring_shadows:
+
+            cur = self.manager.dbconn.cursor()
+            dbkey = "/".join(str(item) for item in key)
+            for name, value in self.properties.items():
+                if self._properties.get(name, NoValue) != value:
+                    cur.execute("""
+                      insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
+                    """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
+                    self.manager.changes = True
+            for name, value in self._properties.items():
+                if name not in self.properties:
+                    cur.execute("""
+                      delete from shadows where key=? and name=?
+                    """, (dbkey, name))
+                    self.manager.changes = True
+            if key != self.current_key and self.current_key is not None:
+                current_dbkey = "/".join(str(item) for item in self.current_key)
                 cur.execute("""
-                  insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
-                """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
+                  update shadows set key=? where key=?
+                    """, (dbkey, current_dbkey))
                 self.manager.changes = True
-        for name, value in self._properties.items():
-            if name not in self.properties:
-                cur.execute("""
-                  delete from shadows where key=? and name=?
-                """, (dbkey, name))
-                self.manager.changes = True
-        if key != self.current_key and self.current_key is not None:
-            current_dbkey = "/".join(str(item) for item in self.current_key)
-            cur.execute("""
-              update shadows set key=? where key=?
-                """, (dbkey, current_dbkey))
-            self.manager.changes = True
-                
+
         if key == self.current_key:
             return
         if self.current_key is not None:
             del self.manager.shadows[self.current_key]
             sys.stderr.write("UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
-            self.current_key = key
-            self.manager.shadows[self.current_key] = self
+                
+        self.current_key = key
+        self.manager.shadows[self.current_key] = self
             
     def apply(self, window):
         sys.stderr.write("SHADOW APPLY %s %s\n" % (window.__window__(), self)); sys.stderr.flush()
