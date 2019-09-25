@@ -14,11 +14,16 @@ import glass_ghosts.session
 import sys
 
 class GhostManager(object):
-    def __init__(self, display, MATCH = ("WM_CLASS", "WM_NAME"), SET = ("IG_SIZE", "IG_COORDS")):
+    def __init__(self,
+                 display,
+                 MATCH = ("WM_CLASS", "WM_NAME"),
+                 SET = ("IG_SIZE", "IG_COORDS"),
+                 IGNORE=("WM_TRANSIENT_FOR", "IG_GHOST")):
         self.display = display
 
         self.MATCH = MATCH
         self.SET = SET
+        self.IGNORE = IGNORE
 
         self.changes = False
         self.windows = {}

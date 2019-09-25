@@ -61,7 +61,7 @@ class Shadow(object):
         self.manager.shadows[self.current_key] = self
             
     def apply(self, window):
-        sys.stderr.write("SHADOW APPLY %s %s\n" % (window.__window__(), self)); sys.stderr.flush()
+        sys.stderr.write("SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
         for key in self.manager.SET:
             if key in self.properties:
                 window[key] = self.properties[key]

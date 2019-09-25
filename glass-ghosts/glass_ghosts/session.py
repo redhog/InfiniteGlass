@@ -70,7 +70,7 @@ class Server(pysmlib.server.Server):
             self.SmsSaveYourself(pysmlib.server.SmSaveBoth, False, pysmlib.server.SmInteractStyleAny, False)
             
         def register_client(self, previous_id):
-            sys.stderr.write("register_client %s\n" % (previous_id,))
+            sys.stderr.write("register_client client_id=%s\n" % (previous_id,))
             sys.stderr.flush()
             if previous_id is not None and previous_id in self.manager.manager.clients:
                 client = self.manager.manager.clients[previous_id]
@@ -80,7 +80,7 @@ class Server(pysmlib.server.Server):
                 self.manager.manager.clients[client.client_id] = client            
             self.client = client
             self.client.conn = self
-            sys.stderr.write("REGISTER DONE %s\n" % client.client_id)
+            sys.stderr.write("REGISTER DONE fd=%s client_id=%s\n" % (self.fd, client.client_id))
             sys.stderr.flush()
             self.SmsRegisterClientReply(self.client.client_id)
             return 1
