@@ -198,7 +198,8 @@ int main() {
      //XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureRequest) {
       XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window);
+      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
+      if (!item) continue;
       item->base.coords[2] *= (float) event->width / (float) item->base.width;
       item->base.coords[3] *= (float) event->height / (float) item->base.height;
       item->base.width = event->width;
@@ -211,7 +212,8 @@ int main() {
     } else if (e.type == ConfigureNotify) {
       fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window);
+      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
+      if (!item) continue;
       if (item->base.layer == IG_LAYER_MENU) {       
         item->base.coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
         item->base.coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.width;
@@ -231,10 +233,11 @@ int main() {
       unsigned long nitems_return;
       unsigned long bytes_after_return;
       unsigned char *prop_return;
+      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
+      if (!item) continue;
       XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
                          &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
       if (type_return != None) {
-        ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window);
         item->base.width = ((long *) prop_return)[0];
         item->base.height = ((long *) prop_return)[1];
         item->width_property = item->base.width;
@@ -245,40 +248,48 @@ int main() {
       }
       XFree(prop_return);
     } else if (e.type == PropertyNotify && e.xproperty.atom == DISPLAYSVG) {
-      Item * item = item_get_from_window(e.xproperty.window);
+      Item * item = item_get_from_window(e.xproperty.window, False);
+      if (!item) continue;
       // FIXME: Handle updates of existign item later
       // if (!item_isinstance(item, &item_type_window_svg)) {
       item_remove(item);
-      item = item_get_from_window(e.xproperty.window);
-    } else if (e.type == CreateNotify) {
+      item = item_get_from_window(e.xproperty.window, True);
+/*
+     } else if (e.type == CreateNotify) {
       if (e.xcreatewindow.window != overlay && e.xcreatewindow.window != motion_notification_window) {
         fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
-        Item *item = item_get_from_window(e.xcreatewindow.window);
+        Item *item = item_get_from_window(e.xcreatewindow.window, False);
+        if (!item) continue;
         // XMapWindow(display, e.xmaprequest.window);
         item->type->update(item);
       }
+*/
     } else if (e.type == DestroyNotify) {
-      Item * item = item_get_from_window(e.xdestroywindow.window);
+      Item * item = item_get_from_window(e.xdestroywindow.window, False);
+      if (!item) continue;
       item_remove(item);
     } else if (e.type == ReparentNotify) {
       if (e.xreparent.parent == root) {
-        Item * item = item_get_from_window(e.xreparent.window);
+        Item * item = item_get_from_window(e.xreparent.window, False);
+        if (!item) continue;
         item->type->update(item);
       } else {
-        Item * item = item_get_from_window(e.xreparent.window);
+        Item * item = item_get_from_window(e.xreparent.window, False);
+        if (!item) continue;
         item_remove(item);
       }
       draw();
     } else if (e.type == MapNotify) {
       if (e.xmap.window != overlay) {
         fprintf(stderr, "MapNotify %ld\n", e.xmap.window);
-        Item *item = item_get_from_window(e.xmap.window);
+        Item *item = item_get_from_window(e.xmap.window, True);
         item->is_mapped = True;
         item->type->update(item);
         draw();
       }
    } else if (e.type == UnmapNotify) {
-      Item *item = item_get_from_window(e.xunmap.window);
+      Item *item = item_get_from_window(e.xunmap.window, False);
+      if (!item) continue;
       item->is_mapped = False;
       draw();
     } else if (e.type == MapRequest) {
@@ -292,7 +303,8 @@ int main() {
         draw();
         handled=True;
       } else if (e.xproperty.atom == IG_COORDS) {
-        Item *item = item_get_from_window(e.xproperty.window);
+        Item *item = item_get_from_window(e.xproperty.window, False);
+        if (!item) continue;
         item_type_window_update_space_pos_from_window((ItemWindow *) item);
         item->type->update(item);
         draw();

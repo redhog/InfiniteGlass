@@ -6,7 +6,7 @@
 #include <limits.h>
 
 Bool debugpicks = False;
-Bool debuglayers = False;
+Bool debuglayers = True;
 
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {

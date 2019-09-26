@@ -146,14 +146,15 @@ ItemType item_type_window = {
   &item_type_window_print
 };
 
-Item *item_get_from_window(Window window) {
+Item *item_get_from_window(Window window, int create) {
   if (items_all) {
     for (size_t idx = 0; idx < items_all->count; idx++) {
       ItemWindow *item = (ItemWindow *) items_all->entries[idx];
       if (item->window == window) return (Item *) item;
     }
   }
-
+  if (!create) return NULL;
+  
   fprintf(stderr, "Adding window %ld\n", window);
 
   Atom type_return;
@@ -191,7 +192,11 @@ void items_get_from_toplevel_windows() {
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
     if (top_level_windows[i] == motion_notification_window) continue;
-    item_get_from_window(top_level_windows[i]);
+    XWindowAttributes attr;
+    XGetWindowAttributes(display, top_level_windows[i], &attr);
+    if (attr.map_state == IsViewable) {
+      item_get_from_window(top_level_windows[i], True);
+    }
   }
 
   XFree(top_level_windows);
