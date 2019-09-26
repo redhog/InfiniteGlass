@@ -13,6 +13,8 @@ Features:
   * Windows that are closed leave a ghost window in their place that can be moved, resized and deleted.
   * When a window with the same name reappears, it takes the place of the ghost window if it still exists.
   * Ghost windows are stored in a file between sessions.
+* Window content / application state is stored between sessions for supported clients
+  * Applications supporting the XSM protocol can be closed and saved and later restored, in the same session or another.
 * Infinitely zoomable SVG for buttons etc
   * A window can display an SVG image instead of content, and the SVG will render to the current screen resolution, no matter the zoom level.
 
