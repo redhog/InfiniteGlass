@@ -21,6 +21,20 @@ class Client(object):
         self._properties = {}
         self.properties = properties or {}
         self.updatedb()
+        self.windows = {}
+        self.connections = {}
+
+    def add_window(self, window):
+        self.windows[window.id] = window
+
+    def remove_window(self, window):
+        self.windows.pop(window.id)
+        
+    def add_connection(self, conn):
+        self.connections[conn.fd] = conn
+
+    def remove_connection(self, conn):
+        self.connections.pop(conn.fd)
         
     def __getitem__(self, name):
         return self.properties[name]

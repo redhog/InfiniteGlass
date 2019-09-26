@@ -38,15 +38,30 @@ class Window(object):
         def ClientMessage(win, event):
             print("RECEIVED SLEEP", win, event, self.client)
             if self.client:
-                self.client.conn.sleep()
+                for conn in self.client.connections.values():
+                    conn.sleep()
+        self.SleepMessage = ClientMessage
 
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
+        def ClientMessage(win, event):
+            print("RECEIVED CLOSE", win, event, self.client)
+            if self.client:
+                if len(self.client.windows) <= 1:
+                    for conn in self.client.connections.values():
+                        conn.sleep()
+                    return
+            if "WM_PROTOCOLS" in self.window and "WM_DELETE_WINDOW" in self.window["WM_PROTOCOLS"]:
+                self.window.send(self.window, "WM_PROTOCOLS", "WM_DELETE_WINDOW", Xlib.X.CurrentTime)
+            else:
+                self.window.destroy()
+        self.CloseMessage = ClientMessage
+                
         @window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
             sys.stderr.write("WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             self.destroy()
             
         self.DestroyNotify = DestroyNotify
-        self.SleepMessage = ClientMessage
         self.PropertyNotify = PropertyNotify
         
     def key(self):
@@ -61,10 +76,11 @@ class Window(object):
         self.shadow.activate()
         self.manager.windows.pop(self.id, None)
         self.manager.display.eventhandlers.remove(self.PropertyNotify)
+        self.manager.display.eventhandlers.remove(self.CloseMessage)
         self.manager.display.eventhandlers.remove(self.SleepMessage)
         self.manager.display.eventhandlers.remove(self.DestroyNotify)
-        if self.client and self.client.conn:
-            self.client.conn.remove_window(self)
+        if self.client:
+            self.client.remove_window(self)
     
     def match(self):
         self.match_shadow()
@@ -86,8 +102,7 @@ class Window(object):
         sys.stderr.write("MATCH CLIENT window=%s client_id=%s\n" % (self.id, client_id))
         sys.stderr.flush()
         self.client = self.manager.clients[client_id]
-        if not self.client.conn: return
-        self.client.conn.add_window(self)
+        self.client.add_window(self)
         
     def __str__(self):
         res = str(self.window.__window__())

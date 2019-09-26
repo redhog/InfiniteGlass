@@ -40,7 +40,6 @@ class Server(pysmlib.server.Server):
     class Connection(pysmlib.server.PySmsConn):
         def __init__(self, *arg, **kw):
             self.client = None
-            self.windows = {}
             pysmlib.server.PySmsConn.__init__(self, *arg, **kw)
             self.ice_conn = self.SmsGetIceConnection()
             self.ice_conn.error_handler = self.error_handler
@@ -58,12 +57,6 @@ class Server(pysmlib.server.Server):
             sys.stderr.write("IO Error: %s\n" % (self,))
             sys.stderr.flush()
             self.close_connection()
-            
-        def add_window(self, window):
-            self.windows[window.id] = window
-
-        def remove_window(self, window):
-            self.windows.pop(window.id)
 
         def sleep(self):
             self.do_sleep = True
@@ -79,7 +72,7 @@ class Server(pysmlib.server.Server):
                 client = glass_ghosts.client.Client(self.manager.manager, previous_id)
                 self.manager.manager.clients[client.client_id] = client            
             self.client = client
-            self.client.conn = self
+            self.client.add_connection(self)
             sys.stderr.write("REGISTER DONE fd=%s client_id=%s\n" % (self.fd, client.client_id))
             sys.stderr.flush()
             self.SmsRegisterClientReply(self.client.client_id)
@@ -115,7 +108,7 @@ class Server(pysmlib.server.Server):
             sys.stderr.flush()
             self.manager.display.mainloop.remove(self.fd)
             if self.client:
-                self.client.conn = None
+                self.client.remove_connection(self)
 
         def set_properties(self, props):
             self.client.update(props)

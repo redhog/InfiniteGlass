@@ -113,12 +113,13 @@ class GrabbedMode(Mode):
         elif event == "KeyPress" and event["XK_F4"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                print("SENDING SLEEP", win)
-                win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
+                print("SENDING CLOSE", win)
+                win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
         elif event == "KeyPress" and event["XK_F5"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                win.destroy()
+                print("SENDING SLEEP", win)
+                win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:

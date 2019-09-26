@@ -27,7 +27,11 @@ class Shadow(object):
 
     def update_key(self):
         key = self.key()
-        
+
+        if key != self.current_key and key in self.manager.shadows:
+            sys.stderr.write("DUPLICATE SHADOW %s\n" % (self,))
+            self.destroy()
+            
         if not self.manager.restoring_shadows:
 
             cur = self.manager.dbconn.cursor()
@@ -56,7 +60,7 @@ class Shadow(object):
         if self.current_key is not None:
             del self.manager.shadows[self.current_key]
             sys.stderr.write("UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
-                
+        
         self.current_key = key
         self.manager.shadows[self.current_key] = self
             
@@ -91,17 +95,12 @@ class Shadow(object):
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
             sys.stderr.write("SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
-            self.manager.display.eventhandlers.remove(self.DestroyNotify)
-            self.manager.display.eventhandlers.remove(self.PropertyNotify)
-            self.manager.display.eventhandlers.remove(self.WMDelete)
-            self.manager.shadows.pop(self.key(), None)
-
-            dbkey = str(self)
-            cur = self.manager.dbconn.cursor()
-            cur.execute("""
-                delete from shadows where key = ?
-            """, (dbkey,))
-            self.manager.dbconn.commit()
+            self.destroy()
+            
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
+        def ClientMessage(win, event):
+            self.window.destroy()
+        self.CloseMessage = ClientMessage
             
         @self.window.on(mask="NoEventMask", client_type="WM_PROTOCOLS")
         def ClientMessage(win, event):
@@ -109,6 +108,7 @@ class Shadow(object):
                 self.window.destroy()
             else:
                 sys.stderr.write("%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
+        self.WMDelete = ClientMessage
 
         @self.window.on()
         def PropertyNotify(win, event):
@@ -130,7 +130,6 @@ class Shadow(object):
         
         self.Expose = Expose
         self.DestroyNotify = DestroyNotify
-        self.WMDelete = ClientMessage
         self.PropertyNotify = PropertyNotify
         self.ButtonPress = ButtonPress
         
@@ -156,7 +155,20 @@ class Shadow(object):
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
             self.manager.display.eventhandlers.remove(self.WMDelete)
+            self.manager.display.eventhandlers.remove(self.CloseMessage)
             self.manager.display.eventhandlers.remove(self.Expose)
-        
+
+    def destroy(self):
+        self.deactivate()
+
+        self.manager.shadows.pop(self.key(), None)
+
+        dbkey = str(self)
+        cur = self.manager.dbconn.cursor()
+        cur.execute("""
+            delete from shadows where key = ?
+        """, (dbkey,))
+        self.manager.dbconn.commit()        
+            
     def __str__(self):
         return "/".join(str(item) for item in self.key())
