@@ -5,6 +5,9 @@
 
 typedef struct {
   Shader base;
+
+  GLint width_attr;
+  GLint height_attr;
  
   GLint screen_attr;
   GLint coords_attr;

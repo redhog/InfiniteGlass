@@ -11,6 +11,9 @@ void item_type_base_draw(View *view, Item *item) {
   if (item->is_mapped) {
     ItemShader *shader = (ItemShader *) item->type->get_shader(item);
 
+    glUniform1i(shader->width_attr, view->width);
+    glUniform1i(shader->height_attr, view->height);
+    
     glUniform1i(shader->picking_mode_attr, view->picking);
     glUniform4fv(shader->screen_attr, 1, view->screen);
     

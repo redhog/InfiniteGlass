@@ -2,7 +2,10 @@
 
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
- 
+
+uniform int width;
+uniform int height;
+
 uniform vec4 screen; // x,y,w,h in space
 in vec4 window[]; // x,y,w,h in space
 
@@ -32,7 +35,12 @@ void main() {
     top = window[i][1];
     right = left + window[i][2];
     bottom = top - window[i][3];
-    
+
+    left = floor(left * width / 2.) * 2. / width;
+    right = floor(right * width / 2.) * 2. / width;
+    bottom = floor(bottom * width / 2.) * 2. / width;
+    top = floor(top * width / 2.) * 2. / width;
+
     size = distance(space2screen * vec4(left, bottom, 0., 1.),
                     space2screen * vec4(right, top, 0., 1.));
 

@@ -5,6 +5,8 @@ int item_shader_load(ItemShader *shader) {
     return 0;
   }
 
+  shader->width_attr = glGetUniformLocation(shader->base.program, "width");
+  shader->height_attr = glGetUniformLocation(shader->base.program, "height");
   shader->screen_attr = glGetUniformLocation(shader->base.program, "screen");
   shader->coords_attr = glGetAttribLocation(shader->base.program, "coords");
 
