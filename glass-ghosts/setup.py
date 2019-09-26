@@ -15,7 +15,7 @@ setuptools.setup(name='glass-ghosts',
       ],
       entry_points={
           'console_scripts': [
-              'glass-ghosts = glass_ghosts:main',
+              'glass-ghosts = glass_ghosts.main:main',
           ],
       },
       package_data={'glass_ghosts': ['*.svg']},

@@ -109,11 +109,17 @@ class GrabbedMode(Mode):
             print("SENDING DEBUG")
             self.display.root.send(
                 self.display.root, "IG_DEBUG",
-                event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+                event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif event == "KeyPress" and event["XK_F4"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                win.destroy()
+                print("SENDING CLOSE", win)
+                win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
+        elif event == "KeyPress" and event["XK_F5"]:
+            win = self.get_active_window()
+            if win and win != self.display.root:
+                print("SENDING SLEEP", win)
+                win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:

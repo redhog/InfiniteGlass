@@ -9,25 +9,33 @@ fi
   
 . ./build/env/bin/activate
 
-glass-input &
-glass-widgets &
-glass-animator &
-glass-wintest &
+session_content() {
+    
+  glass-input &
+  glass-widgets &
+  glass-animator &
+  glass-wintest &
 
-if ! [ "$GLASS_NOGHOSTS" ]; then
-  glass-ghosts &
-fi
-
-if [ "$GLASS_DEBUG" = "valgrind" ]; then
-  echo "Debugging using Valgrind..."
-  valgrind --vgdb=yes ./build/glass-renderer &
-else
-  if [ "$GLASS_DEBUG" = "gdb" ]; then
-    echo "Debugging using GDB..."
-    gdbserver :2048 ./build/glass-renderer &
+  sleep 5
+  
+  if [ "$GLASS_DEBUG" = "valgrind" ]; then
+    echo "Debugging using Valgrind..."
+    valgrind --vgdb=yes ./build/glass-renderer &
   else
-    echo "Starting renderer without debugger"
-    ./build/glass-renderer &
+    if [ "$GLASS_DEBUG" = "gdb" ]; then
+      echo "Debugging using GDB..."
+      gdbserver :2048 ./build/glass-renderer &
+    else
+      echo "Starting renderer without debugger"
+      ./build/glass-renderer &
+    fi
   fi
+  xterm
+  exit 0
+}
+
+if [ "$GLASS_NOGHOSTS" ]; then
+  session_content
+else
+  glass-ghosts | { read SESSION_MANAGER; export SESSION_MANAGER; session_content; }
 fi
-xterm
