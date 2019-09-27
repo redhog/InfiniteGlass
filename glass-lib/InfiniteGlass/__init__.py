@@ -16,6 +16,7 @@ from . import window
 from . import eventmask
 from .keymap import *
 from .valueencoding import *
+from .debug import *
 
 from Xlib.display import Display
 
