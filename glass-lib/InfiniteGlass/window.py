@@ -13,6 +13,7 @@ import time
 import math
 from . import eventmask
 from . import valueencoding
+from . import framing
 
 def window_setitem(self, key, value):
     key = self.display.get_atom(key)
@@ -108,3 +109,5 @@ def window_send(self, window, client_type, *arg, **kw):
         data = (format, data))
     self.send_event(event, **kw)
 Xlib.xobject.drawable.Window.send = window_send
+
+Xlib.xobject.drawable.Window.find_client_window = framing.find_client_window
