@@ -184,8 +184,8 @@ void view_load_size(View *view) {
   XGetWindowProperty(display, root, view->attr_size, 0, sizeof(long)*2, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
-    view->width = prop_return[0];
-    view->height = prop_return[1];
+    view->width = ((long *) prop_return)[0];
+    view->height = ((long *) prop_return)[1];
   } else {
     view->width = overlay_attr.width;
     view->height = overlay_attr.height;
@@ -288,4 +288,16 @@ View *view_find(List *views, Atom name) {
     }
   }
   return NULL;
+}
+
+void view_print(View *v) {
+  printf("%s: layer=%s screen=%f,%f,%f,%f size=%d,%d\n",
+         XGetAtomName(display, v->name),
+         XGetAtomName(display, v->layer),
+         v->screen[0],
+         v->screen[1],
+         v->screen[2],
+         v->screen[3],
+         v->width,
+         v->height);
 }

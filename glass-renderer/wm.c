@@ -102,7 +102,6 @@ int main() {
   
   fprintf(stderr, "Initialized X and GL.\n");
 
-
   while (!(views = view_load_all())) sleep(1);
 
   motion_notification_window = XCreateSimpleWindow(display, root, 0, 0, 1, 1, 0, 0, 0);
@@ -328,6 +327,13 @@ int main() {
         fprintf(stderr, "Ignored event\n"); fflush(stderr);
       }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
+      printf("DEBUG LIST VIEWS\n");
+      for (size_t idx = 0; idx < views->count; idx++) {
+        View *view = (View *) views->entries[idx];
+        view_print(view);
+      }
+      
+      printf("DEBUG LIST VIEWS END\n");
       printf("DEBUG LIST ITEMS\n");
       for (size_t idx = 0; idx < items_all->count; idx++) {
         Item *item = (Item *) items_all->entries[idx];
