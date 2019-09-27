@@ -50,6 +50,6 @@ def main(*arg, **kw):
             coords = [struct.unpack("<" + "f", struct.pack("<L", event.data[1][i]))
                       for i in range(4)]
 
-            print("MOTION", win, coords)
+            InfiniteGlass.DEBUG("motion", "MOTION %s %s\n" % (win, coords))
 
-        print("Widgets started")
+        InfiniteGlass.DEBUG("init", "Widgets started\n")
