@@ -4,13 +4,13 @@ import pkg_resources
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
-        display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
         display.root["IG_VIEW_MENU_LAYER"]="IG_LAYER_MENU"
         display.root["IG_VIEW_MENU_VIEW"]=[0.0, 0.0, 1.0, 0.0]
         display.root["IG_VIEW_OVERLAY_LAYER"]="IG_LAYER_OVERLAY"
         display.root["IG_VIEW_OVERLAY_VIEW"]=[0.0, 0.0, 1.0, 0.0]
         display.root["IG_VIEW_DESKTOP_LAYER"]="IG_LAYER_DESKTOP"
         display.root["IG_VIEW_DESKTOP_VIEW"]=[0.0, 0.0, 1.0, 0.0]
+        display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
 
         for idx, (icon, zoom) in enumerate((("search-plus", 0.9090909090909091),
                                             ("search-minus", 1.1),
