@@ -4,8 +4,6 @@ import select
 import array
 import traceback
 
-debug_aninmation = False
-
 animations = []
 
 def animate(display):
@@ -34,7 +32,7 @@ def animate_property(display, window, atom, timeframe):
     start = time.time()
     tick = [0]
 
-    if debug_aninmation: print("ANIMATE %s.%s=%s...%s / %ss" % (window.__window__(), atom, src, dst, timeframe))
+    InfiniteGlass.DEBUG("begin", "ANIMATE %s.%s=%s...%s / %ss\n" % (window.__window__(), atom, src, dst, timeframe))
 
     def animationfn():
         while True:
@@ -44,14 +42,13 @@ def animate_property(display, window, atom, timeframe):
             if progress > 1.:
                 window[atom] = dst
                 animations.remove(animation)
-                if debug_aninmation: print("SET FINAL %s.%s=%s" % (window.__window__(), atom, dst))
+                InfiniteGlass.DEBUG("final", "SET FINAL %s.%s=%s\n" % (window.__window__(), atom, dst))
             else:
                 res = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
                 if isint:
                     res = [int(item) for item in res]
                 window[atom] = res
-                if debug_aninmation and tick[0] % 100 == 0:
-                    print("SET %s.%s=%s" % (window.__window__(), atom, [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
+                InfiniteGlass.DEBUG("transition", "SET %s.%s=%s\n" % (window.__window__(), atom, [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
             display.flush()
             display.sync()
             yield
@@ -67,7 +64,7 @@ def animate_geometry(display, window, timeframe):
     start = time.time()
     tick = [0]
 
-    print("ANIMATE [%s]=%s...%s / %ss" % (window.__window__(), src, dst, timeframe))
+    InfiniteGlass.DEBUG("begin", "ANIMATE [%s]=%s...%s / %ss\n" % (window.__window__(), src, dst, timeframe))
 
     def animationfn():
         while True:
@@ -77,11 +74,12 @@ def animate_geometry(display, window, timeframe):
             if progress > 1.:
                 current_values = dst
                 animations.remove(animation)
-                print("SET FINAL [%s]=%s" % (window.__window__(), dst))
+                InfiniteGlass.DEBUG("final", "SET FINAL [%s]=%s\n" % (window.__window__(), dst))
             else:
                 current_values = [int(progress * dstval + (1.-progress) * srcval) for srcval, dstval in values]
                 if tick[0] % 100 == 0:
-                    print("SET [%s]=%s" % (window.__window__(), [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
+                    InfiniteGlass.DEBUG(
+                        "transition", "SET [%s]=%s\n" % (window.__window__(), [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
             window.configure(x=current_values[0], y=current_values[1], width=current_values[2], height=current_values[3])
             display.flush()
             display.sync()
@@ -107,4 +105,4 @@ def main(*arg, **kw):
             else:
                 animate_property(display, window, atom, timeframe)
 
-        print("Animator started")
+        InfiniteGlass.DEBUG("init", "Animator started\n")
