@@ -17,8 +17,6 @@
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
-static Bool debug_positions = False;
-
 Window motion_notification_window;
 List *views;
 GLuint picking_fb;
@@ -328,8 +326,10 @@ int main() {
         }
       }
       if (!handled) {
-        print_xevent(display, &e);
-        DEBUG("event.debug", "Ignored event\n");
+        if (DEBUG_ENABLED("event.other")) {
+          DEBUG("event.other", "Ignored event ");
+          print_xevent(display, &e);
+        }
       }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
       printf("DEBUG LIST VIEWS\n");

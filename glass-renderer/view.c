@@ -3,10 +3,8 @@
 #include "error.h"
 #include "list.h"
 #include "item_window.h"
+#include "debug.h"
 #include <limits.h>
-
-Bool debugpicks = False;
-Bool debuglayers = True;
 
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
@@ -112,9 +110,7 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   memset(data, 0, sizeof(data));
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   gl_check_error("pick2");
-  if (debugpicks) {
-    fprintf(stderr, "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
-  }
+  DEBUG("pick", "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   *winx = 0;
   *winy = 0;
   *returnitem = NULL;
@@ -125,13 +121,11 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
       *winy = (int) (data[1] * (*returnitem)->height);
     }
   }
-  if (debugpicks) {
-    if (*returnitem) {
-      fprintf(stderr, "  -> %d,%d,%d\n", (*returnitem)->id, *winx, *winy);
-    } else {
-      fprintf(stderr, "  -> NULL\n");
-    }
- }
+  if (*returnitem) {
+    DEBUG("pick", "  -> %d,%d,%d\n", (*returnitem)->id, *winx, *winy);
+  } else {
+    DEBUG("pick", "  -> NULL\n");
+  }
 }
 
 void view_load_layer(View *view) {
@@ -240,15 +234,17 @@ List *view_load_all(void) {
   }
   XFree(prop_return);
 
-  if (debuglayers) {
+  if (DEBUG_ENABLED("layers")) {
    for (size_t idx = 0; idx < res->count; idx++) {
      View *v = (View *) res->entries[idx];
-     printf("VIEW: layer=%s screen=%f,%f,%f,%f\n",
-            XGetAtomName(display, v->layer),
-            v->screen[0],
-            v->screen[1],
-            v->screen[2],
-            v->screen[3]);
+     
+     DEBUG("layers",
+           "VIEW: layer=%s screen=%f,%f,%f,%f\n",
+           XGetAtomName(display, v->layer),
+           v->screen[0],
+           v->screen[1],
+           v->screen[2],
+           v->screen[3]);
     }
   }
   

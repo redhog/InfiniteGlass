@@ -5,6 +5,7 @@
 #include "item_window_svg.h"
 #include "xapi.h"
 #include "wm.h"
+#include "debug.h"
 #include <X11/Xatom.h>
 
 void item_type_window_update_space_pos_from_window(ItemWindow *item) {
@@ -15,7 +16,7 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   item->y                   = attr.y;
   int width                 = attr.width;
   int height                = attr.height;
-  // fprintf(stderr, "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, x, y, width, height);
+  DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
   item->base.width = width;
   item->base.height = height;
@@ -155,7 +156,7 @@ Item *item_get_from_window(Window window, int create) {
   }
   if (!create) return NULL;
   
-  fprintf(stderr, "Adding window %ld\n", window);
+  DEBUG("window.add", "Adding window %ld\n", window);
 
   Atom type_return;
   int format_return;

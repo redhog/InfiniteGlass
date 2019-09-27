@@ -4,6 +4,7 @@
 #include <string.h>
 #include "shader.h"
 #include "glapi.h"
+#include "debug.h"
 
 char *filetobuf(char *filename) {
   char *buffer = 0;
@@ -54,7 +55,7 @@ int checkShaderError(char *name, char *src, GLuint shader) {
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
-  fprintf(stderr, "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
+  DEBUG("shader", "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
   gl_check_error(name);
   return 0;
 }
@@ -68,7 +69,7 @@ int checkProgramError(GLuint program) {
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetProgramInfoLog(program, len, &len, log);
-  fprintf(stderr, "Program linkage failed: %s [%d]\n", log, len);
+  DEBUG("shader", "Program linkage failed: %s [%d]\n", log, len);
   gl_check_error("checkProgramError");
   return 0;
 }

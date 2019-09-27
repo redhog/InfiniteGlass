@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "error.h"
+#include "debug.h"
 #include <X11/extensions/XInput2.h>
 
 t_glx_bind glXBindTexImageEXT = 0;
@@ -83,7 +84,7 @@ int xinit() {
 
   extensions = glXQueryExtensionsString(display, 0); fflush(stderr);
 
-  printf("Extensions: %s\n", extensions);
+  DEBUG("init", "Extensions: %s\n", extensions);
   if(! strstr(extensions, "GLX_EXT_texture_from_pixmap")) {
     fprintf(stderr, "GLX_EXT_texture_from_pixmap not supported!\n");
     return 0;
@@ -121,6 +122,7 @@ int xinit() {
     return 0;
   } else if (xiret != Success) {
     fprintf(stderr, "Internal Error! This is a bug in Xlib.\n");
+    return 0;
   }
   
 
@@ -139,7 +141,7 @@ int xinit() {
   
   XSync(display, False);
 
-  fprintf(stderr, "root=%ld, overlay=%ld\n", root, overlay);
+  DEBUG("init", "root=%ld, overlay=%ld\n", root, overlay);
 
   return 1;
 }

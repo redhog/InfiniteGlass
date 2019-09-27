@@ -4,6 +4,7 @@
 #include "glapi.h"
 #include "xapi.h"
 #include "wm.h"
+#include "debug.h"
 #include <librsvg/rsvg.h>
 
 void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
@@ -57,7 +58,7 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
 
   RsvgHandle *rsvg = rsvg_handle_new_from_data((unsigned char *) item->source, strlen(item->source), &error);
   if (!rsvg) {
-    printf("Unable to load svg: %s\n",  error->message);
+    DEBUG("window.svg.error", "Unable to load svg: %s\n",  error->message);
     fflush(stdout);
   }
   rsvg_handle_get_dimensions(rsvg, &dimension);
@@ -73,17 +74,13 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   
   cairo_t *cairo_ctx = cairo_create(item->drawing.surface);
 
-  /*
-  printf("RENDER %d,%d[%d,%d]/[%d,%d] = [%f,%f]\n",
-         (int) (-item->drawing.x * item->drawing.itempixelwidth),
-         (int) (-item->drawing.y * item->drawing.itempixelheight),
-         item->drawing.pixelwidth,
-         item->drawing.pixelheight,
-         item->drawing.itempixelwidth,
-         item->drawing.itempixelheight,
-         (float) item->drawing.itempixelwidth / (float) dimension.width,
-         (float) item->drawing.itempixelheight / (float) dimension.height);
-  */
+  DEBUG("window.svg", "RENDER %d,%d[%d,%d] = [%d,%d]\n",
+        -item->drawing.x,
+        -item->drawing.y,
+        dimension.width,
+        dimension.height,
+        item->drawing.itemwidth,
+        item->drawing.itemheight);
   
   cairo_translate(cairo_ctx,
                   -item->drawing.x,
@@ -136,9 +133,8 @@ void item_type_window_svg_draw(View *view, Item *item) {
                         (float) item_window_svg->drawing.width / (float) item_window_svg->drawing.itemwidth,
                         (float) item_window_svg->drawing.height / (float) item_window_svg->drawing.itemheight};
   
-//  float transform[4] = {0., 0., 1., 1.};
-  /*
-  printf("DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
+  DEBUG("window.svg.draw",
+         "DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
          item->coords[0],
          item->coords[1],
          item->coords[2],
@@ -147,7 +143,6 @@ void item_type_window_svg_draw(View *view, Item *item) {
          transform[1],
          transform[2],
          transform[3]);
-  */
   
   glUniform4fv(shader->transform_attr, 1, transform);
   

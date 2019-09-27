@@ -1,5 +1,6 @@
 #include "glapi.h"
 #include "xapi.h"
+#include "debug.h"
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB       0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB       0x2092
@@ -47,7 +48,7 @@ int glinit(Window window) {
     fprintf(stderr, "GLEW: Unable to initialize: %s\n", glewGetErrorString(err));
     return 0;
   }
-  fprintf(stdout, "GLEW: %s\n", glewGetString(GLEW_VERSION));
+  DEBUG("init.glew", "GLEW: %s\n", glewGetString(GLEW_VERSION));
   
   const GLubyte* vendor   = glGetString(GL_VENDOR);
   const GLubyte* renderer = glGetString(GL_RENDERER);
@@ -60,6 +61,6 @@ int glinit(Window window) {
   
   glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
 
-  printf("OpenGL: %s:%s(%s)\nGLSL: %s\n", vendor, renderer, version, glsl_ver);
+  DEBUG("init.opengl", "OpenGL: %s:%s(%s)\nGLSL: %s\n", vendor, renderer, version, glsl_ver);
   return 1;
 }

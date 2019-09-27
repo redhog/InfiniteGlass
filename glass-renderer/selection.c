@@ -1,6 +1,7 @@
 #include "xapi.h"
 #include "event.h"
 #include "selection.h"
+#include "debug.h"
 
 
 int selection_get_params(Selection *selection, XEvent *event, long offset, long length,
@@ -102,7 +103,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   XEvent timestamp_event;
   XSelectInput(display, selection->owner, PropertyChangeMask);
   XChangeProperty(display, selection->owner, selection->name, XA_STRING, 8, PropModeAppend, (void *) &dummy, 0);
-  printf("Waiting for timestamp\n");
+  DEBUG("selection.create", "Waiting for timestamp\n");
   XWindowEvent(display, selection->owner, PropertyChangeMask, &timestamp_event);
 
   XSetSelectionOwner(display, selection->name, selection->owner, timestamp_event.xproperty.time);
@@ -134,7 +135,7 @@ Selection *manager_selection_create(Atom name, SelectionHandler *handler, Select
     XEvent destroy_event;
     while (1) {
       // FIXME: Timeout for this and use XKillClient if it times out...
-      printf("Waiting for existing window to destroy\n");
+      DEBUG("selection.create.manager", "Waiting for existing window to destroy\n");
       XWindowEvent(display, existing, StructureNotifyMask, &destroy_event);
       if (destroy_event.type == DestroyNotify) break;
     }

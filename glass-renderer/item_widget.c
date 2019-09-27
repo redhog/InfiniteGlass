@@ -4,6 +4,7 @@
 #include "glapi.h"
 #include "xapi.h"
 #include "wm.h"
+#include "debug.h"
 #include <librsvg/rsvg.h>
 
 void item_type_widget_update_tile(ItemWidget *item, ItemWidgetTile *tile) {
@@ -28,20 +29,14 @@ void item_type_widget_update_tile(ItemWidget *item, ItemWidgetTile *tile) {
   
   cairo_t *cairo_ctx = cairo_create(tile->surface);
 
-  /*
-  printf("RENDER %d,%d[%d,%d]/[%d,%d] = [%f,%f]\n",
-         (int) (-tile->x * tile->itempixelwidth),
-         (int) (-tile->y * tile->itempixelheight),
-         tile->pixelwidth,
-         tile->pixelheight,
-         tile->itempixelwidth,
-         tile->itempixelheight,
-         (float) tile->itempixelwidth / (float) dimension.width,
-         (float) tile->itempixelheight / (float) dimension.height);
-  */
-
-
-  // printf("YYYYYYYYYYYYYYYYYYYYYY %f / %f\n", 1. / default_view.screen[2], (float) tile->itemwidth / (float) dimension.width);
+  DEBUG("widget.render",
+        "RENDER %d,%d[%d,%d]/ = [%d,%d]\n",
+        -tile->x,
+        -tile->y,
+        dimension.width,
+        dimension.height,
+        tile->itemwidth, 
+        tile->itemheight); 
   
   cairo_translate(cairo_ctx,
                   -tile->x,
@@ -49,16 +44,6 @@ void item_type_widget_update_tile(ItemWidget *item, ItemWidgetTile *tile) {
   cairo_scale(cairo_ctx,
               (float) tile->itemwidth / (float) dimension.width,
               (float) tile->itemheight / (float) dimension.height);
-  // printf("XXXXXXXXXXXXXX %f, %f\n", tile->x, tile->y);
-
-  /*
-  cairo_set_source_rgb(cairo_ctx, 0., 0., .5);
-  cairo_rectangle(cairo_ctx, tile->x, tile->y, tile->width, tile->height);
-  cairo_fill(cairo_ctx);
-  cairo_set_source_rgb(cairo_ctx, .5, .5, 1.);
-  cairo_rectangle(cairo_ctx, tile->x+40, tile->y+40, tile->width-80, tile->height-80);
-  cairo_fill(cairo_ctx);
-  */
   
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
@@ -164,9 +149,7 @@ void item_type_widget_draw(View *view, Item *item) {
                         (float) tile->width / (float) tile->itemwidth,
                         (float) tile->height / (float) tile->itemheight};
   
-//  float transform[4] = {0., 0., 1., 1.};
-  /*
-  printf("DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
+  DEBUG("widget.draw", "DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
          item->coords[0],
          item->coords[1],
          item->coords[2],
@@ -175,7 +158,6 @@ void item_type_widget_draw(View *view, Item *item) {
          transform[1],
          transform[2],
          transform[3]);
-  */
   
   glUniform4fv(shader->transform_attr, 1, transform);
   

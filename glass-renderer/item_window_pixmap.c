@@ -3,6 +3,7 @@
 #include "item_window_shader.h"
 #include "xapi.h"
 #include "wm.h"
+#include "debug.h"
 
 void item_type_window_pixmap_constructor(Item *item, void *args) {
   ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
@@ -26,7 +27,7 @@ void item_type_window_pixmap_constructor(Item *item, void *args) {
     XFree(wm_hints);
   }
   if (!x_catch(&error)) {
-    printf("Window does not have any WM_HINTS: %lu", window_item->window);
+    DEBUG("window.pixmap.error", "Window does not have any WM_HINTS: %lu", window_item->window);
   }
 }
 
@@ -39,12 +40,6 @@ void item_type_window_pixmap_destructor(Item *item) {
 }
 
 void item_type_window_pixmap_draw(View *view, Item *item) {
-  /*
-  printf("XXXXXXXXXXXXXXXXX\n");
-  item_type_base_print(item);
-  printf("\n\n");
-  */
- 
   if (item->is_mapped) {
     ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
 
@@ -105,11 +100,11 @@ void item_type_window_pixmap_update(Item *item) {
   unsigned int border_width_return;
   unsigned int depth_return;
   
-  XGetGeometry(display, pixmap_item->window_pixmap, &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
-  /*
-  printf("XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
+  int res = XGetGeometry(display, pixmap_item->window_pixmap,
+                         &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
+  DEBUG("window.update",
+        "XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
          pixmap_item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);
-  */
   
   texture_from_pixmap(&pixmap_item->window_texture, pixmap_item->window_pixmap);
 
