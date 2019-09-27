@@ -91,11 +91,9 @@ def animate_geometry(display, window, timeframe):
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
-        next_event = display.next_event
-        def new_next_event():
+        @display.mainloop.add_interval(0.1)
+        def animator(timestamp, idx):
             animate(display)
-            return next_event()
-        display.next_event = new_next_event
 
         w = display.root.create_window(map=False)
         display.root["IG_ANIMATE"] = w
@@ -109,4 +107,4 @@ def main(*arg, **kw):
             else:
                 animate_property(display, window, atom, timeframe)
 
-        print("ANIMATOR STARTED")
+        print("Animator started")
