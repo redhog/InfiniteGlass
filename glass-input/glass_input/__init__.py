@@ -9,29 +9,27 @@ debug_property_notify = False
 debug_modes = False
 
 def push(display, Mode, **kw):
-    if debug_modes: print("PUSH", Mode)
+    InfiniteGlass.DEBUG("modes.push", "PUSH %s\n" % Mode)
     if not hasattr(display, "input_stack"):
         display.input_stack = []
     display.input_stack.append(Mode(display=display, **kw))
 
 def pop(display):
     res = display.input_stack.pop()
-    if debug_modes: print("POP", res)
+    InfiniteGlass.DEBUG("modes.pop", "POP %s\n" % res)
     res.exit()
     return res
 
 def handle_event(display, event):
     is_propnot = not (event == "PropertyNotify" and event.window == display.notify_motion_window)
-    if debug_property_notify and (is_propnot or debug_property_notify):
-        print("    HANDLE", event)
+    cat = "event.prop" if is_propnot else "event"
+    InfiniteGlass.DEBUG(cat, "HANDLE %s\n" % event)
     for i in range(len(display.input_stack)-1, -1, -1):
         mode = display.input_stack[i]
         if mode.handle(event):
-            if debug_property_notify and (is_propnot or debug_property_notify):
-                print("        BY", i, mode)
+            InfiniteGlass.DEBUG(cat, "        BY %s %s\n" % (i, mode))
             return True
-    if debug_property_notify and (is_propnot or debug_property_notify):
-        print("        UNHANDLED")    
+    InfiniteGlass.DEBUG(cat, "        UNHANDLED\n")
     return False
 
 def view_to_space(screen, size, screenx, screeny):
@@ -106,26 +104,26 @@ class GrabbedMode(Mode):
                 self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
         elif event == "KeyPress" and event["XK_F1"]:
-            print("SENDING DEBUG")
+            InfiniteGlass.DEBUG("debug", "SENDING DEBUG\n")
             self.display.root.send(
                 self.display.root, "IG_DEBUG",
                 event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
         elif event == "KeyPress" and event["XK_F4"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                print("SENDING CLOSE", win)
+                InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
                 win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
         elif event == "KeyPress" and event["XK_F5"]:
             win = self.get_active_window()
             if win and win != self.display.root:
-                print("SENDING SLEEP", win)
+                InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
                 win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
         elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
             win = self.get_active_window()
             if win and win != self.display.root:
                 # zoom_screen_to_window_and_window_to_screen
 
-                print("zoom_screen_to_window_and_window_to_screen")
+                InfiniteGlass.DEBUG("zoom", "zoom_screen_to_window_and_window_to_screen\n")
                 size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
                 coords = list(win["IG_COORDS"])
                 screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
@@ -137,7 +135,7 @@ class GrabbedMode(Mode):
                 screen[0] = coords[0]
                 screen[1] = coords[1] - screen[3]
 
-                print("    screen=%s geom=%s" % (screen, size))
+                InfiniteGlass.DEBUG("zoom", "    screen=%s geom=%s\n" % (screen, size))
                 
                 win["IG_COORDS_ANIMATE"] = coords
                 win["IG_SIZE_ANIMATE"] = size
@@ -148,7 +146,7 @@ class GrabbedMode(Mode):
                 self.display.flush()
                 self.display.sync()
         elif event == "KeyPress" and event["XK_Home"]:
-            print("ZOOM HOME")
+            InfiniteGlass.DEBUG("zoom", "ZOOM HOME\n")
             old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
@@ -189,7 +187,7 @@ class GrabbedMode(Mode):
                 win = self.get_active_window()
             else:
                 win = self.display.get_input_focus().focus
-            print("BUTTON PRESS", win)
+            InfiniteGlass.DEBUG("button", "BUTTON PRESS %s\n" % win)
             if win and win != self.display.root:
                 push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
                 handle_event(self.display, event)
@@ -372,4 +370,4 @@ def main(*arg, **kw):
 
         push(display, BaseMode)
 
-        print("Input handler started")
+        InfiniteGlass.DEBUG("init", "Input handler started\n")
