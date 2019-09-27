@@ -47,6 +47,13 @@ def window_getitem(self, name):
     return res
 Xlib.xobject.drawable.Window.__getitem__ = window_getitem
 
+def window_get(self, name, default=None):
+    try:
+        return self[name]
+    except:
+        return default
+Xlib.xobject.drawable.Window.get = window_get
+
 def window_items(self):
     return [(key, self[key]) for key in self.keys()]
 Xlib.xobject.drawable.Window.items = window_items
