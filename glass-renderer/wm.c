@@ -198,16 +198,22 @@ int main() {
     } else if (e.type == ConfigureRequest) {
       XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
       ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
-      if (!item) continue;
-      item->base.coords[2] *= (float) event->width / (float) item->base.width;
-      item->base.coords[3] *= (float) event->height / (float) item->base.height;
-      item->base.width = event->width;
-      item->base.height = event->height;
-      item->width_window = event->width;
-      item->height_window = event->height;
-      item->base.type->update((Item *) item);
-      gl_check_error("item_update_pixmap");
-      draw();      
+      if (!item) {
+        XWindowChanges values;
+        values.width = event->width;
+        values.height = event->height;
+        XConfigureWindow(display, event->window, CWWidth | CWHeight, &values);
+      } else {
+        item->base.coords[2] *= (float) event->width / (float) item->base.width;
+        item->base.coords[3] *= (float) event->height / (float) item->base.height;
+        item->base.width = event->width;
+        item->base.height = event->height;
+        item->width_window = event->width;
+        item->height_window = event->height;
+        item->base.type->update((Item *) item);
+        gl_check_error("item_update_pixmap");
+        draw();
+      }
     } else if (e.type == ConfigureNotify) {
       fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
