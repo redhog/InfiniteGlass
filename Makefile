@@ -1,7 +1,7 @@
 all: run
 
 XSERVER=Xephyr
-GLASS_DEBUG=gdb
+GLASS_DEBUGGER=gdb
 
 ifeq ($(XSERVEROPTS),)
   ifeq ($(XSERVER),Xephyr)
@@ -39,7 +39,7 @@ $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
 run: $(BINARIES) $(PYTHONAPPS)
-	GLASS_DEBUG="$(GLASS_DEBUG)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" ./xstartup.sh
+	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" ./xstartup.sh
 
 install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer

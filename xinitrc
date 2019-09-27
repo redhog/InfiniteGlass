@@ -16,11 +16,11 @@ session_content() {
   glass-animator &
   glass-wintest &
   
-  if [ "$GLASS_DEBUG" = "valgrind" ]; then
+  if [ "$GLASS_DEBUGGER" = "valgrind" ]; then
     echo "Debugging using Valgrind..."
     valgrind --vgdb=yes ./build/glass-renderer &
   else
-    if [ "$GLASS_DEBUG" = "gdb" ]; then
+    if [ "$GLASS_DEBUGGER" = "gdb" ]; then
       echo "Debugging using GDB..."
       gdbserver :2048 ./build/glass-renderer &
     else

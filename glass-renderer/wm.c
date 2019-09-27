@@ -13,6 +13,7 @@
 #include "event.h"
 #include "selection.h"
 #include "list.h"
+#include "debug.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
@@ -100,7 +101,7 @@ int main() {
                            &selection_sn_clear,
                            NULL, True, 0, 0);
   
-  fprintf(stderr, "Initialized X and GL.\n");
+  DEBUG("start", "Initialized X and GL.\n");
 
   while (!(views = view_load_all())) sleep(1);
 
@@ -116,6 +117,8 @@ int main() {
 
   gl_check_error("start2");
 
+  DEBUG("start", "Renderer started.\n");
+  
   for (;;) {
     XEvent e;
     XGenericEventCookie *cookie = &e.xcookie;
@@ -156,13 +159,9 @@ int main() {
               window_item->y = values.y;
             }
 
-            if (debug_positions) {
-              printf("Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy); fflush(stdout);
-            }
+            DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy);
           } else {
-            if (debug_positions) {
-              printf("Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root); fflush(stdout);
-            }
+            DEBUG("position", "Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root);
           }
 
           long coords[views->count * 2];
@@ -174,18 +173,18 @@ int main() {
           XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) coords, 2*views->count);
           XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
         } else {
-          printf("Unknown XGenericEventCookie\n");
+          DEBUG("event", "Unknown XGenericEventCookie\n");
         }
         XFreeEventData(display, cookie);
       } else {
-        printf("Unknown GenericEvent without EventData\n");
+        DEBUG("event", "Unknown GenericEvent without EventData\n");
       }
     } else if (event_handle(&e)) {
      // Already handled
     } else if (e.type == damage_event + XDamageNotify) {
       XErrorEvent error;
       XDamageNotifyEvent *event = (XDamageNotifyEvent*) &e;
-      //fprintf(stderr, "Received XDamageNotify: %d\n", event->drawable);
+      DEBUG("event.damage", "Received XDamageNotify: %d\n", event->drawable);
 
       // Subtract all the damage, repairing the window.
       draw();
@@ -215,7 +214,7 @@ int main() {
         draw();
       }
     } else if (e.type == ConfigureNotify) {
-      fprintf(stderr, "Received ConfigureNotify for %ld\n", e.xconfigure.window);
+      DEBUG("event.configure", "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
       ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
       if (!item) continue;
@@ -247,7 +246,7 @@ int main() {
         item->base.height = ((long *) prop_return)[1];
         item->width_property = item->base.width;
         item->height_property = item->base.height;
-        //printf("SIZE CHANGED TO %i,%i\n", item->width, item->height);
+        DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->base.width, item->base.height);
         item->base.type->update((Item *) item);
         draw();
       }
@@ -286,7 +285,7 @@ int main() {
       draw();
     } else if (e.type == MapNotify) {
       if (e.xmap.window != overlay) {
-        fprintf(stderr, "MapNotify %ld\n", e.xmap.window);
+        DEBUG("event.map", "MapNotify %ld\n", e.xmap.window);
         Item *item = item_get_from_window(e.xmap.window, True);
         item->is_mapped = True;
         item->type->update(item);
@@ -330,7 +329,7 @@ int main() {
       }
       if (!handled) {
         print_xevent(display, &e);
-        fprintf(stderr, "Ignored event\n"); fflush(stderr);
+        DEBUG("event.debug", "Ignored event\n");
       }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
       printf("DEBUG LIST VIEWS\n");
@@ -347,11 +346,13 @@ int main() {
       }
       printf("DEBUG LIST ITEMS END\n");
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_EXIT) {
-      printf("Exiting by request");
+      DEBUG("exit", "Exiting by request");
       exit(1);
     } else {
-//      print_xevent(display, &e);
-//      fprintf(stderr, "Ignored event\n"); fflush(stderr);
+      if (DEBUG_ENABLED("event.other")) {
+        DEBUG("event.other", "Ignored event ");
+        print_xevent(display, &e);
+      }
     }
   }
   return 0;
