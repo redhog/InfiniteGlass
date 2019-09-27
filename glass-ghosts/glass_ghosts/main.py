@@ -10,8 +10,7 @@ def main2():
             manager = glass_ghosts.manager.GhostManager(display)
             sys.stdout.write("%s\n" % manager.session.listen_address())
             sys.stdout.flush()
-            sys.stderr.write("Session manager listening to %s\n" % manager.session.listen_address())
-            sys.stderr.flush()
+            InfiniteGlass.DEBUG("init", "Session manager listening to %s\n" % manager.session.listen_address())
     except Exception as e:
         print(e)
         traceback.print_exc()

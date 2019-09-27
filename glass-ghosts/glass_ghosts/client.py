@@ -67,8 +67,7 @@ class Client(object):
 
     def restart(self):
         assert "RestartCommand" in self.properties, "Session client did not provide a restart command"
-        sys.stderr.write("Restarting %s by running %s\n" % (self.client_id, " ".join(self.properties["RestartCommand"][1])))
-        sys.stderr.flush()
+        InfiniteGlass.DEBUG("restart", "Restarting %s by running %s\n" % (self.client_id, " ".join(self.properties["RestartCommand"][1])))
 
         env = dict(os.environ)
         env["SESSION_MANAGER"] = self.manager.session.listen_address()

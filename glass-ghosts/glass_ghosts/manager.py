@@ -48,13 +48,11 @@ class GhostManager(object):
         
         display.mainloop.add_interval(0.5)(self.save_shadows)
 
-        sys.stderr.write("Ghosts handler started\n"); sys.stderr.flush()
-        sys.stderr.flush()
+        InfiniteGlass.DEBUG("init", "Ghosts handler started\n")
 
     def save_shadows(self, current_time, idx):
         if self.changes:
-            #sys.stderr.write("Committing...\n")
-            #sys.stderr.flush()
+            InfiniteGlass.DEBUG("conmmit", "Committing...\n")
             self.dbconn.commit()
             self.changes = False
     

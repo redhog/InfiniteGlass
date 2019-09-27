@@ -21,7 +21,7 @@ class Window(object):
         self.properties = {}
         for name in self.window.keys():
             self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
-        sys.stderr.write("WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
         self.match()
             
         @window.on()
@@ -58,7 +58,7 @@ class Window(object):
                 
         @window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            sys.stderr.write("WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
+            InfiniteGlass.DEBUG("window", "WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             self.destroy()
             
         self.DestroyNotify = DestroyNotify
@@ -99,7 +99,7 @@ class Window(object):
         if "SM_CLIENT_ID" not in self.properties: return
         client_id = self.properties["SM_CLIENT_ID"]
         if client_id not in self.manager.clients: return
-        sys.stderr.write("MATCH CLIENT window=%s client_id=%s\n" % (self.id, client_id))
+        InfiniteGlass.DEBUG("window", "MATCH CLIENT window=%s client_id=%s\n" % (self.id, client_id))
         sys.stderr.flush()
         self.client = self.manager.clients[client_id]
         self.client.add_window(self)

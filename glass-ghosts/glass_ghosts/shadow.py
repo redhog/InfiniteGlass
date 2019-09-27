@@ -20,7 +20,7 @@ class Shadow(object):
         self.window = None
         self.current_key = None
         self.update_key()
-        sys.stderr.write("SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("shadow", "SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
     def key(self):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
@@ -29,7 +29,7 @@ class Shadow(object):
         key = self.key()
 
         if key != self.current_key and key in self.manager.shadows:
-            sys.stderr.write("DUPLICATE SHADOW %s\n" % (self,))
+            InfiniteGlass.DEBUG("shadow", "DUPLICATE SHADOW %s\n" % (self,))
             self.destroy()
             
         if not self.manager.restoring_shadows:
@@ -59,19 +59,19 @@ class Shadow(object):
             return
         if self.current_key is not None:
             del self.manager.shadows[self.current_key]
-            sys.stderr.write("UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("shadow", "UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
         
         self.current_key = key
         self.manager.shadows[self.current_key] = self
             
     def apply(self, window):
-        sys.stderr.write("SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("shadow", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
         for key in self.manager.SET:
             if key in self.properties:
                 window[key] = self.properties[key]
                 
     def activate(self):
-        sys.stderr.write("SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("shadow", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
         self.window = self.manager.display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
         
@@ -94,7 +94,7 @@ class Shadow(object):
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            sys.stderr.write("SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("shadow", "SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
             self.destroy()
             
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
@@ -107,7 +107,7 @@ class Shadow(object):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
                 self.window.destroy()
             else:
-                sys.stderr.write("%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
+                InfiniteGlass.DEBUG("shadow", "%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
         self.WMDelete = ClientMessage
 
         @self.window.on()
@@ -148,7 +148,7 @@ class Shadow(object):
         self.manager.display.flush()
         
     def deactivate(self):
-        sys.stderr.write("SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("shadow", "SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
             self.window.destroy()
             self.manager.display.eventhandlers.remove(self.ButtonPress)
