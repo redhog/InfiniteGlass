@@ -22,6 +22,7 @@ Compile and run with "make"
 
 * [Key bindings](KEYMAP.md)
 * [Protocols](PROTOCOLS.md)
+* [Debugging](DEBUGGING.md)
 * [References](REFERENCES.md)
 
 # License
