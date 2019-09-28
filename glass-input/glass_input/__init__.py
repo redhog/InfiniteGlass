@@ -198,6 +198,20 @@ class GrabbedMode(Mode):
 
     
 class ZoomMode(Mode):
+    def zoom(self, factor, around_aspect = (0.5, 0.5), around_pos = None, view="IG_VIEW_DESKTOP_VIEW"):
+        screen = list(self.display.root[view])
+        if around_pos is None:
+            around_pos = (screen[0] + screen[2] * around_aspect[0],
+                          screen[1] + screen[3] * around_aspect[1])
+        else:
+            around_aspect = ((around_pos[0] - screen[0]) / screen[2],
+                             (around_pos[1] - screen[1]) / screen[3])
+        screen[2] *= factor
+        screen[3] *= factor
+        screen[0] = around_pos[0] - screen[2] * around_aspect[0]
+        screen[1] = around_pos[1] - screen[3] * around_aspect[1]
+        self.display.root[view] = screen
+        
     def handle(self, event):
         if event == "KeyRelease":
             pop(self.display)
@@ -214,25 +228,13 @@ class ZoomMode(Mode):
                  and (event["ShiftMask"])):
             pass
         elif event == "KeyPress" and event["XK_Prior"]:
-            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
-            screen[2] *= 1/1.1
-            screen[3] *= 1/1.1
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
+            self.zoom(1/1.1)
         elif event == "KeyPress" and event["XK_Next"]: # down -> zoom out
-            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
-            screen[2] *= 1.1
-            screen[3] *= 1.1
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
+            self.zoom(1.1)
         elif event == "ButtonRelease" and event[4]: # up -> zoom in
-            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
-            screen[2] *= 1/1.1
-            screen[3] *= 1/1.1
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
+            self.zoom(1/1.1) # We should supply around_pos here...
         elif event == "ButtonRelease" and event[5]: # down -> zoom out
-            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
-            screen[2] *= 1.1
-            screen[3] *= 1.1
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = screen
+            self.zoom(1.1) # We should supply around_pos here...
         return True
 
 class PanMode(Mode):
