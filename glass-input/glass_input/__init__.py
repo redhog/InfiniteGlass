@@ -50,9 +50,18 @@ class Mode(object):
     def exit(self):
         pass
 
+    keymap = {}
+    
     def handle(self, event):
-        pass
+        for key, value in self.keymap.items():
+            if event == key.split(","):
+                getattr(self, value)(event)
+                return True
+        return True
 
+    def pop(self, event):
+        pop(self.display)
+    
     def get_active_window(self):
         try:
             return self.display.notify_motion_window["IG_ACTIVE_WINDOW"]
@@ -72,16 +81,21 @@ class BaseMode(Mode):
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)           
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
 
-    def handle(self, event):
-        if event == "PropertyNotify" and event.window == self.display.notify_motion_window:
+    keymap = {
+        "PropertyNotify": "focus_follows_mouse",
+        "ButtonPress,Mod4Mask": "push_grabbed",
+        "KeyPress,Mod4Mask": "push_grabbed",
+    }
+
+    def focus_follows_mouse(self, event):
+        if event.window == self.display.notify_motion_window:
             win = self.get_active_window()
             if win and win != self.display.root:
                 win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
-        elif (   (event == "ButtonPress" and event["Mod4Mask"])
-              or (event == "KeyPress" and event["Mod4Mask"])):
-            push(self.display, GrabbedMode)
-            handle_event(self.display, event)
-        return True
+
+    def push_grabbed(self, event):
+        push(self.display, GrabbedMode)
+        handle_event(self.display, event)
 
 class GrabbedMode(Mode):
     def __init__(self, **kw):
@@ -125,16 +139,6 @@ class GrabbedMode(Mode):
         "KeyPress,XK_Left": "push_item_pan",
         "KeyPress,XK_Right": "push_item_pan"
     }
-    
-    def handle(self, event):
-        for key, value in self.keymap.items():
-            if event == key.split(","):
-                getattr(self, value)(event)
-                return True
-        return False
-    
-    def pop(self, event):
-        pop(self.display)
 
     def rofi(self, event):
         os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
@@ -227,6 +231,16 @@ class GrabbedMode(Mode):
 
     
 class ZoomMode(Mode):
+    keymap = {
+        "KeyRelease": "pop",
+        "ButtonRelease,4,ShiftMask": "zoom_to_window",
+        "KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
+        "KeyPress,XK_Prior": "zoom_in",
+        "KeyPress,XK_Next": "zoom_out",
+        "ButtonRelease,4": "zoom_in",
+        "ButtonRelease,5": "zoom_out"
+    }
+    
     def zoom(self, factor, around_aspect = (0.5, 0.5), around_pos = None, view="IG_VIEW_DESKTOP_VIEW"):
         screen = list(self.display.root[view])
         if around_pos is None:
@@ -241,30 +255,20 @@ class ZoomMode(Mode):
         screen[1] = around_pos[1] - screen[3] * around_aspect[1]
         self.display.root[view] = screen
         
-    def handle(self, event):
-        if event == "KeyRelease":
-            pop(self.display)
-        elif (   (event == "ButtonRelease" and event[4] and (event["ShiftMask"]))
-                 or (event == "KeyPress" and event["XK_Prior"] and (event["ShiftMask"]))):
-            win = self.get_active_window()
-            old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
-            view = list(win["IG_COORDS"])
-            view[3] = view[2] * old_view[3] / old_view[2]
-            view[1] -= view[3]
-            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
-            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
-        elif (event == "ButtonRelease" and event[5]
-                 and (event["ShiftMask"])):
-            pass
-        elif event == "KeyPress" and event["XK_Prior"]:
-            self.zoom(1/1.1)
-        elif event == "KeyPress" and event["XK_Next"]: # down -> zoom out
-            self.zoom(1.1)
-        elif event == "ButtonRelease" and event[4]: # up -> zoom in
-            self.zoom(1/1.1) # We should supply around_pos here...
-        elif event == "ButtonRelease" and event[5]: # down -> zoom out
-            self.zoom(1.1) # We should supply around_pos here...
-        return True
+    def zoom_to_window(self, event):
+        win = self.get_active_window()
+        old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+        view = list(win["IG_COORDS"])
+        view[3] = view[2] * old_view[3] / old_view[2]
+        view[1] -= view[3]
+        self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+
+    def zoom_in(self, event):
+        self.zoom(1/1.1)
+
+    def zoom_out(self, event):
+        self.zoom(1.1)
 
 class PanMode(Mode):
     def __init__(self, **kw):
@@ -274,72 +278,79 @@ class PanMode(Mode):
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
 
-    def handle(self, event):
-        if event == "KeyRelease" or event == "ButtonRelease":
-            pop(self.display)
-        elif event == "KeyPress":
-            self.x += event["XK_Left"] - event["XK_Right"];
-            self.y += event["XK_Up"] - event["XK_Down"];
-            
-            space_orig = view_to_space(self.orig_view, self.size, 0, 0)
-            space = view_to_space(self.orig_view, self.size, self.x, self.y)
-
-            view = list(self.orig_view)
-            view[0] = self.orig_view[0] - (space[0] - space_orig[0])
-            view[1] = self.orig_view[1] - (space[1] - space_orig[1])
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
-            
-        elif self.first_event == "ButtonPress" and event == "MotionNotify":
-            space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
-            space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
-
-            view = list(self.orig_view)
-            view[0] = self.orig_view[0] - (space[0] - space_orig[0])
-            view[1] = self.orig_view[1] - (space[1] - space_orig[1])
-
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
+    keymap = {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "KeyPress": "pan",
+        "ButtonPress": "pan_mouse",
+        "MotionNotify": "pan_mouse"
+    }
         
-        return True
+    def pan(self, event):
+        self.x += event["XK_Left"] - event["XK_Right"];
+        self.y += event["XK_Up"] - event["XK_Down"];
+
+        space_orig = view_to_space(self.orig_view, self.size, 0, 0)
+        space = view_to_space(self.orig_view, self.size, self.x, self.y)
+
+        view = list(self.orig_view)
+        view[0] = self.orig_view[0] - (space[0] - space_orig[0])
+        view[1] = self.orig_view[1] - (space[1] - space_orig[1])
+        self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
+            
+    def pan_mouse(self, event):
+        space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
+        space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
+
+        view = list(self.orig_view)
+        view[0] = self.orig_view[0] - (space[0] - space_orig[0])
+        view[1] = self.orig_view[1] - (space[1] - space_orig[1])
+
+        self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
 class ItemZoomMode(Mode):
-    def handle(self, event):
-        if event == "KeyRelease":
-            pop(self.display)
-        elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[4])
-              or (event == "KeyPress" and event["ShiftMask"] and event["XK_Prior"])):
-            # zoom_window_to_1_to_1_to_screen
-            size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-            coords = self.window["IG_COORDS"]
-            screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+    keymap = {
+        "KeyRelease": "pop",
+        "ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
+        "KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
+        "ButtonRelease,ShiftMask,5": "zoom_1_1_to_window",
+        "KeyPress,ShiftMask,XK_Next": "zoom_1_1_to_window",
+        "ButtonRelease,4": "zoom_in",
+        "KeyPress,XK_Prior": "zoom_in",
+        "ButtonRelease,5": "zoom_out",
+        "KeyPress,XK_Next": "zoom_out"
+        }
 
-            geom = [int(size[0] * coords[2]/screen[2]),
-                    int(size[1] * coords[3]/screen[3])]
-            
-            self.window["IG_SIZE_ANIMATE"] = geom
-            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.window, "IG_SIZE", .5)
-        elif (   (event == "ButtonRelease" and event["ShiftMask"] and event[5])
-              or (event == "KeyPress" and event["ShiftMask"] and event["XK_Next"])):
-            # zoom_screen_to_1_to_1_to_window
+    def zoom_1_1_to_sreen(self, event):
+        size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+        coords = self.window["IG_COORDS"]
+        screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
 
-            winsize = self.window["IG_SIZE"]
-            size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-            coords = self.window["IG_COORDS"]
-            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+        geom = [int(size[0] * coords[2]/screen[2]),
+                int(size[1] * coords[3]/screen[3])]
 
-            screen[2] = size[0] * coords[2]/winsize[0]
-            screen[3] = size[1] * coords[3]/winsize[1]
-            screen[0] = coords[0] - (screen[2] - coords[2]) / 2.
-            screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
+        self.window["IG_SIZE_ANIMATE"] = geom
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.window, "IG_SIZE", .5)
 
-            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
-            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
-        elif (   (event == "ButtonRelease" and event[4])
-              or (event == "KeyPress" and event["XK_Prior"])):
-            self.window["IG_SIZE"] = [int(item * 1/1.1) for item in self.window["IG_SIZE"]]
-        elif (   (event == "ButtonRelease" and event[5])
-              or (event == "KeyPress" and event["XK_Next"])):
-            self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
-        return True
+    def zoom_1_1_to_window(self, event):
+        winsize = self.window["IG_SIZE"]
+        size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+        coords = self.window["IG_COORDS"]
+        screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+
+        screen[2] = size[0] * coords[2]/winsize[0]
+        screen[3] = size[1] * coords[3]/winsize[1]
+        screen[0] = coords[0] - (screen[2] - coords[2]) / 2.
+        screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
+
+        self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+
+    def zoom_in(self, event):
+        self.window["IG_SIZE"] = [int(item * 1/1.1) for item in self.window["IG_SIZE"]]
+
+    def zoom_out(self, event):
+        self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
     
 class ItemPanMode(Mode):
     def __init__(self, **kw):
@@ -351,32 +362,35 @@ class ItemPanMode(Mode):
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
 
-    def handle(self, event):
-        if event == "KeyRelease" or event == "ButtonRelease":
-            pop(self.display)
-        elif event == "KeyPress":
-            self.x += event["XK_Right"] - event["XK_Left"]
-            self.y += event["XK_Down"] - event["XK_Up"]
+    keymap = {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "KeyPress": "pan",
+        "MotionNotify": "pan_mouse"
+    }
 
-            space_orig = view_to_space(self.orig_view, self.size, 0, 0)
-            space = view_to_space(self.orig_view, self.size, self.x, self.y)
+    def pan(self, event):
+        self.x += event["XK_Right"] - event["XK_Left"]
+        self.y += event["XK_Down"] - event["XK_Up"]
 
-            coords = list(self.orig_coords)
-            coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
-            coords[1] =  self.orig_coords[1] + (space[1] - space_orig[1])
-            
-            self.window["IG_COORDS"] = coords
+        space_orig = view_to_space(self.orig_view, self.size, 0, 0)
+        space = view_to_space(self.orig_view, self.size, self.x, self.y)
 
-        elif event == "MotionNotify":
-            space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
-            space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
-            
-            coords = list(self.orig_coords)
-            coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
-            coords[1] =  self.orig_coords[1] + (space[1] - space_orig[1])
-            
-            self.window["IG_COORDS"] = coords
-        return True
+        coords = list(self.orig_coords)
+        coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
+        coords[1] =  self.orig_coords[1] + (space[1] - space_orig[1])
+
+        self.window["IG_COORDS"] = coords
+
+    def pan_mouse(self, event):
+        space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
+        space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
+
+        coords = list(self.orig_coords)
+        coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
+        coords[1] =  self.orig_coords[1] + (space[1] - space_orig[1])
+
+        self.window["IG_COORDS"] = coords
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
