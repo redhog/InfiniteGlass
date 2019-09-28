@@ -23,7 +23,7 @@ def pop(display):
 
 def handle_event(display, event):
     is_propnot = not (event == "PropertyNotify" and event.window == display.notify_motion_window)
-    cat = "event.prop" if is_propnot else "event"
+    cat = "event" if is_propnot else "event.prop"
     InfiniteGlass.DEBUG(cat, "HANDLE %s\n" % event)
     for i in range(len(display.input_stack)-1, -1, -1):
         mode = display.input_stack[i]
@@ -77,8 +77,10 @@ class BaseMode(Mode):
             win = self.get_active_window()
             if win and win != self.display.root:
                 win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
-        elif event == "KeyPress" and event["XK_Super_L"]:
+        elif (   (event == "ButtonPress" and event["Mod4Mask"])
+              or (event == "KeyPress" and event["Mod4Mask"])):
             push(self.display, GrabbedMode)
+            handle_event(self.display, event)
         return True
 
 class GrabbedMode(Mode):
@@ -93,108 +95,135 @@ class GrabbedMode(Mode):
         self.display.ungrab_pointer(Xlib.X.CurrentTime)
         self.display.ungrab_keyboard(Xlib.X.CurrentTime)
 
+    keymap = {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "KeyPress,XK_space": "rofi",
+        "KeyPress,XK_Escape": "toggle_overlay",
+        "KeyPress,XK_F1": "send_debug",
+        "KeyPress,XK_F4": "send_close",
+        "KeyPress,XK_F5": "send_sleep",
+        "KeyPress,ShiftMask,XK_Home": "zoom_1_1_1",
+        "KeyPress,XK_Home": "zoom_home",
+        "ButtonPress,Mod1Mask,4": "push_item_zoom",
+        "ButtonPress,Mod1Mask,5": "push_item_zoom",
+        "KeyPress,Mod1Mask,XK_Next": "push_item_zoom",
+        "KeyPress,Mod1Mask,XK_Prior": "push_item_zoom",
+        "ButtonPress,4": "push_zoom",
+        "ButtonPress,5": "push_zoom",
+        "KeyPress,XK_Next": "push_zoom",
+        "KeyPress,XK_Prior": "push_zoom",
+        "ButtonPress,2": "push_pan",
+        "ButtonPress,1,ControlMask": "push_pan",
+        "KeyPress,ControlMask,XK_Up": "push_pan",
+        "KeyPress,ControlMask,XK_Down": "push_pan",
+        "KeyPress,ControlMask,XK_Left": "push_pan",
+        "KeyPress,ControlMask,XK_Right": "push_pan",
+        "ButtonPress,1": "push_item_pan",
+        "KeyPress,XK_Up": "push_item_pan",
+        "KeyPress,XK_Down": "push_item_pan",
+        "KeyPress,XK_Left": "push_item_pan",
+        "KeyPress,XK_Right": "push_item_pan"
+    }
+    
     def handle(self, event):
-        if event == "KeyRelease" and event["XK_Super_L"]:
-            # Not Mod4Mask here, as we only want to ungrab when the super key itself is released
-            pop(self.display)
-        elif event == "KeyPress" and event["XK_space"]:
-            os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
-        elif event == "KeyPress" and event["XK_Escape"]:
-            old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
-            if old[0] == 0.:
-                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6 * old[3] / old[2]]
-            else:
-                self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
-            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
-        elif event == "KeyPress" and event["XK_F1"]:
-            InfiniteGlass.DEBUG("debug", "SENDING DEBUG\n")
-            self.display.root.send(
-                self.display.root, "IG_DEBUG",
-                event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
-        elif event == "KeyPress" and event["XK_F4"]:
-            win = self.get_active_window()
-            if win and win != self.display.root:
-                InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
-                win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
-        elif event == "KeyPress" and event["XK_F5"]:
-            win = self.get_active_window()
-            if win and win != self.display.root:
-                InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
-                win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
-        elif event == "KeyPress" and event["ShiftMask"] and event["XK_Home"]:
-            win = self.get_active_window()
-            if win and win != self.display.root:
-                # zoom_screen_to_window_and_window_to_screen
+        for key, value in self.keymap.items():
+            if event == key.split(","):
+                getattr(self, value)(event)
+                return True
+        return False
+    
+    def pop(self, event):
+        pop(self.display)
 
-                InfiniteGlass.DEBUG("zoom", "zoom_screen_to_window_and_window_to_screen\n")
-                size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-                coords = list(win["IG_COORDS"])
-                screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+    def rofi(self, event):
+        os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
 
-                coords[3] = (size[1] * coords[2]) / size[0]
+    def toggle_overlay(self, event):
+        old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
+        if old[0] == 0.:
+            self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6 * old[3] / old[2]]
+        else:
+            self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
 
-                screen[2] = coords[2]
-                screen[3] = coords[3]
-                screen[0] = coords[0]
-                screen[1] = coords[1] - screen[3]
+    def send_debug(self, event):
+        InfiniteGlass.DEBUG("debug", "SENDING DEBUG\n")
+        self.display.root.send(
+            self.display.root, "IG_DEBUG",
+            event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+    def send_close(self, event):
+        win = self.get_active_window()
+        if win and win != self.display.root:
+            InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
+            win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
 
-                InfiniteGlass.DEBUG("zoom", "    screen=%s geom=%s\n" % (screen, size))
-                
-                win["IG_COORDS_ANIMATE"] = coords
-                win["IG_SIZE_ANIMATE"] = size
-                self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
-                self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_COORDS", .5)
-                self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
-                self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
-                self.display.flush()
-                self.display.sync()
-        elif event == "KeyPress" and event["XK_Home"]:
-            InfiniteGlass.DEBUG("zoom", "ZOOM HOME\n")
-            old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
-            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
+    def send_sleep(self, event):
+        win = self.get_active_window()
+        if win and win != self.display.root:
+            InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
+            win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
+
+    def zoom_1_1_1(self, event):
+        win = self.get_active_window()
+        if win and win != self.display.root:
+            # zoom_screen_to_window_and_window_to_screen
+
+            InfiniteGlass.DEBUG("zoom", "zoom_screen_to_window_and_window_to_screen\n")
+            size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+            coords = list(win["IG_COORDS"])
+            screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+
+            coords[3] = (size[1] * coords[2]) / size[0]
+
+            screen[2] = coords[2]
+            screen[3] = coords[3]
+            screen[0] = coords[0]
+            screen[1] = coords[1] - screen[3]
+
+            InfiniteGlass.DEBUG("zoom", "    screen=%s geom=%s\n" % (screen, size))
+
+            win["IG_COORDS_ANIMATE"] = coords
+            win["IG_SIZE_ANIMATE"] = size
+            self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_COORDS", .5)
+            self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
             self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
-        elif (   (event == "ButtonPress" and event["Mod1Mask"] and event[4])
-              or (event == "ButtonPress" and event["Mod1Mask"] and event[5])
-              or (event == "KeyPress" and event["Mod1Mask"] and event["XK_Next"])
-              or (event == "KeyPress" and event["Mod1Mask"] and event["XK_Prior"])):
-            if event == "ButtonPress":
-                win = self.get_active_window()
-            else:
-                win = self.display.get_input_focus().focus
-            if win and win != self.display.root:
-                push(self.display, ItemZoomMode, window=win, first_event=event, last_event=event)
-                handle_event(self.display, event);
+            self.display.flush()
+            self.display.sync()
 
-        elif (   (    event == "ButtonPress"
-                         and (   event[4]
-                              or event[5]))
-                    or (    event == "KeyPress"
-                            and (   event["XK_Next"]
-                                 or event["XK_Prior"]))):
-            push(self.display, ZoomMode)
+    def zoom_home(self, event):
+       InfiniteGlass.DEBUG("zoom", "ZOOM HOME\n")
+       old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+       self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
+       self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+
+    def push_item_zoom(self, event):
+        if event == "ButtonPress":
+            win = self.get_active_window()
+        else:
+            win = self.display.get_input_focus().focus
+        if win and win != self.display.root:
+            push(self.display, ItemZoomMode, window=win, first_event=event, last_event=event)
+            handle_event(self.display, event);
+
+    def push_zoom(self, event):
+        push(self.display, ZoomMode)
+        handle_event(self.display, event)
+
+    def push_pan(self, event):
+        push(self.display, PanMode, first_event=event, last_event=event)
+        handle_event(self.display, event)
+
+    def push_item_pan(self, event):
+        if event == "ButtonPress":
+            win = self.get_active_window()
+        else:
+            win = self.display.get_input_focus().focus
+        InfiniteGlass.DEBUG("button", "BUTTON PRESS %s\n" % win)
+        if win and win != self.display.root:
+            push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
             handle_event(self.display, event)
-        elif (   (event == "ButtonPress" and event[2])
-                 or (event == "ButtonPress" and event[1] and event["ControlMask"])
-                 or (event == "KeyPress" and event["ControlMask"] and event["XK_Up"])
-                 or (event == "KeyPress" and event["ControlMask"] and event["XK_Down"])
-                 or (event == "KeyPress" and event["ControlMask"] and event["XK_Left"])
-                 or (event == "KeyPress" and event["ControlMask"] and event["XK_Right"])):
-            push(self.display, PanMode, first_event=event, last_event=event)
-            handle_event(self.display, event)
-        elif (   (event == "ButtonPress" and event[1])
-                  or (event == "KeyPress" and event["XK_Up"])
-                  or (event == "KeyPress" and event["XK_Down"])
-                  or (event == "KeyPress" and event["XK_Left"])
-                  or (event == "KeyPress" and event["XK_Right"])):
-            if event == "ButtonPress":
-                win = self.get_active_window()
-            else:
-                win = self.display.get_input_focus().focus
-            InfiniteGlass.DEBUG("button", "BUTTON PRESS %s\n" % win)
-            if win and win != self.display.root:
-                push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
-                handle_event(self.display, event)
-        return True
 
     
 class ZoomMode(Mode):
