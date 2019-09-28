@@ -5,9 +5,78 @@ import Xlib.keysymdef.miscellany
 import numpy
 import os
 
-debug_events = False
-debug_property_notify = False
-debug_modes = False
+
+config = {
+    "base": {
+        "PropertyNotify": "focus_follows_mouse",
+        "ButtonPress,Mod4Mask": "push_grabbed",
+        "KeyPress,Mod4Mask": "push_grabbed",
+        "KeyPress,XK_Super_L": "push_grabbed",
+    },
+    "grabbed": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "Mod4Mask,KeyPress,XK_space": "rofi",
+        "Mod4Mask,KeyPress,XK_Escape": "toggle_overlay",
+        "Mod4Mask,KeyPress,XK_F1": "send_debug",
+        "Mod4Mask,KeyPress,XK_F4": "send_close",
+        "Mod4Mask,KeyPress,XK_F5": "send_sleep",
+        "Mod4Mask,KeyPress,ShiftMask,XK_Home": "zoom_1_1_1",
+        "Mod4Mask,KeyPress,XK_Home": "zoom_home",
+        "Mod4Mask,ButtonPress,Mod1Mask,4": "push_item_zoom",
+        "Mod4Mask,ButtonPress,Mod1Mask,5": "push_item_zoom",
+        "Mod4Mask,KeyPress,Mod1Mask,XK_Next": "push_item_zoom",
+        "Mod4Mask,KeyPress,Mod1Mask,XK_Prior": "push_item_zoom",
+        "Mod4Mask,ButtonPress,4": "push_zoom",
+        "Mod4Mask,ButtonPress,5": "push_zoom",
+        "Mod4Mask,KeyPress,XK_Next": "push_zoom",
+        "Mod4Mask,KeyPress,XK_Prior": "push_zoom",
+        "Mod4Mask,ButtonPress,2": "push_pan",
+        "Mod4Mask,ButtonPress,1,ControlMask": "push_pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Up": "push_pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Down": "push_pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Left": "push_pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Right": "push_pan",
+        "Mod4Mask,ButtonPress,1": "push_item_pan",
+        "Mod4Mask,KeyPress,XK_Up": "push_item_pan",
+        "Mod4Mask,KeyPress,XK_Down": "push_item_pan",
+        "Mod4Mask,KeyPress,XK_Left": "push_item_pan",
+        "Mod4Mask,KeyPress,XK_Right": "push_item_pan"
+    },
+    "zoom": {
+        "KeyRelease": "pop",
+        "Mod4Mask,ButtonRelease,4,ShiftMask": "zoom_to_window",
+        "Mod4Mask,KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
+        "Mod4Mask,KeyPress,XK_Prior": "zoom_in",
+        "Mod4Mask,KeyPress,XK_Next": "zoom_out",
+        "Mod4Mask,ButtonRelease,4": "zoom_in",
+        "Mod4Mask,ButtonRelease,5": "zoom_out"
+    },
+    "pan": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "Mod4Mask,ControlMask,KeyPress": "pan",
+        "Mod4Mask,ControlMask,Button1Mask,ButtonPress": "pan_mouse",
+        "Mod4Mask,ControlMask,Button1Mask,MotionNotify": "pan_mouse"
+    },
+    "item_zoom": {
+        "KeyRelease": "pop",
+        "Mod4Mask,Mod1Mask,ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
+        "Mod4Mask,Mod1Mask,KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
+        "Mod4Mask,Mod1Mask,ButtonRelease,ShiftMask,5": "zoom_1_1_to_window",
+        "Mod4Mask,Mod1Mask,KeyPress,ShiftMask,XK_Next": "zoom_1_1_to_window",
+        "Mod4Mask,Mod1Mask,ButtonRelease,4": "zoom_in",
+        "Mod4Mask,Mod1Mask,KeyPress,XK_Prior": "zoom_in",
+        "Mod4Mask,Mod1Mask,ButtonRelease,5": "zoom_out",
+        "Mod4Mask,Mod1Mask,KeyPress,XK_Next": "zoom_out"
+    },
+    "item_pan": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "Mod4Mask,KeyPress": "pan",
+        "Mod4Mask,Button1Mask,MotionNotify": "pan_mouse"
+    }
+}
 
 def push(display, Mode, **kw):
     InfiniteGlass.DEBUG("modes.push", "PUSH %s\n" % Mode)
@@ -81,11 +150,7 @@ class BaseMode(Mode):
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)           
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
 
-    keymap = {
-        "PropertyNotify": "focus_follows_mouse",
-        "ButtonPress,Mod4Mask": "push_grabbed",
-        "KeyPress,Mod4Mask": "push_grabbed",
-    }
+    keymap = config["base"]
 
     def focus_follows_mouse(self, event):
         if event.window == self.display.notify_motion_window:
@@ -109,36 +174,7 @@ class GrabbedMode(Mode):
         self.display.ungrab_pointer(Xlib.X.CurrentTime)
         self.display.ungrab_keyboard(Xlib.X.CurrentTime)
 
-    keymap = {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-        "KeyPress,XK_space": "rofi",
-        "KeyPress,XK_Escape": "toggle_overlay",
-        "KeyPress,XK_F1": "send_debug",
-        "KeyPress,XK_F4": "send_close",
-        "KeyPress,XK_F5": "send_sleep",
-        "KeyPress,ShiftMask,XK_Home": "zoom_1_1_1",
-        "KeyPress,XK_Home": "zoom_home",
-        "ButtonPress,Mod1Mask,4": "push_item_zoom",
-        "ButtonPress,Mod1Mask,5": "push_item_zoom",
-        "KeyPress,Mod1Mask,XK_Next": "push_item_zoom",
-        "KeyPress,Mod1Mask,XK_Prior": "push_item_zoom",
-        "ButtonPress,4": "push_zoom",
-        "ButtonPress,5": "push_zoom",
-        "KeyPress,XK_Next": "push_zoom",
-        "KeyPress,XK_Prior": "push_zoom",
-        "ButtonPress,2": "push_pan",
-        "ButtonPress,1,ControlMask": "push_pan",
-        "KeyPress,ControlMask,XK_Up": "push_pan",
-        "KeyPress,ControlMask,XK_Down": "push_pan",
-        "KeyPress,ControlMask,XK_Left": "push_pan",
-        "KeyPress,ControlMask,XK_Right": "push_pan",
-        "ButtonPress,1": "push_item_pan",
-        "KeyPress,XK_Up": "push_item_pan",
-        "KeyPress,XK_Down": "push_item_pan",
-        "KeyPress,XK_Left": "push_item_pan",
-        "KeyPress,XK_Right": "push_item_pan"
-    }
+    keymap = config["grabbed"]
 
     def rofi(self, event):
         os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
@@ -231,15 +267,7 @@ class GrabbedMode(Mode):
 
     
 class ZoomMode(Mode):
-    keymap = {
-        "KeyRelease": "pop",
-        "ButtonRelease,4,ShiftMask": "zoom_to_window",
-        "KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
-        "KeyPress,XK_Prior": "zoom_in",
-        "KeyPress,XK_Next": "zoom_out",
-        "ButtonRelease,4": "zoom_in",
-        "ButtonRelease,5": "zoom_out"
-    }
+    keymap = config["zoom"]
     
     def zoom(self, factor, around_aspect = (0.5, 0.5), around_pos = None, view="IG_VIEW_DESKTOP_VIEW"):
         screen = list(self.display.root[view])
@@ -271,20 +299,14 @@ class ZoomMode(Mode):
         self.zoom(1.1)
 
 class PanMode(Mode):
+    keymap = config["pan"]
+    
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
         self.x = 0
         self.y = 0
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-
-    keymap = {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-        "KeyPress": "pan",
-        "ButtonPress": "pan_mouse",
-        "MotionNotify": "pan_mouse"
-    }
         
     def pan(self, event):
         self.x += event["XK_Left"] - event["XK_Right"];
@@ -309,17 +331,7 @@ class PanMode(Mode):
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
 class ItemZoomMode(Mode):
-    keymap = {
-        "KeyRelease": "pop",
-        "ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
-        "KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
-        "ButtonRelease,ShiftMask,5": "zoom_1_1_to_window",
-        "KeyPress,ShiftMask,XK_Next": "zoom_1_1_to_window",
-        "ButtonRelease,4": "zoom_in",
-        "KeyPress,XK_Prior": "zoom_in",
-        "ButtonRelease,5": "zoom_out",
-        "KeyPress,XK_Next": "zoom_out"
-        }
+    keymap = config["item_zoom"]
 
     def zoom_1_1_to_sreen(self, event):
         size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
@@ -353,6 +365,8 @@ class ItemZoomMode(Mode):
         self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
     
 class ItemPanMode(Mode):
+    keymap = config["item_pan"]
+    
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
         self.x = 0
@@ -361,13 +375,6 @@ class ItemPanMode(Mode):
         # FIXME: Get the right view...
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-
-    keymap = {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-        "KeyPress": "pan",
-        "MotionNotify": "pan_mouse"
-    }
 
     def pan(self, event):
         self.x += event["XK_Right"] - event["XK_Left"]
@@ -383,6 +390,7 @@ class ItemPanMode(Mode):
         self.window["IG_COORDS"] = coords
 
     def pan_mouse(self, event):
+        print(event)
         space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
         space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
 
