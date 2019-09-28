@@ -100,3 +100,11 @@ Xlib.display.Display.root = display_root
 def display_keycode(self, name):
     return self.keysym_to_keycode(keymap.keysyms[name])
 Xlib.display.Display.keycode = display_keycode
+
+@property
+def display_mask_to_keysym(self):
+    return {name: [keymap.symkeys[self.keycode_to_keysym(keycode, 0)]
+                                for keycode in mapping if keycode != 0 and self.keycode_to_keysym(keycode, 0) != 0]
+            for name, mapping in zip(("ShiftMask", "LockMask", "ControlMask", "Mod1Mask", "Mod2Mask", "Mod3Mask", "Mod4Mask", "Mod5Mask"),
+                                    self.get_modifier_mapping())}
+Xlib.display.Display.mask_to_keysym = display_mask_to_keysym

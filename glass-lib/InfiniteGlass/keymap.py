@@ -6,3 +6,5 @@ keysyms = {keyname: getattr(dictionary, keyname)
            for dictionary in [getattr(keysymdef, name) for name in keysymdef.__all__]
            for keyname in dir(dictionary)
            if not keyname.startswith("_")}
+
+symkeys = {v: k for k, v in keysyms.items()}
