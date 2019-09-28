@@ -75,7 +75,8 @@ config = {
         "ButtonRelease": "pop",
         "Mod4Mask,KeyPress": "pan",
         "Mod4Mask,Button1Mask,MotionNotify": "pan_mouse"
-    }}
+    }},
+    "rofi": {"shell": 'rofi -show drun -font "DejaVu Sans 18" -show-icons &'}
 }
 
 def push(display, Mode, **kw):
@@ -134,8 +135,13 @@ class Mode(object):
         if hasattr(self, name):
             getattr(self, name)(event)
         elif name in config:
-            push_by_name(self.display, name, first_event=event, last_event=event)
-            handle_event(self.display, event)
+            if "class" in config[name]:
+                push_by_name(self.display, name, first_event=event, last_event=event)
+                handle_event(self.display, event)
+            elif "shell" in config[name]:
+                os.system(config[name]["shell"])
+            else:
+                InfiniteGlass.DEBUG("error", "Unknown action parameters for %s" % (name,))
         else:
             InfiniteGlass.DEBUG("error", "Unknown action for %s: %\n" % (key, name)) 
     
@@ -173,10 +179,6 @@ class BaseMode(Mode):
             if win and win != self.display.root:
                 win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
 
-    # def push_grabbed(self, event):
-    #     push(self.display, GrabbedMode)
-    #     handle_event(self.display, event)
-
 class GrabbedMode(Mode):
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
@@ -188,9 +190,6 @@ class GrabbedMode(Mode):
     def exit(self):
         self.display.ungrab_pointer(Xlib.X.CurrentTime)
         self.display.ungrab_keyboard(Xlib.X.CurrentTime)
-
-    def rofi(self, event):
-        os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
 
     def toggle_overlay(self, event):
         old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
@@ -250,27 +249,6 @@ class GrabbedMode(Mode):
        old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
        self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
-
-    # def push_item_zoom(self, event):
-    #     win = self.get_event_window(event)
-    #     if win and win != self.display.root:
-    #         push(self.display, ItemZoomMode, window=win, first_event=event, last_event=event)
-    #         handle_event(self.display, event);
-
-    # def push_zoom(self, event):
-    #     push(self.display, ZoomMode)
-    #     handle_event(self.display, event)
-
-    # def push_pan(self, event):
-    #     push(self.display, PanMode, first_event=event, last_event=event)
-    #     handle_event(self.display, event)
-
-    # def push_item_pan(self, event):
-    #     win = self.get_event_window(event)
-    #     if win and win != self.display.root:
-    #         push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
-    #         handle_event(self.display, event)
-
     
 class ZoomMode(Mode):
     def zoom(self, factor, around_aspect = (0.5, 0.5), around_pos = None, view="IG_VIEW_DESKTOP_VIEW"):
