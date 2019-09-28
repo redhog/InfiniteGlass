@@ -3,6 +3,7 @@ import Xlib.X
 import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
 import numpy
+import os
 
 debug_events = False
 debug_property_notify = False
@@ -96,6 +97,8 @@ class GrabbedMode(Mode):
         if event == "KeyRelease" and event["XK_Super_L"]:
             # Not Mod4Mask here, as we only want to ungrab when the super key itself is released
             pop(self.display)
+        elif event == "KeyPress" and event["XK_space"]:
+            os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
         elif event == "KeyPress" and event["XK_Escape"]:
             old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
             if old[0] == 0.:
