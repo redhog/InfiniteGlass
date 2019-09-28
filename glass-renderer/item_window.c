@@ -35,10 +35,21 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
     }
     XFree(prop_return);
   } else {
-    item->base.coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
-    item->base.coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
-    item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
-    item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
+    View *v = NULL;
+    if (views) {
+      v = view_find(views, item->base.layer);
+    }
+    if (v) {
+      item->base.coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
+      item->base.coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
+      item->base.coords[2] = (v->screen[2] * (float) item->base.width) / (float) v->width;
+      item->base.coords[3] = (v->screen[3] * (float) item->base.height) / (float) v->height;
+    } else {
+      item->base.coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
+      item->base.coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
+      item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
+      item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
+    }
     for (int i = 0; i < 4; i++) {
      item->base._coords[i] = 0.0;
     }
