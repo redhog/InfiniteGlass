@@ -4,16 +4,16 @@ import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
 import numpy
 import os
-
+import sys
 
 config = {
-    "base": {
+    "base": {"class": "BaseMode", "keymap": {
         "PropertyNotify": "focus_follows_mouse",
-        "ButtonPress,Mod4Mask": "push_grabbed",
-        "KeyPress,Mod4Mask": "push_grabbed",
-        "KeyPress,XK_Super_L": "push_grabbed",
-    },
-    "grabbed": {
+        "ButtonPress,Mod4Mask": "grabbed",
+        "KeyPress,Mod4Mask": "grabbed",
+        "KeyPress,XK_Super_L": "grabbed",
+    }},
+    "grabbed": {"class": "GrabbedMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
         "Mod4Mask,KeyPress,XK_space": "rofi",
@@ -23,27 +23,27 @@ config = {
         "Mod4Mask,KeyPress,XK_F5": "send_sleep",
         "Mod4Mask,KeyPress,ShiftMask,XK_Home": "zoom_1_1_1",
         "Mod4Mask,KeyPress,XK_Home": "zoom_home",
-        "Mod4Mask,ButtonPress,Mod1Mask,4": "push_item_zoom",
-        "Mod4Mask,ButtonPress,Mod1Mask,5": "push_item_zoom",
-        "Mod4Mask,KeyPress,Mod1Mask,XK_Next": "push_item_zoom",
-        "Mod4Mask,KeyPress,Mod1Mask,XK_Prior": "push_item_zoom",
-        "Mod4Mask,ButtonPress,4": "push_zoom",
-        "Mod4Mask,ButtonPress,5": "push_zoom",
-        "Mod4Mask,KeyPress,XK_Next": "push_zoom",
-        "Mod4Mask,KeyPress,XK_Prior": "push_zoom",
-        "Mod4Mask,ButtonPress,2": "push_pan",
-        "Mod4Mask,ButtonPress,1,ControlMask": "push_pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Up": "push_pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Down": "push_pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Left": "push_pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Right": "push_pan",
-        "Mod4Mask,ButtonPress,1": "push_item_pan",
-        "Mod4Mask,KeyPress,XK_Up": "push_item_pan",
-        "Mod4Mask,KeyPress,XK_Down": "push_item_pan",
-        "Mod4Mask,KeyPress,XK_Left": "push_item_pan",
-        "Mod4Mask,KeyPress,XK_Right": "push_item_pan"
-    },
-    "zoom": {
+        "Mod4Mask,ButtonPress,Mod1Mask,4": "item_zoom",
+        "Mod4Mask,ButtonPress,Mod1Mask,5": "item_zoom",
+        "Mod4Mask,KeyPress,Mod1Mask,XK_Next": "item_zoom",
+        "Mod4Mask,KeyPress,Mod1Mask,XK_Prior": "item_zoom",
+        "Mod4Mask,ButtonPress,4": "zoom",
+        "Mod4Mask,ButtonPress,5": "zoom",
+        "Mod4Mask,KeyPress,XK_Next": "zoom",
+        "Mod4Mask,KeyPress,XK_Prior": "zoom",
+        "Mod4Mask,ButtonPress,2": "pan",
+        "Mod4Mask,ButtonPress,1,ControlMask": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Up": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Down": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Left": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Right": "pan",
+        "Mod4Mask,ButtonPress,1": "item_pan",
+        "Mod4Mask,KeyPress,XK_Up": "item_pan",
+        "Mod4Mask,KeyPress,XK_Down": "item_pan",
+        "Mod4Mask,KeyPress,XK_Left": "item_pan",
+        "Mod4Mask,KeyPress,XK_Right": "item_pan"
+    }},
+    "zoom": {"class": "ZoomMode", "keymap": {
         "KeyRelease": "pop",
         "Mod4Mask,ButtonRelease,4,ShiftMask": "zoom_to_window",
         "Mod4Mask,KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
@@ -51,15 +51,15 @@ config = {
         "Mod4Mask,KeyPress,XK_Next": "zoom_out",
         "Mod4Mask,ButtonRelease,4": "zoom_in",
         "Mod4Mask,ButtonRelease,5": "zoom_out"
-    },
-    "pan": {
+    }},
+    "pan": {"class": "PanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
         "Mod4Mask,ControlMask,KeyPress": "pan",
         "Mod4Mask,ControlMask,Button1Mask,ButtonPress": "pan_mouse",
         "Mod4Mask,ControlMask,Button1Mask,MotionNotify": "pan_mouse"
-    },
-    "item_zoom": {
+    }},
+    "item_zoom": {"class": "ItemZoomMode", "keymap": {
         "KeyRelease": "pop",
         "Mod4Mask,Mod1Mask,ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
         "Mod4Mask,Mod1Mask,KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
@@ -69,13 +69,13 @@ config = {
         "Mod4Mask,Mod1Mask,KeyPress,XK_Prior": "zoom_in",
         "Mod4Mask,Mod1Mask,ButtonRelease,5": "zoom_out",
         "Mod4Mask,Mod1Mask,KeyPress,XK_Next": "zoom_out"
-    },
-    "item_pan": {
+    }},
+    "item_pan": {"class": "ItemPanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
         "Mod4Mask,KeyPress": "pan",
         "Mod4Mask,Button1Mask,MotionNotify": "pan_mouse"
-    }
+    }}
 }
 
 def push(display, Mode, **kw):
@@ -83,6 +83,10 @@ def push(display, Mode, **kw):
     if not hasattr(display, "input_stack"):
         display.input_stack = []
     display.input_stack.append(Mode(display=display, **kw))
+
+def push_by_name(display, name, **kw):
+    cls = getattr(sys.modules[push_by_name.__module__], config[name]["class"])
+    push(display, cls, keymap=config[name]["keymap"], **kw)
 
 def pop(display):
     res = display.input_stack.pop()
@@ -118,16 +122,23 @@ class Mode(object):
     
     def exit(self):
         pass
-
-    keymap = {}
     
     def handle(self, event):
         for key, value in self.keymap.items():
             if event == key.split(","):
-                getattr(self, value)(event)
+                self.action(key, value, event)
                 return True
         return True
 
+    def action(self, key, name, event):
+        if hasattr(self, name):
+            getattr(self, name)(event)
+        elif name in config:
+            push_by_name(self.display, name, first_event=event, last_event=event)
+            handle_event(self.display, event)
+        else:
+            InfiniteGlass.DEBUG("error", "Unknown action for %s: %\n" % (key, name)) 
+    
     def pop(self, event):
         pop(self.display)
     
@@ -137,6 +148,12 @@ class Mode(object):
         except (KeyError, AttributeError) as e:
             print("Unable to get active window", e)
             return None
+
+    def get_event_window(self, event):
+        if event == "ButtonPress":
+            return self.get_active_window()
+        else:
+            return self.display.get_input_focus().focus
         
 class BaseMode(Mode):
     def __init__(self, **kw):
@@ -150,17 +167,15 @@ class BaseMode(Mode):
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)           
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
 
-    keymap = config["base"]
-
     def focus_follows_mouse(self, event):
         if event.window == self.display.notify_motion_window:
             win = self.get_active_window()
             if win and win != self.display.root:
                 win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
 
-    def push_grabbed(self, event):
-        push(self.display, GrabbedMode)
-        handle_event(self.display, event)
+    # def push_grabbed(self, event):
+    #     push(self.display, GrabbedMode)
+    #     handle_event(self.display, event)
 
 class GrabbedMode(Mode):
     def __init__(self, **kw):
@@ -173,8 +188,6 @@ class GrabbedMode(Mode):
     def exit(self):
         self.display.ungrab_pointer(Xlib.X.CurrentTime)
         self.display.ungrab_keyboard(Xlib.X.CurrentTime)
-
-    keymap = config["grabbed"]
 
     def rofi(self, event):
         os.system('rofi -show drun -font "DejaVu Sans 18" -show-icons &')
@@ -238,37 +251,28 @@ class GrabbedMode(Mode):
        self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
-    def push_item_zoom(self, event):
-        if event == "ButtonPress":
-            win = self.get_active_window()
-        else:
-            win = self.display.get_input_focus().focus
-        if win and win != self.display.root:
-            push(self.display, ItemZoomMode, window=win, first_event=event, last_event=event)
-            handle_event(self.display, event);
+    # def push_item_zoom(self, event):
+    #     win = self.get_event_window(event)
+    #     if win and win != self.display.root:
+    #         push(self.display, ItemZoomMode, window=win, first_event=event, last_event=event)
+    #         handle_event(self.display, event);
 
-    def push_zoom(self, event):
-        push(self.display, ZoomMode)
-        handle_event(self.display, event)
+    # def push_zoom(self, event):
+    #     push(self.display, ZoomMode)
+    #     handle_event(self.display, event)
 
-    def push_pan(self, event):
-        push(self.display, PanMode, first_event=event, last_event=event)
-        handle_event(self.display, event)
+    # def push_pan(self, event):
+    #     push(self.display, PanMode, first_event=event, last_event=event)
+    #     handle_event(self.display, event)
 
-    def push_item_pan(self, event):
-        if event == "ButtonPress":
-            win = self.get_active_window()
-        else:
-            win = self.display.get_input_focus().focus
-        InfiniteGlass.DEBUG("button", "BUTTON PRESS %s\n" % win)
-        if win and win != self.display.root:
-            push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
-            handle_event(self.display, event)
+    # def push_item_pan(self, event):
+    #     win = self.get_event_window(event)
+    #     if win and win != self.display.root:
+    #         push(self.display, ItemPanMode, window=win, first_event=event, last_event=event)
+    #         handle_event(self.display, event)
 
     
 class ZoomMode(Mode):
-    keymap = config["zoom"]
-    
     def zoom(self, factor, around_aspect = (0.5, 0.5), around_pos = None, view="IG_VIEW_DESKTOP_VIEW"):
         screen = list(self.display.root[view])
         if around_pos is None:
@@ -299,8 +303,6 @@ class ZoomMode(Mode):
         self.zoom(1.1)
 
 class PanMode(Mode):
-    keymap = config["pan"]
-    
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
         self.x = 0
@@ -331,8 +333,12 @@ class PanMode(Mode):
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
 class ItemZoomMode(Mode):
-    keymap = config["item_zoom"]
-
+    def __init__(self, **kw):
+        Mode.__init__(self, **kw)
+        self.window = self.get_event_window(self.first_event)
+        if not self.window or self.window == self.display.root:
+            pop(self.display)
+    
     def zoom_1_1_to_sreen(self, event):
         size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
         coords = self.window["IG_COORDS"]
@@ -365,17 +371,19 @@ class ItemZoomMode(Mode):
         self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
     
 class ItemPanMode(Mode):
-    keymap = config["item_pan"]
-    
     def __init__(self, **kw):
         Mode.__init__(self, **kw)
+        self.window = self.get_event_window(self.first_event)
+        if not self.window or self.window == self.display.root:
+            pop(self.display)
+            return
         self.x = 0
         self.y = 0
         self.orig_coords = self.window["IG_COORDS"]
         # FIXME: Get the right view...
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-
+        
     def pan(self, event):
         self.x += event["XK_Right"] - event["XK_Left"]
         self.y += event["XK_Down"] - event["XK_Up"]
@@ -390,7 +398,6 @@ class ItemPanMode(Mode):
         self.window["IG_COORDS"] = coords
 
     def pan_mouse(self, event):
-        print(event)
         space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
         space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
 
@@ -424,6 +431,6 @@ def main(*arg, **kw):
                 return False
             return handle_event(display, event)
 
-        push(display, BaseMode)
+        push_by_name(display, "base")
 
         InfiniteGlass.DEBUG("init", "Input handler started\n")
