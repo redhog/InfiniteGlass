@@ -14,12 +14,17 @@ def push(display, Mode, **kw):
     InfiniteGlass.DEBUG("modes.push", "PUSH %s\n" % Mode)
     if not hasattr(display, "input_stack"):
         display.input_stack = []
-    display.input_stack.append(Mode(display=display, **kw))
+    mode = Mode(display=display, **kw)
+    display.input_stack.append(mode)
+    if not mode.enter():
+        pop(display)
+        return False
+    return True
 
 def push_by_name(display, name, **kw):
     cls = getattr(sys.modules[push_by_name.__module__], config[name]["class"])
-    push(display, cls, keymap=config[name]["keymap"], **kw)
-
+    return push(display, cls, keymap=config[name]["keymap"], **kw)
+    
 def pop(display):
     res = display.input_stack.pop()
     InfiniteGlass.DEBUG("modes.pop", "POP %s\n" % res)
@@ -51,13 +56,16 @@ class Mode(object):
     def __init__(self, **kw):
         for key, value in kw.items():
             setattr(self, key, value)
+
+    def enter(self):
+        return True
     
     def exit(self):
         pass
     
     def handle(self, event):
         for key, value in self.keymap.items():
-            if event == key.split(","):
+            if event[key.split(",")]:
                 self.action(key, value, event)
                 return True
         return True
@@ -67,8 +75,8 @@ class Mode(object):
             getattr(self, name)(event)
         elif name in config:
             if "class" in config[name]:
-                push_by_name(self.display, name, first_event=event, last_event=event)
-                handle_event(self.display, event)
+                if push_by_name(self.display, name, first_event=event, last_event=event):
+                    handle_event(self.display, event)
             elif "shell" in config[name]:
                 os.system(config[name]["shell"])
             else:
@@ -90,7 +98,10 @@ class Mode(object):
         if event == "ButtonPress":
             return self.get_active_window()
         else:
-            return self.display.get_input_focus().focus
+            focus = self.display.get_input_focus().focus
+            if focus == Xlib.X.PointerRoot:
+                return None
+            return focus
         
 class BaseMode(Mode):
     def __init__(self, **kw):
@@ -242,11 +253,11 @@ class PanMode(Mode):
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
 class ItemZoomMode(Mode):
-    def __init__(self, **kw):
-        Mode.__init__(self, **kw)
+    def enter(self):
         self.window = self.get_event_window(self.first_event)
         if not self.window or self.window == self.display.root:
-            pop(self.display)
+            return False
+        return True
     
     def zoom_1_1_to_sreen(self, event):
         size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
@@ -280,19 +291,18 @@ class ItemZoomMode(Mode):
         self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
     
 class ItemPanMode(Mode):
-    def __init__(self, **kw):
-        Mode.__init__(self, **kw)
+    def enter(self):
         self.window = self.get_event_window(self.first_event)
         if not self.window or self.window == self.display.root:
-            pop(self.display)
-            return
+            return False
         self.x = 0
         self.y = 0
         self.orig_coords = self.window["IG_COORDS"]
         # FIXME: Get the right view...
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-        
+        return True
+    
     def pan(self, event):
         self.x += event["XK_Right"] - event["XK_Left"]
         self.y += event["XK_Down"] - event["XK_Up"]
