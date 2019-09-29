@@ -30,18 +30,22 @@ def parse_event_pattern(pattern):
            "keys": [],
            "types": []}
     for item in pattern:
+        include = True
+        if item.startswith("!"):
+            include = False
+            item = item[1:]
         try:
             item = int(item)
         except:
             pass
         if isinstance(item, int):
-            res["buttons"].append(item)
+            res["buttons"].append((include, item))
         elif item.endswith("Mask"):
-            res["masks"].append(item)
+            res["masks"].append((include, item))
         elif item.startswith("XK_"):
-            res["keys"].append(item)
+            res["keys"].append((include, item))
         else:
-            res["types"].append(item)
+            res["types"].append((include, item))
     return res
 
 orig_event_eq = Xlib.protocol.rq.Event.__eq__
@@ -49,33 +53,33 @@ def event_eq(self, other):
     pattern = parse_event_pattern(other)
     if pattern is None:
         return orig_event_eq(self, other)
-    for t in pattern["types"]:
-        if self.type != getattr(Xlib.X, t):
+    for i, t in pattern["types"]:
+        if i != (self.type == getattr(Xlib.X, t)):
             return False
-    if pattern["masks"] and self.state != sum((getattr(Xlib.X, item) for item in pattern["masks"]), 0):
+    if pattern["masks"] and self.state != sum((getattr(Xlib.X, item) for i, item in pattern["masks"] if i), 0):
         return False
-    for k in pattern["keys"]:
-        if self.detail != self.window.display.real_display.keycode(k):
+    for i, k in pattern["keys"]:
+        if i != (self.detail == self.window.display.real_display.keycode(k)):
             return False
-    for b in pattern["buttons"]:
-        if self.detail != b:
+    for i, b in pattern["buttons"]:
+        if i != (self.detail == b):
             return False
     return True
 Xlib.protocol.rq.Event.__eq__ = event_eq
 
 def event_getitem(self, item):
     pattern = parse_event_pattern(item)
-    for t in pattern["types"]:
-        if self.type != getattr(Xlib.X, t):
+    for i, t in pattern["types"]:
+        if i != (self.type == getattr(Xlib.X, t)):
             return False
-    for s in pattern["masks"]:
-        if not self.state & getattr(Xlib.X, s):
+    for i, s in pattern["masks"]:
+        if i != (not not self.state & getattr(Xlib.X, s)):
             return False
-    for k in pattern["keys"]:
-        if self.detail != self.window.display.real_display.keycode(k):
+    for i, k in pattern["keys"]:
+        if i != (self.detail == self.window.display.real_display.keycode(k)):
             return False
-    for b in pattern["buttons"]:
-        if self.detail != b:
+    for i, b in pattern["buttons"]:
+        if i != (self.detail == b):
             return False
     return True
 Xlib.protocol.rq.Event.__getitem__ = event_getitem
