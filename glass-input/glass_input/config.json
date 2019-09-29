@@ -1,0 +1,72 @@
+{
+    "base": {"class": "BaseMode", "keymap": {
+        "PropertyNotify": "focus_follows_mouse",
+        "ButtonPress,Mod4Mask": "grabbed",
+        "KeyPress,Mod4Mask": "grabbed",
+        "KeyPress,XK_Super_L": "grabbed"
+    }},
+    "grabbed": {"class": "GrabbedMode", "keymap": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "Mod4Mask,KeyPress,XK_space": "rofi",
+        "Mod4Mask,KeyPress,XK_Escape": "toggle_overlay",
+        "Mod4Mask,KeyPress,XK_F1": "send_debug",
+        "Mod4Mask,KeyPress,XK_F4": "send_close",
+        "Mod4Mask,KeyPress,XK_F5": "send_sleep",
+        "Mod4Mask,KeyPress,ShiftMask,XK_Home": "zoom_1_1_1",
+        "Mod4Mask,KeyPress,XK_Home": "zoom_home",
+        "Mod4Mask,ButtonPress,Mod1Mask,4": "item_zoom",
+        "Mod4Mask,ButtonPress,Mod1Mask,5": "item_zoom",
+        "Mod4Mask,KeyPress,Mod1Mask,XK_Next": "item_zoom",
+        "Mod4Mask,KeyPress,Mod1Mask,XK_Prior": "item_zoom",
+        "Mod4Mask,ButtonPress,4": "zoom",
+        "Mod4Mask,ButtonPress,5": "zoom",
+        "Mod4Mask,KeyPress,XK_Next": "zoom",
+        "Mod4Mask,KeyPress,XK_Prior": "zoom",
+        "Mod4Mask,ButtonPress,2": "pan",
+        "Mod4Mask,ButtonPress,1,ControlMask": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Up": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Down": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Left": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Right": "pan",
+        "Mod4Mask,ButtonPress,1": "item_pan",
+        "Mod4Mask,KeyPress,XK_Up": "item_pan",
+        "Mod4Mask,KeyPress,XK_Down": "item_pan",
+        "Mod4Mask,KeyPress,XK_Left": "item_pan",
+        "Mod4Mask,KeyPress,XK_Right": "item_pan"
+    }},
+    "zoom": {"class": "ZoomMode", "keymap": {
+        "KeyRelease": "pop",
+        "Mod4Mask,ButtonRelease,4,ShiftMask": "zoom_to_window",
+        "Mod4Mask,KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
+        "Mod4Mask,KeyPress,XK_Prior": "zoom_in",
+        "Mod4Mask,KeyPress,XK_Next": "zoom_out",
+        "Mod4Mask,ButtonRelease,4": "zoom_in",
+        "Mod4Mask,ButtonRelease,5": "zoom_out"
+    }},
+    "pan": {"class": "PanMode", "keymap": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "Mod4Mask,ControlMask,KeyPress": "pan",
+        "Mod4Mask,ControlMask,Button1Mask,ButtonPress": "pan_mouse",
+        "Mod4Mask,ControlMask,Button1Mask,MotionNotify": "pan_mouse"
+    }},
+    "item_zoom": {"class": "ItemZoomMode", "keymap": {
+        "KeyRelease": "pop",
+        "Mod4Mask,Mod1Mask,ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
+        "Mod4Mask,Mod1Mask,KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
+        "Mod4Mask,Mod1Mask,ButtonRelease,ShiftMask,5": "zoom_1_1_to_window",
+        "Mod4Mask,Mod1Mask,KeyPress,ShiftMask,XK_Next": "zoom_1_1_to_window",
+        "Mod4Mask,Mod1Mask,ButtonRelease,4": "zoom_in",
+        "Mod4Mask,Mod1Mask,KeyPress,XK_Prior": "zoom_in",
+        "Mod4Mask,Mod1Mask,ButtonRelease,5": "zoom_out",
+        "Mod4Mask,Mod1Mask,KeyPress,XK_Next": "zoom_out"
+    }},
+    "item_pan": {"class": "ItemPanMode", "keymap": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+        "Mod4Mask,KeyPress": "pan",
+        "Mod4Mask,Button1Mask,MotionNotify": "pan_mouse"
+    }},
+    "rofi": {"shell": "rofi -show drun -font 'DejaVu Sans 18' -show-icons &"}
+}

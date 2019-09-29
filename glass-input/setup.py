@@ -18,5 +18,6 @@ setuptools.setup(name='glass-input',
               'glass-input = glass_input:main',
           ],
       },
+      package_data={'glass_input': ['*.json']},
       include_package_data=True
   )
