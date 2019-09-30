@@ -224,6 +224,9 @@ class ZoomMode(Mode):
         
         windows = []
         for child in self.display.root.query_tree().children:
+            if child.get_attributes().map_state != Xlib.X.IsViewable:
+                continue
+            
             child = child.find_client_window()
             if not child: continue
             coords = child["IG_COORDS"]
@@ -242,25 +245,28 @@ class ZoomMode(Mode):
             y = coords[1] - coords[3]/2.
 
             d = math.sqrt((x-vx)**2+(y-vy)**2)
-            windows.append((d, coords, child.get("WM_NAME", None)))
+            windows.append((d, coords, child))
 
         if not windows:
             return
 
         windows.sort(key=lambda a: a[0])
+        d, window, w = windows[0]
+        InfiniteGlass.DEBUG("window", "Next window %s/%s[%s] @ %s\n" % (w.get("WM_NAME", None), w.get("WM_CLASS", None), w.__window__(), window))
         
         ratio = view[2] / view[3]
-
-        window = windows[0][1]
+        
         xs = [view[0], view[0] + view[2], window[0], window[0]+window[2]]
         ys = [view[1], view[1] + view[3], window[1], window[1]-window[3]]
 
         view = [min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)]
 
+        InfiniteGlass.DEBUG("view", "View before aspect ratio corr %s\n" % (view,))
         if view[2] / ratio > view[3]:
             view[3] = view[2] / ratio
         else:
             view[2]  = ratio * view[3]
+        InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
         self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
         self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         
