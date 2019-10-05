@@ -7,6 +7,8 @@
 #include "item_window.h"
 #include "list.h"
 
+FILE *eventlog;
+
 extern Window motion_notification_window;
 extern List *views;
 

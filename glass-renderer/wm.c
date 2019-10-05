@@ -14,6 +14,7 @@
 #include "selection.h"
 #include "list.h"
 #include "debug.h"
+#include "fps.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
@@ -27,6 +28,7 @@ Bool filter_by_layer(Item *item) {
 }
 
 void draw() {
+  draw_fps_start();
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDisable(GL_SCISSOR_TEST);
   glClearColor(1.0, 1.0, 0.5, 1.0);
@@ -38,6 +40,7 @@ void draw() {
   }
   glFlush();
   glXSwapBuffers(display, overlay);
+  draw_fps();
 }
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
@@ -90,6 +93,8 @@ void selection_sn_clear(Selection *selection) {
 
 
 int main() {
+  eventlog = fopen("eventlog.log", "w");
+
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
@@ -123,7 +128,8 @@ int main() {
     XSync(display, False);
     XNextEvent(display, &e);
 //    if (e.type != MotionNotify && e.type != GenericEvent && e.type != damage_event + XDamageNotify) {
-//      print_xevent(display, &e);
+          fprintf(eventlog, "Timestamp: %lu\n", get_timestamp());
+          print_xevent(eventlog, display, &e);
 //    }
     
     gl_check_error("loop");
@@ -288,6 +294,12 @@ int main() {
         item->is_mapped = True;
         item->type->update(item);
         draw();
+
+        char *window_name;
+        if (XFetchName(display, e.xmap.window, &window_name) && window_name) {
+          fprintf(eventlog, "Window %ld is %s\n", e.xmap.window, window_name);
+          XFree(window_name);
+        }        
       }
    } else if (e.type == UnmapNotify) {
       Item *item = item_get_from_window(e.xunmap.window, False);
@@ -328,7 +340,7 @@ int main() {
       if (!handled) {
         if (DEBUG_ENABLED("event.other")) {
           DEBUG("event.other", "Ignored event ");
-          print_xevent(display, &e);
+          print_xevent(stderr, display, &e);
         }
       }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
@@ -351,7 +363,7 @@ int main() {
     } else {
       if (DEBUG_ENABLED("event.other")) {
         DEBUG("event.other", "Ignored event ");
-        print_xevent(display, &e);
+        print_xevent(stderr, display, &e);
       }
     }
   }
