@@ -18,6 +18,7 @@
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/XInput2.h>
 
+extern void print_xevent_fragment(FILE *stream, Display *display, XEvent *event);
 extern void print_xevent(FILE *stream, Display *display, XEvent *event);
 
 #endif

@@ -38,12 +38,19 @@ from the X Consortium.
  */
 
 #include "xevent.h"
+#include <sys/time.h>
+
+static unsigned long get_timestamp() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return 1000000 * tv.tv_sec + tv.tv_usec;
+}
 
 //typedef unsigned long Pixel;
 
-const char *Yes = "YES";
-const char *No = "NO";
-const char *Unknown = "unknown";
+const char *Yes = "true";
+const char *No = "false";
+const char *Unknown = "undefined";
 
 // Display *dpy;
 // int screen;
@@ -65,8 +72,8 @@ prologue(FILE *stream, XEvent *eventp, const char *event_name)
 {
     XAnyEvent *e = (XAnyEvent *) eventp;
 
-    fprintf(stream, "\n%s event, serial %ld, synthetic %s, window 0x%lx,\n",
-           event_name, e->serial, e->send_event ? Yes : No, e->window);
+    fprintf(stream, "\"type\":\"%s\", \"serial\":%ld, \"synthetic\":%s, \"window\":%lu, \"print_time\": %lu",
+            event_name, e->serial, e->send_event ? Yes : No, e->window, get_timestamp());
 }
 
 static void
@@ -106,29 +113,25 @@ do_KeyPress(FILE *stream, Display *display, XEvent *eventp)
         kc_set = True;
     }
 
-    fprintf(stream, "    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    fprintf(stream, ", \"root\":%lu, \"subw\":%lu, \"time\":%lu, \"x\":%d, \"y\":%d, \"rootx\":%d, \"rooty\":%d",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    fprintf(stream, "    state 0x%x, keycode %u (keysym 0x%lx, %s), same_screen %s,\n",
+    fprintf(stream, ", \"state\":0x%x, \"keycode\":%u, \"keysym\":%lu, \"keysymname\":\"%s\", \"same_screen\":%s",
            e->state, e->keycode, (unsigned long) ks, ksname,
            e->same_screen ? Yes : No);
     if (kc_set && e->keycode != kc)
-        fprintf(stream, "    XKeysymToKeycode returns keycode: %u\n", kc);
+        fprintf(stream, ", \"XKeysymToKeycode\":%u", kc);
     if (nbytes < 0)
         nbytes = 0;
     if (nbytes > 256)
         nbytes = 256;
     str[nbytes] = '\0';
-    fprintf(stream, "    XLookupString gives %d bytes: ", nbytes);
     if (nbytes > 0) {
         dump(stream, str, nbytes);
-        fprintf(stream, " \"%s\"\n", str);
-    }
-    else {
-        fprintf(stream, "\n");
+        fprintf(stream, ", \"XLookupString\":\"%s\"", str);
     }
 
-    fprintf(stream, "    XFilterEvent returns: %s\n",
-            XFilterEvent(eventp, e->window) ? "True" : "False");
+    fprintf(stream, ", \"XFilterEvent\":%s",
+            XFilterEvent(eventp, e->window) ? "true" : "false");
 }
 
 static void
@@ -142,9 +145,9 @@ do_ButtonPress(FILE *stream, Display *display, XEvent *eventp)
 {
     XButtonEvent *e = (XButtonEvent *) eventp;
 
-    fprintf(stream, "    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    fprintf(stream, ", \"root\":%lu, \"subw\":%lu, \"time\":%lu, \"x\":%d, \"y\":%d, \"rootx\":%d, \"rooty\":%d",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    fprintf(stream, "    state 0x%x, button %u, same_screen %s\n",
+    fprintf(stream, ", \"state\":0x%x, \"button\":%u, \"same_screen\":%s",
            e->state, e->button, e->same_screen ? Yes : No);
 }
 
@@ -159,9 +162,9 @@ do_MotionNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XMotionEvent *e = (XMotionEvent *) eventp;
 
-    fprintf(stream, "    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    fprintf(stream, ", \"root\":%lu, \"subw\":%lu, \"time\":%lu, \"x\":%d, \"y\":%d, \"rootx\":%d, \"rooty\":%d",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    fprintf(stream, "    state 0x%x, is_hint %u, same_screen %s\n",
+    fprintf(stream, ", \"state\":0x%x, \"is_hint\":%u, \"same_screen\":%s",
            e->state, e->is_hint, e->same_screen ? Yes : No);
 }
 
@@ -222,11 +225,11 @@ do_EnterNotify(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
+    fprintf(stream, ", \"root\":%lu, \"subw\":%lu, \"time\":%lu, \"x\":%d, \"y\":%d, \"rootx\":%d, \"rooty\":%d",
            e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
-    fprintf(stream, "    mode %s, detail %s, same_screen %s,\n",
+    fprintf(stream, ", \"mode\":\"%s\", \"detail\":\"%s\", \"same_screen\":%s",
            mode, detail, e->same_screen ? Yes : No);
-    fprintf(stream, "    focus %s, state %u\n", e->focus ? Yes : No, e->state);
+    fprintf(stream, ", \"focus\":%s, \"state\":%u", e->focus ? Yes : No, e->state);
 }
 
 static void
@@ -292,7 +295,7 @@ do_FocusIn(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    mode %s, detail %s\n", mode, detail);
+    fprintf(stream, ", \"mode\":\"%s\", \"detail\":\"%s\"", mode, detail);
 }
 
 static void
@@ -307,13 +310,13 @@ do_KeymapNotify(FILE *stream, Display *display, XEvent *eventp)
     XKeymapEvent *e = (XKeymapEvent *) eventp;
     int i;
 
-    fprintf(stream, "    keys:  ");
+    fprintf(stream, ", \"keys\":[[");
     for (i = 0; i < 32; i++) {
         if (i == 16)
-            fprintf(stream, "\n           ");
-        fprintf(stream, "%-3u ", (unsigned int) e->key_vector[i]);
+            fprintf(stream, "], [");
+        fprintf(stream, "%-3u, ", (unsigned int) e->key_vector[i]);
     }
-    fprintf(stream, "\n");
+    fprintf(stream, "]]");
 }
 
 static void
@@ -321,7 +324,7 @@ do_Expose(FILE *stream, Display *display, XEvent *eventp)
 {
     XExposeEvent *e = (XExposeEvent *) eventp;
 
-    fprintf(stream, "    (%d,%d), width %d, height %d, count %d\n",
+    fprintf(stream, ", \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d, \"count\":%d",
            e->x, e->y, e->width, e->height, e->count);
 }
 
@@ -345,9 +348,9 @@ do_GraphicsExpose(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    (%d,%d), width %d, height %d, count %d,\n",
+    fprintf(stream, ", \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d, \"count\":%d",
            e->x, e->y, e->width, e->height, e->count);
-    fprintf(stream, "    major %s, minor %d\n", m, e->minor_code);
+    fprintf(stream, ", \"major\":\"%s\", \"minor\":%d", m, e->minor_code);
 }
 
 static void
@@ -370,7 +373,7 @@ do_NoExpose(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    major %s, minor %d\n", m, e->minor_code);
+    fprintf(stream, ", \"major\":\"%s\", \"minor\":%d", m, e->minor_code);
     return;
 }
 
@@ -397,7 +400,7 @@ do_VisibilityNotify(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    state %s\n", v);
+    fprintf(stream, ", \"state\":\"%s\"", v);
 }
 
 static void
@@ -405,9 +408,9 @@ do_CreateNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XCreateWindowEvent *e = (XCreateWindowEvent *) eventp;
 
-    fprintf(stream, "    parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d\n",
+    fprintf(stream, ", \"parent\":%lu, \"window\":%lu, \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d",
            e->parent, e->window, e->x, e->y, e->width, e->height);
-    fprintf(stream, "border_width %d, override %s\n",
+    fprintf(stream, ", \"border_width\":%d, \"override\":%s",
            e->border_width, e->override_redirect ? Yes : No);
 }
 
@@ -416,7 +419,7 @@ do_DestroyNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XDestroyWindowEvent *e = (XDestroyWindowEvent *) eventp;
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx\n", e->event, e->window);
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu", e->event, e->window);
 }
 
 static void
@@ -424,7 +427,7 @@ do_UnmapNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XUnmapEvent *e = (XUnmapEvent *) eventp;
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx, from_configure %s\n",
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu, \"from_configure\":%s",
            e->event, e->window, e->from_configure ? Yes : No);
 }
 
@@ -433,7 +436,7 @@ do_MapNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XMapEvent *e = (XMapEvent *) eventp;
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx, override %s\n",
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu, \"override\":%s",
            e->event, e->window, e->override_redirect ? Yes : No);
 }
 
@@ -442,7 +445,7 @@ do_MapRequest(FILE *stream, Display *display, XEvent *eventp)
 {
     XMapRequestEvent *e = (XMapRequestEvent *) eventp;
 
-    fprintf(stream, "    parent 0x%lx, window 0x%lx\n", e->parent, e->window);
+    fprintf(stream, ", \"parent\":%lu, \"window\":%lu", e->parent, e->window);
 }
 
 static void
@@ -450,9 +453,9 @@ do_ReparentNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XReparentEvent *e = (XReparentEvent *) eventp;
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx, parent 0x%lx,\n",
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu, \"parent\":%lu",
            e->event, e->window, e->parent);
-    fprintf(stream, "    (%d,%d), override %s\n", e->x, e->y,
+    fprintf(stream, ", \"x\":%d, \"y\":%d, \"override\":%s", e->x, e->y,
            e->override_redirect ? Yes : No);
 }
 
@@ -461,9 +464,9 @@ do_ConfigureNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XConfigureEvent *e = (XConfigureEvent *) eventp;
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,\n",
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu, \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d",
            e->event, e->window, e->x, e->y, e->width, e->height);
-    fprintf(stream, "    border_width %d, above 0x%lx, override %s\n",
+    fprintf(stream, ", \"border_width\":%d, \"above\":%lu, \"override\":%s",
            e->border_width, e->above, e->override_redirect ? Yes : No);
 }
 
@@ -496,9 +499,9 @@ do_ConfigureRequest(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,\n",
+    fprintf(stream, ", \"parent\":%lu, \"window\":%lu, \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d",
            e->parent, e->window, e->x, e->y, e->width, e->height);
-    fprintf(stream, "    border_width %d, above 0x%lx, detail %s, value 0x%lx\n",
+    fprintf(stream, ", \"border_width\":%d, \"above\":%lu, \"detail\":\"%s\", \"value\":%lu",
            e->border_width, e->above, detail, e->value_mask);
 }
 
@@ -507,7 +510,7 @@ do_GravityNotify(FILE *stream, Display *display, XEvent *eventp)
 {
     XGravityEvent *e = (XGravityEvent *) eventp;
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx, (%d,%d)\n",
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu, \"x\":%d, \"y\":%d",
            e->event, e->window, e->x, e->y);
 }
 
@@ -516,7 +519,7 @@ do_ResizeRequest(FILE *stream, Display *display, XEvent *eventp)
 {
     XResizeRequestEvent *e = (XResizeRequestEvent *) eventp;
 
-    fprintf(stream, "    width %d, height %d\n", e->width, e->height);
+    fprintf(stream, ", \"width\":%d, \"height\":%d", e->width, e->height);
 }
 
 static void
@@ -539,7 +542,7 @@ do_CirculateNotify(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    event 0x%lx, window 0x%lx, place %s\n", e->event, e->window, p);
+    fprintf(stream, ", \"event\":%lu, \"window\":%lu, \"place\":\"%s\"", e->event, e->window, p);
 }
 
 static void
@@ -562,7 +565,7 @@ do_CirculateRequest(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    parent 0x%lx, window 0x%lx, place %s\n",
+    fprintf(stream, ", \"parent\":%lu, \"window\":%lu, \"place\":\"%s\"",
            e->parent, e->window, p);
 }
 
@@ -587,7 +590,7 @@ do_PropertyNotify(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    atom 0x%lx (%s), time %lu, state %s\n",
+    fprintf(stream, ", \"atom\":%lu, \"name\":\"%s\", \"time\":%lu, \"state\":\"%s\"",
            e->atom, aname ? aname : Unknown, e->time, s);
 
     XFree(aname);
@@ -599,7 +602,7 @@ do_SelectionClear(FILE *stream, Display *display, XEvent *eventp)
     XSelectionClearEvent *e = (XSelectionClearEvent *) eventp;
     char *sname = XGetAtomName(display, e->selection);
 
-    fprintf(stream, "    selection 0x%lx (%s), time %lu\n",
+    fprintf(stream, ", \"selection\":%lu, \"name\":\"%s\", \"time\":%lu",
            e->selection, sname ? sname : Unknown, e->time);
 
     XFree(sname);
@@ -613,9 +616,9 @@ do_SelectionRequest(FILE *stream, Display *display, XEvent *eventp)
     char *tname = XGetAtomName(display, e->target);
     char *pname = XGetAtomName(display, e->property);
 
-    fprintf(stream, "    owner 0x%lx, requestor 0x%lx, selection 0x%lx (%s),\n",
+    fprintf(stream, ", \"owner\":%lu, \"requestor\":%lu, \"selection\":%lu, \"name\":\"%s\"",
            e->owner, e->requestor, e->selection, sname ? sname : Unknown);
-    fprintf(stream, "    target 0x%lx (%s), property 0x%lx (%s), time %lu\n",
+    fprintf(stream, ", \"target\":%lu, \"target_name\":\"%s\", \"property\":%lu, \"property_name\":\"%s\", \"time\":%lu",
            e->target, tname ? tname : Unknown, e->property,
            pname ? pname : Unknown, e->time);
 
@@ -632,10 +635,10 @@ do_SelectionNotify(FILE *stream, Display *display, XEvent *eventp)
     char *tname = XGetAtomName(display, e->target);
     char *pname = XGetAtomName(display, e->property);
 
-    fprintf(stream, "    selection 0x%lx (%s), target 0x%lx (%s),\n",
+    fprintf(stream, ", \"selection\":%lu, \"name\":\"%s\", \"target\":%lu, \"target_name\":\"%s\"",
            e->selection, sname ? sname : Unknown, e->target,
            tname ? tname : Unknown);
-    fprintf(stream, "    property 0x%lx (%s), time %lu\n",
+    fprintf(stream, ", \"property\":%lu, \"property_name\":\"%s\", \"time\":%lu",
            e->property, pname ? pname : Unknown, e->time);
 
     XFree(sname);
@@ -663,7 +666,7 @@ do_ColormapNotify(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    colormap 0x%lx, new %s, state %s\n",
+    fprintf(stream, ", \"colormap\":%lu, \"new\":%s, \"state\":\"%s\"",
            e->colormap, e->new ? Yes : No, s);
 }
 
@@ -677,13 +680,13 @@ do_ClientMessage(FILE *stream, Display *display, XEvent *eventp)
     if (e->message_type == wm_protocols) {
         char *message = XGetAtomName(display, e->data.l[0]);
 
-        fprintf(stream, "    message_type 0x%lx (%s), format %d, message 0x%lx (%s)\n",
+        fprintf(stream, ", \"message_type\":%lu, \"message_type_name\":\"%s\", \"format\":%d, \"message\":%lu, \"message_name\":\"%s\"",
                e->message_type, mname ? mname : Unknown, e->format,
                e->data.l[0], message);
         XFree(message);
     }
     else {
-     fprintf(stream, "    message_type 0x%lx (%s), format %d\n",
+     fprintf(stream, ", \"message_type\":%lu, \"message_type_name\":\"%s\", \"format\":%d",
                e->message_type, mname ? mname : Unknown, e->format);
     }
 
@@ -713,7 +716,7 @@ do_MappingNotify(FILE *stream, Display *display, XEvent *eventp)
         break;
     }
 
-    fprintf(stream, "    request %s, first_keycode %d, count %d\n",
+    fprintf(stream, ", \"request\":\"%s\", \"first_keycode\":%d, \"count\":%d",
            r, e->first_keycode, e->count);
     XRefreshKeyboardMapping(e);
 }
@@ -790,14 +793,14 @@ do_RRScreenChangeNotify(FILE *stream, Display *display, XEvent *eventp)
     XRRScreenChangeNotifyEvent *e = (XRRScreenChangeNotifyEvent *) eventp;
 
     XRRUpdateConfiguration(eventp);
-    fprintf(stream, "    root 0x%lx, timestamp %lu, config_timestamp %lu\n",
+    fprintf(stream, ", \"root\":%lu, \"timestamp\":%lu, \"config_timestamp\":%lu",
            e->root, e->timestamp, e->config_timestamp);
-    fprintf(stream, "    size_index %hu", e->size_index);
-    fprintf(stream, ", subpixel_order ");
+    fprintf(stream, ", \"size_index\":%hu", e->size_index);
+    fprintf(stream, ", \"subpixel_order\":\"");
     print_SubPixelOrder(stream, e->subpixel_order);
-    fprintf(stream, "\n    rotation ");
+    fprintf(stream, "\", \"rotation\":\"");
     print_Rotation(stream, e->rotation);
-    fprintf(stream, "\n    width %d, height %d, mwidth %d, mheight %d\n",
+    fprintf(stream, "\", \"width\":%d, \"height\":%d, \"mwidth\":%d, \"mheight\":%d",
            e->width, e->height, e->mwidth, e->mheight);
 }
 
@@ -818,29 +821,29 @@ do_RRNotify_OutputChange(FILE *stream, Display *display, XEvent *eventp, XRRScre
                 break;
             }
     }
-    fprintf(stream, "    subtype XRROutputChangeNotifyEvent\n");
+    fprintf(stream, ", \"subtype\":\"XRROutputChangeNotifyEvent\"");
     if (output_info)
-        fprintf(stream, "    output %s, ", output_info->name);
+        fprintf(stream, ", \"output_name\":\"%s\"", output_info->name);
     else
-        fprintf(stream, "    output %lu, ", e->output);
+        fprintf(stream, ", \"output\":%lu", e->output);
     if (e->crtc)
-        fprintf(stream, "crtc %lu, ", e->crtc);
+        fprintf(stream, ", \"crtc\":%lu", e->crtc);
     else
-        fprintf(stream, "crtc None, ");
+        fprintf(stream, ", \"crtc\":undefined");
     if (mode_info)
-        fprintf(stream, "mode %s (%dx%d)\n", mode_info->name, mode_info->width,
+        fprintf(stream, ", \"mode\":\"%s\", \"width\":%d, \"height\":%d", mode_info->name, mode_info->width,
                mode_info->height);
     else if (e->mode)
-        fprintf(stream, "mode %lu\n", e->mode);
+        fprintf(stream, ", \"mode\":%lu", e->mode);
     else
-        fprintf(stream, "mode None\n");
-    fprintf(stream, "    rotation ");
+        fprintf(stream, ", \"mode\":undefined");
+    fprintf(stream, ", \"rotation\":\"");
     print_Rotation(stream, e->rotation);
-    fprintf(stream, "\n    connection ");
+    fprintf(stream, "\", \"connection\":\"");
     print_Connection(stream, e->connection);
-    fprintf(stream, ", subpixel_order ");
+    fprintf(stream, "\", \"subpixel_order\":\"");
     print_SubPixelOrder(stream, e->subpixel_order);
-    fprintf(stream, "\n");
+    fprintf(stream, "\"");
     XRRFreeOutputInfo(output_info);
 }
 
@@ -859,20 +862,20 @@ do_RRNotify_CrtcChange(FILE *stream, Display *display, XEvent *eventp, XRRScreen
                 break;
             }
     }
-    fprintf(stream, "    subtype XRRCrtcChangeNotifyEvent\n");
+    fprintf(stream, ", \"subtype\":\"XRRCrtcChangeNotifyEvent\"");
     if (e->crtc)
-        fprintf(stream, "    crtc %lu, ", e->crtc);
+        fprintf(stream, ", \"crtc\":%lu", e->crtc);
     else
-        fprintf(stream, "    crtc None, ");
+        fprintf(stream, ", \"crtc\":undefined");
     if (mode_info)
-        fprintf(stream, "mode %s, ", mode_info->name);
+        fprintf(stream, ", \"mode\":\"%s\"", mode_info->name);
     else if (e->mode)
-        fprintf(stream, "mode %lu, ", e->mode);
+        fprintf(stream, ", \"mode\":%lu", e->mode);
     else
-        fprintf(stream, "mode None, ");
-    fprintf(stream, "rotation ");
+        fprintf(stream, ", \"mode\":undefined");
+    fprintf(stream, ", \"rotation\":\"");
     print_Rotation(stream, e->rotation);
-    fprintf(stream, "\n    x %d, y %d, width %d, height %d\n",
+    fprintf(stream, "\", \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d",
            e->x, e->y, e->width, e->height);
 }
 
@@ -886,18 +889,18 @@ do_RRNotify_OutputProperty(FILE *stream, Display *display, XEvent *eventp,
 
     if (screen_resources)
         output_info = XRRGetOutputInfo(display, screen_resources, e->output);
-    fprintf(stream, "    subtype XRROutputPropertyChangeNotifyEvent\n");
+    fprintf(stream, ", \"subtype\":\"XRROutputPropertyChangeNotifyEvent\"");
     if (output_info)
-        fprintf(stream, "    output %s, ", output_info->name);
+        fprintf(stream, ", output \"%s\"", output_info->name);
     else
-        fprintf(stream, "    output %lu, ", e->output);
-    fprintf(stream, "property %s, timestamp %lu, state ", property, e->timestamp);
+        fprintf(stream, ", \"output\":%lu", e->output);
+    fprintf(stream, ", \"property\":\"%s\", \"timestamp\":%lu, \"state\":", property, e->timestamp);
     if (e->state == PropertyNewValue)
-        fprintf(stream, "NewValue\n");
+        fprintf(stream, "\"NewValue\"");
     else if (e->state == PropertyDelete)
-        fprintf(stream, "Delete\n");
+        fprintf(stream, "\"Delete\"");
     else
-        fprintf(stream, "%d\n", e->state);
+        fprintf(stream, "%d", e->state);
     XRRFreeOutputInfo(output_info);
     XFree(property);
 }
@@ -922,12 +925,12 @@ do_RRNotify(FILE *stream, Display *display, XEvent *eventp)
         do_RRNotify_OutputProperty(stream, display, eventp, screen_resources);
         break;
     default:
-        fprintf(stream, "    subtype %d\n", e->subtype);
+        fprintf(stream, ", \"subtype\":%d", e->subtype);
     }
     XRRFreeScreenResources(screen_resources);
 }
 
-void print_xevent(FILE *stream, Display *display, XEvent *event) {
+void print_xevent_fragment(FILE *stream, Display *display, XEvent *event) {
     if (!initialized) {
         initialized = True;
         have_rr = XRRQueryExtension(display, &rr_event_base, &rr_error_base);
@@ -1075,7 +1078,7 @@ void print_xevent(FILE *stream, Display *display, XEvent *event) {
                     prologue(stream, event, "XI_RawMotion");
                     break;
                 default:  
-                    fprintf(stream, "Unknown GenericEvent evtype %d\n", event->xcookie.evtype);
+                    fprintf(stream, "\"type\":\"GenericEvent\", \"error\":\"Unknown GenericEvent\", \"evtype\":%d", event->xcookie.evtype);
                     break;
             }
             break;
@@ -1103,7 +1106,13 @@ void print_xevent(FILE *stream, Display *display, XEvent *event) {
                     break;
                 }
             }
-            fprintf(stream, "Unknown event type %d\n", event->type);
+            fprintf(stream, "\"error\":\"Unknown event\", \"type\":%d", event->type);
             break;
-    }
+     }
+}
+
+void print_xevent(FILE *stream, Display *display, XEvent *event) {
+     fprintf(stream, "{");
+     print_xevent_fragment(stream, display, event);
+     fprintf(stream, "}\n");
 }

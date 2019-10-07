@@ -127,10 +127,8 @@ int main() {
     XGenericEventCookie *cookie = &e.xcookie;
     XSync(display, False);
     XNextEvent(display, &e);
-//    if (e.type != MotionNotify && e.type != GenericEvent && e.type != damage_event + XDamageNotify) {
-          fprintf(eventlog, "Timestamp: %lu\n", get_timestamp());
-          print_xevent(eventlog, display, &e);
-//    }
+
+    unsigned long start_time = get_timestamp();
     
     gl_check_error("loop");
 
@@ -221,8 +219,7 @@ int main() {
       DEBUG("event.configure", "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
       ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
-      if (!item) continue;
-      if (item->base.layer == IG_LAYER_MENU) {       
+      if (item && item->base.layer == IG_LAYER_MENU) {       
         item->base.coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
         item->base.coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.width;
         item->base.coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
@@ -242,51 +239,43 @@ int main() {
       unsigned long bytes_after_return;
       unsigned char *prop_return;
       ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
-      if (!item) continue;
-      XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
-                         &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-      if (type_return != None) {
-        item->base.width = ((long *) prop_return)[0];
-        item->base.height = ((long *) prop_return)[1];
-        item->width_property = item->base.width;
-        item->height_property = item->base.height;
-        DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->base.width, item->base.height);
-        item->base.type->update((Item *) item);
-        draw();
+      if (item) {
+        XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
+                           &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+        if (type_return != None) {
+          item->base.width = ((long *) prop_return)[0];
+          item->base.height = ((long *) prop_return)[1];
+          item->width_property = item->base.width;
+          item->height_property = item->base.height;
+          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->base.width, item->base.height);
+          item->base.type->update((Item *) item);
+          draw();
+        }
+        XFree(prop_return);
       }
-      XFree(prop_return);
     } else if (e.type == PropertyNotify && e.xproperty.atom == DISPLAYSVG) {
       Item * item = item_get_from_window(e.xproperty.window, False);
-      if (!item) continue;
-      // FIXME: Handle updates of existign item later
-      // if (!item_isinstance(item, &item_type_window_svg)) {
-      item_remove(item);
-      item = item_get_from_window(e.xproperty.window, True);
-/*
-     } else if (e.type == CreateNotify) {
-      if (e.xcreatewindow.window != overlay && e.xcreatewindow.window != motion_notification_window) {
-        fprintf(stderr, "CreateNotify %ld under %ld @ %d,%d size = %d, %d\n", e.xcreatewindow.window, e.xcreatewindow.parent, e.xcreatewindow.x, e.xcreatewindow.y, e.xcreatewindow.width, e.xcreatewindow.height);
-        Item *item = item_get_from_window(e.xcreatewindow.window, False);
-        if (!item) continue;
-        // XMapWindow(display, e.xmaprequest.window);
-        item->type->update(item);
+      if (item) {
+        // FIXME: Handle updates of existign item later
+        // if (!item_isinstance(item, &item_type_window_svg)) {
+        item_remove(item);
+        item = item_get_from_window(e.xproperty.window, True);
       }
-*/
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window, False);
-      if (!item) continue;
-      item_remove(item);
-    } else if (e.type == ReparentNotify) {
-      if (e.xreparent.parent == root) {
-        Item * item = item_get_from_window(e.xreparent.window, False);
-        if (!item) continue;
-        item->type->update(item);
-      } else {
-        Item * item = item_get_from_window(e.xreparent.window, False);
-        if (!item) continue;
+      if (item) {
         item_remove(item);
       }
-      draw();
+    } else if (e.type == ReparentNotify) {
+      Item * item = item_get_from_window(e.xreparent.window, False);
+      if (item) {
+        if (e.xreparent.parent == root) {
+          item->type->update(item);
+        } else {
+          item_remove(item);
+        }
+        draw();
+      }
     } else if (e.type == MapNotify) {
       if (e.xmap.window != overlay) {
         DEBUG("event.map", "MapNotify %ld\n", e.xmap.window);
@@ -297,15 +286,16 @@ int main() {
 
         char *window_name;
         if (XFetchName(display, e.xmap.window, &window_name) && window_name) {
-          fprintf(eventlog, "Window %ld is %s\n", e.xmap.window, window_name);
+          fprintf(eventlog, "{\"window\": %ld, \"name\": \"%s\"}\n", e.xmap.window, window_name);
           XFree(window_name);
         }        
       }
    } else if (e.type == UnmapNotify) {
       Item *item = item_get_from_window(e.xunmap.window, False);
-      if (!item) continue;
-      item->is_mapped = False;
-      draw();
+      if (item) {
+        item->is_mapped = False;
+        draw();
+      }
     } else if (e.type == MapRequest) {
       XMapWindow(display, e.xmaprequest.window);
     } else if (e.type == PropertyNotify) {
@@ -318,10 +308,11 @@ int main() {
         handled=True;
       } else if (e.xproperty.atom == IG_COORDS) {
         Item *item = item_get_from_window(e.xproperty.window, False);
-        if (!item) continue;
-        item_type_window_update_space_pos_from_window((ItemWindow *) item);
-        item->type->update(item);
-        draw();
+        if (item) {
+          item_type_window_update_space_pos_from_window((ItemWindow *) item);
+          item->type->update(item);
+          draw();
+        }
         handled=True;
       } else {
         for (size_t idx = 0; idx < views->count; idx++) {
@@ -366,6 +357,10 @@ int main() {
         print_xevent(stderr, display, &e);
       }
     }
+
+    fprintf(eventlog, "{\"processing_time\": %lu, ", get_timestamp() - start_time);    
+    print_xevent_fragment(eventlog, display, &e);
+    fprintf(eventlog, "}\n");
   }
   return 0;
 }
