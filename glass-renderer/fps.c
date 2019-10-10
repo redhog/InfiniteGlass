@@ -25,7 +25,7 @@ void draw_fps() {
   frames++;
   if (now - epoch >= 2000000) { // 10 Seconds
     fprintf(eventlog,
-           "{\"time\": %lu, \"fps\": %f, \"draw_time\": %f}\n",
+           "{\"print_time\": %lu, \"fps\": %f, \"draw_time\": %f}\n",
             now, (float) frames * (float) 1000000 / (float) (now - epoch), (float) total_time / 1000000. / (float) frames);
     epoch = now;
     frames = 0;
