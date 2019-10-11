@@ -33,18 +33,17 @@ def pop(display):
     return res
 
 def handle_event(display, event):
-    is_propnot = not (event == "PropertyNotify" and event.window == display.notify_motion_window)
-    cat = "event" if is_propnot else "event.prop"
-    InfiniteGlass.DEBUG(cat, "HANDLE %s\n" % event)
+    InfiniteGlass.DEBUG("event", "HANDLE %s\n" % event)
     for i in range(len(display.input_stack)-1, -1, -1):
         mode = display.input_stack[i]
         if mode.handle(event):
-            InfiniteGlass.DEBUG(cat, "        BY %s %s\n" % (i, mode))
+            InfiniteGlass.DEBUG("event", "        BY %s %s\n" % (i, mode))
             return True
-    InfiniteGlass.DEBUG(cat, "        UNHANDLED\n")
+    InfiniteGlass.DEBUG("event", "        UNHANDLED\n")
     return False
 
 def view_to_space(screen, size, screenx, screeny):
+    screeny = screeny - size[1] # FIXME: Merge into matrix...
     screen2space = numpy.array(((screen[2]/size[0],0,0,screen[0]),
                                 (0,-screen[3]/size[1],0,screen[1]),
                                 (0,0,1,0),
@@ -89,11 +88,24 @@ class Mode(object):
         pop(self.display)
     
     def get_active_window(self):
-        try:
-            return self.display.notify_motion_window["IG_ACTIVE_WINDOW"]
-        except (KeyError, AttributeError) as e:
-            print("Unable to get active window", e)
-            return None
+        pointer = self.display.root.query_pointer()
+
+        views = {self.display.root[name + "_LAYER"]: (self.display.root[name + "_VIEW"],
+                                                      self.display.root[name + "_SIZE"])
+                 for name in self.display.root["IG_VIEWS"]}
+        spacecoords = {layer: view_to_space(view, size, pointer.root_x, pointer.root_y)
+                       for layer, (view, size) in views.items()}
+        for child in self.display.root.query_tree().children:
+            coords = child.get("IG_COORDS", None)
+            if coords is None: continue
+            layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
+            pointer = spacecoords[layer]
+            if (pointer[0] >= coords[0]
+                and pointer[0] <= coords[0] + coords[2]
+                and pointer[1] <= coords[1]
+                and pointer[1] >= coords[1] - coords[3]):
+                return child
+        return None
 
     def get_event_window(self, event):
         if event == "ButtonPress":
@@ -117,10 +129,9 @@ class BaseMode(Mode):
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
 
     def focus_follows_mouse(self, event):
-        if event.window == self.display.notify_motion_window:
-            win = self.get_active_window()
-            if win and win != self.display.root:
-                win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
+        win = self.get_active_window()
+        if win:
+            win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
 
 class GrabbedMode(Mode):
     def __init__(self, **kw):
@@ -134,6 +145,10 @@ class GrabbedMode(Mode):
         self.display.ungrab_pointer(Xlib.X.CurrentTime)
         self.display.ungrab_keyboard(Xlib.X.CurrentTime)
 
+    def debugpos(self, event):
+        pass
+        #self.get_active_window()
+        
     def toggle_overlay(self, event):
         old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
         if old[0] == 0.:
@@ -400,20 +415,14 @@ def main(*arg, **kw):
             font, Xlib.Xcursorfont.box_spiral, Xlib.Xcursorfont.box_spiral+1,
             (65535, 65535, 65535), (0, 0, 0))
 
-        display.notify_motion_window = -1
-        @display.root.require("IG_NOTIFY_MOTION")
-        def notify_motion(root, win):
-            win.change_attributes(event_mask = Xlib.X.PropertyChangeMask)
-            display.notify_motion_window = win
-
         display.animate_window = -1
         @display.root.require("IG_ANIMATE")
-        def notify_motion(root, win):
+        def animate_window(root, win):
             display.animate_window = win
 
         @display.eventhandlers.append
         def handle(event):
-            if display.notify_motion_window == -1 or display.animate_window == -1:
+            if display.animate_window == -1:
                 return False
             return handle_event(display, event)
 
