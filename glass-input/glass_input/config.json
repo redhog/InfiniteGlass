@@ -1,11 +1,11 @@
 {
-    "base": {"class": "BaseMode", "keymap": {
+    "base": {"class": "glass_input.BaseMode", "keymap": {
         "GenericEventCode": "focus_follows_mouse",
         "ButtonPress,Mod4Mask": "grabbed",
         "KeyPress,Mod4Mask": "grabbed",
         "KeyPress,XK_Super_L": "grabbed"
     }},
-    "grabbed": {"class": "GrabbedMode", "keymap": {
+    "grabbed": {"class": "glass_input.GrabbedMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
         "Mod4Mask,KeyPress,XK_space": "rofi",
@@ -35,7 +35,7 @@
         "Mod4Mask,KeyPress,XK_Left,!ControlMask": "item_pan",
         "Mod4Mask,KeyPress,XK_Right,!ControlMask": "item_pan"
     }},
-    "zoom": {"class": "ZoomMode", "keymap": {
+    "zoom": {"class": "glass_input.ZoomMode", "keymap": {
         "KeyRelease": "pop",
         "Mod4Mask,ButtonRelease,4,ShiftMask": "zoom_to_window",
         "Mod4Mask,KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
@@ -48,14 +48,14 @@
         "Mod4Mask,ButtonRelease,4": "zoom_in",
         "Mod4Mask,ButtonRelease,5": "zoom_out"
     }},
-    "pan": {"class": "PanMode", "keymap": {
+    "pan": {"class": "glass_input.PanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
         "Mod4Mask,KeyPress": "pan",
         "Mod4Mask,ButtonPress": "pan_mouse",
         "Mod4Mask,MotionNotify": "pan_mouse"
     }},
-    "item_zoom": {"class": "ItemZoomMode", "keymap": {
+    "item_zoom": {"class": "glass_input.ItemZoomMode", "keymap": {
         "KeyRelease": "pop",
         "Mod4Mask,Mod1Mask,ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
         "Mod4Mask,Mod1Mask,KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
@@ -66,7 +66,7 @@
         "Mod4Mask,Mod1Mask,ButtonRelease,5": "zoom_out",
         "Mod4Mask,Mod1Mask,KeyPress,XK_Next": "zoom_out"
     }},
-    "item_pan": {"class": "ItemPanMode", "keymap": {
+    "item_pan": {"class": "glass_input.ItemPanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
         "Mod4Mask,KeyPress": "pan",

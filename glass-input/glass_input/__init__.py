@@ -10,128 +10,11 @@ import pkg_resources
 import json
 import math
 import datetime
-
-config = {}
-
-def push(display, Mode, **kw):
-    InfiniteGlass.DEBUG("modes.push", "PUSH %s\n" % Mode)
-    if not hasattr(display, "input_stack"):
-        display.input_stack = []
-    mode = Mode(display=display, **kw)
-    display.input_stack.append(mode)
-    if not mode.enter():
-        pop(display)
-        return False
-    return True
-
-def push_by_name(display, name, **kw):
-    cls = getattr(sys.modules[push_by_name.__module__], config[name]["class"])
-    return push(display, cls, keymap=config[name]["keymap"], **kw)
-    
-def pop(display):
-    res = display.input_stack.pop()
-    InfiniteGlass.DEBUG("modes.pop", "POP %s\n" % res)
-    res.exit()
-    return res
-
-def handle_event(display, event):
-    InfiniteGlass.DEBUG("event", "HANDLE %s\n" % event)
-    for i in range(len(display.input_stack)-1, -1, -1):
-        mode = display.input_stack[i]
-        if mode.handle(event):
-            InfiniteGlass.DEBUG("event", "        BY %s %s\n" % (i, mode))
-            return True
-    InfiniteGlass.DEBUG("event", "        UNHANDLED\n")
-    return False
-
-def view_to_space(screen, size, screenx, screeny):
-    screeny = screeny - size[1] # FIXME: Merge into matrix...
-    screen2space = numpy.array(((screen[2]/size[0],0,0,screen[0]),
-                                (0,-screen[3]/size[1],0,screen[1]),
-                                (0,0,1,0),
-                                (0,0,0,1)))
-    space = numpy.array((screenx, screeny, 0., 1.))
-    out = screen2space.dot(space)
-    return out[:2]
-
-class Mode(object):
-    def __init__(self, **kw):
-        for key, value in kw.items():
-            setattr(self, key, value)
-
-    def enter(self):
-        self.start_time = datetime.datetime.now()
-        return True
-    
-    def exit(self):
-        pass
-    
-    def handle(self, event):
-        time = datetime.datetime.now() - self.start_time
-        for key, value in self.keymap.items():
-            key = key.split(",")
-            key = [item for item in key if not item.startswith("@")]
-            timefilters = [item for item in key if item.startswith("@")]
-            if timefilters and time < float(timefilters[0][1:]):
-                continue
-            if not event[key]:
-                continue
-            self.action(key, value, event)
-            return True
-        return True
-
-    def action(self, key, name, event):
-        if hasattr(self, name):
-            getattr(self, name)(event)
-        elif name in config:
-            if "class" in config[name]:
-                if push_by_name(self.display, name, first_event=event, last_event=event):
-                    handle_event(self.display, event)
-            elif "shell" in config[name]:
-                os.system(config[name]["shell"])
-            else:
-                InfiniteGlass.DEBUG("error", "Unknown action parameters for %s" % (name,))
-        else:
-            InfiniteGlass.DEBUG("error", "Unknown action for %s: %\n" % (key, name)) 
-    
-    def pop(self, event):
-        pop(self.display)
-    
-    def get_active_window(self):
-        pointer = self.display.root.query_pointer()
-
-        try:
-            views = {self.display.root[name + "_LAYER"]: (self.display.root[name + "_VIEW"],
-                                                          self.display.root[name + "_SIZE"])
-                     for name in self.display.root["IG_VIEWS"]}
-        except KeyError:
-            return None
-        spacecoords = {layer: view_to_space(view, size, pointer.root_x, pointer.root_y)
-                       for layer, (view, size) in views.items()}
-        for child in self.display.root.query_tree().children:
-            coords = child.get("IG_COORDS", None)
-            if coords is None: continue
-            layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
-            pointer = spacecoords[layer]
-            if (pointer[0] >= coords[0]
-                and pointer[0] <= coords[0] + coords[2]
-                and pointer[1] <= coords[1]
-                and pointer[1] >= coords[1] - coords[3]):
-                return child
-        return None
-
-    def get_event_window(self, event):
-        if event == "ButtonPress":
-            return self.get_active_window()
-        else:
-            focus = self.display.get_input_focus().focus
-            if focus == Xlib.X.PointerRoot:
-                return None
-            return focus
+from . import mode
         
-class BaseMode(Mode):
+class BaseMode(mode.Mode):
     def __init__(self, **kw):
-        Mode.__init__(self, **kw)
+        mode.Mode.__init__(self, **kw)
         for mod in range(0, 2**8):
             self.display.root.grab_key(self.display.keycode("XK_Super_L"),
                                        mod, False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync)
@@ -146,9 +29,9 @@ class BaseMode(Mode):
         if win:
             win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
 
-class GrabbedMode(Mode):
+class GrabbedMode(mode.Mode):
     def __init__(self, **kw):
-        Mode.__init__(self, **kw)
+        mode.Mode.__init__(self, **kw)
         self.display.root.grab_pointer(
             False, Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
             Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor, Xlib.X.CurrentTime)
@@ -221,7 +104,7 @@ class GrabbedMode(Mode):
        self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
     
-class ZoomMode(Mode):
+class ZoomMode(mode.Mode):
     def zoom(self, factor, around_aspect = (0.5, 0.5), around_pos = None, view="IG_VIEW_DESKTOP_VIEW"):
         screen = list(self.display.root[view])
         if around_pos is None:
@@ -304,9 +187,9 @@ class ZoomMode(Mode):
     def zoom_out(self, event):
         self.zoom(1.1)
 
-class PanMode(Mode):
+class PanMode(mode.Mode):
     def __init__(self, **kw):
-        Mode.__init__(self, **kw)
+        mode.Mode.__init__(self, **kw)
         self.x = 0
         self.y = 0
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
@@ -316,8 +199,8 @@ class PanMode(Mode):
         self.x += event["XK_Left"] - event["XK_Right"];
         self.y += event["XK_Up"] - event["XK_Down"];
 
-        space_orig = view_to_space(self.orig_view, self.size, 0, 0)
-        space = view_to_space(self.orig_view, self.size, self.x, self.y)
+        space_orig = mode.view_to_space(self.orig_view, self.size, 0, 0)
+        space = mode.view_to_space(self.orig_view, self.size, self.x, self.y)
 
         view = list(self.orig_view)
         view[0] = self.orig_view[0] - (space[0] - space_orig[0])
@@ -325,8 +208,8 @@ class PanMode(Mode):
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
             
     def pan_mouse(self, event):
-        space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
-        space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
+        space_orig = mode.view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
+        space = mode.view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
 
         view = list(self.orig_view)
         view[0] = self.orig_view[0] - (space[0] - space_orig[0])
@@ -334,8 +217,9 @@ class PanMode(Mode):
 
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
-class ItemZoomMode(Mode):
+class ItemZoomMode(mode.Mode):
     def enter(self):
+        mode.Mode.enter(self)
         self.window = self.get_event_window(self.first_event)
         if not self.window or self.window == self.display.root:
             return False
@@ -372,12 +256,13 @@ class ItemZoomMode(Mode):
     def zoom_out(self, event):
         self.window["IG_SIZE"] = [int(item * 1.1) for item in self.window["IG_SIZE"]]
     
-class ItemPanMode(Mode):
+class ItemPanMode(mode.Mode):
     def enter(self):
+        mode.Mode.enter(self)
         self.window = self.get_event_window(self.first_event)
         if not self.window or self.window == self.display.root:
-            pop(self.display)
-            push_by_name(self.display, "pan", first_event=self.first_event, last_event=self.last_event)
+            mode.pop(self.display)
+            mode.push_by_name(self.display, "pan", first_event=self.first_event, last_event=self.last_event)
             return True
         self.x = 0
         self.y = 0
@@ -391,8 +276,8 @@ class ItemPanMode(Mode):
         self.x += event["XK_Right"] - event["XK_Left"]
         self.y += event["XK_Down"] - event["XK_Up"]
 
-        space_orig = view_to_space(self.orig_view, self.size, 0, 0)
-        space = view_to_space(self.orig_view, self.size, self.x, self.y)
+        space_orig = mode.view_to_space(self.orig_view, self.size, 0, 0)
+        space = mode.view_to_space(self.orig_view, self.size, self.x, self.y)
 
         coords = list(self.orig_coords)
         coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
@@ -401,8 +286,8 @@ class ItemPanMode(Mode):
         self.window["IG_COORDS"] = coords
 
     def pan_mouse(self, event):
-        space_orig = view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
-        space = view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
+        space_orig = mode.view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
+        space = mode.view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
 
         coords = list(self.orig_coords)
         coords[0] =  self.orig_coords[0] + (space[0] - space_orig[0])
@@ -411,8 +296,6 @@ class ItemPanMode(Mode):
         self.window["IG_COORDS"] = coords
 
 def main(*arg, **kw):
-    global config
-
     configpath = os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.json")
     if configpath:
         configpath = os.path.expanduser(configpath)
@@ -427,10 +310,10 @@ def main(*arg, **kw):
                     outf.write(inf.read())
     
         with open(configpath) as f:
-            config = json.load(f)
+            mode.config = json.load(f)
     else:
         with pkg_resources.resource_stream("glass_input", "config.json") as f:
-            config = json.load(f)
+            mode.config = json.load(f)
         
     with InfiniteGlass.Display() as display:
 
@@ -456,9 +339,9 @@ def main(*arg, **kw):
         def handle(event):
             if display.animate_window == -1:
                 return False
-            return handle_event(display, event)
+            return mode.handle_event(display, event)
 
-        push_by_name(display, "base")
+        mode.push_by_name(display, "base")
 
         display.root.xinput_select_events([
           (Xlib.ext.xinput.AllDevices, Xlib.ext.xinput.RawMotionMask),
