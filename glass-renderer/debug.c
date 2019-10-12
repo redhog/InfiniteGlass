@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-char prefix[] = "GLASS_DEBUG.renderer";
-size_t prefix_len = sizeof("GLASS_DEBUG.renderer") - 1;
+FILE *eventlog = NULL;
 
-int debug_enabled(const char *file, const char *func, const char *entry) {
+int debug_enabled(const char *prefix, const char *file, const char *func, const char *entry) {
+  size_t prefix_len = strlen(prefix); 
   size_t file_len = strlen(file);
   size_t func_len = strlen(func);
   size_t entry_len = strlen(entry);
@@ -46,9 +46,10 @@ int debug_enabled(const char *file, const char *func, const char *entry) {
   return 0;
 }
 
-void debug_print(const char *file, const char *func, const char *entry, const char * format, ...) {
-  if (!debug_enabled(file, func, entry)) return;
+void debug_print(FILE *fd, const char *prefix, const char *file, const char *func, const char *entry, const char * format, ...) {
+  if (!debug_enabled(prefix, file, func, entry)) return;
 
+  size_t prefix_len = strlen(prefix);
   size_t file_len = strlen(file);
   size_t func_len = strlen(func);
   size_t entry_len = strlen(entry);
@@ -64,9 +65,11 @@ void debug_print(const char *file, const char *func, const char *entry, const ch
   key[prefix_len + 1 + file_len + 1 + func_len] = '.';
   strcpy(key + prefix_len + 1 + file_len + 1 + func_len + 1, entry);
   
-  fprintf(stderr, "%s: ", key);
+  fprintf(fd, "%s: ", key);
   va_start(args, format);
-  vfprintf(stderr, format, args);
+  vfprintf(fd, format, args);
   va_end(args);
-  fflush(stderr);
+  fflush(fd);
 }
+
+

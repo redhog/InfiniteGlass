@@ -92,8 +92,6 @@ void selection_sn_clear(Selection *selection) {
 
 
 int main() {
-  eventlog = fopen("eventlog.log", "w");
-
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
@@ -272,7 +270,7 @@ int main() {
 
         char *window_name;
         if (XFetchName(display, e.xmap.window, &window_name) && window_name) {
-          fprintf(eventlog, "{\"window\": %ld, \"name\": \"%s\"}\n", e.xmap.window, window_name);
+          EVENTLOG("window", "{\"window\": %ld, \"name\": \"%s\"}\n", e.xmap.window, window_name);
           XFree(window_name);
         }        
       }
@@ -344,9 +342,11 @@ int main() {
       }
     }
 
-    fprintf(eventlog, "{\"processing_time\": %lu, ", get_timestamp() - start_time);    
-    print_xevent_fragment(eventlog, display, &e);
-    fprintf(eventlog, "}\n");
+    if (EVENTLOG_ENABLED("processing_time")) {
+      EVENTLOG("processing_time", "{\"processing_time\": %lu, ", get_timestamp() - start_time);
+      print_xevent_fragment(eventlog, display, &e);
+      EVENTLOG("processing_time", "}\n");
+    }
   }
   return 0;
 }
