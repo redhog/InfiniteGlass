@@ -18,7 +18,6 @@
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
-Window motion_notification_window;
 List *views;
 GLuint picking_fb;
 
@@ -108,10 +107,6 @@ int main() {
 
   while (!(views = view_load_all())) sleep(1);
 
-  motion_notification_window = XCreateSimpleWindow(display, root, 0, 0, 1, 1, 0, 0, 0);
-  
-  XChangeProperty(display, root, IG_NOTIFY_MOTION, XA_WINDOW, 32, PropModeReplace, (void *) &motion_notification_window, 1);
-  
   items_get_from_toplevel_windows();
  
   gl_check_error("start1");
@@ -165,15 +160,6 @@ int main() {
           } else {
             DEBUG("position", "Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root);
           }
-
-          long coords[views->count * 2];
-          for (int i=0; i < views->count; i++) {
-            view_to_space((View *) views->entries[i],
-                          root_x, root_y - ((View *) views->entries[i])->height,
-                          (float *) &coords[i*2], (float *) &coords[i*2+1]);
-          }
-          XChangeProperty(display, motion_notification_window, IG_NOTIFY_MOTION, XA_FLOAT, 32, PropModeReplace, (void *) coords, 2*views->count);
-          XChangeProperty(display, motion_notification_window, IG_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &win, 1);
         } else {
           DEBUG("event", "Unknown XGenericEventCookie\n");
         }

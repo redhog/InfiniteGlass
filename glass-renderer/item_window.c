@@ -203,7 +203,6 @@ void items_get_from_toplevel_windows() {
              &num_top_level_windows);
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
-    if (top_level_windows[i] == motion_notification_window) continue;
     XWindowAttributes attr;
     XGetWindowAttributes(display, top_level_windows[i], &attr);
     if (attr.map_state == IsViewable) {

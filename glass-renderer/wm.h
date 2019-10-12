@@ -9,7 +9,6 @@
 
 FILE *eventlog;
 
-extern Window motion_notification_window;
 extern List *views;
 
 extern void draw();
