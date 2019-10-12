@@ -367,7 +367,9 @@ class ItemPanMode(Mode):
     def enter(self):
         self.window = self.get_event_window(self.first_event)
         if not self.window or self.window == self.display.root:
-            return False
+            pop(self.display)
+            push_by_name(self.display, "pan", first_event=self.first_event, last_event=self.last_event)
+            return True
         self.x = 0
         self.y = 0
         self.orig_coords = self.window["IG_COORDS"]

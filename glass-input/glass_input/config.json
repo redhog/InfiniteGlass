@@ -39,6 +39,8 @@
         "KeyRelease": "pop",
         "Mod4Mask,ButtonRelease,4,ShiftMask": "zoom_to_window",
         "Mod4Mask,KeyPress,XK_Prior,ShiftMask": "zoom_to_window",
+        "Mod4Mask,ButtonRelease,5,ShiftMask": "zoom_to_more_windows",
+        "Mod4Mask,KeyPress,XK_Next,ShiftMask": "zoom_to_more_windows",
         "Mod4Mask,KeyPress,XK_Prior": "zoom_in",
         "Mod4Mask,KeyPress,XK_Next": "zoom_out",
         "Mod4Mask,ButtonRelease,4": "zoom_in",
@@ -47,9 +49,9 @@
     "pan": {"class": "PanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
-        "Mod4Mask,ControlMask,KeyPress": "pan",
-        "Mod4Mask,ControlMask,Button1Mask,ButtonPress": "pan_mouse",
-        "Mod4Mask,ControlMask,Button1Mask,MotionNotify": "pan_mouse"
+        "Mod4Mask,KeyPress": "pan",
+        "Mod4Mask,ButtonPress": "pan_mouse",
+        "Mod4Mask,MotionNotify": "pan_mouse"
     }},
     "item_zoom": {"class": "ItemZoomMode", "keymap": {
         "KeyRelease": "pop",
