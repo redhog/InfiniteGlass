@@ -9,6 +9,7 @@ import sys
 import pkg_resources
 import json
 import math
+import datetime
 
 config = {}
 
@@ -59,16 +60,24 @@ class Mode(object):
             setattr(self, key, value)
 
     def enter(self):
+        self.start_time = datetime.datetime.now()
         return True
     
     def exit(self):
         pass
     
     def handle(self, event):
+        time = datetime.datetime.now() - self.start_time
         for key, value in self.keymap.items():
-            if event[key.split(",")]:
-                self.action(key, value, event)
-                return True
+            key = key.split(",")
+            key = [item for item in key if not item.startswith("@")]
+            timefilters = [item for item in key if item.startswith("@")]
+            if timefilters and time < float(timefilters[0][1:]):
+                continue
+            if not event[key]:
+                continue
+            self.action(key, value, event)
+            return True
         return True
 
     def action(self, key, name, event):
