@@ -1,5 +1,6 @@
 import Xlib.display
 import Xlib.X
+import Xlib.ext.ge
 import Xlib.xobject.drawable
 import Xlib.protocol.event
 import sys
@@ -59,7 +60,12 @@ def display_on_event(self, event=None, mask=None, **kw):
         if e is None:
             e = eventmask.event_mask_map_inv[m]
             if isinstance(e, tuple): e = e[0]
-        e = getattr(Xlib.X, e)
+        if hasattr(Xlib.X, e):
+            e = getattr(Xlib.X, e)
+        elif hasattr(Xlib.ext.ge, e): 
+            e = getattr(Xlib.ext.ge, e)
+        else:
+            raise Exception("Unknown event type specified in on(): %s" % e)
         def handler(event):
             if event.type != e: return False
             for name, value in kw.items():

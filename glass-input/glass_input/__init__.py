@@ -2,6 +2,7 @@ import InfiniteGlass
 import Xlib.X
 import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
+import Xlib.ext.xinput
 import numpy
 import os.path
 import sys
@@ -90,9 +91,12 @@ class Mode(object):
     def get_active_window(self):
         pointer = self.display.root.query_pointer()
 
-        views = {self.display.root[name + "_LAYER"]: (self.display.root[name + "_VIEW"],
-                                                      self.display.root[name + "_SIZE"])
-                 for name in self.display.root["IG_VIEWS"]}
+        try:
+            views = {self.display.root[name + "_LAYER"]: (self.display.root[name + "_VIEW"],
+                                                          self.display.root[name + "_SIZE"])
+                     for name in self.display.root["IG_VIEWS"]}
+        except KeyError:
+            return None
         spacecoords = {layer: view_to_space(view, size, pointer.root_x, pointer.root_y)
                        for layer, (view, size) in views.items()}
         for child in self.display.root.query_tree().children:
@@ -410,6 +414,15 @@ def main(*arg, **kw):
         config = json.load(f)
         
     with InfiniteGlass.Display() as display:
+
+        extension_info = display.query_extension('XInputExtension')
+        xinput_major = extension_info.major_opcode
+        version_info = display.xinput_query_version()
+        print('Found XInput version %u.%u' % (
+         version_info.major_version,
+         version_info.minor_version,
+        ))
+        
         font = display.open_font('cursor')
         display.input_cursor = font.create_glyph_cursor(
             font, Xlib.Xcursorfont.box_spiral, Xlib.Xcursorfont.box_spiral+1,
@@ -428,4 +441,8 @@ def main(*arg, **kw):
 
         push_by_name(display, "base")
 
+        display.root.xinput_select_events([
+          (Xlib.ext.xinput.AllDevices, Xlib.ext.xinput.RawMotionMask),
+        ])
+        
         InfiniteGlass.DEBUG("init", "Input handler started\n")

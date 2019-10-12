@@ -1,6 +1,6 @@
 {
     "base": {"class": "BaseMode", "keymap": {
-        "MotionNotify": "focus_follows_mouse",
+        "GenericEventCode": "focus_follows_mouse",
         "ButtonPress,Mod4Mask": "grabbed",
         "KeyPress,Mod4Mask": "grabbed",
         "KeyPress,XK_Super_L": "grabbed"

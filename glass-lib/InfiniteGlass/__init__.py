@@ -1,5 +1,6 @@
 import Xlib.display
 import Xlib.X
+import Xlib.ext.ge
 import Xlib.xobject.drawable
 import Xlib.protocol.event
 import sys
@@ -54,7 +55,13 @@ def event_eq(self, other):
     if pattern is None:
         return orig_event_eq(self, other)
     for i, t in pattern["types"]:
-        if i != (self.type == getattr(Xlib.X, t)):
+        if hasattr(Xlib.X, t):
+            t = getattr(Xlib.X, t)
+        elif hasattr(Xlib.ext.ge, t):
+            t = getattr(Xlib.ext.ge, t)
+        else:
+            raise Exception("Unknown event type specified in on(): %s" % e)
+        if i != (self.type == t):
             return False
     if pattern["masks"] and self.state != sum((getattr(Xlib.X, item) for i, item in pattern["masks"] if i), 0):
         return False
@@ -70,7 +77,13 @@ Xlib.protocol.rq.Event.__eq__ = event_eq
 def event_getitem(self, item):
     pattern = parse_event_pattern(item)
     for i, t in pattern["types"]:
-        if i != (self.type == getattr(Xlib.X, t)):
+        if hasattr(Xlib.X, t):
+            t = getattr(Xlib.X, t)
+        elif hasattr(Xlib.ext.ge, t):
+            t = getattr(Xlib.ext.ge, t)
+        else:
+            raise Exception("Unknown event type specified in on(): %s" % e)
+        if i != (self.type == t):
             return False
     for i, s in pattern["masks"]:
         if i != (not not self.state & getattr(Xlib.X, s)):

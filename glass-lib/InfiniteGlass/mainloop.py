@@ -39,7 +39,7 @@ class MainLoop(object):
                 pass
             else:
                 self.add_timeout(interval * (idx + 1), timeout_handler)
-        timeout_handler(start)
+        self.add_timeout(start, timeout_handler)
 
     def remove(self, fd):
         if fd not in self.handlers: return
