@@ -403,17 +403,25 @@ class ItemPanMode(Mode):
 
 def main(*arg, **kw):
     global config
+
+    configpath = os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.json")
+    if configpath:
+        configpath = os.path.expanduser(configpath)
+        
+        configdirpath = os.path.dirname(config)
+        if not os.path.exists(configdirpath):
+            os.makedirs(configdirpath)
+
+        if not os.path.exists(configpath):
+            with pkg_resources.resource_stream("glass_input", "config.json") as inf:
+                with open(configpath, "wb") as outf:
+                    outf.write(inf.read())
     
-    configdirpath = os.path.expanduser("~/.config/glass")
-    if not os.path.exists(configdirpath):
-        os.makedirs(configdirpath)
-    configfilepath = os.path.join(configdirpath, "input.json")
-    if not os.path.exists(configfilepath):
-        with pkg_resources.resource_stream("glass_input", "config.json") as inf:
-            with open(configfilepath, "wb") as outf:
-                outf.write(inf.read())
-    with open(configfilepath) as f:
-        config = json.load(f)
+        with open(configpath) as f:
+            config = json.load(f)
+    else:
+        with pkg_resources.resource_stream("glass_input", "config.json") as f:
+            config = json.load(f)
         
     with InfiniteGlass.Display() as display:
 
