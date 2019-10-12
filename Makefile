@@ -1,7 +1,8 @@
-all: run
+.PHONY: default
+default: run
 
 XSERVER=Xephyr
-GLASS_DEBUGGER=gdb
+GLASS_DEBUGGER=
 
 ifeq ($(XSERVEROPTS),)
   ifeq ($(XSERVER),Xephyr)
@@ -38,7 +39,10 @@ $(BUILD)/env:
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
-run: $(BINARIES) $(PYTHONAPPS)
+.PHONY: all
+all: $(BINARIES) $(PYTHONAPPS)
+
+run: all
 	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" ./xstartup.sh
 
 install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
