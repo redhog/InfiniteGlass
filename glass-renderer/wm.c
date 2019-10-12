@@ -205,9 +205,9 @@ int main() {
       ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
       if (item && item->base.layer == IG_LAYER_MENU) {       
         item->base.coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
-        item->base.coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.width;
+        item->base.coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
         item->base.coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
-        item->base.coords[3] = ((float) (event->height)) / (float) overlay_attr.width;
+        item->base.coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
         item->base.width = event->width;
         item->base.height = event->height;
         item->width_window = event->width;
