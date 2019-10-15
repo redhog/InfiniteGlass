@@ -39,6 +39,24 @@ def display_init(self, *arg, **kw):
             self.flush()
 Xlib.display.Display.__init__ = display_init
 
+orig_next_event = Xlib.display.Display.next_event
+def next_event(self):
+    event = orig_next_event(self)
+    if event.type == Xlib.X.KeyRelease and self.display.event_queue:
+        next_event = self.display.event_queue[0]
+        if next_event.type == Xlib.X.KeyPress and next_event.detail == event.detail:
+            event.AutoRepeat = True
+            next_event.AutoRepeat = True
+    return event
+Xlib.display.Display.next_event = next_event
+
+def display_peek_event(self):
+    # Fetch any pending events from the server
+    if not self.pending_events():
+        raise IndexError("No pending events")
+    return self.display.event_queue[0]
+Xlib.display.Display.peek_event = display_peek_event
+
 def display_on_event(self, event=None, mask=None, **kw):
     def parse(value):
         value = valueencoding.parse_value(self, value)[1]

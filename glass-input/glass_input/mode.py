@@ -11,6 +11,7 @@ import json
 import math
 import datetime
 import importlib
+import traceback
 
 config = {}
 
@@ -72,18 +73,26 @@ class Mode(object):
         time = datetime.datetime.now() - self.start_time
         for key, value in self.keymap.items():
             key = key.split(",")
-            key = [item for item in key if not item.startswith("@")]
             timefilters = [item for item in key if item.startswith("@")]
-            if timefilters and time < float(timefilters[0][1:]):
-                continue
+            key = [item for item in key if not item.startswith("@")]
+            if timefilters:
+                if time.total_seconds() < float(timefilters[0][1:]):
+                    continue
             if not event[key]:
                 continue
-            self.action(key, value, event)
+            try:
+                self.action(key, value, event)
+            except Exception as e:
+                print(e)
+                traceback.print_exc()
             return True
         return True
 
     def action(self, key, name, event):
-        if hasattr(self, name):
+        if isinstance(name, (tuple, list)):
+            for item in name:
+                self.action(key, item, event)
+        elif hasattr(self, name):
             getattr(self, name)(event)
         elif name in config:
             if "class" in config[name]:

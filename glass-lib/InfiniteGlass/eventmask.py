@@ -11,7 +11,7 @@ event_mask_map = {
     "FocusOut": "FocusChangeMask",
     "KeymapNotify": "KeymapStateMask",
     "KeyPress": "KeyPressMask",
-    "ReleasePress": "KeyReleaseMask",
+    "KeyRelease": "KeyReleaseMask",
     "MotionNotify": "PointerMotionMask",
     "PropertyNotify": "PropertyChangeMask",
     "CirculateNotify": ("StructureNotifyMask", "SubstructureNotifyMask"),

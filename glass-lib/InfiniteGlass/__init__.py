@@ -29,7 +29,8 @@ def parse_event_pattern(pattern):
     res = {"buttons": [],
            "masks": [],
            "keys": [],
-           "types": []}
+           "types": [],
+           "flags": []}
     for item in pattern:
         include = True
         if item.startswith("!"):
@@ -45,6 +46,8 @@ def parse_event_pattern(pattern):
             res["masks"].append((include, item))
         elif item.startswith("XK_"):
             res["keys"].append((include, item))
+        elif item == "AutoRepeat":
+            res["flags"].append((include, item))
         else:
             res["types"].append((include, item))
     return res
@@ -60,7 +63,7 @@ def event_eq(self, other):
         elif hasattr(Xlib.ext.ge, t):
             t = getattr(Xlib.ext.ge, t)
         else:
-            raise Exception("Unknown event type specified in on(): %s" % e)
+            raise Exception("Unknown event type specified in on(): %s" % t)
         if i != (self.type == t):
             return False
     if pattern["masks"] and self.state != sum((getattr(Xlib.X, item) for i, item in pattern["masks"] if i), 0):
@@ -70,6 +73,9 @@ def event_eq(self, other):
             return False
     for i, b in pattern["buttons"]:
         if i != (self.detail == b):
+            return False
+    for i, f in pattern["flags"]:
+        if i != (hasattr(self, f)):
             return False
     return True
 Xlib.protocol.rq.Event.__eq__ = event_eq
@@ -82,7 +88,7 @@ def event_getitem(self, item):
         elif hasattr(Xlib.ext.ge, t):
             t = getattr(Xlib.ext.ge, t)
         else:
-            raise Exception("Unknown event type specified in on(): %s" % e)
+            raise Exception("Unknown event type specified in on(): %s" % t)
         if i != (self.type == t):
             return False
     for i, s in pattern["masks"]:
@@ -93,6 +99,9 @@ def event_getitem(self, item):
             return False
     for i, b in pattern["buttons"]:
         if i != (self.detail == b):
+            return False
+    for i, f in pattern["flags"]:
+        if i != (hasattr(self, f)):
             return False
     return True
 Xlib.protocol.rq.Event.__getitem__ = event_getitem

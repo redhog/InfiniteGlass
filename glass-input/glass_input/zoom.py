@@ -90,7 +90,9 @@ class ZoomMode(mode.Mode):
         self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         
     def zoom_in(self, event):
+        print("ZOOM IN")
         self.zoom(1/1.1)
 
     def zoom_out(self, event):
+        print("ZOOM OUT")
         self.zoom(1.1)
