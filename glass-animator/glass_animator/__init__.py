@@ -4,7 +4,7 @@ import select
 import array
 import traceback
 
-animations = []
+animations = {}
 
 def animate(display):
     while True:
@@ -13,11 +13,11 @@ def animate(display):
         r, w, e = select.select([display], [], [], 0.01)
         if r or w or e:
             return
-        for animation in animations:
+        for animationid, animation in list(animations.items()):
             try:
                 next(animation)
             except StopIteration:
-                animations.remove(animation)
+                del animations[animationid]
             except Exception as e:
                 print("Animation failed: ", e)
                 traceback.print_exc()
@@ -32,6 +32,8 @@ def animate_property(display, window, atom, timeframe):
     start = time.time()
     tick = [0]
 
+    animationid = (window.__window__(), atom)
+    
     InfiniteGlass.DEBUG("begin", "ANIMATE %s.%s=%s...%s / %ss\n" % (window.__window__(), atom, src, dst, timeframe))
 
     def animationfn():
@@ -41,7 +43,7 @@ def animate_property(display, window, atom, timeframe):
             progress = (current - start) / timeframe
             if progress > 1.:
                 window[atom] = dst
-                animations.remove(animation)
+                del animations[animationid]
                 InfiniteGlass.DEBUG("final", "SET FINAL %s.%s=%s\n" % (window.__window__(), atom, dst))
             else:
                 res = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
@@ -53,7 +55,7 @@ def animate_property(display, window, atom, timeframe):
             display.sync()
             yield
     animation = iter(animationfn())
-    animations.append(animation)
+    animations[animationid] = animation
 
 def animate_geometry(display, window, timeframe):
     src = window.get_geometry()
@@ -64,6 +66,8 @@ def animate_geometry(display, window, timeframe):
     start = time.time()
     tick = [0]
 
+    animationid = (window.__window__(), "geom")
+    
     InfiniteGlass.DEBUG("begin", "ANIMATE [%s]=%s...%s / %ss\n" % (window.__window__(), src, dst, timeframe))
 
     def animationfn():
@@ -73,7 +77,7 @@ def animate_geometry(display, window, timeframe):
             progress = (current - start) / timeframe
             if progress > 1.:
                 current_values = dst
-                animations.remove(animation)
+                del animations[animationid]
                 InfiniteGlass.DEBUG("final", "SET FINAL [%s]=%s\n" % (window.__window__(), dst))
             else:
                 current_values = [int(progress * dstval + (1.-progress) * srcval) for srcval, dstval in values]
@@ -85,7 +89,7 @@ def animate_geometry(display, window, timeframe):
             display.sync()
             yield
     animation = iter(animationfn())
-    animations.append(animation)
+    animations[animationid] = animation
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
