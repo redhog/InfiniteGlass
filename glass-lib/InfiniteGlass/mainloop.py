@@ -49,7 +49,7 @@ class MainLoop(object):
         keys = self.handlers.keys()
         rlist, wlist, xlist = select.select(keys, [], [], 0.01)
         timestamp = time.time()
-        for timeout in self.timeouts.keys():
+        for timeout in list(self.timeouts.keys()):
             if timeout < timestamp:
                 try:
                     self.timeouts.pop(timeout)(timestamp)
