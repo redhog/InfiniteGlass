@@ -26,11 +26,16 @@ def push(display, Mode, **kw):
         return False
     return True
 
-def push_by_name(display, name, **kw):
-    mod, cls = config[name]["class"].rsplit(".", 1)
+def push_config(display, config, **kw):
+    cfg = dict(config)
+    cfg.update(kw)
+    mod, cls = cfg.pop("class").rsplit(".", 1)
     cls = getattr(importlib.import_module(mod), cls)
-    return push(display, cls, keymap=config[name]["keymap"], **kw)
-    
+    return push(display, cls, **cfg)
+
+def push_by_name(display, name, **kw):
+    return push_config(display, config[name], **kw)
+
 def pop(display):
     res = display.input_stack.pop()
     InfiniteGlass.DEBUG("modes.pop", "POP %s\n" % res)
@@ -59,26 +64,38 @@ def view_to_space(screen, size, screenx, screeny):
 
 class Mode(object):
     def __init__(self, **kw):
+        self.timers = {}
         for key, value in kw.items():
             setattr(self, key, value)
 
     def enter(self):
-        self.start_time = datetime.datetime.now()
+        self.timers['start'] = datetime.datetime.now()
         return True
     
     def exit(self):
         pass
     
     def handle(self, event):
-        time = datetime.datetime.now() - self.start_time
+        now = datetime.datetime.now()
         for key, value in self.keymap.items():
-            key = key.split(",")
-            timefilters = [item for item in key if item.startswith("@")]
-            key = [item for item in key if not item.startswith("@")]
-            if timefilters:
-                if time.total_seconds() < float(timefilters[0][1:]):
+            timefilters = []
+            filters = []
+            for item in key.split(","):
+                if '>' in item:
+                    name, t = item.split('>')
+                    timefilters.append((name, False, float(t)))
+                elif '<' in item:
+                    name, t = item.split('<')
+                    timefilters.append((name, True, float(t)))
+                else:
+                    filters.append(item)
+            for name, lt, t in timefilters:
+                print("TIMEFILTER",
+                      lt != ((now - self.timers[name]).total_seconds() < t),
+                      lt, (now - self.timers[name]).total_seconds() < t, (now - self.timers[name]).total_seconds(), t)
+                if lt != ((now - self.timers[name]).total_seconds() < t):
                     continue
-            if not event[key]:
+            if not event[filters]:
                 continue
             try:
                 self.action(key, value, event)
@@ -88,22 +105,26 @@ class Mode(object):
             return True
         return True
 
-    def action(self, key, name, event):
-        if isinstance(name, (tuple, list)):
-            for item in name:
+    def action(self, key, action, event):
+        if isinstance(action, (tuple, list)):
+            for item in action:
                 self.action(key, item, event)
-        elif hasattr(self, name):
-            getattr(self, name)(event)
-        elif name in config:
-            if "class" in config[name]:
-                if push_by_name(self.display, name, first_event=event, last_event=event):
+        elif isinstance(action, dict):
+            if "class" in action:
+                if push_config(self.display, action, first_event=event, last_event=event):
                     handle_event(self.display, event)
-            elif "shell" in config[name]:
-                os.system(config[name]["shell"])
+            elif "shell" in action:
+                os.system(action["shell"])
+            elif "reset" in action:
+                self.timers[action['reset']] = datetime.datetime.now()                
             else:
-                InfiniteGlass.DEBUG("error", "Unknown action parameters for %s" % (name,))
+                InfiniteGlass.DEBUG("error", "Unknown action parameters: %s" % (action,))
+        elif hasattr(self, action):
+            getattr(self, action)(event)
+        elif action in config:
+            self.action(key, config[action], event)
         else:
-            InfiniteGlass.DEBUG("error", "Unknown action for %s: %\n" % (key, name)) 
+            InfiniteGlass.DEBUG("error", "Unknown action for %s: %\n" % (key, action)) 
     
     def pop(self, event):
         pop(self.display)

@@ -38,10 +38,10 @@
     "zoom": {"class": "glass_input.zoom.ZoomMode", "keymap": {
         "Mod4Mask,ButtonRelease,4,ShiftMask": ["zoom_to_window", "pop"],
         "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior,ShiftMask": ["zoom_to_window", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior,@.2": ["zoom_to_window", "pop"],
+        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior,start>1.": ["zoom_to_window", "pop"],
         "Mod4Mask,ButtonRelease,5,ShiftMask": ["zoom_to_more_windows", "pop"],
         "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next,ShiftMask": ["zoom_to_more_windows", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next,@.2": ["zoom_to_more_windows", "pop"],        
+        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next,start>1.": ["zoom_to_more_windows", "pop"],        
         "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior": ["zoom_in", "pop"],
         "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next": ["zoom_out", "pop"],
         "Mod4Mask,ButtonRelease,4": ["zoom_in", "pop"],
