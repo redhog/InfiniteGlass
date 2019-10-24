@@ -12,6 +12,7 @@ import math
 import datetime
 import importlib
 import traceback
+import operator
 
 config = {}
 
@@ -64,67 +65,84 @@ def view_to_space(screen, size, screenx, screeny):
 
 class Mode(object):
     def __init__(self, **kw):
-        self.timers = {}
+        self.state = {}
         for key, value in kw.items():
             setattr(self, key, value)
 
     def enter(self):
-        self.timers['start'] = datetime.datetime.now()
+        self.state['start'] = datetime.datetime.now()
         return True
     
     def exit(self):
         pass
-    
+
+    def handle_state_filter(self, eventfilter):
+        filters = []
+        statefilters = []
+        for item in eventfilter:
+            if '>=' in item:
+                name, value = item.split('>=')
+                statefilters.append((name, operator.ge, float(value)))
+            elif '<=' in item:
+                name, value = item.split('<=')
+                statefilters.append((name, operator.le, float(value)))
+            elif '>' in item:
+                name, value = item.split('>')
+                statefilters.append((name, operator.gt, float(value)))
+            elif '<' in item:
+                name, value = item.split('<')
+                statefilters.append((name, operator.lt, float(value)))
+            else:
+                filters.append(item)
+        for name, op, value in statefilters:
+            cvalue = self.state.get(name, 0)
+            if isinstance(cvalue, datetime.datetime):
+                cvalue = (now - cvalue).total_seconds()
+            if not op(cvalue, value):
+                return None
+        return filters
+
     def handle(self, event):
         now = datetime.datetime.now()
-        for key, value in self.keymap.items():
-            timefilters = []
-            filters = []
-            for item in key.split(","):
-                if '>' in item:
-                    name, t = item.split('>')
-                    timefilters.append((name, False, float(t)))
-                elif '<' in item:
-                    name, t = item.split('<')
-                    timefilters.append((name, True, float(t)))
-                else:
-                    filters.append(item)
-            for name, lt, t in timefilters:
-                print("TIMEFILTER",
-                      lt != ((now - self.timers[name]).total_seconds() < t),
-                      lt, (now - self.timers[name]).total_seconds() < t, (now - self.timers[name]).total_seconds(), t)
-                if lt != ((now - self.timers[name]).total_seconds() < t):
-                    continue
-            if not event[filters]:
+        for eventfilter, action in self.keymap.items():
+            filters = self.handle_state_filter(eventfilter.split(","))
+            if not filters or not event[filters]:
                 continue
             try:
-                self.action(key, value, event)
+                self.action(eventfilter, action, event)
             except Exception as e:
                 print(e)
                 traceback.print_exc()
             return True
         return True
 
-    def action(self, key, action, event):
+    def action(self, eventfilter, action, event):
         if isinstance(action, (tuple, list)):
             for item in action:
-                self.action(key, item, event)
+                self.action(eventfilter, item, event)
         elif isinstance(action, dict):
             if "class" in action:
                 if push_config(self.display, action, first_event=event, last_event=event):
                     handle_event(self.display, event)
             elif "shell" in action:
                 os.system(action["shell"])
-            elif "reset" in action:
-                self.timers[action['reset']] = datetime.datetime.now()                
+            elif "timer" in action:
+                name = action['timer']
+                self.state[name] = datetime.datetime.now()
+            elif "counter" in action:
+                name = action['counter']
+                self.state[name] = 0
+            elif "inc" in action:
+                name = action['inc']
+                self.state[name] = self.state.get(name, 0) + 1
             else:
                 InfiniteGlass.DEBUG("error", "Unknown action parameters: %s" % (action,))
-        elif hasattr(self, action):
+        elif isinstance(action, str) and hasattr(self, action):
             getattr(self, action)(event)
-        elif action in config:
-            self.action(key, config[action], event)
+        elif isinstance(action, str) and action in config:
+            self.action(eventfilter, config[action], event)
         else:
-            InfiniteGlass.DEBUG("error", "Unknown action for %s: %\n" % (key, action)) 
+            InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action)) 
     
     def pop(self, event):
         pop(self.display)

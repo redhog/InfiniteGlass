@@ -28,6 +28,7 @@ class ZoomMode(mode.Mode):
         self.display.root[view] = screen
         
     def zoom_to_window(self, event):
+        print("ZOOM IN TO WINDOW")
         win = self.get_active_window()
         old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         view = list(win["IG_COORDS"])
@@ -37,6 +38,7 @@ class ZoomMode(mode.Mode):
         self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
     def zoom_to_more_windows(self, event):
+        print("ZOOM OUT TO MORE WINDOWS")
         view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
         vx = view[0] + view[2]/2.
         vy = view[1] + view[3]/2.

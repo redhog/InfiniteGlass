@@ -36,16 +36,19 @@
         "Mod4Mask,KeyPress,XK_Right,!ControlMask": "item_pan"
     }},
     "zoom": {"class": "glass_input.zoom.ZoomMode", "keymap": {
-        "Mod4Mask,ButtonRelease,4,ShiftMask": ["zoom_to_window", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior,ShiftMask": ["zoom_to_window", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior,start>1.": ["zoom_to_window", "pop"],
-        "Mod4Mask,ButtonRelease,5,ShiftMask": ["zoom_to_more_windows", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next,ShiftMask": ["zoom_to_more_windows", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next,start>1.": ["zoom_to_more_windows", "pop"],        
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Prior": ["zoom_in", "pop"],
-        "Mod4Mask,!AutoRepeat,KeyRelease,XK_Next": ["zoom_out", "pop"],
+        "KeyRelease,!AutoRepeat": "pop",
+        "ButtonRelease": "pop",
+
         "Mod4Mask,ButtonRelease,4": ["zoom_in", "pop"],
-        "Mod4Mask,ButtonRelease,5": ["zoom_out", "pop"]
+        "Mod4Mask,ButtonRelease,5": ["zoom_out", "pop"],
+
+        "Mod4Mask,ButtonPress,4,ShiftMask": "zoom_to_window",
+        "Mod4Mask,ButtonPress,5,ShiftMask": "zoom_to_more_windows",
+        
+        "Mod4Mask,KeyPress,XK_Prior,count<=3": ["zoom_in", {"inc": "count"}],
+        "Mod4Mask,KeyPress,XK_Prior,count>3": ["zoom_to_window", {"inc": "count"}],
+        "Mod4Mask,KeyPress,XK_Next,count<=3": ["zoom_out", {"inc": "count"}],
+        "Mod4Mask,KeyPress,XK_Next,count>3": ["zoom_to_more_windows", {"inc": "count"}]
     }},
     "pan": {"class": "glass_input.pan.PanMode", "keymap": {
         "KeyRelease": "pop",
