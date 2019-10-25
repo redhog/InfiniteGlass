@@ -42,13 +42,22 @@
         "Mod4Mask,ButtonRelease,4": ["zoom_in", "pop"],
         "Mod4Mask,ButtonRelease,5": ["zoom_out", "pop"],
 
-        "Mod4Mask,ButtonPress,4,ShiftMask": "zoom_to_window",
+        "Mod4Mask,ButtonPress,4,ShiftMask": "zoom_to_fewer_windows",
         "Mod4Mask,ButtonPress,5,ShiftMask": "zoom_to_more_windows",
+
+        "Mod4Mask,KeyPress,XK_Prior,ShiftMask": "zoom_to_fewer_windows",
+        "Mod4Mask,KeyPress,XK_Next,ShiftMask": "zoom_to_more_windows",
         
         "Mod4Mask,KeyPress,XK_Prior,count<=3": ["zoom_in", {"inc": "count"}],
-        "Mod4Mask,KeyPress,XK_Prior,count>3": ["zoom_to_window", {"inc": "count"}],
+        "Mod4Mask,KeyPress,XK_Prior,count>3": [
+            {"keymap": {
+                "count%4": "zoom_to_fewer_windows"}},
+            {"inc": "count"}],
         "Mod4Mask,KeyPress,XK_Next,count<=3": ["zoom_out", {"inc": "count"}],
-        "Mod4Mask,KeyPress,XK_Next,count>3": ["zoom_to_more_windows", {"inc": "count"}]
+        "Mod4Mask,KeyPress,XK_Next,count>3": [
+            {"keymap": {
+                "count%4": "zoom_to_more_windows"}},
+            {"inc": "count"}]
     }},
     "pan": {"class": "glass_input.pan.PanMode", "keymap": {
         "KeyRelease": "pop",

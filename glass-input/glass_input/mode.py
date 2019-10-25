@@ -63,6 +63,9 @@ def view_to_space(screen, size, screenx, screeny):
     out = screen2space.dot(space)
     return out[:2]
 
+def modulo(a, b):
+    return a % b == 0
+
 class Mode(object):
     def __init__(self, **kw):
         self.state = {}
@@ -80,7 +83,13 @@ class Mode(object):
         filters = []
         statefilters = []
         for item in eventfilter:
-            if '>=' in item:
+            if '==' in item:
+                name, value = item.split('==')
+                statefilters.append((name, operator.eq, float(value)))
+            elif '%' in item:
+                name, value = item.split('%')
+                statefilters.append((name, modulo, int(value)))
+            elif '>=' in item:
                 name, value = item.split('>=')
                 statefilters.append((name, operator.ge, float(value)))
             elif '<=' in item:
@@ -98,15 +107,18 @@ class Mode(object):
             cvalue = self.state.get(name, 0)
             if isinstance(cvalue, datetime.datetime):
                 cvalue = (now - cvalue).total_seconds()
+            #print("%s %s %s == %s" % (cvalue, op, value, op(cvalue, value)))
             if not op(cvalue, value):
                 return None
         return filters
 
-    def handle(self, event):
+    def handle(self, event, keymap=None):
+        if keymap is None:
+            keymap = self.keymap
         now = datetime.datetime.now()
-        for eventfilter, action in self.keymap.items():
+        for eventfilter, action in keymap.items():
             filters = self.handle_state_filter(eventfilter.split(","))
-            if not filters or not event[filters]:
+            if filters is None or filters and not event[filters]:
                 continue
             try:
                 self.action(eventfilter, action, event)
@@ -124,6 +136,8 @@ class Mode(object):
             if "class" in action:
                 if push_config(self.display, action, first_event=event, last_event=event):
                     handle_event(self.display, event)
+            elif "keymap" in action:
+                self.handle(event, keymap = action["keymap"])
             elif "shell" in action:
                 os.system(action["shell"])
             elif "timer" in action:

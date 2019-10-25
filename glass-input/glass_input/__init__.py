@@ -17,7 +17,7 @@ def main(*arg, **kw):
     if configpath:
         configpath = os.path.expanduser(configpath)
         
-        configdirpath = os.path.dirname(config)
+        configdirpath = os.path.dirname(configpath)
         if not os.path.exists(configdirpath):
             os.makedirs(configdirpath)
 
