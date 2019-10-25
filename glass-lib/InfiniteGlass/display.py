@@ -39,14 +39,23 @@ def display_init(self, *arg, **kw):
             self.flush()
 Xlib.display.Display.__init__ = display_init
 
+def fetch_all_pending_events(self):
+    while True:
+        r, w, e = select.select([self.display.socket],[],[],0)
+        if not r: return
+        self.pending_events()
+Xlib.display.Display.fetch_all_pending_events = fetch_all_pending_events
+        
 orig_next_event = Xlib.display.Display.next_event
 def next_event(self):
     event = orig_next_event(self)
+    self.fetch_all_pending_events()
     if event.type == Xlib.X.KeyRelease and self.display.event_queue:
-        next_event = self.display.event_queue[0]
-        if next_event.type == Xlib.X.KeyPress and next_event.detail == event.detail:
-            event.AutoRepeat = True
-            next_event.AutoRepeat = True
+        for next_event in self.display.event_queue:
+            if next_event.type == Xlib.X.KeyPress and next_event.detail == event.detail:
+                event.AutoRepeat = True
+                next_event.AutoRepeat = True
+                break
     return event
 Xlib.display.Display.next_event = next_event
 
