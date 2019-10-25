@@ -37,30 +37,6 @@ class ZoomMode(mode.Mode):
         self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
         self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
-    def get_windows(self, view, margin=0.01):
-        visible = []
-        invisible = []
-        for child in self.display.root.query_tree().children:
-            if child.get_attributes().map_state != Xlib.X.IsViewable:
-                continue
-            
-            child = child.find_client_window()
-            if not child: continue
-            coords = child["IG_COORDS"]
-
-            # Margins to not get stuck due to rounding errors of
-            # windows that sit right on the edge...
-            marginx = view[2] * margin
-            marginy = view[3] * margin
-            if (    coords[0] + marginx >= view[0]
-                and coords[0] + coords[2] - marginx <= view[0] + view[2]
-                and coords[1] - coords[3] + marginy >= view[1]
-                and coords[1] - marginy <= view[1] + view[3]):
-                visible.append((child, coords))
-            else:
-                invisible.append((child, coords))                
-        return visible, invisible
-        
     def zoom_to_fewer_windows(self, event, margin=0.01):
         print("ZOOM IN TO FEWER WINDOWS")
         view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
