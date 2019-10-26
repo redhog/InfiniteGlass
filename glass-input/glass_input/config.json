@@ -62,7 +62,11 @@
     "pan": {"class": "glass_input.pan.PanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
-        "Mod4Mask,KeyPress": "pan",
+        "Mod4Mask,KeyPress,!ShiftMask": "pan",
+        "Mod4Mask,KeyPress,XK_Left,ShiftMask": "zoom_to_window_to_the_left",
+        "Mod4Mask,KeyPress,XK_Right,ShiftMask": "zoom_to_window_to_the_right",
+        "Mod4Mask,KeyPress,XK_Up,ShiftMask": "zoom_to_window_above",
+        "Mod4Mask,KeyPress,XK_Down,ShiftMask": "zoom_to_window_below",
         "Mod4Mask,ButtonPress": "pan_mouse",
         "Mod4Mask,MotionNotify": "pan_mouse"
     }},
