@@ -9,7 +9,6 @@
 #include "view.h"
 #include "xevent.h"
 #include "wm.h"
-#include "item_widget.h"
 #include "event.h"
 #include "selection.h"
 #include "list.h"

@@ -1,5 +1,5 @@
 #include "item_window_svg.h"
-#include "item_widget_shader.h"
+#include "item_window_svg_shader.h"
 #include "texture.h"
 #include "glapi.h"
 #include "xapi.h"
@@ -122,7 +122,7 @@ void item_type_window_svg_destructor(Item *item) {
 void item_type_window_svg_draw(View *view, Item *item) {
   ItemWindowSVG *item_window_svg = (ItemWindowSVG *) item;
 
-  ItemWidgetShader *shader = (ItemWidgetShader *) item->type->get_shader(item);
+  ItemWindowSvgShader *shader = (ItemWindowSvgShader *) item->type->get_shader(item);
 
   item_type_window_svg_update_drawing(view, item_window_svg);
   
@@ -173,7 +173,7 @@ void item_type_window_svg_update(Item *item) {
 }
 
 Shader *item_type_window_svg_get_shader(Item *item) {
-  return (Shader *) item_widget_shader_get();
+  return (Shader *) item_window_svg_shader_get();
 }
 
 void item_type_window_svg_print(Item *item) {
