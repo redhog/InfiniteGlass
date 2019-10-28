@@ -4,17 +4,18 @@
 #include "glapi.h"
 
 typedef struct {
-  GLchar *vertex_src_file;
-  GLchar *geometry_src_file;
-  GLchar *fragment_src_file;
+  Atom name;
+  Atom geometry;
+  Atom vertex;
+  Atom fragment;
 
-  GLchar *vertex_src;
   GLchar *geometry_src;
+  GLchar *vertex_src;
   GLchar *fragment_src;
  
   GLuint program;
-  GLuint vertex_shader;
   GLuint geometry_shader;
+  GLuint vertex_shader;
   GLuint fragment_shader;
 } Shader;
 

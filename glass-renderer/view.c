@@ -191,15 +191,6 @@ void view_load_size(View *view) {
   XFree(prop_return);
 }
 
-Atom atom_append(Display *display, Atom base, char *suffix) {
-  char *strbase = XGetAtomName(display, base);
-  char appended[strlen(strbase) + strlen(suffix) + 1];
-  strcpy(appended, strbase);
-  strcpy(appended + strlen(strbase), suffix);
-  XFree(strbase);
-  return XInternAtom(display, appended, False);
-}
-
 View *view_load(Atom name) {
   View *view = malloc(sizeof(View));
   view->name = name;
