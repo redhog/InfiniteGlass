@@ -3,6 +3,7 @@
 #include "item_window_shader.h"
 #include "item_window_pixmap.h"
 #include "item_window_svg.h"
+#include "property.h"
 #include "xapi.h"
 #include "wm.h"
 #include "debug.h"
@@ -95,6 +96,8 @@ void item_type_window_constructor(Item *item, void *args) {
   item_type_window_update_space_pos_from_window(window_item);
 
   XSelectInput(display, window, PropertyChangeMask);
+
+  window_item->properties = properties_load(window);
 }
 
 void item_type_window_destructor(Item *item) {

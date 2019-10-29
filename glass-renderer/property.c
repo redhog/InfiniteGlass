@@ -15,21 +15,25 @@ void property_load(Property *prop, Window window) {
 
   if (prop->values.bytes) {
     XFree(prop->values.bytes);
+    prop->values.bytes = NULL;
   }
   if (prop->name_str) {
-    XFree(prop->values.bytes);
+    XFree(prop->name_str);
+    prop->name_str = NULL;
   }
   XGetWindowProperty(display, window, prop->name, 0, 0, 0, AnyPropertyType, &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (prop->type == None) return;
   XGetWindowProperty(display, window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
-  property_type_get(prop->type)->load(prop);
+  PropertyTypeHandler *type = property_type_get(prop->type);
+  if (type) type->load(prop);
   prop->name_str = XGetAtomName(display, prop->name);
 }
 
 void property_free(Property *prop) {
-  property_type_get(prop->type)->free(prop);
+  PropertyTypeHandler *type = property_type_get(prop->type);
+  if(type) type->free(prop);
   if (prop->name_str) XFree(prop->name_str);
   if (prop->values.bytes) XFree(prop->values.bytes);
   free(prop);

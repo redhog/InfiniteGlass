@@ -14,6 +14,7 @@
 #include "list.h"
 #include "debug.h"
 #include "fps.h"
+#include "property.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
@@ -104,6 +105,9 @@ int main() {
 
   while (!(views = view_load_all())) sleep(1);
 
+  property_type_register(&property_int);
+  property_type_register(&property_float);
+  
   items_get_from_toplevel_windows();
  
   gl_check_error("start1");
@@ -244,6 +248,10 @@ int main() {
         item_remove(item);
         item = item_get_from_window(e.xproperty.window, True);
       }
+    } else if (e.type == PropertyNotify) {
+      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, True);
+      properties_update(item->properties, item->window, e.xproperty.atom);
+      draw();
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window, False);
       if (item) {
