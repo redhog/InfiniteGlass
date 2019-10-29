@@ -16,8 +16,7 @@ $(BUILD)/%.o: %.c *.h
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/glass-renderer: *.glsl
 $(BUILD)/glass-renderer: $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c))
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c)) $(LIBS)
-	cp *.glsl $(BUILD)/
+

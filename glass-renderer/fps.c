@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
-#import "wm.h"
-#import "debug.h"
+#include "wm.h"
+#include "debug.h"
 
 unsigned long get_timestamp() {
   struct timeval tv;

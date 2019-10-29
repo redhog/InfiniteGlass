@@ -1,11 +1,9 @@
 #include "item_window_svg_shader.h"
 #include "glapi.h"
-
+#include "xapi.h"
 
 int item_window_svg_shader_load(ItemWindowSvgShader *shader) {
-  if (!shader->base.base.vertex_src_file) shader->base.base.vertex_src_file = "shader_window_vertex.glsl";
-  if (!shader->base.base.geometry_src_file) shader->base.base.geometry_src_file = "shader_window_geometry.glsl";
-  if (!shader->base.base.fragment_src_file) shader->base.base.fragment_src_file = "shader_window_svg_fragment.glsl";
+  shader->base.base.name = XInternAtom(display, "SHADER_SVG", False);
  
   if (!item_shader_load((ItemShader *) shader)) {
     return 0;

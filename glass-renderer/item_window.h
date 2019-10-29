@@ -3,6 +3,7 @@
 
 #include "item.h"
 #include "texture.h"
+#include "property.h"
 
 typedef struct {
   Item base;
@@ -15,6 +16,8 @@ typedef struct {
   int height_property;
   int width_window;
   int height_window;
+
+  List *properties;
 } ItemWindow;
 
 extern ItemType item_type_window;

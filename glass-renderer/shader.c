@@ -7,46 +7,6 @@
 #include "xapi.h"
 #include "debug.h"
 
-char *filetobuf(char *filename) {
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(filename, "rb");
-
-  if (!f) return NULL;
-
-  fseek(f, 0, SEEK_END);
-  length = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  buffer = malloc(length + 1);
-  if (buffer) {
-    fread(buffer, 1, length, f);
-    buffer[length] = 0;
-  }
-  fclose(f);
-
-  return buffer;
-}
-
-char *pathfiletobuf(char *filename) {
-  char *path;
-  char *next; 
-  char *res; 
-
-  for (path = getenv("GLASS_SHADER_PATH"); path[0]; path = next) {
-    next = strstr(path, ":");
-    if (!next) next = path + strlen(path);
-
-    char pathentry[next - path + 1 + strlen(filename) + 1];
-    strncpy(pathentry, path, next - path);
-    pathentry[next - path] =  '/';
-    strcpy(pathentry + (next - path) + 1, filename);
-
-    res = filetobuf(pathentry);
-    if (res) return res;
-  }
-  return NULL;
-}
-
 int checkShaderError(char *name, char *src, GLuint shader) {
   GLint res;
   GLint len;
@@ -85,9 +45,9 @@ char *atom_load_string(Display *display, Window window, Atom name) {
   XGetWindowProperty(display, window, name, 0, 0, 0, XA_STRING, &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (type_return == None) return NULL;
-  XGetWindowProperty(display, window, shader->geometry, 0, bytes_after_return, 0, XA_STRING,
+  XGetWindowProperty(display, window, name, 0, bytes_after_return, 0, XA_STRING,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  return prop_return;
+  return (char *) prop_return;
 }
 
 int shader_load(Shader *shader) {
@@ -108,7 +68,7 @@ int shader_load(Shader *shader) {
   glCompileShader(shader->vertex_shader);
   if (!checkShaderError("vertex", shader->vertex_src, shader->vertex_shader)) return 0;  
 
-  shader->fragment_src = char *atom_load_string(display, root, shader->fragment);
+  shader->fragment_src = atom_load_string(display, root, shader->fragment);
   shader->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(shader->fragment_shader, 1, (const GLchar**)&(shader->fragment_src), 0);
   glCompileShader(shader->fragment_shader);

@@ -12,7 +12,8 @@ fi
 
 session_content() {
     
-  glass-input &
+  glass-input 2>&1 &
+  glass-theme 2>&1 &
   glass-widgets 2>&1 &
   glass-animator 2>&1 &
   glass-wintest 2>&1 &
