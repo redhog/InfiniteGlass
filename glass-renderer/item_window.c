@@ -105,6 +105,13 @@ void item_type_window_destructor(Item *item) {
 }
 
 void item_type_window_draw(View *view, Item *item) {
+ List *properties = ((ItemWindow *) item)->properties;
+ ItemShader *shader = item->type->get_shader(item);
+ for (size_t i = 0; i < properties->count; i++) {
+    Property *prop = (Property *) properties->entries[i];
+    PropertyTypeHandler *type = property_type_get(prop->type);
+    if (type) type->to_gl(prop, shader->shader);
+  }
   item_type_base.draw(view, item);
 }
 

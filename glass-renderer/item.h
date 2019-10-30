@@ -3,7 +3,7 @@
 
 #include "xapi.h"
 #include "glapi.h"
-#include "shader.h"
+#include "item_shader.h"
 #include "list.h"
 #include "view_type.h"
 
@@ -17,7 +17,7 @@ typedef void ItemTypeConstructor(Item *item, void *args);
 typedef void ItemTypeDestructor(Item *item);
 typedef void ItemTypeDraw(View *view, Item *item);
 typedef void ItemTypeUpdate(Item *item);
-typedef Shader *ItemTypeGetShader(Item *);
+typedef ItemShader *ItemTypeGetShader(Item *);
 typedef void ItemTypePrint(Item *);
 
 struct ItemTypeStruct {
