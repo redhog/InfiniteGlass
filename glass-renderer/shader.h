@@ -2,6 +2,7 @@
 #define SHADER
 
 #include "glapi.h"
+#include "list.h"
 
 typedef struct {
   Atom name;
@@ -19,6 +20,11 @@ typedef struct {
   GLuint fragment_shader;
 } Shader;
 
-extern int shader_load(Shader *shader);
+extern Shader *shader_loadX(Atom name);
+extern List *shader_load_all(void);
+extern void shader_free(Shader *shader);
+extern void shader_free_all(List *shaders);
+extern Shader *shader_find(List *shaders, Atom name);
+extern void shader_print(Shader *shader);
 
 #endif

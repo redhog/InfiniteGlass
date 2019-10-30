@@ -11,19 +11,23 @@ def main(*arg, **kw):
         display.root["IG_VIEW_DESKTOP_LAYER"]="IG_LAYER_DESKTOP"
         display.root["IG_VIEW_DESKTOP_VIEW"]=[0.0, 0.0, 1.0, 0.0]
         display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
-        
-        with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
-            display.root["SHADER_PIXMAP_GEOMETRY"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
-            display.root["SHADER_PIXMAP_VERTEX"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_window_fragment.glsl") as f:
-            display.root["SHADER_PIXMAP_FRAGMENT"] = f.read()
 
         with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
-            display.root["SHADER_SVG_GEOMETRY"] = f.read()
+            display.root["IG_SHADER_PIXMAP_GEOMETRY"] = f.read()
         with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
-            display.root["SHADER_SVG_VERTEX"] = f.read()
+            display.root["IG_SHADER_PIXMAP_VERTEX"] = f.read()
+        with pkg_resources.resource_stream("glass_theme", "shader_window_fragment.glsl") as f:
+            display.root["IG_SHADER_PIXMAP_FRAGMENT"] = f.read()
+
+        with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
+            display.root["IG_SHADER_SVG_GEOMETRY"] = f.read()
+        with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
+            display.root["IG_SHADER_SVG_VERTEX"] = f.read()
         with pkg_resources.resource_stream("glass_theme", "shader_window_svg_fragment.glsl") as f:
-            display.root["SHADER_SVG_FRAGMENT"] = f.read()
-                
+            display.root["IG_SHADER_SVG_FRAGMENT"] = f.read()
+        display.root["IG_SHADERS"] = ["IG_SHADER_PIXMAP", "IG_SHADER_SVG"]
+        
         InfiniteGlass.DEBUG("init", "Theme started\n")
+
+        display.sync()
+        

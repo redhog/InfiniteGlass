@@ -18,7 +18,8 @@
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
-List *views;
+List *views = NULL;
+List *shaders = NULL;
 GLuint picking_fb;
 
 Atom current_layer;
@@ -104,7 +105,10 @@ int main() {
   DEBUG("start", "Initialized X and GL.\n");
 
   while (!(views = view_load_all())) sleep(1);
+  while (!(shaders = shader_load_all())) sleep(1);
 
+  DEBUG("start", "Initialized views and shaders.\n");
+  
   property_type_register(&property_int);
   property_type_register(&property_float);
   
@@ -248,10 +252,6 @@ int main() {
         item_remove(item);
         item = item_get_from_window(e.xproperty.window, True);
       }
-    } else if (e.type == PropertyNotify) {
-      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, True);
-      properties_update(item->properties, item->window, e.xproperty.atom);
-      draw();
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window, False);
       if (item) {
@@ -318,6 +318,15 @@ int main() {
             handled=True;
           }
         }
+        if (!handled) {
+          ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
+          if (item) {
+            properties_update(item->properties, item->window, e.xproperty.atom);
+            draw();
+            handled = True;
+          }
+        }
+        
       }
       if (!handled) {
         if (DEBUG_ENABLED("event.other")) {

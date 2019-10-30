@@ -4,7 +4,7 @@
 #include "shader.h"
 
 typedef struct {
-  Shader base;
+  Shader *shader;
 
   GLint width_attr;
   GLint height_attr;
