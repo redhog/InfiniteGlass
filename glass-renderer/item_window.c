@@ -105,14 +105,12 @@ void item_type_window_destructor(Item *item) {
 }
 
 void item_type_window_draw(View *view, Item *item) {
- List *properties = ((ItemWindow *) item)->properties;
- ItemShader *shader = item->type->get_shader(item);
- for (size_t i = 0; i < properties->count; i++) {
-    Property *prop = (Property *) properties->entries[i];
-    PropertyTypeHandler *type = property_type_get(prop->type);
-    if (type) type->to_gl(prop, shader->shader);
-  }
+  item_type_window_print(item);
+  properties_print(((ItemWindow *) item)->properties, stderr);
+  properties_to_gl(((ItemWindow *) item)->properties, item->type->get_shader(item)->shader);
+  gl_check_error("item_type_window_draw1");
   item_type_base.draw(view, item);
+  gl_check_error("item_type_window_draw2");
 }
 
 void item_type_window_update(Item *item) {

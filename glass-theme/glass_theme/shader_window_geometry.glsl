@@ -6,6 +6,7 @@ layout(triangle_strip, max_vertices=4) out;
 uniform int width;
 uniform int height;
 
+uniform vec4 IG_COORDS;
 uniform vec4 screen; // x,y,w,h in space
 in vec4 window[]; // x,y,w,h in space
 
@@ -31,8 +32,8 @@ void main() {
 
   for(int i = 0; i < gl_in.length(); i++) {
 
-    left = window[i][0];
-    top = window[i][1];
+    left = IG_COORDS[0];
+    top = IG_COORDS[1];
     right = left + window[i][2];
     bottom = top - window[i][3];
 

@@ -137,6 +137,7 @@ List *shader_load_all(void) {
   XFree(prop_return);
 
   if (DEBUG_ENABLED("shaders")) {
+    DEBUG("shaders", "Shaders:\n");
     for (size_t idx = 0; idx < res->count; idx++) {
       shader_print((Shader *) res->entries[idx]);
     }

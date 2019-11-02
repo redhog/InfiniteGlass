@@ -1,4 +1,6 @@
 #include "property.h"
+#include "shader.h"
+#include "debug.h"
 
 Property *property_allocate(Atom name) {
   Property *prop = malloc(sizeof(Property));
@@ -39,6 +41,21 @@ void property_free(Property *prop) {
   free(prop);
 }
 
+void property_to_gl(Property *prop, Shader *shader) {
+  PropertyTypeHandler *type = property_type_get(prop->type);
+  if (type) type->to_gl(prop, shader);
+}
+
+void property_print(Property *prop, FILE *fp) {
+  PropertyTypeHandler *type = property_type_get(prop->type);
+  if (type) {
+    type->print(prop, fp);
+  } else {
+    char *type_name = XGetAtomName(display, prop->type);
+    fprintf(fp, "%s=<%s>\n", prop->name_str, type_name);
+    XFree(type_name);
+  }
+}
 
 List *properties_load(Window window) {
   List *prop_list = list_create();
@@ -73,6 +90,23 @@ void properties_free(List *properties) {
   list_destroy(properties);
 }
 
+void properties_to_gl(List *properties, Shader *shader) {
+  for (size_t i = 0; i < properties->count; i++) {
+    Property *prop = (Property *) properties->entries[i];
+    property_to_gl(prop, shader);
+  }
+}
+
+void properties_print(List *properties, FILE *fp) {
+  fprintf(fp, "Properties:\n");
+  for (size_t i = 0; i < properties->count; i++) {
+    Property *prop = (Property *) properties->entries[i];
+    fprintf(fp, "  ");
+    property_print(prop, fp);
+  }
+  fprintf(fp, "\n");
+}
+
 
 List *property_types = NULL;
 
@@ -104,6 +138,7 @@ void property_int_to_gl(Property *prop, Shader *shader) {
   if (prop->program != shader->program) {
     prop->program = shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
+    DEBUG("prop", "%s %s (int)\n", prop->name_str, (prop->location != -1) ? "enabled" : "disabled");
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {
@@ -113,7 +148,15 @@ void property_int_to_gl(Property *prop, Shader *shader) {
     case 4: glUniform4i(prop->location, prop->values.dwords[0], prop->values.dwords[1], prop->values.dwords[2], prop->values.dwords[3]); break;
   }
 }
-PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl};
+void property_int_print(Property *prop, FILE *fp) {
+  fprintf(fp, "%s=<int>", prop->name_str);
+  for (int i = 0; i <prop->nitems; i++) {
+    if (i > 0) fprintf(fp, ",");
+    fprintf(fp, "%li", prop->values.dwords[i]);
+  }
+  fprintf(fp, "\n");
+}
+PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl, &property_int_print};
 
 #define FL(value) *((float *) &value)
 void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; }
@@ -123,6 +166,7 @@ void property_float_to_gl(Property *prop, Shader *shader) {
   if (prop->program != shader->program) {
     prop->program = shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
+    DEBUG("prop", "%s %s (float)\n", prop->name_str, (prop->location != -1) ? "enabled" : "disabled");
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {
@@ -130,8 +174,17 @@ void property_float_to_gl(Property *prop, Shader *shader) {
     case 2: glUniform2f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1])); break;
     case 3: glUniform3f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2])); break;
     case 4:
+     printf("%s=%f,%f,%f,%f\n", prop->name_str, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2]), FL(prop->values.dwords[3]));
       glUniform4f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2]), FL(prop->values.dwords[3]));
       break;
   }
 }
-PropertyTypeHandler property_float = {&property_float_init, &property_float_load, &property_float_free, &property_float_to_gl};
+void property_float_print(Property *prop, FILE *fp) {
+  fprintf(fp, "%s=<int>", prop->name_str);
+  for (int i = 0; i <prop->nitems; i++) {
+    if (i > 0) fprintf(fp, ",");
+    fprintf(fp, "%f", FL(prop->values.dwords[i]));
+  }
+  fprintf(fp, "\n");
+}
+PropertyTypeHandler property_float = {&property_float_init, &property_float_load, &property_float_free, &property_float_to_gl, &property_float_print};
