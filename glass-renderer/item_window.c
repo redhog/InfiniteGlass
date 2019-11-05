@@ -32,7 +32,6 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   if (type_return != None) {
     for (int i = 0; i < 4; i++) {
      item->base.coords[i] = *(float *) (i + (long *) prop_return);
-     item->base._coords[i] = *(float *) (i + (long *) prop_return);
     }
     XFree(prop_return);
   } else {
@@ -51,9 +50,11 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
       item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
       item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
     }
+    long arr[4];
     for (int i = 0; i < 4; i++) {
-     item->base._coords[i] = 0.0;
+     arr[i] = *(long *) &item->base.coords[i];
     }
+    XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
 }
 
@@ -116,16 +117,6 @@ void item_type_window_update(Item *item) {
    
   if (!item->is_mapped) return;
 
-  if (   (item->_coords[0] != item->coords[0])
-      || (item->_coords[1] != item->coords[1])
-      || (item->_coords[2] != item->coords[2])
-      || (item->_coords[3] != item->coords[3])) {
-    long arr[4];
-    for (int i = 0; i < 4; i++) {
-     arr[i] = *(long *) &item->coords[i];
-    }
-    XChangeProperty(display, window_item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
-  }
   if (item->width != window_item->width_window || item->height != window_item->height_window) {
     XWindowChanges values;
     values.width = item->width;

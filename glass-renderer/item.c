@@ -66,10 +66,6 @@ Item *item_create(ItemType *type, void *args) {
 
   item->width = 0;
   item->height = 0;
-  item->_coords[0] = 0.0;
-  item->_coords[1] = 0.0;
-  item->_coords[2] = 0.0;
-  item->_coords[3] = 0.0;
   item->coords[0] = 0.0;
   item->coords[1] = 0.0;
   item->coords[2] = 0.0;

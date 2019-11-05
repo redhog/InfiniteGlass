@@ -46,7 +46,7 @@ struct ItemStruct {
 
   int layer;
  
-  float _coords[4];
+//  float _coords[4];
   uint _is_mapped; 
 };
 
