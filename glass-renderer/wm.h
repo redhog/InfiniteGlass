@@ -4,7 +4,6 @@
 #include "glapi.h"
 #include "shader.h"
 #include "item.h"
-#include "item_window.h"
 #include "list.h"
 
 FILE *eventlog;

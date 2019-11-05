@@ -2,7 +2,6 @@
 #define ITEM_WINDOW_SVG
 
 #include "item.h"
-#include "item_window.h"
 #include "view.h"
 #include "texture.h"
 #include <cairo.h>

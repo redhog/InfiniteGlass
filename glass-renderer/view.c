@@ -2,7 +2,7 @@
 #include "xapi.h"
 #include "error.h"
 #include "list.h"
-#include "item_window.h"
+#include "item.h"
 #include "debug.h"
 #include <limits.h>
 

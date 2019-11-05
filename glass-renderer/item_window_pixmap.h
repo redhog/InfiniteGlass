@@ -2,7 +2,6 @@
 #define ITEM_WINDOW_PIXMAP
 
 #include "item.h"
-#include "item_window.h"
 #include "texture.h"
 
 typedef struct {
