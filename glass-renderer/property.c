@@ -8,6 +8,7 @@ Property *property_allocate(Atom name) {
   prop->program = -1;
   prop->name_str = NULL;
   prop->values.bytes = NULL;
+  prop->data = NULL;
   return prop;
 }
 
@@ -171,9 +172,19 @@ PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &pro
 
 #define FL(value) *((float *) &value)
 void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; }
-void property_float_load(Property *prop) {}
-void property_float_free(Property *prop) {}
+void property_float_load(Property *prop) {
+  prop->data = realloc(prop->data, sizeof(float) * prop->nitems);
+  for (int i = 0; i < prop->nitems; i++) {
+    ((float *) prop->data)[i] = FL(prop->values.dwords[i]);
+  }
+}
+
+void property_float_free(Property *prop) {
+  if (prop->data) free(prop->data);
+}
+
 void property_float_to_gl(Property *prop, Shader *shader) {
+  float *values = (float *) prop->data;
   if (prop->program != shader->program) {
     prop->program = shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
@@ -181,19 +192,20 @@ void property_float_to_gl(Property *prop, Shader *shader) {
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {
-    case 1: glUniform1f(prop->location, FL(prop->values.dwords[0])); break;
-    case 2: glUniform2f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1])); break;
-    case 3: glUniform3f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2])); break;
+    case 1: glUniform1f(prop->location, values[0]); break;
+    case 2: glUniform2f(prop->location, values[0], values[1]); break;
+    case 3: glUniform3f(prop->location, values[0], values[1], values[2]); break;
     case 4:
-      glUniform4f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2]), FL(prop->values.dwords[3]));
+      glUniform4f(prop->location, values[0], values[1], values[2], values[3]);
       break;
   }
 }
 void property_float_print(Property *prop, FILE *fp) {
+  float *values = (float *) prop->data;
   fprintf(fp, "%s=<int>", prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
-    fprintf(fp, "%f", FL(prop->values.dwords[i]));
+    fprintf(fp, "%f", values[i]);
   }
   fprintf(fp, "\n");
 }

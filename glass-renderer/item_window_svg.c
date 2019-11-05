@@ -12,16 +12,23 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   int px1, py1, px2, py2;
   int itempixelwidth, itempixelheight;
   int pixelwidth, pixelheight;
-   
-  itempixelwidth = item->base.coords[2] * view->width / view->screen[2];
-  itempixelheight = item->base.coords[3] * view->height / view->screen[3];
+
+  if(!((Item *) item)->prop_coords) {
+    DEBUG("window.svg.error", "Property coords not set\n");   
+    return;
+  }
+
+  float *coords = (float *) ((Item *) item)->prop_coords->data;
+  
+  itempixelwidth = coords[2] * view->width / view->screen[2];
+  itempixelheight = coords[3] * view->height / view->screen[3];
   
   // x and y are ]0,1[, from top left to bottom right of window.
-  x1 = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
-  y1 = (item->base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.coords[3];
+  x1 = (view->screen[0] - coords[0]) / coords[2];
+  y1 = (coords[1] - (view->screen[1] + view->screen[3])) / coords[3];
 
-  x2 = (view->screen[0] + view->screen[2] - item->base.coords[0]) / item->base.coords[2];
-  y2 = (item->base.coords[1] - view->screen[1]) / item->base.coords[3];
+  x2 = (view->screen[0] + view->screen[2] - coords[0]) / coords[2];
+  y2 = (coords[1] - view->screen[1]) / coords[3];
   
   if (x1 < 0.) x1 = 0.;
   if (x1 > 1.) x1 = 1.;
@@ -132,13 +139,20 @@ void item_type_window_svg_draw(View *view, Item *item) {
                         (float) item_window_svg->drawing.y / (float) item_window_svg->drawing.itemheight,
                         (float) item_window_svg->drawing.width / (float) item_window_svg->drawing.itemwidth,
                         (float) item_window_svg->drawing.height / (float) item_window_svg->drawing.itemheight};
+
+  float _coords[] = {-1.,-1.,-1.,-1.};
+  float *coords = _coords;
+
+  if (((Item *) item)->prop_coords) {
+    coords = (float *) ((Item *) item)->prop_coords->data;
+  }
   
   DEBUG("window.svg.draw",
          "DRAW %f,%f[%f,%f] from tile %f,%f[%f,%f]\n",
-         item->coords[0],
-         item->coords[1],
-         item->coords[2],
-         item->coords[3],
+         coords[0],
+         coords[1],
+         coords[2],
+         coords[3],
          transform[0],
          transform[1],
          transform[2],

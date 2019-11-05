@@ -204,11 +204,20 @@ int main() {
         if (item->prop_size) {
           unsigned long width = item->prop_size->values.dwords[0];
           unsigned long height = item->prop_size->values.dwords[1];
-         
-          item->coords[2] *= (float) event->width / (float) width;
-          item->coords[3] *= (float) event->height / (float) height;
+          float *coords = (float *) item->prop_coords->data;
+           
+          coords[2] *= (float) event->width / (float) width;
+          coords[3] *= (float) event->height / (float) height;
+
+          long coords_arr[4];
+          for (int i = 0; i < 4; i++) {
+            coords_arr[i] = *(long *) &coords[i];
+          }
+          XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+          
           long arr[2] = {width, height};
           XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+
           item->type->update((Item *) item);
           gl_check_error("item_update_pixmap");
           draw();
@@ -220,11 +229,19 @@ int main() {
       DEBUG("event.configure", "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
       Item *item = item_get_from_window(event->window, False);
-      if (item && item->layer == IG_LAYER_MENU) {       
-        item->coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
-        item->coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
-        item->coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
-        item->coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
+      if (item && item->layer == IG_LAYER_MENU) {
+        float coords[4];
+        coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
+        coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
+        coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
+        coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
+
+        long coords_arr[4];
+        for (int i = 0; i < 4; i++) {
+          coords_arr[i] = *(long *) &coords[i];
+        }
+        XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+        
         long arr[2] = {event->width, event->height};
         XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
         item->type->update((Item *) item);

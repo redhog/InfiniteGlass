@@ -39,19 +39,11 @@ struct ItemStruct {
 
   int id;
  
-//  int width;
-//  int height;
-
-  float coords[4];
-
   uint is_mapped; 
 
   int layer;
  
-//  float _coords[4];
   uint _is_mapped;
-
-
 
   int x;
   int y;
