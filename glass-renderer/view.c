@@ -65,7 +65,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
         if (!catch(&e)) {
           if (   (   e.error_code == BadWindow
                   || e.error_code == BadDrawable)
-              && e.resourceid == ((ItemWindow *) item)->window) {
+              && e.resourceid == item->window) {
             if (!to_delete) to_delete = list_create();
             list_append(to_delete, item);
           } else {

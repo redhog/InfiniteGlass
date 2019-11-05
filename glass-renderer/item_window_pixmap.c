@@ -7,7 +7,6 @@
 
 void item_type_window_pixmap_constructor(Item *item, void *args) {
   ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
-  ItemWindow *window_item = (ItemWindow *) item;
 
   item_type_window.init(item, args);
   
@@ -16,18 +15,18 @@ void item_type_window_pixmap_constructor(Item *item, void *args) {
   texture_initialize(&pixmap_item->icon_texture);
   texture_initialize(&pixmap_item->icon_mask_texture);
 
-  pixmap_item->damage = XDamageCreate(display, window_item->window, XDamageReportNonEmpty);
+  pixmap_item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
   pixmap_item->wm_hints.flags = 0;
 
   XErrorEvent error;
   x_try();
-  XWMHints *wm_hints = XGetWMHints(display, window_item->window);
+  XWMHints *wm_hints = XGetWMHints(display, item->window);
   if (wm_hints) {
     pixmap_item->wm_hints = *wm_hints;
     XFree(wm_hints);
   }
   if (!x_catch(&error)) {
-    DEBUG("window.pixmap.error", "Window does not have any WM_HINTS: %lu", window_item->window);
+    DEBUG("window.pixmap.error", "Window does not have any WM_HINTS: %lu", item->window);
   }
 }
 
@@ -77,7 +76,6 @@ void item_type_window_pixmap_draw(View *view, Item *item) {
 
 void item_type_window_pixmap_update(Item *item) {
   ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
-  ItemWindow *window_item = (ItemWindow *) item;
    
   if (!item->is_mapped) return;
 
@@ -90,7 +88,7 @@ void item_type_window_pixmap_update(Item *item) {
   if (pixmap_item->window_pixmap) {
     XFreePixmap(display, pixmap_item->window_pixmap);
   }
-  pixmap_item->window_pixmap = XCompositeNameWindowPixmap(display, window_item->window);
+  pixmap_item->window_pixmap = XCompositeNameWindowPixmap(display, item->window);
 
   Window root_return;
   int x_return;

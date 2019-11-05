@@ -9,7 +9,7 @@
 #include "debug.h"
 #include <X11/Xatom.h>
 
-void item_type_window_update_space_pos_from_window(ItemWindow *item) {
+void item_type_window_update_space_pos_from_window(Item *item) {
   XWindowAttributes attr;
   XGetWindowAttributes(display, item->window, &attr);
 
@@ -19,8 +19,8 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
   int height                = attr.height;
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
-  item->base.width = width;
-  item->base.height = height;
+  item->width = width;
+  item->height = height;
   
   Atom type_return;
   int format_return;
@@ -31,42 +31,41 @@ void item_type_window_update_space_pos_from_window(ItemWindow *item) {
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
     for (int i = 0; i < 4; i++) {
-     item->base.coords[i] = *(float *) (i + (long *) prop_return);
+     item->coords[i] = *(float *) (i + (long *) prop_return);
     }
     XFree(prop_return);
   } else {
     View *v = NULL;
     if (views) {
-      v = view_find(views, item->base.layer);
+      v = view_find(views, item->layer);
     }
     if (v) {
-      item->base.coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
-      item->base.coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
-      item->base.coords[2] = (v->screen[2] * (float) item->base.width) / (float) v->width;
-      item->base.coords[3] = (v->screen[3] * (float) item->base.height) / (float) v->height;
+      item->coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
+      item->coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
+      item->coords[2] = (v->screen[2] * (float) item->width) / (float) v->width;
+      item->coords[3] = (v->screen[3] * (float) item->height) / (float) v->height;
     } else {
-      item->base.coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
-      item->base.coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
-      item->base.coords[2] = ((float) (width)) / (float) overlay_attr.width;
-      item->base.coords[3] = ((float) (height)) / (float) overlay_attr.width;
+      item->coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
+      item->coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
+      item->coords[2] = ((float) (width)) / (float) overlay_attr.width;
+      item->coords[3] = ((float) (height)) / (float) overlay_attr.width;
     }
     long arr[4];
     for (int i = 0; i < 4; i++) {
-     arr[i] = *(long *) &item->base.coords[i];
+     arr[i] = *(long *) &item->coords[i];
     }
     XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
 }
 
 void item_type_window_constructor(Item *item, void *args) {
-  ItemWindow *window_item = (ItemWindow *) item;
   Window window = *(Window *) args;
   
-  window_item->window = window;
-  window_item->width_property = 0;
-  window_item->height_property = 0;
-  window_item->width_window = 0;
-  window_item->height_window = 0;
+  item->window = window;
+  item->width_property = 0;
+  item->height_property = 0;
+  item->width_window = 0;
+  item->height_window = 0;
 
   Atom type_return;
   int format_return;
@@ -79,12 +78,12 @@ void item_type_window_constructor(Item *item, void *args) {
     XWindowAttributes attr;
     XGetWindowAttributes(display, window, &attr);
     if (attr.override_redirect) {
-      window_item->base.layer = IG_LAYER_MENU;
+      item->layer = IG_LAYER_MENU;
     } else {
-      window_item->base.layer = IG_LAYER_DESKTOP;
+      item->layer = IG_LAYER_DESKTOP;
     }
   } else {
-    window_item->base.layer = *(Atom *) prop_return;
+    item->layer = *(Atom *) prop_return;
   }
   XFree(prop_return);
 
@@ -93,14 +92,14 @@ void item_type_window_constructor(Item *item, void *args) {
   
   XWindowAttributes attr;
   XGetWindowAttributes(display, window, &attr);
-  window_item->base.is_mapped = attr.map_state == IsViewable;
-  item_type_window_update_space_pos_from_window(window_item);
+  item->is_mapped = attr.map_state == IsViewable;
+  item_type_window_update_space_pos_from_window(item);
 
   XSelectInput(display, window, PropertyChangeMask);
 
-  window_item->properties = properties_load(window);
-  window_item->prop_size = properties_find(window_item->properties, IG_SIZE);
-  window_item->prop_coords = properties_find(window_item->properties, IG_COORDS);
+  item->properties = properties_load(window);
+  item->prop_size = properties_find(item->properties, IG_SIZE);
+  item->prop_coords = properties_find(item->properties, IG_COORDS);
 }
 
 void item_type_window_destructor(Item *item) {
@@ -108,30 +107,28 @@ void item_type_window_destructor(Item *item) {
 }
 
 void item_type_window_draw(View *view, Item *item) {
-  properties_to_gl(((ItemWindow *) item)->properties, item->type->get_shader(item)->shader);
+  properties_to_gl(item->properties, item->type->get_shader(item)->shader);
   gl_check_error("item_type_window_draw1");
   item_type_base.draw(view, item);
   gl_check_error("item_type_window_draw2");
 }
 
 void item_type_window_update(Item *item) {
-  ItemWindow *window_item = (ItemWindow *) item;
-   
   if (!item->is_mapped) return;
 
-  if (item->width != window_item->width_window || item->height != window_item->height_window) {
+  if (item->width != item->width_window || item->height != item->height_window) {
     XWindowChanges values;
     values.width = item->width;
     values.height = item->height;
-    XConfigureWindow(display, window_item->window, CWWidth | CWHeight, &values);
-    window_item->width_window = item->width;
-    window_item->height_window = item->height;
+    XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+    item->width_window = item->width;
+    item->height_window = item->height;
   }
-  if (item->width != window_item->width_property || item->height != window_item->height_property) {
+  if (item->width != item->width_property || item->height != item->height_property) {
     long arr[2] = {item->width, item->height};
-    XChangeProperty(display, window_item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-    window_item->width_property = item->width;
-    window_item->height_property = item->height;
+    XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+    item->width_property = item->width;
+    item->height_property = item->height;
   }
   item_type_window.base->update(item);
 }
@@ -142,8 +139,8 @@ Shader *item_type_window_get_shader(Item *item) {
 
 void item_type_window_print(Item *item) {
   item_type_window.base->print(item);
-  printf("    window=%ld\n", ((ItemWindow *) item)->window);
-  properties_print(((ItemWindow *) item)->properties, stderr);
+  printf("    window=%ld\n", item->window);
+  properties_print(item->properties, stderr);
 }
 
 ItemType item_type_window = {
@@ -161,8 +158,8 @@ ItemType item_type_window = {
 Item *item_get_from_window(Window window, int create) {
   if (items_all) {
     for (size_t idx = 0; idx < items_all->count; idx++) {
-      ItemWindow *item = (ItemWindow *) items_all->entries[idx];
-      if (item->window == window) return (Item *) item;
+      Item *item = (Item *) items_all->entries[idx];
+      if (item->window == window) return item;
     }
   }
   if (!create) return NULL;

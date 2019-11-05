@@ -133,7 +133,7 @@ int main() {
     gl_check_error("loop");
 
     if (e.type == PropertyNotify) {
-      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
+      Item *item = (Item *) item_get_from_window(e.xproperty.window, False);
       if (item) {
         properties_update(item->properties, item->window, e.xproperty.atom);
         draw();
@@ -156,20 +156,19 @@ int main() {
           Window win = root;
           pick(root_x, root_y, &winx, &winy, &item);
           if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_window)) {
-            ItemWindow *window_item = (ItemWindow *) item;
-            win = window_item->window;
+            win = item->window;
 
             XWindowChanges values;
             values.x = root_x - winx;
             values.y = root_y - winy;
             values.stack_mode = Above;
-            if (values.x != window_item->x || values.y != window_item->y) {
-              XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
-              window_item->x = values.x;
-              window_item->y = values.y;
+            if (values.x != item->x || values.y != item->y) {
+              XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
+              item->x = values.x;
+              item->y = values.y;
             }
 
-            DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy);
+            DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, item->window, winx, winy);
           } else {
             DEBUG("position", "Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root);
           }
@@ -197,37 +196,37 @@ int main() {
      //XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureRequest) {
       XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
+      Item *item = item_get_from_window(event->window, False);
       if (!item) {
         XWindowChanges values;
         values.width = event->width;
         values.height = event->height;
         XConfigureWindow(display, event->window, CWWidth | CWHeight, &values);
       } else {
-        item->base.coords[2] *= (float) event->width / (float) item->base.width;
-        item->base.coords[3] *= (float) event->height / (float) item->base.height;
-        item->base.width = event->width;
-        item->base.height = event->height;
+        item->coords[2] *= (float) event->width / (float) item->width;
+        item->coords[3] *= (float) event->height / (float) item->height;
+        item->width = event->width;
+        item->height = event->height;
         item->width_window = event->width;
         item->height_window = event->height;
-        item->base.type->update((Item *) item);
+        item->type->update((Item *) item);
         gl_check_error("item_update_pixmap");
         draw();
       }
     } else if (e.type == ConfigureNotify) {
       DEBUG("event.configure", "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
-      if (item && item->base.layer == IG_LAYER_MENU) {       
-        item->base.coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
-        item->base.coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
-        item->base.coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
-        item->base.coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
-        item->base.width = event->width;
-        item->base.height = event->height;
+      Item *item = item_get_from_window(event->window, False);
+      if (item && item->layer == IG_LAYER_MENU) {       
+        item->coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
+        item->coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
+        item->coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
+        item->coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
+        item->width = event->width;
+        item->height = event->height;
         item->width_window = event->width;
         item->height_window = event->height;
-        item->base.type->update((Item *) item);
+        item->type->update((Item *) item);
         draw();
       }
       // FIXME: Update width/height regardless of window type...
@@ -237,17 +236,17 @@ int main() {
       unsigned long nitems_return;
       unsigned long bytes_after_return;
       unsigned char *prop_return;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
+      Item *item = item_get_from_window(e.xproperty.window, False);
       if (item) {
         XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
                            &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
         if (type_return != None) {
-          item->base.width = ((long *) prop_return)[0];
-          item->base.height = ((long *) prop_return)[1];
-          item->width_property = item->base.width;
-          item->height_property = item->base.height;
-          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->base.width, item->base.height);
-          item->base.type->update((Item *) item);
+          item->width = ((long *) prop_return)[0];
+          item->height = ((long *) prop_return)[1];
+          item->width_property = item->width;
+          item->height_property = item->height;
+          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->width, item->height);
+          item->type->update((Item *) item);
           draw();
         }
         XFree(prop_return);

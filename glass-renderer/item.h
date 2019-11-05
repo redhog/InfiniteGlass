@@ -6,6 +6,8 @@
 #include "item_shader.h"
 #include "list.h"
 #include "view_type.h"
+#include "texture.h"
+#include "property.h"
 
 struct ItemTypeStruct;
 struct ItemStruct;
@@ -47,7 +49,22 @@ struct ItemStruct {
   int layer;
  
 //  float _coords[4];
-  uint _is_mapped; 
+  uint _is_mapped;
+
+
+
+  int x;
+  int y;
+  Window window;
+
+  int width_property;
+  int height_property;
+  int width_window;
+  int height_window;
+
+  List *properties;
+  Property *prop_size;
+  Property *prop_coords;
 };
 
 extern ItemType item_type_base;
