@@ -34,8 +34,8 @@ void main() {
 
     left = IG_COORDS[0];
     top = IG_COORDS[1];
-    right = left + window[i][2];
-    bottom = top - window[i][3];
+    right = left + IG_COORDS[2];
+    bottom = top - IG_COORDS[3];
 
     left = floor(left * width / 2.) * 2. / width;
     right = floor(right * width / 2.) * 2. / width;

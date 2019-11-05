@@ -105,8 +105,6 @@ void item_type_window_destructor(Item *item) {
 }
 
 void item_type_window_draw(View *view, Item *item) {
-  item_type_window_print(item);
-  properties_print(((ItemWindow *) item)->properties, stderr);
   properties_to_gl(((ItemWindow *) item)->properties, item->type->get_shader(item)->shader);
   gl_check_error("item_type_window_draw1");
   item_type_base.draw(view, item);

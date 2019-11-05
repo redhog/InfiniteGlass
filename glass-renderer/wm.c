@@ -132,6 +132,14 @@ int main() {
     
     gl_check_error("loop");
 
+    if (e.type == PropertyNotify) {
+      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
+      if (item) {
+        properties_update(item->properties, item->window, e.xproperty.atom);
+        draw();
+      }
+   }
+    
     if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
         if (cookie->evtype == XI_RawMotion) {
@@ -318,15 +326,6 @@ int main() {
             handled=True;
           }
         }
-        if (!handled) {
-          ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
-          if (item) {
-            properties_update(item->properties, item->window, e.xproperty.atom);
-            draw();
-            handled = True;
-          }
-        }
-        
       }
       if (!handled) {
         if (DEBUG_ENABLED("event.other")) {
