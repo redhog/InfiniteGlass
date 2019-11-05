@@ -99,6 +99,8 @@ void item_type_window_constructor(Item *item, void *args) {
   XSelectInput(display, window, PropertyChangeMask);
 
   window_item->properties = properties_load(window);
+  window_item->prop_size = properties_find(window_item->properties, IG_SIZE);
+  window_item->prop_coords = properties_find(window_item->properties, IG_COORDS);
 }
 
 void item_type_window_destructor(Item *item) {

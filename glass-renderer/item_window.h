@@ -18,6 +18,8 @@ typedef struct {
   int height_window;
 
   List *properties;
+  Property *prop_size;
+  Property *prop_coords;
 } ItemWindow;
 
 extern ItemType item_type_window;

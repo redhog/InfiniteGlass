@@ -34,6 +34,7 @@ extern void properties_update(List *properties, Window window, Atom name);
 extern void properties_free(List *properties);
 extern void properties_to_gl(List *properties, Shader *shader);
 extern void properties_print(List *properties, FILE *fp);
+extern Property *properties_find(List *properties, Atom name);
 
 struct PropertyTypeHandlerT;
 typedef struct PropertyTypeHandlerT PropertyTypeHandler;

@@ -108,6 +108,15 @@ void properties_print(List *properties, FILE *fp) {
   fprintf(fp, "\n");
 }
 
+Property *properties_find(List *properties, Atom name) {
+  for (size_t idx = 0; idx < properties->count; idx++) {
+    Property *p = (Property *) properties->entries[idx];   
+    if (p->name == name) {
+      return p;
+    }
+  }
+  return NULL;
+}
 
 List *property_types = NULL;
 
