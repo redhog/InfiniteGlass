@@ -166,8 +166,8 @@ void item_type_window_svg_update(Item *item) {
   rsvg_handle_get_dimensions(rsvg, &dimension);
   g_object_unref(rsvg);
 
-  item->width = dimension.width;
-  item->height = dimension.height;
+  int arr[2] = {dimension.width, dimension.height};
+  XChangeProperty(display, ((ItemWindow *) item)->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   
   item_type_window_svg.base->update(item);
 }
