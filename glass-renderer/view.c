@@ -58,7 +58,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (!filter || filter(item)) {
-      if (item_isinstance(item, &item_type_window)) {
+      if (item_isinstance(item, &item_type_base)) {
         try();
         item->type->draw(view, item);
         XErrorEvent e;

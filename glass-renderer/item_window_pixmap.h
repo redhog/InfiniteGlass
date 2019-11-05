@@ -6,7 +6,7 @@
 #include "texture.h"
 
 typedef struct {
-  ItemWindow base;
+  Item base;
  
   Damage damage;
  

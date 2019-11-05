@@ -155,7 +155,7 @@ int main() {
           Item *item;
           Window win = root;
           pick(root_x, root_y, &winx, &winy, &item);
-          if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_window)) {
+          if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_base)) {
             win = item->window;
 
             XWindowChanges values;
@@ -307,7 +307,7 @@ int main() {
       } else if (e.xproperty.atom == IG_COORDS) {
         Item *item = item_get_from_window(e.xproperty.window, False);
         if (item) {
-          item_type_window_update_space_pos_from_window((ItemWindow *) item);
+          item_type_window_update_space_pos_from_window(item);
           item->type->update(item);
           draw();
         }

@@ -24,7 +24,7 @@ typedef struct {
 } ItemWindowSVGDrawing;
 
 typedef struct {
-  ItemWindow base;
+  Item base;
  
   char *source;
  

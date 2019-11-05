@@ -13,15 +13,15 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   int itempixelwidth, itempixelheight;
   int pixelwidth, pixelheight;
    
-  itempixelwidth = item->base.base.coords[2] * view->width / view->screen[2];
-  itempixelheight = item->base.base.coords[3] * view->height / view->screen[3];
+  itempixelwidth = item->base.coords[2] * view->width / view->screen[2];
+  itempixelheight = item->base.coords[3] * view->height / view->screen[3];
   
   // x and y are ]0,1[, from top left to bottom right of window.
-  x1 = (view->screen[0] - item->base.base.coords[0]) / item->base.base.coords[2];
-  y1 = (item->base.base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.base.coords[3];
+  x1 = (view->screen[0] - item->base.coords[0]) / item->base.coords[2];
+  y1 = (item->base.coords[1] - (view->screen[1] + view->screen[3])) / item->base.coords[3];
 
-  x2 = (view->screen[0] + view->screen[2] - item->base.base.coords[0]) / item->base.base.coords[2];
-  y2 = (item->base.base.coords[1] - view->screen[1]) / item->base.base.coords[3];
+  x2 = (view->screen[0] + view->screen[2] - item->base.coords[0]) / item->base.coords[2];
+  y2 = (item->base.coords[1] - view->screen[1]) / item->base.coords[3];
   
   if (x1 < 0.) x1 = 0.;
   if (x1 > 1.) x1 = 1.;
@@ -107,7 +107,7 @@ void item_type_window_svg_constructor(Item *item, void *args) {
   texture_initialize(&item_window_svg->drawing.texture);
   item_window_svg->drawing.surface = 0;
 
-  item_type_window.init(item, &svg_args->window);
+  item_type_base.init(item, &svg_args->window);
 }
 
 void item_type_window_svg_destructor(Item *item) {
@@ -182,7 +182,7 @@ void item_type_window_svg_print(Item *item) {
 
 
 ItemType item_type_window_svg = {
-  &item_type_window,
+  &item_type_base,
   sizeof(ItemWindowSVG),
   "ItemWindowSVG",
   &item_type_window_svg_constructor,

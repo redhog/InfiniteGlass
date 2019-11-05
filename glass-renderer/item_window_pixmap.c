@@ -8,7 +8,7 @@
 void item_type_window_pixmap_constructor(Item *item, void *args) {
   ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
 
-  item_type_window.init(item, args);
+  item_type_base.init(item, args);
   
   pixmap_item->window_pixmap = 0;
   texture_initialize(&pixmap_item->window_texture);
@@ -35,7 +35,7 @@ void item_type_window_pixmap_destructor(Item *item) {
   texture_destroy(&pixmap_item->window_texture);
   texture_destroy(&pixmap_item->icon_texture);
   texture_destroy(&pixmap_item->icon_mask_texture);
-  item_type_window.destroy(item);
+  item_type_base.destroy(item);
 }
 
 void item_type_window_pixmap_draw(View *view, Item *item) {
@@ -70,7 +70,7 @@ void item_type_window_pixmap_draw(View *view, Item *item) {
       glUniform1i(shader->has_icon_mask_attr, 1);
     }
     
-    item_type_window.draw(view, item);
+    item_type_base.draw(view, item);
   }
 }
 
@@ -79,7 +79,7 @@ void item_type_window_pixmap_update(Item *item) {
    
   if (!item->is_mapped) return;
 
-  item_type_window.update(item);
+  item_type_base.update(item);
 
   x_push_error_context("item_update_pixmap");
   
@@ -126,7 +126,7 @@ void item_type_window_pixmap_print(Item *item) {
 }
 
 ItemType item_type_window_pixmap = {
-  &item_type_window,
+  &item_type_base,
   sizeof(ItemWindowPixmap),
   "ItemWindowPixmap",
   &item_type_window_pixmap_constructor,
