@@ -1,8 +1,6 @@
 #include "item_shader.h"
 
 int item_shader_load(ItemShader *shader) {
-  shader->width_attr = glGetUniformLocation(shader->shader->program, "width");
-  shader->height_attr = glGetUniformLocation(shader->shader->program, "height");
   shader->screen_attr = glGetUniformLocation(shader->shader->program, "screen");
 
   shader->picking_mode_attr = glGetUniformLocation(shader->shader->program, "picking_mode");

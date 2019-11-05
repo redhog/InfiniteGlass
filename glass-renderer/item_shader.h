@@ -6,9 +6,6 @@
 typedef struct {
   Shader *shader;
 
-  GLint width_attr;
-  GLint height_attr;
- 
   GLint screen_attr;
  
   GLint picking_mode_attr;

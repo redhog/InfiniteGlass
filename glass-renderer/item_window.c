@@ -150,6 +150,7 @@ Shader *item_type_window_get_shader(Item *item) {
 void item_type_window_print(Item *item) {
   item_type_window.base->print(item);
   printf("    window=%ld\n", ((ItemWindow *) item)->window);
+  properties_print(((ItemWindow *) item)->properties, stderr);
 }
 
 ItemType item_type_window = {

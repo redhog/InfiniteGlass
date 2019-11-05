@@ -3,10 +3,8 @@
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 
-uniform int width;
-uniform int height;
-
 uniform vec4 IG_COORDS;
+uniform ivec2 IG_SIZE;
 uniform vec4 screen; // x,y,w,h in space
 
 out vec2 window_coord;
@@ -21,6 +19,8 @@ mat4 screen2glscreen = transpose(mat4(
 
 void main() {
   float left, right, top, bottom, size;
+  int width = IG_SIZE[0];
+  int height = IG_SIZE[1];
 
   mat4 space2screen = screen2glscreen * transpose(mat4(
     1./screen[2], 0., 0., -screen.x/screen[2],
@@ -33,6 +33,8 @@ void main() {
   top = IG_COORDS[1];
   right = left + IG_COORDS[2];
   bottom = top - IG_COORDS[3];
+
+  left += 0.000000001 * IG_SIZE[0];
 
   left = floor(left * width / 2.) * 2. / width;
   right = floor(right * width / 2.) * 2. / width;

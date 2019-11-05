@@ -94,6 +94,7 @@ void properties_to_gl(List *properties, Shader *shader) {
   for (size_t i = 0; i < properties->count; i++) {
     Property *prop = (Property *) properties->entries[i];
     property_to_gl(prop, shader);
+    gl_check_error(prop->name_str);
   }
 }
 
@@ -138,7 +139,7 @@ void property_int_to_gl(Property *prop, Shader *shader) {
   if (prop->program != shader->program) {
     prop->program = shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
-    DEBUG("prop", "%s %s (int)\n", prop->name_str, (prop->location != -1) ? "enabled" : "disabled");
+    DEBUG("prop", "%s %s (int) [%d]\n", prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {
@@ -166,7 +167,7 @@ void property_float_to_gl(Property *prop, Shader *shader) {
   if (prop->program != shader->program) {
     prop->program = shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
-    DEBUG("prop", "%s %s (float)\n", prop->name_str, (prop->location != -1) ? "enabled" : "disabled");
+    DEBUG("prop", "%s %s (float) [%d]\n", prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {
