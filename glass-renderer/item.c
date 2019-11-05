@@ -19,24 +19,10 @@ void item_type_base_draw(View *view, Item *item) {
     
     glUniform1f(shader->window_id_attr, (float) item->id / (float) INT_MAX);
     
-    glEnableVertexAttribArray(shader->coords_attr);
-    glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
-    glVertexAttribPointer(shader->coords_attr, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
     glDrawArrays(GL_POINTS, 0, 1);
   }
 }
 void item_type_base_update(Item *item) {
-  if (item->coords_vbo == -1) {
-    glGenBuffers(1, &item->coords_vbo);
-  }
-  glBindBuffer(GL_ARRAY_BUFFER, item->coords_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(item->coords), item->coords, GL_STATIC_DRAW);
-
-  item->_coords[0] = item->coords[0];
-  item->_coords[1] = item->coords[1];
-  item->_coords[2] = item->coords[2];
-  item->_coords[3] = item->coords[3];
   item->_is_mapped = item->is_mapped;
 }
 
@@ -91,7 +77,6 @@ Item *item_create(ItemType *type, void *args) {
   item->coords[1] = 0.0;
   item->coords[2] = 0.0;
   item->coords[3] = 0.0;
-  item->coords_vbo = -1;
   item->is_mapped = False;
   item->_is_mapped = False;
   item->type = type;

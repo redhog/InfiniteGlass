@@ -41,7 +41,6 @@ struct ItemStruct {
   int height;
 
   float coords[4];
-  GLuint coords_vbo;
 
   uint is_mapped; 
 

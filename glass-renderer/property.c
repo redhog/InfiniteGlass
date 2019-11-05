@@ -174,7 +174,6 @@ void property_float_to_gl(Property *prop, Shader *shader) {
     case 2: glUniform2f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1])); break;
     case 3: glUniform3f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2])); break;
     case 4:
-     printf("%s=%f,%f,%f,%f\n", prop->name_str, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2]), FL(prop->values.dwords[3]));
       glUniform4f(prop->location, FL(prop->values.dwords[0]), FL(prop->values.dwords[1]), FL(prop->values.dwords[2]), FL(prop->values.dwords[3]));
       break;
   }

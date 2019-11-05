@@ -8,7 +8,6 @@ uniform int height;
 
 uniform vec4 IG_COORDS;
 uniform vec4 screen; // x,y,w,h in space
-in vec4 window[]; // x,y,w,h in space
 
 out vec2 window_coord;
 out float geometry_size;
@@ -30,40 +29,38 @@ void main() {
     0., 0., 0., 1.
   ));
 
-  for(int i = 0; i < gl_in.length(); i++) {
+  left = IG_COORDS[0];
+  top = IG_COORDS[1];
+  right = left + IG_COORDS[2];
+  bottom = top - IG_COORDS[3];
 
-    left = IG_COORDS[0];
-    top = IG_COORDS[1];
-    right = left + IG_COORDS[2];
-    bottom = top - IG_COORDS[3];
+  left = floor(left * width / 2.) * 2. / width;
+  right = floor(right * width / 2.) * 2. / width;
+  bottom = floor(bottom * width / 2.) * 2. / width;
+  top = floor(top * width / 2.) * 2. / width;
 
-    left = floor(left * width / 2.) * 2. / width;
-    right = floor(right * width / 2.) * 2. / width;
-    bottom = floor(bottom * width / 2.) * 2. / width;
-    top = floor(top * width / 2.) * 2. / width;
+  size = distance(space2screen * vec4(left, bottom, 0., 1.),
+                  space2screen * vec4(right, top, 0., 1.));
 
-    size = distance(space2screen * vec4(left, bottom, 0., 1.),
-                    space2screen * vec4(right, top, 0., 1.));
+  gl_Position = space2screen * vec4(left, bottom, 0., 1.);
+  window_coord = vec2(0., 1.);
+  geometry_size = size;
+  EmitVertex();
 
-    gl_Position = space2screen * vec4(left, bottom, 0., 1.);
-    window_coord = vec2(0., 1.);
-    geometry_size = size;
-    EmitVertex();
+  gl_Position = space2screen * vec4(left, top, 0., 1.);
+  window_coord = vec2(0., 0.);
+  geometry_size = size;
+  EmitVertex();
 
-    gl_Position = space2screen * vec4(left, top, 0., 1.);
-    window_coord = vec2(0., 0.);
-    geometry_size = size;
-    EmitVertex();
+  gl_Position = space2screen * vec4(right, bottom, 0., 1.);
+  window_coord = vec2(1., 1.);
+  geometry_size = size;
+  EmitVertex();
 
-    gl_Position = space2screen * vec4(right, bottom, 0., 1.);
-    window_coord = vec2(1., 1.);
-    geometry_size = size;
-    EmitVertex();
+  gl_Position = space2screen * vec4(right, top, 0., 1.);
+  window_coord = vec2(1., 0.);
+  geometry_size = size;
+  EmitVertex();
 
-    gl_Position = space2screen * vec4(right, top, 0., 1.);
-    window_coord = vec2(1., 0.);
-    geometry_size = size;
-    EmitVertex();
-  }
   EndPrimitive();
 }
