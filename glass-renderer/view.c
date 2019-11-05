@@ -116,9 +116,12 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   *returnitem = NULL;
   if (data[2] != 0.0) {
     *returnitem = item_get(data[2] * (float) INT_MAX);
-    if (*returnitem) {
-      *winx = (int) (data[0] * (*returnitem)->width);
-      *winy = (int) (data[1] * (*returnitem)->height);
+    if (*returnitem && (*returnitem)->prop_size) {
+      unsigned long width = (*returnitem)->prop_size->values.dwords[0];
+      unsigned long height = (*returnitem)->prop_size->values.dwords[1];
+      
+      *winx = (int) (data[0] * width);
+      *winy = (int) (data[1] * height);
     }
   }
   if (*returnitem) {

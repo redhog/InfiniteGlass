@@ -153,11 +153,9 @@ int main() {
 
           int winx, winy;
           Item *item;
-          Window win = root;
+
           pick(root_x, root_y, &winx, &winy, &item);
           if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_base)) {
-            win = item->window;
-
             XWindowChanges values;
             values.x = root_x - winx;
             values.y = root_y - winy;
@@ -203,15 +201,20 @@ int main() {
         values.height = event->height;
         XConfigureWindow(display, event->window, CWWidth | CWHeight, &values);
       } else {
-        item->coords[2] *= (float) event->width / (float) item->width;
-        item->coords[3] *= (float) event->height / (float) item->height;
-        item->width = event->width;
-        item->height = event->height;
-        item->width_window = event->width;
-        item->height_window = event->height;
-        item->type->update((Item *) item);
-        gl_check_error("item_update_pixmap");
-        draw();
+        if (item->prop_size) {
+          unsigned long width = item->prop_size->values.dwords[0];
+          unsigned long height = item->prop_size->values.dwords[1];
+         
+          item->coords[2] *= (float) event->width / (float) width;
+          item->coords[3] *= (float) event->height / (float) height;
+          long arr[2] = {width, height};
+          XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+          item->type->update((Item *) item);
+          gl_check_error("item_update_pixmap");
+          draw();
+        } else {
+          DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", e.xconfigure.window);
+        }
       }
     } else if (e.type == ConfigureNotify) {
       DEBUG("event.configure", "Received ConfigureNotify for %ld\n", e.xconfigure.window);
@@ -222,10 +225,8 @@ int main() {
         item->coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
         item->coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
         item->coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
-        item->width = event->width;
-        item->height = event->height;
-        item->width_window = event->width;
-        item->height_window = event->height;
+        long arr[2] = {event->width, event->height};
+        XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
         item->type->update((Item *) item);
         draw();
       }
@@ -241,11 +242,11 @@ int main() {
         XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
                            &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
         if (type_return != None) {
-          item->width = ((long *) prop_return)[0];
-          item->height = ((long *) prop_return)[1];
-          item->width_property = item->width;
-          item->height_property = item->height;
-          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->width, item->height);
+          XWindowChanges values;
+          values.width = ((long *) prop_return)[0];
+          values.height = ((long *) prop_return)[1];
+          XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
           item->type->update((Item *) item);
           draw();
         }

@@ -15,10 +15,6 @@ void item_type_base_constructor(Item *item, void *args) {
   Window window = *(Window *) args;
   
   item->window = window;
-  item->width_property = 0;
-  item->height_property = 0;
-  item->width_window = 0;
-  item->height_window = 0;
 
   Atom type_return;
   int format_return;
@@ -76,21 +72,6 @@ void item_type_base_draw(View *view, Item *item) {
 }
 void item_type_base_update(Item *item) {
   if (!item->is_mapped) return;
-
-  if (item->width != item->width_window || item->height != item->height_window) {
-    XWindowChanges values;
-    values.width = item->width;
-    values.height = item->height;
-    XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-    item->width_window = item->width;
-    item->height_window = item->height;
-  }
-  if (item->width != item->width_property || item->height != item->height_property) {
-    long arr[2] = {item->width, item->height};
-    XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-    item->width_property = item->width;
-    item->height_property = item->height;
-  }
   item->_is_mapped = item->is_mapped;
 }
 
@@ -99,12 +80,17 @@ Shader *item_type_base_get_shader(Item *item) {
 }
 
 void item_type_base_print(Item *item) {
-  printf("%s(%d):%s [%d,%d] @ %f,%f,%f,%f\n",
+  long width = -1, height = -1;
+  if (item->prop_size) {
+    width = item->prop_size->values.dwords[0];
+    height = item->prop_size->values.dwords[1];
+  }
+  printf("%s(%d):%s [%ld,%ld] @ %f,%f,%f,%f\n",
          item->type->name,
          item->id,
          item->is_mapped ? "" : " invisible",
-         item->width,
-         item->height,
+         width,
+         height,
          item->coords[0],
          item->coords[1],
          item->coords[2],
@@ -137,8 +123,6 @@ Bool item_isinstance(Item *item, ItemType *type) {
 Item *item_create(ItemType *type, void *args) {
   Item *item = (Item *) malloc(type->size);
 
-  item->width = 0;
-  item->height = 0;
   item->coords[0] = 0.0;
   item->coords[1] = 0.0;
   item->coords[2] = 0.0;
@@ -183,8 +167,8 @@ void item_type_window_update_space_pos_from_window(Item *item) {
   int height                = attr.height;
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
-  item->width = width;
-  item->height = height;
+  long arr[2] = {width, height};
+  XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   
   Atom type_return;
   int format_return;
@@ -206,8 +190,8 @@ void item_type_window_update_space_pos_from_window(Item *item) {
     if (v) {
       item->coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
       item->coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
-      item->coords[2] = (v->screen[2] * (float) item->width) / (float) v->width;
-      item->coords[3] = (v->screen[3] * (float) item->height) / (float) v->height;
+      item->coords[2] = (v->screen[2] * (float) width) / (float) v->width;
+      item->coords[3] = (v->screen[3] * (float) height) / (float) v->height;
     } else {
       item->coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
       item->coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;

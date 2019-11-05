@@ -39,8 +39,8 @@ struct ItemStruct {
 
   int id;
  
-  int width;
-  int height;
+//  int width;
+//  int height;
 
   float coords[4];
 
@@ -56,11 +56,6 @@ struct ItemStruct {
   int x;
   int y;
   Window window;
-
-  int width_property;
-  int height_property;
-  int width_window;
-  int height_window;
 
   List *properties;
   Property *prop_size;
