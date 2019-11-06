@@ -41,7 +41,7 @@ struct ItemStruct {
  
   uint is_mapped; 
 
-  int layer;
+  Atom layer;
  
   uint _is_mapped;
 
