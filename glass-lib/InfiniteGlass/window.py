@@ -37,7 +37,7 @@ def window_getitem(self, name):
     if property_type == "ATOM":
         res = [self.display.real_display.get_atom_name(item) for item in res]
     if property_type == "FLOAT":
-        res = struct.unpack("<" + "f" * len(res), res.tobytes())
+        res = list(struct.unpack("<" + "f" * len(res), res.tobytes()))
     if property_type == "WINDOW":
         res = [self.display.real_display.create_resource_object("window", item) for item in res]
     if property_type == "STRING":

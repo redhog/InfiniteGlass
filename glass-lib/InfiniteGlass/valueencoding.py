@@ -5,7 +5,11 @@ import array
 from . import keymap 
 
 def parse_value(display, value):
-    if isinstance(value, (tuple, list, array.array)):
+    if isinstance(value, tuple):
+        itemtype, items = parse_value(display, value[1])
+        return display.get_atom(value[0]), items
+    
+    if isinstance(value, (list, array.array)):
         items = value
     elif isinstance(value, str):
         items = value.split(" ")
