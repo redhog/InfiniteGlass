@@ -117,8 +117,8 @@ void item_type_window_pixmap_update(Item *item) {
   x_pop_error_context();
 }
 
-Shader *item_type_window_pixmap_get_shader(Item *item) {
-  return (Shader *) item_window_shader_get();
+ItemShader *item_type_window_pixmap_get_shader(Item *item) {
+  return (ItemShader *) item_window_shader_get();
 }
 
 void item_type_window_pixmap_print(Item *item) {

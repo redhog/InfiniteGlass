@@ -186,8 +186,8 @@ void item_type_window_svg_update(Item *item) {
   item_type_window_svg.base->update(item);
 }
 
-Shader *item_type_window_svg_get_shader(Item *item) {
-  return (Shader *) item_window_svg_shader_get();
+ItemShader *item_type_window_svg_get_shader(Item *item) {
+  return (ItemShader *) item_window_svg_shader_get();
 }
 
 void item_type_window_svg_print(Item *item) {

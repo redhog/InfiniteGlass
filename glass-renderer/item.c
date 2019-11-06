@@ -75,8 +75,8 @@ void item_type_base_update(Item *item) {
   item->_is_mapped = item->is_mapped;
 }
 
-Shader *item_type_base_get_shader(Item *item) {
-  return (Shader *) item_window_shader_get();
+ItemShader *item_type_base_get_shader(Item *item) {
+  return (ItemShader *) item_window_shader_get();
 }
 
 void item_type_base_print(Item *item) {
