@@ -1,5 +1,6 @@
 #include "property.h"
 #include "shader.h"
+#include "rendering.h"
 #include "debug.h"
 
 Property *property_allocate(Atom name) {
@@ -30,8 +31,8 @@ void property_load(Property *prop, Window window) {
   XGetWindowProperty(display, window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   PropertyTypeHandler *type = property_type_get(prop->type);
-  if (type) type->load(prop);
   prop->name_str = XGetAtomName(display, prop->name);
+  if (type) type->load(prop);
 }
 
 void property_free(Property *prop) {
@@ -42,9 +43,9 @@ void property_free(Property *prop) {
   free(prop);
 }
 
-void property_to_gl(Property *prop, Shader *shader) {
+void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = property_type_get(prop->type);
-  if (type) type->to_gl(prop, shader);
+  if (type) type->to_gl(prop, rendering);
 }
 
 void property_print(Property *prop, FILE *fp) {
@@ -91,11 +92,11 @@ void properties_free(List *properties) {
   list_destroy(properties);
 }
 
-void properties_to_gl(List *properties, Shader *shader) {
+void properties_to_gl(List *properties, Rendering *rendering) {
   gl_check_error("properties_to_gl");
   for (size_t i = 0; i < properties->count; i++) {
     Property *prop = (Property *) properties->entries[i];
-    property_to_gl(prop, shader);
+    property_to_gl(prop, rendering);
     gl_check_error(prop->name_str);
   }
 }
@@ -146,11 +147,11 @@ PropertyTypeHandler *property_type_get(Atom type) {
 void property_int_init(PropertyTypeHandler *prop) { prop->type = XA_INTEGER; }
 void property_int_load(Property *prop) {}
 void property_int_free(Property *prop) {}
-void property_int_to_gl(Property *prop, Shader *shader) {
-  if (prop->program != shader->program) {
-    prop->program = shader->program;
+void property_int_to_gl(Property *prop, Rendering *rendering) {
+  if (prop->program != rendering->shader->program) {
+    prop->program = rendering->shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
-    DEBUG("prop", "%ld.%s %s (int) [%d]\n", shader->program, prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
+    DEBUG("prop", "%ld.%s %s (int) [%d]\n", rendering->shader->program, prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {
@@ -170,6 +171,7 @@ void property_int_print(Property *prop, FILE *fp) {
 }
 PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl, &property_int_print};
 
+
 #define FL(value) *((float *) &value)
 void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; }
 void property_float_load(Property *prop) {
@@ -183,12 +185,12 @@ void property_float_free(Property *prop) {
   if (prop->data) free(prop->data);
 }
 
-void property_float_to_gl(Property *prop, Shader *shader) {
+void property_float_to_gl(Property *prop, Rendering *rendering) {
   float *values = (float *) prop->data;
-  if (prop->program != shader->program) {
-    prop->program = shader->program;
+  if (prop->program != rendering->shader->program) {
+    prop->program = rendering->shader->program;
     prop->location = glGetUniformLocation(prop->program, prop->name_str);
-    DEBUG("prop", "%ld.%s %s (float) [%d]\n", shader->program, prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
+    DEBUG("prop", "%ld.%s %s (float) [%d]\n", rendering->shader->program, prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
   }
   if (prop->location == -1) return;
   switch (prop->nitems) {

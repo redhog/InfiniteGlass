@@ -8,6 +8,7 @@
 #include "item_window_svg.h"
 #include "property.h"
 #include "debug.h"
+#include "rendering.h"
 #include <X11/Xatom.h>
 
 
@@ -55,7 +56,12 @@ void item_type_base_draw(View *view, Item *item) {
   if (item->is_mapped) {
     ItemShader *shader = (ItemShader *) item->type->get_shader(item);
 
-    properties_to_gl(item->properties, shader->shader);
+    Rendering rendering;
+    rendering.shader = shader->shader;
+    rendering.view = view;
+    rendering.item = item;
+    
+    properties_to_gl(item->properties, &rendering);
     gl_check_error("item_draw1");
     
     glUniform1i(shader->picking_mode_attr, view->picking);

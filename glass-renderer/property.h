@@ -3,11 +3,11 @@
 
 #include "xapi.h"
 #include "glapi.h"
-#include "shader.h"
 #include "list.h"
+#include "rendering.h"
 #include <stdio.h>
 
-typedef struct {
+struct PropertyStruct {
   Atom name;
   char *name_str;
   Atom type;
@@ -21,18 +21,19 @@ typedef struct {
   GLint program;
   GLint location; 
   void *data;
-} Property;
+};
+typedef struct PropertyStruct Property;
 
 extern Property *property_allocate(Atom name);
 extern void property_load(Property *prop, Window window);
 extern void property_free(Property *prop);
-extern void property_to_gl(Property *prop, Shader *shader);
+extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_print(Property *prop, FILE *fp);
 
 extern List *properties_load(Window window);
 extern void properties_update(List *properties, Window window, Atom name);
 extern void properties_free(List *properties);
-extern void properties_to_gl(List *properties, Shader *shader);
+extern void properties_to_gl(List *properties, Rendering *rendering);
 extern void properties_print(List *properties, FILE *fp);
 extern Property *properties_find(List *properties, Atom name);
 
@@ -42,7 +43,7 @@ typedef struct PropertyTypeHandlerT PropertyTypeHandler;
 typedef void PropertyInit(PropertyTypeHandler *prop);
 typedef void PropertyLoad(Property *prop);
 typedef void PropertyFree(Property *prop);
-typedef void PropertyToGl(Property *prop, Shader *shader);
+typedef void PropertyToGl(Property *prop, Rendering *rendering);
 typedef void PropertyPrint(Property *prop, FILE *fp);
 
 struct PropertyTypeHandlerT {
@@ -59,7 +60,6 @@ extern PropertyTypeHandler *property_type_get(Atom type);
 
 extern PropertyTypeHandler property_int;
 extern PropertyTypeHandler property_float;
-
 
 
 #endif

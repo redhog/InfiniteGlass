@@ -15,6 +15,7 @@
 #include "debug.h"
 #include "fps.h"
 #include "property.h"
+#include "property_svg.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
@@ -111,6 +112,7 @@ int main() {
   
   property_type_register(&property_int);
   property_type_register(&property_float);
+  property_type_register(&property_svg);
   
   items_get_from_toplevel_windows();
  
