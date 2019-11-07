@@ -132,7 +132,10 @@ List *shader_load_all(void) {
   List *res = list_create();
   
   for (int i=0; i < nitems_return; i++) {
-    list_append(res, (void *) shader_loadX(((Atom *) prop_return)[i]));
+    Shader *shader = shader_loadX(((Atom *) prop_return)[i]);
+    if (shader) {
+      list_append(res, (void *) shader);
+    }
   }
   XFree(prop_return);
 

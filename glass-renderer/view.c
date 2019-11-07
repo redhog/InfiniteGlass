@@ -5,6 +5,7 @@
 #include "item.h"
 #include "debug.h"
 #include <limits.h>
+#include <math.h>
 
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
@@ -50,7 +51,39 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 }
 
 
-
+void reset_uniforms(Shader *shader) {
+  GLint active_uniforms_nr;
+  glGetProgramiv(shader->program, GL_ACTIVE_UNIFORMS, &active_uniforms_nr);
+  for (int i = 0; i < active_uniforms_nr; i++) {
+    GLsizei length;
+    GLint size;
+    GLenum type;
+    GLchar name;
+    glGetActiveUniform(shader->program, i, 0,
+                       &length, &size, &type, &name);
+    const float f = nanf("initial");
+    const float fm[16] = {f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f};
+    switch(type) {
+      case GL_FLOAT: glUniform1f(i, f); break;
+      case GL_FLOAT_VEC2: glUniform2f(i, f, f);  break;
+      case GL_FLOAT_VEC3: glUniform3f(i, f, f, f);  break;
+      case GL_FLOAT_VEC4: glUniform4f(i, f, f, f, f);  break;
+      case GL_INT: glUniform1i(i, 0); break;
+      case GL_INT_VEC2: glUniform2i(i, 0, 0); break;
+      case GL_INT_VEC3: glUniform3i(i, 0, 0, 0); break;
+      case GL_INT_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
+      case GL_BOOL: glUniform1i(i, 0); break;
+      case GL_BOOL_VEC2: glUniform2i(i, 0, 0); break;
+      case GL_BOOL_VEC3: glUniform3i(i, 0, 0, 0); break;
+      case GL_BOOL_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
+      case GL_FLOAT_MAT2: glUniformMatrix2fv(i, 1, False, fm); break;
+      case GL_FLOAT_MAT3: glUniformMatrix3fv(i, 1, False, fm); break;
+      case GL_FLOAT_MAT4: glUniformMatrix4fv(i, 1, False, fm); break;
+      case GL_SAMPLER_2D: glUniform1i(i, -1); break;
+      case GL_SAMPLER_CUBE: glUniform1i(i, -1); break;
+    }
+  }
+}
 
 void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   List *to_delete = NULL;
@@ -60,6 +93,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
     if (!filter || filter(item)) {
       if (item_isinstance(item, &item_type_base)) {
         try();
+        reset_uniforms(item->type->get_shader(item)->shader);
         item->type->draw(view, item);
         XErrorEvent e;
         if (!catch(&e)) {
