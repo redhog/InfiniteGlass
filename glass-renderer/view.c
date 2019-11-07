@@ -55,12 +55,13 @@ void reset_uniforms(Shader *shader) {
   GLint active_uniforms_nr;
   glGetProgramiv(shader->program, GL_ACTIVE_UNIFORMS, &active_uniforms_nr);
   for (int i = 0; i < active_uniforms_nr; i++) {
+    gl_check_error("reset_uniforms1");
     GLsizei length;
     GLint size;
     GLenum type;
-    GLchar name;
-    glGetActiveUniform(shader->program, i, 0,
-                       &length, &size, &type, &name);
+    GLchar name[40];
+    glGetActiveUniform(shader->program, i, 40,
+                       &length, &size, &type, name);
     const float f = nanf("initial");
     const float fm[16] = {f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f};
     switch(type) {
@@ -79,9 +80,10 @@ void reset_uniforms(Shader *shader) {
       case GL_FLOAT_MAT2: glUniformMatrix2fv(i, 1, False, fm); break;
       case GL_FLOAT_MAT3: glUniformMatrix3fv(i, 1, False, fm); break;
       case GL_FLOAT_MAT4: glUniformMatrix4fv(i, 1, False, fm); break;
-      case GL_SAMPLER_2D: glUniform1i(i, -1); break;
-      case GL_SAMPLER_CUBE: glUniform1i(i, -1); break;
+      case GL_SAMPLER_2D: glUniform1i(i, 0); break;
+      case GL_SAMPLER_CUBE: glUniform1i(i, 0); break;
     }
+    gl_check_error(name);
   }
 }
 
