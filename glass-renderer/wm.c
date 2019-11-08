@@ -141,8 +141,9 @@ int main() {
     if (e.type == PropertyNotify) {
       Item *item = (Item *) item_get_from_window(e.xproperty.window, False);
       if (item) {
-        properties_update(item->properties, item->window, e.xproperty.atom);
-        draw();
+        if (properties_update(item->properties, item->window, e.xproperty.atom)) {
+          draw();
+        }
       }
    }
     

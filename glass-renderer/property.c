@@ -13,7 +13,7 @@ Property *property_allocate(Atom name) {
   return prop;
 }
 
-void property_load(Property *prop, Window window) {
+Bool property_load(Property *prop, Window window) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
@@ -25,6 +25,8 @@ void property_load(Property *prop, Window window) {
   }
   prop->name_str = XGetAtomName(display, prop->name);
 
+  unsigned char *old = prop->values.bytes;
+  int old_nitems = prop->nitems;
   if (prop->values.bytes) {
     XFree(prop->values.bytes);
     prop->values.bytes = NULL;
@@ -33,11 +35,14 @@ void property_load(Property *prop, Window window) {
   XGetWindowProperty(display, window, prop->name, 0, 0, 0, AnyPropertyType,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
-  if (prop->type == None) return;
+  if (prop->type == None) return !!old;
   XGetWindowProperty(display, window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   PropertyTypeHandler *type = property_type_get(prop->type);
   if (type) type->load(prop);
+  if (!old) return True;
+  if (old_nitems != prop->nitems) return True;
+  return memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
 }
 
 void property_free(Property *prop) {
@@ -76,17 +81,17 @@ List *properties_load(Window window) {
   return prop_list;
 }
 
-void properties_update(List *properties, Window window, Atom name) {
+Bool properties_update(List *properties, Window window, Atom name) {
   for (size_t i = 0; i < properties->count; i++) {
     Property *prop = (Property *) properties->entries[i];
     if (prop->name == name) {
-      property_load(prop, window);
-      return;
+      return property_load(prop, window);
     }   
   }
   Property *prop = property_allocate(name);
   property_load(prop, window);
   list_append(properties, (void *) prop);
+  return True;
 }
 
 void properties_free(List *properties) {

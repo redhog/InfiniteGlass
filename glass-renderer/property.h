@@ -26,13 +26,13 @@ struct PropertyStruct {
 typedef struct PropertyStruct Property;
 
 extern Property *property_allocate(Atom name);
-extern void property_load(Property *prop, Window window);
+extern Bool property_load(Property *prop, Window window);
 extern void property_free(Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_print(Property *prop, FILE *fp);
 
 extern List *properties_load(Window window);
-extern void properties_update(List *properties, Window window, Atom name);
+extern Bool properties_update(List *properties, Window window, Atom name);
 extern void properties_free(List *properties);
 extern void properties_to_gl(List *properties, Rendering *rendering);
 extern void properties_print(List *properties, FILE *fp);
