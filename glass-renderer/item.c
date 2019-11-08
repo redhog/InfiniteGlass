@@ -5,7 +5,6 @@
 #include "item_window_shader.h"
 #include "wm.h"
 #include <limits.h>
-#include "item_window_pixmap.h"
 #include "property.h"
 #include "debug.h"
 #include "rendering.h"
@@ -50,19 +49,73 @@ void item_type_base_constructor(Item *item, void *args) {
   item->properties = properties_load(window);
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
+
+
+  item->window_pixmap = 0;
+  texture_initialize(&item->window_texture);
+  texture_initialize(&item->icon_texture);
+  texture_initialize(&item->icon_mask_texture);
+
+  item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
+  item->wm_hints.flags = 0;
+
+  XErrorEvent error;
+  x_try();
+  XWMHints *wm_hints = XGetWMHints(display, item->window);
+  if (wm_hints) {
+    item->wm_hints = *wm_hints;
+    XFree(wm_hints);
+  }
+  if (!x_catch(&error)) {
+    DEBUG("window.pixmap.error", "Window does not have any WM_HINTS: %lu", item->window);
+  }  
 }
-void item_type_base_destructor(Item *item) {}
+void item_type_base_destructor(Item *item) {
+  texture_destroy(&item->window_texture);
+  texture_destroy(&item->icon_texture);
+  texture_destroy(&item->icon_mask_texture);
+}
 void item_type_base_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
-    ItemShader *shader = (ItemShader *) rendering->item->type->get_shader(rendering->item);
+    Item *item = (Item *) rendering->item;
+    ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
+
+    texture_from_pixmap(&item->window_texture, item->window_pixmap);
+
+    glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
+    glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
+    glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
+    glBindSampler(rendering->texture_unit, 0);
+    rendering->texture_unit++;
+    
+    if (item->wm_hints.flags & IconPixmapHint) {
+      glUniform1i(shader->has_icon_attr, 1);
+      glUniform1i(shader->icon_sampler_attr, 1);
+      glActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, item->icon_texture.texture_id);
+      glBindSampler(1, 0);
+    } else {
+      glUniform1i(shader->has_icon_attr, 0);
+    }
+    if (item->wm_hints.flags & IconMaskHint) {
+      glUniform1i(shader->has_icon_mask_attr, 1);
+      glUniform1i(shader->icon_mask_sampler_attr, 2);
+      glActiveTexture(GL_TEXTURE2);
+      glBindTexture(GL_TEXTURE_2D, item->icon_mask_texture.texture_id);
+      glBindSampler(1, 0);
+    } else {
+      glUniform1i(shader->has_icon_mask_attr, 1);
+    }
+
+    
     
     properties_to_gl(rendering->item->properties, rendering);
     gl_check_error("item_draw1");
     
-    glUniform1i(shader->picking_mode_attr, rendering->view->picking);
-    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
+    glUniform1i(shader->base.picking_mode_attr, rendering->view->picking);
+    glUniform4fv(shader->base.screen_attr, 1, rendering->view->screen);
     
-    glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
+    glUniform1f(shader->base.window_id_attr, (float) rendering->item->id / (float) INT_MAX);
 
     gl_check_error("item_draw2");
     
@@ -74,6 +127,41 @@ void item_type_base_draw(Rendering *rendering) {
 void item_type_base_update(Item *item) {
   if (!item->is_mapped) return;
   item->_is_mapped = item->is_mapped;
+
+  x_push_error_context("item_update_pixmap");
+  
+  // FIXME: free all other stuff if already created
+
+  if (item->window_pixmap) {
+    XFreePixmap(display, item->window_pixmap);
+  }
+  item->window_pixmap = XCompositeNameWindowPixmap(display, item->window);
+
+  Window root_return;
+  int x_return;
+  int y_return;
+  unsigned int width_return;
+  unsigned int height_return;
+  unsigned int border_width_return;
+  unsigned int depth_return;
+  
+  int res = XGetGeometry(display, item->window_pixmap,
+                         &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
+  DEBUG("window.update",
+        "XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
+         item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);
+  
+  texture_from_pixmap(&item->window_texture, item->window_pixmap);
+
+  if (item->wm_hints.flags & IconPixmapHint) {
+    texture_from_pixmap(&item->icon_texture, item->wm_hints.icon_pixmap);
+  }
+  if (item->wm_hints.flags & IconMaskHint) {
+    texture_from_pixmap(&item->icon_mask_texture, item->wm_hints.icon_mask);
+  }
+  gl_check_error("item_update_pixmap2");
+
+  x_pop_error_context();  
 }
 
 ItemShader *item_type_base_get_shader(Item *item) {
@@ -216,7 +304,7 @@ Item *item_get_from_window(Window window, int create) {
   if (!create) return NULL;
   
   DEBUG("window.add", "Adding window %ld\n", window);
-  return item_create(&item_type_window_pixmap, &window);
+  return item_create(&item_type_base, &window);
 }
 
 
