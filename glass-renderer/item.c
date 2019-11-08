@@ -52,22 +52,17 @@ void item_type_base_constructor(Item *item, void *args) {
   item->prop_coords = properties_find(item->properties, IG_COORDS);
 }
 void item_type_base_destructor(Item *item) {}
-void item_type_base_draw(View *view, Item *item) {
-  if (item->is_mapped) {
-    ItemShader *shader = (ItemShader *) item->type->get_shader(item);
-
-    Rendering rendering;
-    rendering.shader = shader->shader;
-    rendering.view = view;
-    rendering.item = item;
+void item_type_base_draw(Rendering *rendering) {
+  if (rendering->item->is_mapped) {
+    ItemShader *shader = (ItemShader *) rendering->item->type->get_shader(rendering->item);
     
-    properties_to_gl(item->properties, &rendering);
+    properties_to_gl(rendering->item->properties, rendering);
     gl_check_error("item_draw1");
     
-    glUniform1i(shader->picking_mode_attr, view->picking);
-    glUniform4fv(shader->screen_attr, 1, view->screen);
+    glUniform1i(shader->picking_mode_attr, rendering->view->picking);
+    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     
-    glUniform1f(shader->window_id_attr, (float) item->id / (float) INT_MAX);
+    glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
 
     gl_check_error("item_draw2");
     

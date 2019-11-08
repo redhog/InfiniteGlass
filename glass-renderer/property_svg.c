@@ -186,12 +186,13 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
                         (float) data->width / (float) data->itemwidth,
                         (float) data->height / (float) data->itemheight};
   glUniform4fv(data->transform_location, 1, transform);
-  int i = 3;
-  glUniform1i(data->texture_location, i);
-  glActiveTexture(GL_TEXTURE0 + i);
+
+  glUniform1i(data->texture_location, rendering->texture_unit);
+  glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
   glBindTexture(GL_TEXTURE_2D, data->texture.texture_id);
-  glBindSampler(i, 0);
- 
+  glBindSampler(rendering->texture_unit, 0);
+  rendering->texture_unit++;
+  
   gl_check_error("property_svg_to_gl2");
 }
 void property_svg_print(Property *prop, FILE *fp) {

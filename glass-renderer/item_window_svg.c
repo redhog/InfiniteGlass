@@ -7,28 +7,30 @@
 #include "debug.h"
 #include <librsvg/rsvg.h>
 
-void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
+void item_type_window_svg_update_drawing(Rendering *rendering) {
+  ItemWindowSVG *item_window_svg = (ItemWindowSVG *) rendering->item;
+
   float x1, y1, x2, y2;
   int px1, py1, px2, py2;
   int itempixelwidth, itempixelheight;
   int pixelwidth, pixelheight;
 
-  if(!((Item *) item)->prop_coords) {
+  if(!rendering->item->prop_coords) {
     DEBUG("window.svg.error", "Property coords not set\n");   
     return;
   }
 
-  float *coords = (float *) ((Item *) item)->prop_coords->data;
+  float *coords = (float *) rendering->item->prop_coords->data;
   
-  itempixelwidth = coords[2] * view->width / view->screen[2];
-  itempixelheight = coords[3] * view->height / view->screen[3];
+  itempixelwidth = coords[2] * rendering->view->width / rendering->view->screen[2];
+  itempixelheight = coords[3] * rendering->view->height / rendering->view->screen[3];
   
   // x and y are ]0,1[, from top left to bottom right of window.
-  x1 = (view->screen[0] - coords[0]) / coords[2];
-  y1 = (coords[1] - (view->screen[1] + view->screen[3])) / coords[3];
+  x1 = (rendering->view->screen[0] - coords[0]) / coords[2];
+  y1 = (coords[1] - (rendering->view->screen[1] + rendering->view->screen[3])) / coords[3];
 
-  x2 = (view->screen[0] + view->screen[2] - coords[0]) / coords[2];
-  y2 = (coords[1] - view->screen[1]) / coords[3];
+  x2 = (rendering->view->screen[0] + rendering->view->screen[2] - coords[0]) / coords[2];
+  y2 = (coords[1] - rendering->view->screen[1]) / coords[3];
   
   if (x1 < 0.) x1 = 0.;
   if (x1 > 1.) x1 = 1.;
@@ -51,19 +53,19 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   pixelwidth = px2 - px1;
   pixelheight = py2 - py1;
   
-  item->drawing.width = pixelwidth;
-  item->drawing.height = pixelheight;
-  item->drawing.x = px1;
-  item->drawing.y = py1;
-  item->drawing.itemwidth = itempixelwidth;
-  item->drawing.itemheight = itempixelheight;
+  item_window_svg->drawing.width = pixelwidth;
+  item_window_svg->drawing.height = pixelheight;
+  item_window_svg->drawing.x = px1;
+  item_window_svg->drawing.y = py1;
+  item_window_svg->drawing.itemwidth = itempixelwidth;
+  item_window_svg->drawing.itemheight = itempixelheight;
 
   // Actually generate the drawing
   
   GError *error;
   RsvgDimensionData dimension;
 
-  RsvgHandle *rsvg = rsvg_handle_new_from_data((unsigned char *) item->source, strlen(item->source), &error);
+  RsvgHandle *rsvg = rsvg_handle_new_from_data((unsigned char *) item_window_svg->source, strlen(item_window_svg->source), &error);
   if (!rsvg) {
     DEBUG("window.svg.error", "Unable to load svg: %s\n",  error->message);
     fflush(stdout);
@@ -71,38 +73,38 @@ void item_type_window_svg_update_drawing(View *view, ItemWindowSVG *item) {
   rsvg_handle_get_dimensions(rsvg, &dimension);
 
   // Check if current surface size is wrong before recreating...
-  if (1 || !item->drawing.surface) {
-    if (item->drawing.surface) {
-      cairo_surface_destroy(item->drawing.surface);
+  if (1 || !item_window_svg->drawing.surface) {
+    if (item_window_svg->drawing.surface) {
+      cairo_surface_destroy(item_window_svg->drawing.surface);
     }
    
-    item->drawing.surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, item->drawing.width, item->drawing.height);
+    item_window_svg->drawing.surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, item_window_svg->drawing.width, item_window_svg->drawing.height);
   }
   
-  cairo_t *cairo_ctx = cairo_create(item->drawing.surface);
+  cairo_t *cairo_ctx = cairo_create(item_window_svg->drawing.surface);
 
   DEBUG("window.svg", "RENDER %d,%d[%d,%d] = [%d,%d]\n",
-        -item->drawing.x,
-        -item->drawing.y,
+        -item_window_svg->drawing.x,
+        -item_window_svg->drawing.y,
         dimension.width,
         dimension.height,
-        item->drawing.itemwidth,
-        item->drawing.itemheight);
+        item_window_svg->drawing.itemwidth,
+        item_window_svg->drawing.itemheight);
   
   cairo_translate(cairo_ctx,
-                  -item->drawing.x,
-                  -item->drawing.y);
+                  -item_window_svg->drawing.x,
+                  -item_window_svg->drawing.y);
   cairo_scale(cairo_ctx,
-              (float) item->drawing.itemwidth / (float) dimension.width,
-              (float) item->drawing.itemheight / (float) dimension.height);
+              (float) item_window_svg->drawing.itemwidth / (float) dimension.width,
+              (float) item_window_svg->drawing.itemheight / (float) dimension.height);
   
   rsvg_handle_render_cairo(rsvg, cairo_ctx);
   g_object_unref(rsvg);
   cairo_destroy(cairo_ctx);
 
-  cairo_surface_flush(item->drawing.surface);
+  cairo_surface_flush(item_window_svg->drawing.surface);
   
-  texture_from_cairo_surface(&item->drawing.texture, item->drawing.surface);
+  texture_from_cairo_surface(&item_window_svg->drawing.texture, item_window_svg->drawing.surface);
 }
 
 void item_type_window_svg_constructor(Item *item, void *args) {
@@ -126,12 +128,12 @@ void item_type_window_svg_destructor(Item *item) {
   texture_destroy(&item_window_svg->drawing.texture);
 }
 
-void item_type_window_svg_draw(View *view, Item *item) {
-  ItemWindowSVG *item_window_svg = (ItemWindowSVG *) item;
+void item_type_window_svg_draw(Rendering *rendering) {
+  ItemWindowSVG *item_window_svg = (ItemWindowSVG *) rendering->item;
 
-  ItemWindowSvgShader *shader = (ItemWindowSvgShader *) item->type->get_shader(item);
+  ItemWindowSvgShader *shader = (ItemWindowSvgShader *) rendering->item->type->get_shader(rendering->item);
 
-  item_type_window_svg_update_drawing(view, item_window_svg);
+  item_type_window_svg_update_drawing(rendering);
   
   gl_check_error("item_type_window_svg_draw1");
   
@@ -143,8 +145,8 @@ void item_type_window_svg_draw(View *view, Item *item) {
   float _coords[] = {-1.,-1.,-1.,-1.};
   float *coords = _coords;
 
-  if (((Item *) item)->prop_coords) {
-    coords = (float *) ((Item *) item)->prop_coords->data;
+  if (rendering->item->prop_coords) {
+    coords = (float *) rendering->item->prop_coords->data;
   }
   
   DEBUG("window.svg.draw",
@@ -160,14 +162,15 @@ void item_type_window_svg_draw(View *view, Item *item) {
   
   glUniform4fv(shader->transform_attr, 1, transform);
   
-  glUniform1i(shader->texture_attr, 0);
-  glActiveTexture(GL_TEXTURE0);
+  glUniform1i(shader->texture_attr, rendering->texture_unit);
+  glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
   glBindTexture(GL_TEXTURE_2D, item_window_svg->drawing.texture.texture_id);
-  glBindSampler(1, 0);
- 
+  glBindSampler(rendering->texture_unit, 0);
+  rendering->texture_unit++;
+  
   gl_check_error("item_type_window_svg_draw2");
 
-  item_type_window_svg.base->draw(view, item);
+  item_type_window_svg.base->draw(rendering);
 
   gl_check_error("item_type_window_svg_draw3");
 }

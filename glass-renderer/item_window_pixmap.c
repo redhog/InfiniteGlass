@@ -38,18 +38,19 @@ void item_type_window_pixmap_destructor(Item *item) {
   item_type_base.destroy(item);
 }
 
-void item_type_window_pixmap_draw(View *view, Item *item) {
-  if (item->is_mapped) {
-    ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) item;
+void item_type_window_pixmap_draw(Rendering *rendering) {
+  if (rendering->item->is_mapped) {
+    ItemWindowPixmap *pixmap_item = (ItemWindowPixmap *) rendering->item;
 
-    ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
+    ItemWindowShader *shader = (ItemWindowShader *) rendering->item->type->get_shader(rendering->item);
 
     texture_from_pixmap(&pixmap_item->window_texture, pixmap_item->window_pixmap);
 
-    glUniform1i(shader->window_sampler_attr, 0);
-    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
+    glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
     glBindTexture(GL_TEXTURE_2D, pixmap_item->window_texture.texture_id);
-    glBindSampler(1, 0);
+    glBindSampler(rendering->texture_unit, 0);
+    rendering->texture_unit++;
     
     if (pixmap_item->wm_hints.flags & IconPixmapHint) {
       glUniform1i(shader->has_icon_attr, 1);
@@ -70,7 +71,7 @@ void item_type_window_pixmap_draw(View *view, Item *item) {
       glUniform1i(shader->has_icon_mask_attr, 1);
     }
     
-    item_type_base.draw(view, item);
+    item_type_base.draw(rendering);
   }
 }
 

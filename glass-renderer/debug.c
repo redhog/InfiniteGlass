@@ -12,7 +12,6 @@ int debug_enabled(const char *prefix, const char *file, const char *func, const 
   size_t func_len = strlen(func);
   size_t entry_len = strlen(entry);
   char key[prefix_len + 1 + file_len + 1 + func_len + 1 + entry_len + 1];
-  va_list args;
   char *res;
   
   strcpy(key, prefix);
@@ -55,7 +54,6 @@ void debug_print(FILE *fd, const char *prefix, const char *file, const char *fun
   size_t entry_len = strlen(entry);
   char key[prefix_len + 1 + file_len + 1 + func_len + 1 + entry_len + 1];
   va_list args;
-  int match = 0;
   
   strcpy(key, prefix);
   key[prefix_len] = '.';

@@ -8,6 +8,7 @@
 #include "view_type.h"
 #include "texture.h"
 #include "property.h"
+#include "rendering.h"
 
 struct ItemTypeStruct;
 struct ItemStruct;
@@ -17,7 +18,7 @@ typedef struct ItemStruct Item;
 
 typedef void ItemTypeConstructor(Item *item, void *args);
 typedef void ItemTypeDestructor(Item *item);
-typedef void ItemTypeDraw(View *view, Item *item);
+typedef void ItemTypeDraw(Rendering *rendering);
 typedef void ItemTypeUpdate(Item *item);
 typedef ItemShader *ItemTypeGetShader(Item *);
 typedef void ItemTypePrint(Item *);

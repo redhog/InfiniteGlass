@@ -88,29 +88,32 @@ void reset_uniforms(Shader *shader) {
 }
 
 void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
+  Rendering rendering;
+  rendering.shader = NULL;
+  rendering.view = view;
+ 
   List *to_delete = NULL;
   if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (!filter || filter(item)) {
-      if (item_isinstance(item, &item_type_base)) {
-        try();
-        reset_uniforms(item->type->get_shader(item)->shader);
-        item->type->draw(view, item);
-        XErrorEvent e;
-        if (!catch(&e)) {
-          if (   (   e.error_code == BadWindow
-                  || e.error_code == BadDrawable)
-              && e.resourceid == item->window) {
-            if (!to_delete) to_delete = list_create();
-            list_append(to_delete, item);
-          } else {
-            throw(&e);
-          }
+      try();
+      rendering.item = item;
+      rendering.texture_unit = 0;
+      rendering.shader = item->type->get_shader(item)->shader;
+      reset_uniforms(rendering.shader);
+      item->type->draw(&rendering);
+      XErrorEvent e;
+      if (!catch(&e)) {
+        if (   (   e.error_code == BadWindow
+                || e.error_code == BadDrawable)
+            && e.resourceid == item->window) {
+          if (!to_delete) to_delete = list_create();
+          list_append(to_delete, item);
+        } else {
+          throw(&e);
         }
-      } else {
-        item->type->draw(view, item);
-      }     
+      }
     }
   }
   if (to_delete) {
