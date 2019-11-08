@@ -17,11 +17,8 @@ from . import framing
 
 def window_setitem(self, key, value):
     key = self.display.get_atom(key)
-    itemtype, items = valueencoding.format_value(self, value)
-    format = 32
-    if itemtype == self.display.get_atom("STRING"):
-        format = 8
-    self.change_property(key, itemtype, format, items)
+    itemtype, items, fmt = valueencoding.format_value(self, value)
+    self.change_property(key, itemtype, fmt, items)
 Xlib.xobject.drawable.Window.__setitem__ = window_setitem
 
 def window_keys(self):
@@ -105,15 +102,13 @@ Xlib.xobject.drawable.Window.create_window = create_window
 
 def window_send(self, window, client_type, *arg, **kw):
     arg = [valueencoding.format_value(self, value) for value in arg]
-    format = 32
-    if arg and arg[0][0] == self.display.get_atom("STRING"):
-        format = 8
+    fmt = arg[0][2]
     data = b''.join(item[1] for item in arg)
     data = data + b'\0' * (20 - len(data))
     event = Xlib.protocol.event.ClientMessage(
         window = window,
         client_type = self.display.get_atom(client_type),
-        data = (format, data))
+        data = (fmt, data))
     self.send_event(event, **kw)
 Xlib.xobject.drawable.Window.send = window_send
 
