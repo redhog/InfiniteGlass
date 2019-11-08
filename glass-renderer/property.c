@@ -16,22 +16,25 @@ Property *property_allocate(Atom name) {
 void property_load(Property *prop, Window window) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
+  
+  if (prop->name_str) {
+    XFree(prop->name_str);
+    prop->name_str = NULL;
+  }
+  prop->name_str = XGetAtomName(display, prop->name);
 
   if (prop->values.bytes) {
     XFree(prop->values.bytes);
     prop->values.bytes = NULL;
   }
-  if (prop->name_str) {
-    XFree(prop->name_str);
-    prop->name_str = NULL;
-  }
-  XGetWindowProperty(display, window, prop->name, 0, 0, 0, AnyPropertyType, &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
+
+  XGetWindowProperty(display, window, prop->name, 0, 0, 0, AnyPropertyType,
+                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (prop->type == None) return;
   XGetWindowProperty(display, window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   PropertyTypeHandler *type = property_type_get(prop->type);
-  prop->name_str = XGetAtomName(display, prop->name);
   if (type) type->load(prop);
 }
 

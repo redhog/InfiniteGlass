@@ -132,11 +132,11 @@ void property_svg_load(Property *prop) {
   strcpy(data->transform_str, prop->name_str);
   strcpy(data->transform_str + strlen(prop->name_str), "_transform");
   
-  GError *error;
+  GError *error = NULL;
   unsigned char *src = (unsigned char *) prop->values.bytes;
   data->rsvg = rsvg_handle_new_from_data(src, strlen((char *) src), &error);
   if (!data->rsvg) {
-    DEBUG("window.svg.error", "Unable to load svg: %s\n",  error->message);
+    DEBUG("window.svg.error", "Unable to load svg: %s: %s, len=%ld\n",  error->message, src, prop->nitems);
     fflush(stdout);
     return;
   }
