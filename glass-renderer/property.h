@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 struct PropertyStruct {
+  Window window;
   Atom name;
   char *name_str;
   Atom type;

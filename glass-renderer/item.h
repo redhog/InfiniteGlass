@@ -61,10 +61,6 @@ struct ItemStruct {
  
   Pixmap window_pixmap;
   Texture window_texture;
-  Texture icon_texture;
-  Texture icon_mask_texture;
-
-  XWMHints wm_hints;
 };
 
 extern ItemType item_type_base;

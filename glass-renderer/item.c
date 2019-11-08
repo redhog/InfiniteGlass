@@ -50,30 +50,13 @@ void item_type_base_constructor(Item *item, void *args) {
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
 
-
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
-  texture_initialize(&item->icon_texture);
-  texture_initialize(&item->icon_mask_texture);
 
   item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
-  item->wm_hints.flags = 0;
-
-  XErrorEvent error;
-  x_try();
-  XWMHints *wm_hints = XGetWMHints(display, item->window);
-  if (wm_hints) {
-    item->wm_hints = *wm_hints;
-    XFree(wm_hints);
-  }
-  if (!x_catch(&error)) {
-    DEBUG("window.pixmap.error", "Window does not have any WM_HINTS: %lu", item->window);
-  }  
 }
 void item_type_base_destructor(Item *item) {
   texture_destroy(&item->window_texture);
-  texture_destroy(&item->icon_texture);
-  texture_destroy(&item->icon_mask_texture);
 }
 void item_type_base_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
@@ -87,27 +70,6 @@ void item_type_base_draw(Rendering *rendering) {
     glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
     glBindSampler(rendering->texture_unit, 0);
     rendering->texture_unit++;
-    
-    if (item->wm_hints.flags & IconPixmapHint) {
-      glUniform1i(shader->has_icon_attr, 1);
-      glUniform1i(shader->icon_sampler_attr, 1);
-      glActiveTexture(GL_TEXTURE1);
-      glBindTexture(GL_TEXTURE_2D, item->icon_texture.texture_id);
-      glBindSampler(1, 0);
-    } else {
-      glUniform1i(shader->has_icon_attr, 0);
-    }
-    if (item->wm_hints.flags & IconMaskHint) {
-      glUniform1i(shader->has_icon_mask_attr, 1);
-      glUniform1i(shader->icon_mask_sampler_attr, 2);
-      glActiveTexture(GL_TEXTURE2);
-      glBindTexture(GL_TEXTURE_2D, item->icon_mask_texture.texture_id);
-      glBindSampler(1, 0);
-    } else {
-      glUniform1i(shader->has_icon_mask_attr, 1);
-    }
-
-    
     
     properties_to_gl(rendering->item->properties, rendering);
     gl_check_error("item_draw1");
@@ -153,12 +115,6 @@ void item_type_base_update(Item *item) {
   
   texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
-  if (item->wm_hints.flags & IconPixmapHint) {
-    texture_from_pixmap(&item->icon_texture, item->wm_hints.icon_pixmap);
-  }
-  if (item->wm_hints.flags & IconMaskHint) {
-    texture_from_pixmap(&item->icon_mask_texture, item->wm_hints.icon_mask);
-  }
   gl_check_error("item_update_pixmap2");
 
   x_pop_error_context();  

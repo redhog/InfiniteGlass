@@ -8,11 +8,11 @@ in vec2 window_coord;
 in float geometry_size;
 
 uniform sampler2D window_sampler;
-uniform sampler2D icon_sampler;
-uniform sampler2D icon_mask_sampler;
+uniform sampler2D WM_HINTS_icon;
+uniform sampler2D WM_HINTS_icon_mask;
+uniform int WM_HINTS_icon_enabled;
+uniform int WM_HINTS_icon_mask_enabled;
 uniform int picking_mode;
-uniform int has_icon;
-uniform int has_icon_mask;
 uniform float window_id;
 uniform sampler2D IG_CONTENT;
 uniform vec4 IG_CONTENT_transform;
@@ -40,13 +40,13 @@ void main() {
       fragColor = texture(IG_CONTENT, texture_coord.xy).rgba;
     } else {
       window_color = texture(window_sampler, window_coord).rgba;
-      if (has_icon == 1) {
-        icon_color = texture(icon_sampler, window_coord).rgba;
+      if (WM_HINTS_icon_enabled == 1) {
+        icon_color = texture(WM_HINTS_icon, window_coord).rgba;
       } else {
         icon_color =  vec4(1., 0., 0., 1.);
       }
-      if (has_icon_mask == 1) {
-        icon_color.a = 1. - texture(icon_mask_sampler, window_coord).r;
+      if (WM_HINTS_icon_mask_enabled == 1) {
+        icon_color.a = 1. - texture(WM_HINTS_icon_mask, window_coord).r;
       }
 
       if (geometry_size > ICON_CUTOFF_1) {

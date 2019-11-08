@@ -16,6 +16,8 @@ Property *property_allocate(Atom name) {
 void property_load(Property *prop, Window window) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
+
+  prop->window = window;
   
   if (prop->name_str) {
     XFree(prop->name_str);
