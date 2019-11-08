@@ -76,6 +76,7 @@ void item_type_base_draw(Rendering *rendering) {
     
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
+    glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     
     glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
 

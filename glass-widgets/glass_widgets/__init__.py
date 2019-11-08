@@ -11,7 +11,7 @@ def main(*arg, **kw):
             w.zoom = zoom
             w["WM_NAME"]=icon.encode("utf-8")
             w["WM_CLASS"]=b"glass-widget"
-#            w["IG_LAYER"]="IG_LAYER_OVERLAY"
+            w["IG_LAYER"]="IG_LAYER_OVERLAY"
             w["IG_COORDS"]=[0.01, 0.60+0.05*idx, 0.05, 0.05]
             with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon) as f:
                 data = f.read()
@@ -32,7 +32,7 @@ def main(*arg, **kw):
         w = display.root.create_window()
         w["WM_NAME"]=b"eject"
         w["WM_CLASS"]=b"glass-widget"
-#        w["IG_LAYER"]="IG_LAYER_OVERLAY"
+        w["IG_LAYER"]="IG_LAYER_OVERLAY"
         w["IG_COORDS"]=[0.01,0.55,0.05,0.05]
         with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg") as f:
             data = f.read()
