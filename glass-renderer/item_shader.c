@@ -21,3 +21,15 @@ int item_shader_load(ItemShader *shader) {
   
   return 1;
 }
+
+int item_shader_initialized = 0;
+ItemShader item_shader;
+
+ItemShader *item_shader_get() {
+  if (!item_shader_initialized) {
+    if (!item_shader_load(&item_shader)) return NULL;
+    item_shader_initialized =  1;
+  }
+  glUseProgram(item_shader.shader->program);
+  return &item_shader;
+}

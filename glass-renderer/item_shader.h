@@ -19,5 +19,6 @@ typedef struct {
 } ItemShader;
 
 extern int item_shader_load(ItemShader *shader);
+ItemShader *item_shader_get();
 
 #endif

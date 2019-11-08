@@ -2,7 +2,7 @@
 #include "xapi.h"
 #include "item.h"
 #include "view.h"
-#include "item_window_shader.h"
+#include "item_shader.h"
 #include "wm.h"
 #include <limits.h>
 #include "property.h"
@@ -165,7 +165,7 @@ void item_type_base_update(Item *item) {
 }
 
 ItemShader *item_type_base_get_shader(Item *item) {
-  return (ItemShader *) item_window_shader_get();
+  return (ItemShader *) item_shader_get();
 }
 
 void item_type_base_print(Item *item) {
