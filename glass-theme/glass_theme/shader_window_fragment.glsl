@@ -29,7 +29,7 @@ void main() {
   if (picking_mode == 1) {
     fragColor = vec4(window_coord.x, window_coord.y, window_id, 1.);
   } else {
-    if (IG_CONTENT_transform[2] == -1.) {
+    if (!isnan(IG_CONTENT_transform[0])) {
       mat4 transform_mat = transpose(mat4(
         1./IG_CONTENT_transform[2], 0., 0., -IG_CONTENT_transform[0]/IG_CONTENT_transform[2],
         0., 1./IG_CONTENT_transform[3], 0., -IG_CONTENT_transform[1]/IG_CONTENT_transform[3],
