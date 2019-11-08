@@ -126,6 +126,7 @@ void property_svg_load(Property *prop) {
 
   texture_initialize(&data->texture);
   data->surface = NULL;
+  data->cairo_ctx = NULL;
   data->rsvg = NULL;
 
   data->transform_str = malloc(strlen(prop->name_str) + strlen("_transform") + 1);
@@ -161,9 +162,18 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
     prop->program = rendering->shader->program;
     data->texture_location = glGetUniformLocation(prop->program, prop->name_str);
     data->transform_location = glGetUniformLocation(prop->program, data->transform_str);
-    DEBUG("prop", "%ld.%s %s (int) [%d]\n",
-          rendering->shader->program, prop->name_str,
-          (data->texture_location != -1 && data->transform_location != -1) ? "enabled" : "disabled", prop->nitems);
+    char *status = NULL;
+    if (data->texture_location != -1 && data->transform_location != -1) {
+      status = "enabled";
+    } else if (data->transform_location != -1) {
+      status = "only transform enabled";
+    } else if (data->texture_location != -1) {
+      status = "only texture enabled";
+    } else {
+      status = "disabled";
+    }
+    DEBUG("prop", "%ld.%s %s (svg) [%d]\n",
+          rendering->shader->program, prop->name_str, status, prop->nitems);
   }
   if (data->texture_location == -1 || data->transform_location == -1) return;
 
@@ -176,10 +186,11 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
                         (float) data->width / (float) data->itemwidth,
                         (float) data->height / (float) data->itemheight};
   glUniform4fv(data->transform_location, 1, transform);
-  glUniform1i(data->texture_location, 0);
-  glActiveTexture(GL_TEXTURE0);
+  int i = 3;
+  glUniform1i(data->texture_location, i);
+  glActiveTexture(GL_TEXTURE0 + i);
   glBindTexture(GL_TEXTURE_2D, data->texture.texture_id);
-  glBindSampler(1, 0);
+  glBindSampler(i, 0);
  
   gl_check_error("property_svg_to_gl2");
 }
