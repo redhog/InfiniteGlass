@@ -19,13 +19,7 @@ def main(*arg, **kw):
         with pkg_resources.resource_stream("glass_theme", "shader_window_fragment.glsl") as f:
             display.root["IG_SHADER_PIXMAP_FRAGMENT"] = f.read()
 
-        with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
-            display.root["IG_SHADER_SVG_GEOMETRY"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
-            display.root["IG_SHADER_SVG_VERTEX"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_window_svg_fragment.glsl") as f:
-            display.root["IG_SHADER_SVG_FRAGMENT"] = f.read()
-        display.root["IG_SHADERS"] = ["IG_SHADER_PIXMAP", "IG_SHADER_SVG"]
+        display.root["IG_SHADERS"] = ["IG_SHADER_PIXMAP"]
         
         InfiniteGlass.DEBUG("init", "Theme started\n")
 
