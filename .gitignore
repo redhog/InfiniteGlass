@@ -11,3 +11,5 @@ __pycache__
 core*
 dist
 env
+.eggs
+testing
