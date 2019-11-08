@@ -15,6 +15,8 @@
 #include "debug.h"
 #include "fps.h"
 #include "property.h"
+#include "property_int.h"
+#include "property_float.h"
 #include "property_svg.h"
 #include "property_icon.h"
 #include <X11/extensions/XInput2.h>

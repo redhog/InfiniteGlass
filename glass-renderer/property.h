@@ -59,8 +59,5 @@ struct PropertyTypeHandlerT {
 extern void property_type_register(PropertyTypeHandler *handler);
 extern PropertyTypeHandler *property_type_get(Atom type);
 
-extern PropertyTypeHandler property_int;
-extern PropertyTypeHandler property_float;
-
 
 #endif
