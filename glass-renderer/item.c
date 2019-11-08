@@ -78,7 +78,7 @@ void item_type_base_destructor(Item *item) {
 void item_type_base_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
-    ItemWindowShader *shader = (ItemWindowShader *) item->type->get_shader(item);
+    ItemShader *shader = (ItemShader *) item->type->get_shader(item);
 
     texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
@@ -112,10 +112,10 @@ void item_type_base_draw(Rendering *rendering) {
     properties_to_gl(rendering->item->properties, rendering);
     gl_check_error("item_draw1");
     
-    glUniform1i(shader->base.picking_mode_attr, rendering->view->picking);
-    glUniform4fv(shader->base.screen_attr, 1, rendering->view->screen);
+    glUniform1i(shader->picking_mode_attr, rendering->view->picking);
+    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     
-    glUniform1f(shader->base.window_id_attr, (float) rendering->item->id / (float) INT_MAX);
+    glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
 
     gl_check_error("item_draw2");
     

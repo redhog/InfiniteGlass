@@ -4,19 +4,9 @@
 #include "wm.h"
 
 int item_window_shader_load(ItemWindowShader *shader) {
-  if (!(shader->base.shader = shader_find(shaders, XInternAtom(display, "IG_SHADER_PIXMAP", False)))) {
-    return 0;
-  }
-  
   if (!item_shader_load((ItemShader *) shader)) {
     return 0;
   }
-    
-  shader->window_sampler_attr = glGetUniformLocation(shader->base.shader->program, "window_sampler");
-  shader->icon_sampler_attr = glGetUniformLocation(shader->base.shader->program, "icon_sampler");
-  shader->icon_mask_sampler_attr = glGetUniformLocation(shader->base.shader->program, "icon_mask_sampler");
-  shader->has_icon_attr = glGetUniformLocation(shader->base.shader->program, "has_icon");
-  shader->has_icon_mask_attr = glGetUniformLocation(shader->base.shader->program, "has_icon_mask");
   return 1;
 }
 
