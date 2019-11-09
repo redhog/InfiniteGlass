@@ -47,6 +47,7 @@ void item_type_base_constructor(Item *item, void *args) {
   XSelectInput(display, window, PropertyChangeMask);
 
   item->properties = properties_load(window);
+  item->prop_shader = properties_find(item->properties, IG_SHADER);
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
 
@@ -122,7 +123,9 @@ void item_type_base_update(Item *item) {
 }
 
 Shader *item_type_base_get_shader(Item *item) {
-  return shader_find(shaders, XInternAtom(display, "IG_SHADER_PIXMAP", False));
+  Atom shader = IG_SHADER_DEFAULT;
+  if (item->prop_shader) shader = item->prop_shader->values.dwords[0];
+  return shader_find(shaders, shader);
 }
 
 void item_type_base_print(Item *item) {

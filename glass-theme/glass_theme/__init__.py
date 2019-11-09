@@ -13,13 +13,20 @@ def main(*arg, **kw):
         display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
 
         with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
-            display.root["IG_SHADER_PIXMAP_GEOMETRY"] = f.read()
+            display.root["IG_SHADER_DEFAULT_GEOMETRY"] = f.read()
         with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
-            display.root["IG_SHADER_PIXMAP_VERTEX"] = f.read()
+            display.root["IG_SHADER_DEFAULT_VERTEX"] = f.read()
         with pkg_resources.resource_stream("glass_theme", "shader_window_fragment.glsl") as f:
-            display.root["IG_SHADER_PIXMAP_FRAGMENT"] = f.read()
+            display.root["IG_SHADER_DEFAULT_FRAGMENT"] = f.read()
 
-        display.root["IG_SHADERS"] = ["IG_SHADER_PIXMAP"]
+        with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
+            display.root["IG_SHADER_TEST_GEOMETRY"] = f.read()
+        with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
+            display.root["IG_SHADER_TEST_VERTEX"] = f.read()
+        with pkg_resources.resource_stream("glass_theme", "shader_window_fragment_test.glsl") as f:
+            display.root["IG_SHADER_TEST_FRAGMENT"] = f.read()
+            
+        display.root["IG_SHADERS"] = ["IG_SHADER_DEFAULT", "IG_SHADER_TEST"]
         
         InfiniteGlass.DEBUG("init", "Theme started\n")
 

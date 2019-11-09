@@ -51,6 +51,7 @@ struct ItemStruct {
   Window window;
 
   List *properties;
+  Property *prop_shader;
   Property *prop_size;
   Property *prop_coords;
 
