@@ -2,7 +2,7 @@
 #include "xapi.h"
 #include "item.h"
 #include "view.h"
-#include "item_shader.h"
+#include "shader.h"
 #include "wm.h"
 #include <limits.h>
 #include "property.h"
@@ -61,8 +61,8 @@ void item_type_base_destructor(Item *item) {
 void item_type_base_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
-    ItemShader *shader = (ItemShader *) item->type->get_shader(item);
-
+    Shader *shader = item->type->get_shader(item);
+    
     texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
     glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
@@ -121,8 +121,8 @@ void item_type_base_update(Item *item) {
   x_pop_error_context();  
 }
 
-ItemShader *item_type_base_get_shader(Item *item) {
-  return (ItemShader *) item_shader_get();
+Shader *item_type_base_get_shader(Item *item) {
+  return shader_find(shaders, XInternAtom(display, "IG_SHADER_PIXMAP", False));
 }
 
 void item_type_base_print(Item *item) {

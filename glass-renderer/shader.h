@@ -18,6 +18,14 @@ typedef struct {
   GLuint geometry_shader;
   GLuint vertex_shader;
   GLuint fragment_shader;
+
+  GLint screen_attr;
+  GLint size_attr;
+ 
+  GLint picking_mode_attr;
+  GLint window_id_attr;
+
+  GLint window_sampler_attr; 
 } Shader;
 
 extern Shader *shader_loadX(Atom name);
