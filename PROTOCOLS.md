@@ -13,8 +13,15 @@ Window rendering is implemented by the compositor, glass-renderer. It
 is controlled by properties both on individual client windows and on
 the root window.
 
+## Shader programs
+
+Rendering is controlled by OpenGL shader programs. The programs must be specified on the root window, and can then be selected individually for each window. All window properties are available to the shader code as uniforms. Note: You must specify the right type as well as item count, e.g. "vec4 MY_PROP" corresponds to MY_PROP being of type XA_FLOAT and having 4 items.
+
+Shader programs are responsible for drawing in two modes - normal visible mode, and a mode used for picking, where each pixel value corresponds to the window id and coordinates of that window.
+
 ## Window properties
 
+* IG_SHADER atom - the shader to use to render this window.
 * IG_COORDS float[4] - Coordinates for the window on the desktop. A
   client can change these to move and resize a window.
 * IG_SIZE int[2] - horizontal and vertical resolution of the window in
@@ -28,18 +35,19 @@ the root window.
 
 ## ROOT properties
 
+* IG_SHADERS atom[any] - a list of shader programs. Each program needs
+  yo be further specified with the next three properties
+  * shader_GEOMETRY string - geometry shader source code
+  * shader_VERTEX string vertex shader source code
+  * shader_FRAGMENT string fragment shader source code
 * IG_VIEWS atom[any] - a list of layers to display. Each layer needs
   to be further specified with the next two properties
-* layer_LAYER atom - layer name to match on IG_LAYER on windows
-* layer_VIEW float[4] - left,bottom,width,height of layer viewport
+  * layer_LAYER atom - layer name to match on IG_LAYER on windows
+  * layer_VIEW float[4] - left,bottom,width,height of layer viewport
   (zoom and pan)
-* IG_NOTIFY_MOTION window - Properties for describing the current
-  mouse pointer position on the desktop
-* IG_ACTIVE_WINDOW window - the (top most) window under the mouse
-  pointer (if any)
-  * IG_NOTIFY_MOTION float[2*len(IG_VIEWS)] - mouse coordinates (x,y)
-    for each desktop layer
 * IG_ANIMATE window - event destination for animation events
+
+The user should make sure to provide a shader called IG_SHADER_DEFAULT.
 
 The user should make sure to provide a view called IG_VIEW_MENU
 matching the window LAYER IG_LAYER_MENU, with a viewport of 0,0,1,0.75
