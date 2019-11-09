@@ -61,7 +61,7 @@ void item_type_base_destructor(Item *item) {
 void item_type_base_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
-    Shader *shader = item->type->get_shader(item);
+    Shader *shader = rendering->shader;
     
     texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
