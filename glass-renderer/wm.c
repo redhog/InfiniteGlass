@@ -145,9 +145,54 @@ int main() {
           draw();
         }
       }
-   }
-    
-    if (cookie->type == GenericEvent) {
+
+      if (e.xproperty.atom == IG_SIZE) {
+        Atom type_return;
+        int format_return;
+        unsigned long nitems_return;
+        unsigned long bytes_after_return;
+        unsigned char *prop_return;
+        Item *item = item_get_from_window(e.xproperty.window, False);
+        if (item) {
+          XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
+                             &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+          if (type_return != None) {
+            XWindowChanges values;
+            values.width = ((long *) prop_return)[0];
+            values.height = ((long *) prop_return)[1];
+            XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+            DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
+            item->type->update((Item *) item);
+            draw();
+          }
+          XFree(prop_return);
+        }
+      } else if (e.xproperty.atom == IG_VIEWS) {
+        view_free_all(views);
+        views = view_load_all();
+        draw();
+      } else {
+        Bool handled = False;
+        for (size_t idx = 0; idx < views->count; idx++) {
+          View *v = (View *) views->entries[idx];
+          if (e.xproperty.atom == v->attr_layer) {
+            view_load_layer(v);
+            draw();
+            handled=True;
+          } else if (e.xproperty.atom == v->attr_view) {
+            view_load_screen(v);
+            draw();
+            handled=True;
+          }
+        }
+        if (!handled) {
+          if (DEBUG_ENABLED("event.other")) {
+            DEBUG("event.other", "Ignored event ");
+            print_xevent(stderr, display, &e);
+          }
+        }
+      }
+    } else if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
         if (cookie->evtype == XI_RawMotion) {
           //XIRawEvent *re = (XIRawEvent *) cookie->data;
@@ -255,27 +300,6 @@ int main() {
         draw();
       }
       // FIXME: Update width/height regardless of window type...
-    } else if (e.type == PropertyNotify && e.xproperty.atom == IG_SIZE) {
-      Atom type_return;
-      int format_return;
-      unsigned long nitems_return;
-      unsigned long bytes_after_return;
-      unsigned char *prop_return;
-      Item *item = item_get_from_window(e.xproperty.window, False);
-      if (item) {
-        XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
-                           &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-        if (type_return != None) {
-          XWindowChanges values;
-          values.width = ((long *) prop_return)[0];
-          values.height = ((long *) prop_return)[1];
-          XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-          item->type->update((Item *) item);
-          draw();
-        }
-        XFree(prop_return);
-      }
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window, False);
       if (item) {
@@ -313,34 +337,6 @@ int main() {
       }
     } else if (e.type == MapRequest) {
       XMapWindow(display, e.xmaprequest.window);
-    } else if (e.type == PropertyNotify) {
-      Bool handled = False;
-      if (   (e.xproperty.window == root)
-          && (e.xproperty.atom == IG_VIEWS)) {
-        view_free_all(views);
-        views = view_load_all();
-        draw();
-        handled=True;
-      } else {
-        for (size_t idx = 0; idx < views->count; idx++) {
-          View *v = (View *) views->entries[idx];
-          if (e.xproperty.atom == v->attr_layer) {
-            view_load_layer(v);
-            draw();
-            handled=True;
-          } else if (e.xproperty.atom == v->attr_view) {
-            view_load_screen(v);
-            draw();
-            handled=True;
-          }
-        }
-      }
-      if (!handled) {
-        if (DEBUG_ENABLED("event.other")) {
-          DEBUG("event.other", "Ignored event ");
-          print_xevent(stderr, display, &e);
-        }
-      }
     } else if (e.type == ClientMessage && e.xclient.message_type == IG_DEBUG) {
       printf("DEBUG LIST VIEWS\n");
       for (size_t idx = 0; idx < views->count; idx++) {
