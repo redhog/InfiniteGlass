@@ -19,30 +19,30 @@ Bool property_load(Property *prop, Window window) {
 
   prop->window = window;
   
-  if (prop->name_str) {
-    XFree(prop->name_str);
-    prop->name_str = NULL;
-  }
-  prop->name_str = XGetAtomName(display, prop->name);
+  if (!prop->name_str) prop->name_str = XGetAtomName(display, prop->name);
 
   unsigned char *old = prop->values.bytes;
   int old_nitems = prop->nitems;
-  if (prop->values.bytes) {
-    XFree(prop->values.bytes);
-    prop->values.bytes = NULL;
-  }
+  int old_format = prop->format;
+  prop->values.bytes = NULL;
 
   XGetWindowProperty(display, window, prop->name, 0, 0, 0, AnyPropertyType,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
-  if (prop->type == None) return !!old;
+  if (prop->type == None) {
+    if (old) { XFree(old); return True; }
+    return False;
+  }
   XGetWindowProperty(display, window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
+  Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
+
+  if (old) XFree(old);
+  if (!changed) return False;
+  
   PropertyTypeHandler *type = property_type_get(prop->type);
   if (type) type->load(prop);
-  if (!old) return True;
-  if (old_nitems != prop->nitems) return True;
-  return memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
+  return True;
 }
 
 void property_free(Property *prop) {
