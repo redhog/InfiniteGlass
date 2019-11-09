@@ -139,58 +139,58 @@ int main() {
     gl_check_error("loop");
 
     if (e.type == PropertyNotify) {
+      Bool changed = True;
       Item *item = (Item *) item_get_from_window(e.xproperty.window, False);
-      if (item) {
-        if (properties_update(item->properties, item->window, e.xproperty.atom)) {
-          draw();
+      
+      if (e.xproperty.window != root && item) {
+        if (!properties_update(item->properties, item->window, e.xproperty.atom)) {
+          changed = False;
         }
       }
 
-      if (e.xproperty.atom == IG_SIZE) {
-        Atom type_return;
-        int format_return;
-        unsigned long nitems_return;
-        unsigned long bytes_after_return;
-        unsigned char *prop_return;
-        Item *item = item_get_from_window(e.xproperty.window, False);
-        if (item) {
-          XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
-                             &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-          if (type_return != None) {
-            XWindowChanges values;
-            values.width = ((long *) prop_return)[0];
-            values.height = ((long *) prop_return)[1];
-            XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-            DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-            item->type->update((Item *) item);
-            draw();
+      if (changed) {
+        if (e.xproperty.window != root && item && e.xproperty.atom == IG_SIZE) {
+          if (item) {
+            Atom type_return;
+            int format_return;
+            unsigned long nitems_return;
+            unsigned long bytes_after_return;
+            unsigned char *prop_return;
+            XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
+                               &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+            if (type_return != None) {
+              XWindowChanges values;
+              values.width = ((long *) prop_return)[0];
+              values.height = ((long *) prop_return)[1];
+              XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+              DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
+              item->type->update((Item *) item);
+            }
+            XFree(prop_return);
           }
-          XFree(prop_return);
+        } else if (e.xproperty.window == root && e.xproperty.atom == IG_VIEWS) {
+          view_free_all(views);
+          views = view_load_all();
+        } else if (e.xproperty.window == root) {
+          Bool handled = False;
+          for (size_t idx = 0; idx < views->count; idx++) {
+            View *v = (View *) views->entries[idx];
+            if (e.xproperty.atom == v->attr_layer) {
+              view_load_layer(v);
+              handled=True;
+            } else if (e.xproperty.atom == v->attr_view) {
+              view_load_screen(v);
+              handled=True;
+            }
+          }
+          if (!handled) {
+            if (DEBUG_ENABLED("event.other")) {
+              DEBUG("event.other", "Ignored property event ");
+              print_xevent(stderr, display, &e);
+            }
+          }
         }
-      } else if (e.xproperty.atom == IG_VIEWS) {
-        view_free_all(views);
-        views = view_load_all();
         draw();
-      } else {
-        Bool handled = False;
-        for (size_t idx = 0; idx < views->count; idx++) {
-          View *v = (View *) views->entries[idx];
-          if (e.xproperty.atom == v->attr_layer) {
-            view_load_layer(v);
-            draw();
-            handled=True;
-          } else if (e.xproperty.atom == v->attr_view) {
-            view_load_screen(v);
-            draw();
-            handled=True;
-          }
-        }
-        if (!handled) {
-          if (DEBUG_ENABLED("event.other")) {
-            DEBUG("event.other", "Ignored event ");
-            print_xevent(stderr, display, &e);
-          }
-        }
       }
     } else if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
