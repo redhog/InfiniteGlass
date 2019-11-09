@@ -42,6 +42,11 @@ Bool property_load(Property *prop, Window window) {
   
   PropertyTypeHandler *type = property_type_get(prop->type);
   if (type) type->load(prop);
+  if (DEBUG_ENABLED("prop.changed")) {
+    DEBUG("prop.changed", "");
+    property_print(prop, stderr);
+  }
+  
   return True;
 }
 
