@@ -3,6 +3,8 @@
 This is a minimalistic compositing window manager for X with infinite
 desktop, infinite zoom and infinite virtual window pixel resolution.
 
+[![Screenshot](docs/images/InfiniteGlass-2019-11-09-2.gif)](https://www.youtube.com/watch?v=E8f2KwgvxK4)
+
 Features:
 
 * Windows are glued to an infinite desktop to some coordinates and size
