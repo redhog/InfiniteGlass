@@ -61,4 +61,7 @@ extern int x_catch(XErrorEvent *error);
 extern int xinit();
 extern void overlay_set_input(Bool enabled);
 
+extern Atom atom_append(Display *display, Atom base, char *suffix);
+
+
 #endif

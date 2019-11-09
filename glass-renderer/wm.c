@@ -14,10 +14,16 @@
 #include "list.h"
 #include "debug.h"
 #include "fps.h"
+#include "property.h"
+#include "property_int.h"
+#include "property_float.h"
+#include "property_svg.h"
+#include "property_icon.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
-List *views;
+List *views = NULL;
+List *shaders = NULL;
 GLuint picking_fb;
 
 Atom current_layer;
@@ -103,7 +109,15 @@ int main() {
   DEBUG("start", "Initialized X and GL.\n");
 
   while (!(views = view_load_all())) sleep(1);
+  while (!(shaders = shader_load_all())) sleep(1);
 
+  DEBUG("start", "Initialized views and shaders.\n");
+  
+  property_type_register(&property_int);
+  property_type_register(&property_float);
+  property_type_register(&property_svg);
+  property_type_register(&property_icon);
+  
   items_get_from_toplevel_windows();
  
   gl_check_error("start1");
@@ -124,6 +138,15 @@ int main() {
     
     gl_check_error("loop");
 
+    if (e.type == PropertyNotify) {
+      Item *item = (Item *) item_get_from_window(e.xproperty.window, False);
+      if (item) {
+        if (properties_update(item->properties, item->window, e.xproperty.atom)) {
+          draw();
+        }
+      }
+   }
+    
     if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
         if (cookie->evtype == XI_RawMotion) {
@@ -137,23 +160,20 @@ int main() {
 
           int winx, winy;
           Item *item;
-          Window win = root;
-          pick(root_x, root_y, &winx, &winy, &item);
-          if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_window)) {
-            ItemWindow *window_item = (ItemWindow *) item;
-            win = window_item->window;
 
+          pick(root_x, root_y, &winx, &winy, &item);
+          if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_base)) {
             XWindowChanges values;
             values.x = root_x - winx;
             values.y = root_y - winy;
             values.stack_mode = Above;
-            if (values.x != window_item->x || values.y != window_item->y) {
-              XConfigureWindow(display, window_item->window, CWX | CWY | CWStackMode, &values);
-              window_item->x = values.x;
-              window_item->y = values.y;
+            if (values.x != item->x || values.y != item->y) {
+              XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
+              item->x = values.x;
+              item->y = values.y;
             }
 
-            DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, window_item->window, winx, winy);
+            DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", e.xmotion.x_root, e.xmotion.y_root, item->window, winx, winy);
           } else {
             DEBUG("position", "Point %d,%d -> NONE\n", e.xmotion.x_root, e.xmotion.y_root);
           }
@@ -181,37 +201,57 @@ int main() {
      //XShapeEvent *event = (XShapeEvent*) &e;
     } else if (e.type == ConfigureRequest) {
       XConfigureRequestEvent *event = (XConfigureRequestEvent*) &e;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
+      Item *item = item_get_from_window(event->window, False);
       if (!item) {
         XWindowChanges values;
         values.width = event->width;
         values.height = event->height;
         XConfigureWindow(display, event->window, CWWidth | CWHeight, &values);
       } else {
-        item->base.coords[2] *= (float) event->width / (float) item->base.width;
-        item->base.coords[3] *= (float) event->height / (float) item->base.height;
-        item->base.width = event->width;
-        item->base.height = event->height;
-        item->width_window = event->width;
-        item->height_window = event->height;
-        item->base.type->update((Item *) item);
-        gl_check_error("item_update_pixmap");
-        draw();
+        if (item->prop_size) {
+          unsigned long width = item->prop_size->values.dwords[0];
+          unsigned long height = item->prop_size->values.dwords[1];
+          float *coords = (float *) item->prop_coords->data;
+           
+          coords[2] *= (float) event->width / (float) width;
+          coords[3] *= (float) event->height / (float) height;
+
+          long coords_arr[4];
+          for (int i = 0; i < 4; i++) {
+            coords_arr[i] = *(long *) &coords[i];
+          }
+          XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+          
+          long arr[2] = {width, height};
+          XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+
+          item->type->update((Item *) item);
+          gl_check_error("item_update_pixmap");
+          draw();
+        } else {
+          DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", e.xconfigure.window);
+        }
       }
     } else if (e.type == ConfigureNotify) {
       DEBUG("event.configure", "Received ConfigureNotify for %ld\n", e.xconfigure.window);
       XConfigureEvent *event = (XConfigureEvent*) &e;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(event->window, False);
-      if (item && item->base.layer == IG_LAYER_MENU) {       
-        item->base.coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
-        item->base.coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
-        item->base.coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
-        item->base.coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
-        item->base.width = event->width;
-        item->base.height = event->height;
-        item->width_window = event->width;
-        item->height_window = event->height;
-        item->base.type->update((Item *) item);
+      Item *item = item_get_from_window(event->window, False);
+      if (item && item->layer == IG_LAYER_MENU) {
+        float coords[4];
+        coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
+        coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
+        coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
+        coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
+
+        long coords_arr[4];
+        for (int i = 0; i < 4; i++) {
+          coords_arr[i] = *(long *) &coords[i];
+        }
+        XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+        
+        long arr[2] = {event->width, event->height};
+        XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+        item->type->update((Item *) item);
         draw();
       }
       // FIXME: Update width/height regardless of window type...
@@ -221,28 +261,20 @@ int main() {
       unsigned long nitems_return;
       unsigned long bytes_after_return;
       unsigned char *prop_return;
-      ItemWindow *item = (ItemWindow *) item_get_from_window(e.xproperty.window, False);
+      Item *item = item_get_from_window(e.xproperty.window, False);
       if (item) {
         XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
                            &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
         if (type_return != None) {
-          item->base.width = ((long *) prop_return)[0];
-          item->base.height = ((long *) prop_return)[1];
-          item->width_property = item->base.width;
-          item->height_property = item->base.height;
-          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", item->base.width, item->base.height);
-          item->base.type->update((Item *) item);
+          XWindowChanges values;
+          values.width = ((long *) prop_return)[0];
+          values.height = ((long *) prop_return)[1];
+          XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
+          item->type->update((Item *) item);
           draw();
         }
         XFree(prop_return);
-      }
-    } else if (e.type == PropertyNotify && e.xproperty.atom == DISPLAYSVG) {
-      Item * item = item_get_from_window(e.xproperty.window, False);
-      if (item) {
-        // FIXME: Handle updates of existign item later
-        // if (!item_isinstance(item, &item_type_window_svg)) {
-        item_remove(item);
-        item = item_get_from_window(e.xproperty.window, True);
       }
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window, False);
@@ -288,14 +320,6 @@ int main() {
         view_free_all(views);
         views = view_load_all();
         draw();
-        handled=True;
-      } else if (e.xproperty.atom == IG_COORDS) {
-        Item *item = item_get_from_window(e.xproperty.window, False);
-        if (item) {
-          item_type_window_update_space_pos_from_window((ItemWindow *) item);
-          item->type->update(item);
-          draw();
-        }
         handled=True;
       } else {
         for (size_t idx = 0; idx < views->count; idx++) {

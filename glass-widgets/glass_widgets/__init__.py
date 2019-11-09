@@ -4,23 +4,18 @@ import pkg_resources
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
-        display.root["IG_VIEW_MENU_LAYER"]="IG_LAYER_MENU"
-        display.root["IG_VIEW_MENU_VIEW"]=[0.0, 0.0, 1.0, 0.0]
-        display.root["IG_VIEW_OVERLAY_LAYER"]="IG_LAYER_OVERLAY"
-        display.root["IG_VIEW_OVERLAY_VIEW"]=[0.0, 0.0, 1.0, 0.0]
-        display.root["IG_VIEW_DESKTOP_LAYER"]="IG_LAYER_DESKTOP"
-        display.root["IG_VIEW_DESKTOP_VIEW"]=[0.0, 0.0, 1.0, 0.0]
-        display.root["IG_VIEWS"]=["IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
-
         for idx, (icon, zoom) in enumerate((("search-plus", 0.9090909090909091),
                                             ("search-minus", 1.1),
                                             ("search-location", -1.0))):
             w = display.root.create_window()
             w.zoom = zoom
+            w["WM_NAME"]=icon.encode("utf-8")
+            w["WM_CLASS"]=b"glass-widget"
             w["IG_LAYER"]="IG_LAYER_OVERLAY"
             w["IG_COORDS"]=[0.01, 0.60+0.05*idx, 0.05, 0.05]
             with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon) as f:
-                w["DISPLAYSVG"]=f.read()
+                data = f.read()
+                w["IG_CONTENT"]=("IG_SVG", data)
             @w.on()
             def ButtonPress(win, event):
                 screen = list(display.root["IG_VIEW_DESKTOP_VIEW"])
@@ -35,10 +30,13 @@ def main(*arg, **kw):
                 display.root["IG_VIEW_DESKTOP_VIEW"] = screen
 
         w = display.root.create_window()
+        w["WM_NAME"]=b"eject"
+        w["WM_CLASS"]=b"glass-widget"
         w["IG_LAYER"]="IG_LAYER_OVERLAY"
         w["IG_COORDS"]=[0.01,0.55,0.05,0.05]
         with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg") as f:
-            w["DISPLAYSVG"]=f.read()
+            data = f.read()
+            w["IG_CONTENT"]=("IG_SVG", data)
         @w.on()
         def ButtonPress(win, event):
             display.root.send(display.root,

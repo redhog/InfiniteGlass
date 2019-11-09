@@ -5,7 +5,12 @@ import array
 from . import keymap 
 
 def parse_value(display, value):
-    if isinstance(value, (tuple, list, array.array)):
+    fmt = 32
+    if isinstance(value, tuple):
+        itemtype, items, fmt = parse_value(display, value[1])
+        return display.get_atom(value[0]), items, fmt
+    
+    if isinstance(value, (list, array.array)):
         items = value
     elif isinstance(value, str):
         items = value.split(" ")
@@ -26,8 +31,10 @@ def parse_value(display, value):
         itemtype = display.get_atom("FLOAT")
     elif isinstance(items[0], bytes):
         itemtype = display.get_atom("STRING")
+        fmt = 8
     elif items[0].startswith("@"):
         itemtype = display.get_atom("STRING")
+        fmt = 8
         res = []
         for item in items:
             with open(value[1:], "rb") as f:
@@ -42,10 +49,10 @@ def parse_value(display, value):
     else:
         itemtype = display.get_atom("ATOM")
         items = [display.get_atom(item) for item in items]
-    return itemtype, items
+    return itemtype, items, fmt
 
 def format_value(window, value):
-    itemtype, items = parse_value(window.display, value)
+    itemtype, items, fmt = parse_value(window.display, value)
 
     if isinstance(items[0], int):
         items = struct.pack("<" + "i" * len(items), *items)
@@ -55,7 +62,7 @@ def format_value(window, value):
         items = b'\0'.join(items)
     else:
         items = struct.pack("<" + "l" * len(items), *items)
-    return itemtype, items
+    return itemtype, items, fmt
 
 
 def unpack_value(display, value_type, value):

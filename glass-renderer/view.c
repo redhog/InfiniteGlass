@@ -2,9 +2,10 @@
 #include "xapi.h"
 #include "error.h"
 #include "list.h"
-#include "item_window.h"
+#include "item.h"
 #include "debug.h"
 #include <limits.h>
+#include <math.h>
 
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
@@ -50,31 +51,69 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 }
 
 
-
+void reset_uniforms(Shader *shader) {
+  GLint active_uniforms_nr;
+  glGetProgramiv(shader->program, GL_ACTIVE_UNIFORMS, &active_uniforms_nr);
+  for (int i = 0; i < active_uniforms_nr; i++) {
+    gl_check_error("reset_uniforms1");
+    GLsizei length;
+    GLint size;
+    GLenum type;
+    GLchar name[40];
+    glGetActiveUniform(shader->program, i, 40,
+                       &length, &size, &type, name);
+    const float f = nanf("initial");
+    const float fm[16] = {f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f};
+    switch(type) {
+      case GL_FLOAT: glUniform1f(i, f); break;
+      case GL_FLOAT_VEC2: glUniform2f(i, f, f);  break;
+      case GL_FLOAT_VEC3: glUniform3f(i, f, f, f);  break;
+      case GL_FLOAT_VEC4: glUniform4f(i, f, f, f, f);  break;
+      case GL_INT: glUniform1i(i, 0); break;
+      case GL_INT_VEC2: glUniform2i(i, 0, 0); break;
+      case GL_INT_VEC3: glUniform3i(i, 0, 0, 0); break;
+      case GL_INT_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
+      case GL_BOOL: glUniform1i(i, 0); break;
+      case GL_BOOL_VEC2: glUniform2i(i, 0, 0); break;
+      case GL_BOOL_VEC3: glUniform3i(i, 0, 0, 0); break;
+      case GL_BOOL_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
+      case GL_FLOAT_MAT2: glUniformMatrix2fv(i, 1, False, fm); break;
+      case GL_FLOAT_MAT3: glUniformMatrix3fv(i, 1, False, fm); break;
+      case GL_FLOAT_MAT4: glUniformMatrix4fv(i, 1, False, fm); break;
+      case GL_SAMPLER_2D: glUniform1i(i, 0); break;
+      case GL_SAMPLER_CUBE: glUniform1i(i, 0); break;
+    }
+    gl_check_error(name);
+  }
+}
 
 void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
+  Rendering rendering;
+  rendering.shader = NULL;
+  rendering.view = view;
+ 
   List *to_delete = NULL;
   if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (!filter || filter(item)) {
-      if (item_isinstance(item, &item_type_window)) {
-        try();
-        item->type->draw(view, item);
-        XErrorEvent e;
-        if (!catch(&e)) {
-          if (   (   e.error_code == BadWindow
-                  || e.error_code == BadDrawable)
-              && e.resourceid == ((ItemWindow *) item)->window) {
-            if (!to_delete) to_delete = list_create();
-            list_append(to_delete, item);
-          } else {
-            throw(&e);
-          }
+      try();
+      rendering.item = item;
+      rendering.texture_unit = 0;
+      rendering.shader = item->type->get_shader(item)->shader;
+      reset_uniforms(rendering.shader);
+      item->type->draw(&rendering);
+      XErrorEvent e;
+      if (!catch(&e)) {
+        if (   (   e.error_code == BadWindow
+                || e.error_code == BadDrawable)
+            && e.resourceid == item->window) {
+          if (!to_delete) to_delete = list_create();
+          list_append(to_delete, item);
+        } else {
+          throw(&e);
         }
-      } else {
-        item->type->draw(view, item);
-      }     
+      }
     }
   }
   if (to_delete) {
@@ -116,9 +155,12 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   *returnitem = NULL;
   if (data[2] != 0.0) {
     *returnitem = item_get(data[2] * (float) INT_MAX);
-    if (*returnitem) {
-      *winx = (int) (data[0] * (*returnitem)->width);
-      *winy = (int) (data[1] * (*returnitem)->height);
+    if (*returnitem && (*returnitem)->prop_size) {
+      unsigned long width = (*returnitem)->prop_size->values.dwords[0];
+      unsigned long height = (*returnitem)->prop_size->values.dwords[1];
+      
+      *winx = (int) (data[0] * width);
+      *winy = (int) (data[1] * height);
     }
   }
   if (*returnitem) {
@@ -189,15 +231,6 @@ void view_load_size(View *view) {
     XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   }
   XFree(prop_return);
-}
-
-Atom atom_append(Display *display, Atom base, char *suffix) {
-  char *strbase = XGetAtomName(display, base);
-  char appended[strlen(strbase) + strlen(suffix) + 1];
-  strcpy(appended, strbase);
-  strcpy(appended + strlen(strbase), suffix);
-  XFree(strbase);
-  return XInternAtom(display, appended, False);
 }
 
 View *view_load(Atom name) {

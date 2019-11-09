@@ -1,5 +1,5 @@
 #include "xapi.h"
-#include "item_window.h"
+#include "item.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include "error.h"
@@ -159,4 +159,13 @@ void overlay_set_input(Bool enabled) {
   XserverRegion region = XFixesCreateRegion(display, &rect, 1);
   XFixesSetWindowShapeRegion(display, overlay, ShapeInput, 0, 0, region);
   XFixesDestroyRegion(display, region);
+}
+
+Atom atom_append(Display *display, Atom base, char *suffix) {
+  char *strbase = XGetAtomName(display, base);
+  char appended[strlen(strbase) + strlen(suffix) + 1];
+  strcpy(appended, strbase);
+  strcpy(appended + strlen(strbase), suffix);
+  XFree(strbase);
+  return XInternAtom(display, appended, False);
 }
