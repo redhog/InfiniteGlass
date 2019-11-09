@@ -276,14 +276,6 @@ int main() {
         }
         XFree(prop_return);
       }
-    } else if (e.type == PropertyNotify && e.xproperty.atom == DISPLAYSVG) {
-      Item * item = item_get_from_window(e.xproperty.window, False);
-      if (item) {
-        // FIXME: Handle updates of existign item later
-        // if (!item_isinstance(item, &item_type_window_svg)) {
-        item_remove(item);
-        item = item_get_from_window(e.xproperty.window, True);
-      }
     } else if (e.type == DestroyNotify) {
       Item * item = item_get_from_window(e.xdestroywindow.window, False);
       if (item) {
@@ -328,14 +320,6 @@ int main() {
         view_free_all(views);
         views = view_load_all();
         draw();
-        handled=True;
-      } else if (e.xproperty.atom == IG_COORDS) {
-        Item *item = item_get_from_window(e.xproperty.window, False);
-        if (item) {
-          item_type_window_update_space_pos_from_window(item);
-          item->type->update(item);
-          draw();
-        }
         handled=True;
       } else {
         for (size_t idx = 0; idx < views->count; idx++) {
