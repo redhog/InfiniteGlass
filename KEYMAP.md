@@ -1,6 +1,6 @@
 # Key bindings
 
-Key bindings are implemented by input.py
+Key bindings are implemented by glass-input. They are specified in [~/.config/glass/input.json](glass-input/glass_input/config.json).
 
 All key bindings require the Windows key (Super_L) to be pressed, in
 addition to some other keys or mouse buttons.
