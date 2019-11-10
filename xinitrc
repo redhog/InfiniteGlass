@@ -1,7 +1,6 @@
 #! /bin/bash
 
 export GLASS_SHADER_PATH=build
-export GLASS_INPUT_CONFIG=''
 export MALLOC_CHECK_=2
 
 if [ "$GLASS_DMALLOC" ]; then
