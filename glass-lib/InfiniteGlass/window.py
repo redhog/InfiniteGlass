@@ -102,7 +102,9 @@ Xlib.xobject.drawable.Window.create_window = create_window
 
 def window_send(self, window, client_type, *arg, **kw):
     arg = [valueencoding.format_value(self, value) for value in arg]
-    fmt = arg[0][2]
+    fmt = 32
+    if arg:
+        fmt = arg[0][2]
     data = b''.join(item[1] for item in arg)
     data = data + b'\0' * (20 - len(data))
     event = Xlib.protocol.event.ClientMessage(
