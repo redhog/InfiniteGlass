@@ -88,7 +88,7 @@ class Shadow(object):
                                   for item in value)
             if key in ghost_image:
                 ghost_image = ghost_image.replace(key, value)
-                self.window["DISPLAYSVG"] = ghost_image
+                self.window["IG_CONTENT"]=("IG_SVG", ghost_image)
                 self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
         self.apply(self.window)
 
