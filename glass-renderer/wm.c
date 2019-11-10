@@ -146,28 +146,29 @@ int main() {
         if (!properties_update(item->properties, item->window, e.xproperty.atom)) {
           changed = False;
         }
+        if (e.xproperty.atom == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
+        if (e.xproperty.atom == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
+        if (e.xproperty.atom == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);        
       }
 
       if (changed) {
-        if (e.xproperty.window != root && item && e.xproperty.atom == IG_SIZE) {
-          if (item) {
-            Atom type_return;
-            int format_return;
-            unsigned long nitems_return;
-            unsigned long bytes_after_return;
-            unsigned char *prop_return;
-            XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
-                               &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-            if (type_return != None) {
-              XWindowChanges values;
-              values.width = ((long *) prop_return)[0];
-              values.height = ((long *) prop_return)[1];
-              XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-              DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-              item->type->update((Item *) item);
-            }
-            XFree(prop_return);
+        if (e.xproperty.window != root && item && e.xproperty.atom == IG_SIZE && item && item->layer == IG_LAYER_MENU) {
+          Atom type_return;
+          int format_return;
+          unsigned long nitems_return;
+          unsigned long bytes_after_return;
+          unsigned char *prop_return;
+          XGetWindowProperty(display, e.xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
+                             &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+          if (type_return != None) {
+            XWindowChanges values;
+            values.width = ((long *) prop_return)[0];
+            values.height = ((long *) prop_return)[1];
+            XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+            DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
+            item->type->update((Item *) item);
           }
+          XFree(prop_return);
         } else if (e.xproperty.window == root && e.xproperty.atom == IG_VIEWS) {
           view_free_all(views);
           views = view_load_all();
@@ -283,11 +284,32 @@ int main() {
       Item *item = item_get_from_window(event->window, False);
       if (item && item->layer == IG_LAYER_MENU) {
         float coords[4];
-        coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
-        coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.height;
-        coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
-        coords[3] = ((float) (event->height)) / (float) overlay_attr.height;
+        View *v = NULL;
+        if (views) {
+          v = view_find(views, item->layer);
+        }
+        if (v) {
+          coords[0] = v->screen[0] + (v->screen[2] * (float) event->x) / (float) v->width;
+          coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) event->y) / (float) v->height;
+          coords[2] = (v->screen[2] * (float) event->width) / (float) v->width;
+          coords[3] = (v->screen[3] * (float) event->height) / (float) v->height;
+        } else {
+          coords[0] = ((float) (event->x - overlay_attr.x)) / (float) overlay_attr.width;
+          coords[1] = ((float) (overlay_attr.height - event->y - overlay_attr.y)) / (float) overlay_attr.width;
+          coords[2] = ((float) (event->width)) / (float) overlay_attr.width;
+          coords[3] = ((float) (event->height)) / (float) overlay_attr.width;
+        }
 
+        float *old_coords = (float *) item->prop_coords->data;
+        DEBUG("menu.reconfigure", "%ld: %d,%d->%d,%d[%d,%d]   %f,%f,%f,%f->%f,%f,%f,%f\n",
+              item->window,
+              item->x, item->y, event->x, event->y, event->width, event->height,
+              old_coords[0],old_coords[1],old_coords[2],old_coords[3],
+              coords[0],coords[1],coords[2],coords[3]);
+
+        item->x = event->x;
+        item->y = event->y;        
+        
         long coords_arr[4];
         for (int i = 0; i < 4; i++) {
           coords_arr[i] = *(long *) &coords[i];

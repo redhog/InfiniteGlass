@@ -246,6 +246,14 @@ void item_type_window_update_space_pos_from_window(Item *item) {
       coords[2] = ((float) (width)) / (float) overlay_attr.width;
       coords[3] = ((float) (height)) / (float) overlay_attr.width;
     }
+
+    if (item->layer == IG_LAYER_MENU) {
+      DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
+            item->window,
+            attr.x, attr.y, attr.width, attr.height,
+            coords[0],coords[1],coords[2],coords[3]);
+   }
+        
     long arr[4];
     for (int i = 0; i < 4; i++) {
       arr[i] = *(long *) &coords[i];
