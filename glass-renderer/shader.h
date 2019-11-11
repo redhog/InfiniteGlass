@@ -50,5 +50,6 @@ extern void shader_free(Shader *shader);
 extern void shader_free_all(List *shaders);
 extern Shader *shader_find(List *shaders, Atom name);
 extern void shader_print(Shader *shader);
+extern void shader_reset_uniforms(Shader *shader);
 
 #endif
