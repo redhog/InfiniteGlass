@@ -31,6 +31,7 @@ void item_type_base_constructor(Item *item, void *args) {
     } else {
       item->layer = IG_LAYER_DESKTOP;
     }
+    XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &item->layer, 1);
   } else {
     item->layer = *(Atom *) prop_return;
   }
