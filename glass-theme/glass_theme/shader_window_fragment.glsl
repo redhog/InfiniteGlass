@@ -17,6 +17,9 @@ uniform float window_id;
 uniform sampler2D IG_CONTENT;
 uniform vec4 IG_CONTENT_transform;
 
+uniform int ATOM_IG_LAYER_MENU;
+uniform int IG_LAYER;
+
 out vec4 fragColor;
 
 
@@ -49,7 +52,7 @@ void main() {
         icon_color.a = 1. - texture(WM_HINTS_icon_mask, window_coord).r;
       }
 
-      if (geometry_size > ICON_CUTOFF_1) {
+      if (IG_LAYER == ATOM_IG_LAYER_MENU || geometry_size > ICON_CUTOFF_1) {
         fragColor = window_color;
       } else if (geometry_size > ICON_CUTOFF_2) {
         scale = (geometry_size - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
