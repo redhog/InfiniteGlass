@@ -6,6 +6,7 @@
 #include "glapi.h"
 #include "xapi.h"
 #include "debug.h"
+#include <math.h>
 
 int checkShaderError(char *name, char *src, GLuint shader) {
   GLint res;
@@ -111,6 +112,8 @@ Shader *shader_loadX(Atom name) {
     return NULL;
   }
 
+  glUseProgram(shader->program);
+  
   gl_check_error("standard_properties1");
   shader->screen_attr = glGetUniformLocation(shader->program, "screen");
   shader->size_attr = glGetUniformLocation(shader->program, "size");
@@ -118,7 +121,27 @@ Shader *shader_loadX(Atom name) {
   shader->window_id_attr = glGetUniformLocation(shader->program, "window_id");
   shader->window_sampler_attr = glGetUniformLocation(shader->program, "window_sampler");
   gl_check_error("standard_properties2");
-  
+
+  shader->uniforms = list_create();
+
+  GLint active_uniforms_nr;
+  glGetProgramiv(shader->program, GL_ACTIVE_UNIFORMS, &active_uniforms_nr);
+  for (int i = 0; i < active_uniforms_nr; i++) {
+    Uniform *uniform = malloc(sizeof(Uniform));
+    GLsizei  length;
+    glGetActiveUniform(shader->program, i, sizeof(uniform->uniform_name), &length, &uniform->size, &uniform->uniform_type, uniform->uniform_name);
+
+    if (memcmp("ATOM_", uniform->uniform_name, strlen("ATOM_")) == 0) {
+      uniform->type = UNIFORM_ATOM;
+      uniform->base_name = uniform->uniform_name + strlen("ATOM_");
+      glUniform1i(i, XInternAtom(display, uniform->base_name, False));
+    } else {
+      uniform->type = UNIFORM_PROPERTY;
+      uniform->base_name = uniform->uniform_name;
+    }
+    list_append(shader->uniforms, (void *) uniform);
+  }
+     
   return shader;
 }
 
@@ -161,6 +184,10 @@ void shader_free(Shader *shader) {
   XFree(shader->geometry_src);
   XFree(shader->vertex_src);
   XFree(shader->fragment_src);
+  for (size_t idx = 0; idx < shader->uniforms->count; idx++) {
+    free(shader->uniforms->entries[idx]);
+  }
+  list_destroy(shader->uniforms);
   free(shader);
 }
 
@@ -190,3 +217,33 @@ void shader_print(Shader *shader) {
           shader->fragment_src);
 }
 
+void shader_reset_uniforms(Shader *shader) {
+  const float f = nanf("initial");
+  const float fm[16] = {f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f};
+  for (size_t i = 0; i < shader->uniforms->count; i++) {
+    Uniform *uniform = (Uniform *) shader->uniforms->entries[i];
+    if (uniform->type != UNIFORM_PROPERTY) continue;
+    
+    gl_check_error("reset_uniforms1");
+    switch(uniform->uniform_type) {
+      case GL_FLOAT: glUniform1f(i, f); break;
+      case GL_FLOAT_VEC2: glUniform2f(i, f, f);  break;
+      case GL_FLOAT_VEC3: glUniform3f(i, f, f, f);  break;
+      case GL_FLOAT_VEC4: glUniform4f(i, f, f, f, f);  break;
+      case GL_INT: glUniform1i(i, 0); break;
+      case GL_INT_VEC2: glUniform2i(i, 0, 0); break;
+      case GL_INT_VEC3: glUniform3i(i, 0, 0, 0); break;
+      case GL_INT_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
+      case GL_BOOL: glUniform1i(i, 0); break;
+      case GL_BOOL_VEC2: glUniform2i(i, 0, 0); break;
+      case GL_BOOL_VEC3: glUniform3i(i, 0, 0, 0); break;
+      case GL_BOOL_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
+      case GL_FLOAT_MAT2: glUniformMatrix2fv(i, 1, False, fm); break;
+      case GL_FLOAT_MAT3: glUniformMatrix3fv(i, 1, False, fm); break;
+      case GL_FLOAT_MAT4: glUniformMatrix4fv(i, 1, False, fm); break;
+      case GL_SAMPLER_2D: glUniform1i(i, 0); break;
+      case GL_SAMPLER_CUBE: glUniform1i(i, 0); break;
+    }
+    gl_check_error(uniform->uniform_name);
+  }
+}

@@ -4,6 +4,19 @@
 #include "glapi.h"
 #include "list.h"
 
+typedef enum {
+  UNIFORM_ATOM,
+  UNIFORM_PROPERTY
+} UniformName;
+
+typedef struct {
+  UniformName type;
+  GLint size;
+  GLenum uniform_type;
+  char uniform_name[128];
+  char *base_name;
+} Uniform;
+
 typedef struct {
   Atom name;
   Atom geometry;
@@ -19,6 +32,9 @@ typedef struct {
   GLuint vertex_shader;
   GLuint fragment_shader;
 
+  List *uniforms; // List of Uniform (see above)
+
+ 
   GLint screen_attr;
   GLint size_attr;
  
