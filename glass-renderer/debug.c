@@ -6,7 +6,7 @@
 
 FILE *eventlog = NULL;
 
-int debug_enabled(const char *prefix, const char *file, const char *func, const char *entry) {
+int debug_enabled(int dfl, const char *prefix, const char *file, const char *func, const char *entry) {
   size_t prefix_len = strlen(prefix); 
   size_t file_len = strlen(file);
   size_t func_len = strlen(func);
@@ -42,11 +42,11 @@ int debug_enabled(const char *prefix, const char *file, const char *func, const 
     }
   }
 
-  return 0;
+  return dfl;
 }
 
-void debug_print(FILE *fd, const char *prefix, const char *file, const char *func, const char *entry, const char * format, ...) {
-  if (!debug_enabled(prefix, file, func, entry)) return;
+void debug_print(FILE *fd, int dfl, const char *prefix, const char *file, const char *func, const char *entry, const char * format, ...) {
+  if (!debug_enabled(dfl, prefix, file, func, entry)) return;
 
   size_t prefix_len = strlen(prefix);
   size_t file_len = strlen(file);

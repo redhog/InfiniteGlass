@@ -17,7 +17,7 @@ int checkShaderError(char *name, char *src, GLuint shader) {
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
-  DEBUG("shader", "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
+  ERROR("shader", "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
   gl_check_error(name);
   return 0;
 }

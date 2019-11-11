@@ -1,5 +1,5 @@
-#ifndef ERROR
-#define ERROR
+#ifndef ERROR_H
+#define ERROR_H
 
 #include "xapi.h"
 
