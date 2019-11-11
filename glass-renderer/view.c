@@ -64,6 +64,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
       rendering.item = item;
       rendering.texture_unit = 0;
       rendering.shader = item->type->get_shader(item);
+      if (!rendering.shader) continue;
       glUseProgram(rendering.shader->program);
       shader_reset_uniforms(rendering.shader);
       item->type->draw(&rendering);
