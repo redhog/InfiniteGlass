@@ -41,18 +41,22 @@ class GrabbedMode(mode.Mode):
         self.display.root.send(
             self.display.root, "IG_DEBUG",
             event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+        self.display.flush()
+                    
     def send_close(self, event):
         win = self.get_active_window()
         if win and win != self.display.root:
             InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
             win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
+            self.display.flush()
 
     def send_sleep(self, event):
         win = self.get_active_window()
         if win and win != self.display.root:
             InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
             win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
-
+            self.display.flush()
+            
     def zoom_1_1_1(self, event):
         win = self.get_active_window()
         if win and win != self.display.root:
