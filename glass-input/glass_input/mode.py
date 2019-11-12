@@ -149,6 +149,9 @@ class Mode(object):
             elif "inc" in action:
                 name = action['inc']
                 self.state[name] = self.state.get(name, 0) + 1
+            elif len(action.keys()) == 1 and hasattr(self, next(iter(action.keys()))):
+                name = next(iter(action.keys()))
+                getattr(self, name)(event, **action[name])
             else:
                 InfiniteGlass.DEBUG("error", "Unknown action parameters: %s" % (action,))
         elif isinstance(action, str) and hasattr(self, action):

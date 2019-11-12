@@ -62,7 +62,16 @@
     "pan": {"class": "glass_input.pan.PanMode", "keymap": {
         "KeyRelease": "pop",
         "ButtonRelease": "pop",
-        "Mod4Mask,KeyPress,!ShiftMask": "pan",
+        "Mod4Mask,KeyPress,XK_Left,!ShiftMask,!AutoRepeat": {"pan":{"x": -1, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Right,!ShiftMask,!AutoRepeat": {"pan":{"x": 1, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Up,!ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": 1}},
+        "Mod4Mask,KeyPress,XK_Down,!ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": -1}},
+        
+        "Mod4Mask,KeyPress,XK_Left,!ShiftMask,AutoRepeat": {"pan":{"x": -10, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Right,!ShiftMask,AutoRepeat": {"pan":{"x": 10, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Up,!ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": 10}},
+        "Mod4Mask,KeyPress,XK_Down,!ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": -10}},
+        
         "Mod4Mask,KeyPress,XK_Left,ShiftMask": "zoom_to_window_to_the_left",
         "Mod4Mask,KeyPress,XK_Right,ShiftMask": "zoom_to_window_to_the_right",
         "Mod4Mask,KeyPress,XK_Up,ShiftMask": "zoom_to_window_above",

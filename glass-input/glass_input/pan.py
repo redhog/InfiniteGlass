@@ -20,10 +20,14 @@ class PanMode(mode.Mode):
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
         
-    def pan(self, event):
-        self.x += event["XK_Left"] - event["XK_Right"];
-        self.y += event["XK_Up"] - event["XK_Down"];
-
+    def pan(self, event, x=None, y=None):
+        if x is None and y is None:
+            self.x += event["XK_Left"] - event["XK_Right"];
+            self.y += event["XK_Up"] - event["XK_Down"];
+        else:
+            self.x += x
+            self.y += y
+            
         space_orig = mode.view_to_space(self.orig_view, self.size, 0, 0)
         space = mode.view_to_space(self.orig_view, self.size, self.x, self.y)
 
