@@ -198,14 +198,14 @@ int main() {
     } else if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
         if (cookie->evtype == XI_RawMotion) {
-          //XIRawEvent *re = (XIRawEvent *) cookie->data;
+          XIRawEvent *re = (XIRawEvent *) cookie->data;
           Window       root_ret, child_ret;
           int          root_x, root_y;
           int          win_x, win_y;
           unsigned int mask;
           XQueryPointer(display, root,
                         &root_ret, &child_ret, &root_x, &root_y, &win_x, &win_y, &mask);
-
+          
           int winx, winy;
           Item *item;
 

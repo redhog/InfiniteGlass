@@ -75,7 +75,9 @@ void property_icon_free(Property *prop) {
 }
 void property_icon_to_gl(Property *prop, Rendering *rendering) {
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
- 
+
+  if (rendering->view->picking) return;
+  
   if (prop->program != rendering->shader->program) {
     prop->program = rendering->shader->program;
     data->icon_location = glGetUniformLocation(prop->program, data->icon_str);

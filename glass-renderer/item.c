@@ -64,14 +64,16 @@ void item_type_base_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
     Shader *shader = rendering->shader;
-    
-    texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
-    glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
-    glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
-    glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
-    glBindSampler(rendering->texture_unit, 0);
-    rendering->texture_unit++;
+    if (!rendering->view->picking) {
+      texture_from_pixmap(&item->window_texture, item->window_pixmap);
+
+      glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
+      glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
+      glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
+      glBindSampler(rendering->texture_unit, 0);
+      rendering->texture_unit++;
+    }
     
     properties_to_gl(rendering->item->properties, rendering);
     gl_check_error("item_draw1");

@@ -156,6 +156,8 @@ void property_svg_free(Property *prop) {
 
 void property_svg_to_gl(Property *prop, Rendering *rendering) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
+
+  if (rendering->view->picking) return;
   if (!data->rsvg) return;
 
   if (prop->program != rendering->shader->program) {
