@@ -28,9 +28,13 @@ class ItemPanMode(mode.Mode):
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
         return True
     
-    def pan(self, event):
-        self.x += event["XK_Right"] - event["XK_Left"]
-        self.y += event["XK_Down"] - event["XK_Up"]
+    def pan(self, event, x=None, y=None):
+        if x is None and y is None:
+            self.x += event["XK_Right"] - event["XK_Left"]
+            self.y += event["XK_Down"] - event["XK_Up"]
+        else:
+            self.x += x
+            self.y += y
 
         space_orig = mode.view_to_space(self.orig_view, self.size, 0, 0)
         space = mode.view_to_space(self.orig_view, self.size, self.x, self.y)
