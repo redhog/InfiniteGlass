@@ -173,6 +173,7 @@ class Mode(object):
         spacecoords = {layer: view_to_space(view, size, pointer.root_x, pointer.root_y)
                        for layer, (view, size) in views.items()}
         for child in self.display.root.query_tree().children:
+            if child.get_attributes().map_state != Xlib.X.IsViewable: continue
             coords = child.get("IG_COORDS", None)
             if coords is None: continue
             layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
