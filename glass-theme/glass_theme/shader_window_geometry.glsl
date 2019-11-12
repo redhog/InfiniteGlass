@@ -8,6 +8,7 @@ uniform ivec2 IG_SIZE;
 uniform vec4 screen; // x,y,w,h in space
 uniform ivec2 size;
 
+out vec2 window_coord_per_pixel;
 out vec2 window_coord;
 out float geometry_size;
 
@@ -27,10 +28,10 @@ void main() {
   int width = size[0];
   int height = size[1];
 
-  float margin_left = 1. / width;
-  float margin_right = 2. / width;
-  float margin_top = 3. / height;
-  float margin_bottom = 4. / height;
+  float margin_left = 6. * 2. / width;
+  float margin_right = 6. * 2. / width;
+  float margin_top = 6. * 2. / height;
+  float margin_bottom = 6. * 2. / height;
 
   mat4 space2screen = screen2glscreen * transpose(mat4(
     1./screen[2], 0., 0., -screen.x/screen[2],
@@ -55,6 +56,9 @@ void main() {
 
   float window_size = distance(space2screen * vec4(left, bottom, 0., 1.),
                          space2screen * vec4(right, top, 0., 1.));
+
+  window_coord_per_pixel = abs(  (space2windowcoord * screen2space * vec4(2./width, 2./height, 0., 0.)).xy
+                               - (space2windowcoord * screen2space * vec4(0., 0., 0., 0.)).xy);
 
   gl_Position = space2screen * vec4(left, bottom, 0., 1.) + vec4(-margin_left, -margin_bottom, 0., 0.);
   window_coord = (space2windowcoord * screen2space * gl_Position).xy;

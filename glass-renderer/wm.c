@@ -36,7 +36,7 @@ void draw() {
   draw_fps_start();
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDisable(GL_SCISSOR_TEST);
-  glClearColor(1.0, 1.0, 0.5, 1.0);
+  glClearColor(1.0, 1.0, 1., 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   for (size_t idx = 0; idx < views->count; idx++) {
     View *v = (View *) views->entries[idx];
