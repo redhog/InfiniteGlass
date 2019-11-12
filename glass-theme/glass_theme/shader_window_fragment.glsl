@@ -33,7 +33,7 @@ void main() {
     fragColor = vec4(window_coord.x, window_coord.y, window_id, 1.);
   } else {
     if (window_coord.x < 0. || window_coord.x > 1. || window_coord.y < 0. || window_coord.y > 1.) {
-      fragColor = vec4(0., 0., 1., 1.);
+      fragColor = vec4(1., 0., 0., 1.);
     } else {
       if (!isnan(IG_CONTENT_transform[0])) {
         mat4 transform_mat = transpose(mat4(

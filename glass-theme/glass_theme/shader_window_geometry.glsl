@@ -11,6 +11,11 @@ uniform ivec2 size;
 out vec2 window_coord;
 out float geometry_size;
 
+vec2 snap2pixel(vec2 xy) {
+  return vec2(floor(xy.x * size[0] / 2.) * 2. / size[0],
+              floor(xy.y * size[1] / 2.) * 2. / size[1]);
+}
+
 mat4 screen2glscreen = transpose(mat4(
   2., 0., 0., -1.,
   0., 2., 0., -1.,
@@ -19,14 +24,13 @@ mat4 screen2glscreen = transpose(mat4(
 ));
 
 void main() {
-  float margin_left = 0.1;
-  float margin_right = 0.1;
-  float margin_top = 0.1;
-  float margin_bottom = 0.1;
-  
-  float left, right, top, bottom, window_size;
   int width = size[0];
   int height = size[1];
+
+  float margin_left = 1. / width;
+  float margin_right = 2. / width;
+  float margin_top = 3. / height;
+  float margin_bottom = 4. / height;
 
   mat4 space2screen = screen2glscreen * transpose(mat4(
     1./screen[2], 0., 0., -screen.x/screen[2],
@@ -35,36 +39,40 @@ void main() {
     0., 0., 0., 1.
   ));
 
-  left = IG_COORDS[0] - margin_left * IG_COORDS[2];
-  top = IG_COORDS[1] + margin_top * IG_COORDS[3];
-  right = left + IG_COORDS[2] + (margin_left + margin_right) * IG_COORDS[2];
-  bottom = top - IG_COORDS[3] - (margin_top + margin_bottom)* IG_COORDS[3];
+  mat4 screen2space = inverse(space2screen);
 
-  left = floor(left * width / 2.) * 2. / width;
-  right = floor(right * width / 2.) * 2. / width;
-  bottom = floor(bottom * width / 2.) * 2. / width;
-  top = floor(top * width / 2.) * 2. / width;
+  float left = IG_COORDS[0];
+  float top = IG_COORDS[1];
+  float right = left + IG_COORDS[2];
+  float bottom = top - IG_COORDS[3];
 
-  window_size = distance(space2screen * vec4(left, bottom, 0., 1.),
+  mat4 space2windowcoord = transpose(mat4(
+     1/IG_COORDS[2], 0.,  0., -IG_COORDS[0]/IG_COORDS[2],
+     0., -1./IG_COORDS[3], 0., IG_COORDS[1]/IG_COORDS[3],
+     0., 0., 1., 0.,
+     0., 0., 0., 1.
+  ));
+
+  float window_size = distance(space2screen * vec4(left, bottom, 0., 1.),
                          space2screen * vec4(right, top, 0., 1.));
 
-  gl_Position = space2screen * vec4(left, bottom, 0., 1.);
-  window_coord = vec2(-margin_left, 1.+margin_bottom);
+  gl_Position = space2screen * vec4(left, bottom, 0., 1.) + vec4(-margin_left, -margin_bottom, 0., 0.);
+  window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
-  gl_Position = space2screen * vec4(left, top, 0., 1.);
-  window_coord = vec2(-margin_left, -margin_top);
+  gl_Position = space2screen * vec4(left, top, 0., 1.) + vec4(-margin_left, +margin_top, 0., 0.);
+  window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
-  gl_Position = space2screen * vec4(right, bottom, 0., 1.);
-  window_coord = vec2(1.+margin_right, 1.+margin_bottom);
+  gl_Position = space2screen * vec4(right, bottom, 0., 1.) + vec4(margin_right, -margin_bottom, 0., 0.);
+  window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
-  gl_Position = space2screen * vec4(right, top, 0., 1.);
-  window_coord = vec2(1.+margin_right, -margin_top);
+  gl_Position = space2screen * vec4(right, top, 0., 1.) + vec4(margin_right, margin_top, 0., 0.);
+  window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
