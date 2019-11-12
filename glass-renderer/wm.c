@@ -154,7 +154,7 @@ int main() {
       }
 
       if (changed) {
-        if (e.xproperty.window != root && item && e.xproperty.atom == IG_SIZE && item && item->layer == IG_LAYER_MENU) {
+        if (e.xproperty.window != root && item && e.xproperty.atom == IG_SIZE) {
           Atom type_return;
           int format_return;
           unsigned long nitems_return;
