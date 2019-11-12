@@ -8,7 +8,7 @@ cdef object smprops_to_dict(int numProps, SmProp **props):
     for idx in range(numProps):
         values = []
         for valueidx in range(props[idx].num_vals):
-            values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length).decode("utf-8"))
+            values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length-1).decode("utf-8"))
         propdict[bytes(props[idx].name).decode("utf-8")] = (bytes(props[idx].type).decode("utf-8"), values)
     return propdict
 
@@ -40,7 +40,7 @@ cdef void dict_to_smprops(object propsdict, int *numProps, SmProp ***props):
             
         prop.vals = <SmPropValue*> malloc(sizeof(SmPropValue) * len(value))
         for idx in range(len(value)):
-            prop.vals[idx].length = len(value[idx])
+            prop.vals[idx].length = len(value[idx]) + 1
             prop.vals[idx].value = <char*> value[idx]
         
 cdef void free_smprops(int numProps, SmProp **props):
