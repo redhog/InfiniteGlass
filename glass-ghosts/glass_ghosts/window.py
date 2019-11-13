@@ -36,7 +36,7 @@ class Window(object):
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
         def ClientMessage(win, event):
-            print("RECEIVED SLEEP", win, event, self.client)
+            InfiniteGlass.DEBUG("message", "RECEIVED SLEEP %s %s %s" % (win, event, self.client)); sys.stderr.flush()
             if self.client:
                 for conn in self.client.connections.values():
                     conn.sleep()
@@ -44,7 +44,7 @@ class Window(object):
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
-            print("RECEIVED CLOSE", win, event, self.client)
+            InfiniteGlass.DEBUG("message", "RECEIVED CLOSE %s %s %s" % (win, event, self.client)); sys.stderr.flush()
             if self.client:
                 if len(self.client.windows) <= 1:
                     for conn in self.client.connections.values():
