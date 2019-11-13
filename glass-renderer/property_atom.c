@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "xapi.h"
 
-void property_atom_init(PropertyTypeHandler *prop) { prop->type = XA_ATOM; }
+void property_atom_init(PropertyTypeHandler *prop) { prop->type = XA_ATOM; prop->name = AnyPropertyType; }
 void property_atom_load(Property *prop) {}
 void property_atom_free(Property *prop) {}
 void property_atom_to_gl(Property *prop, Rendering *rendering) {

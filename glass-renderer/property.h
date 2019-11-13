@@ -54,10 +54,11 @@ struct PropertyTypeHandlerT {
   PropertyToGl *to_gl;
   PropertyPrint *print;
   Atom type;
+  Atom name;
 };
 
 extern void property_type_register(PropertyTypeHandler *handler);
-extern PropertyTypeHandler *property_type_get(Atom type);
+extern PropertyTypeHandler *property_type_get(Atom type, Atom name);
 
 
 #endif

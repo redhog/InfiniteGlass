@@ -17,7 +17,7 @@ typedef struct {
   GLint icon_mask_enabled_location;
 } WmHintsPropertyData;
 
-void property_icon_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "WM_HINTS", False); }
+void property_icon_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "WM_HINTS", False); prop->name = AnyPropertyType; }
 void property_icon_load(Property *prop) {
   prop->data = malloc(sizeof(WmHintsPropertyData));
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;

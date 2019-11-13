@@ -40,7 +40,7 @@ Bool property_load(Property *prop, Window window) {
   if (old) XFree(old);
   if (!changed) return False;
   
-  PropertyTypeHandler *type = property_type_get(prop->type);
+  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if (type) type->load(prop);
   if (DEBUG_ENABLED("prop.changed")) {
     DEBUG("prop.changed", "");
@@ -51,7 +51,7 @@ Bool property_load(Property *prop, Window window) {
 }
 
 void property_free(Property *prop) {
-  PropertyTypeHandler *type = property_type_get(prop->type);
+  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if(type) type->free(prop);
   if (prop->name_str) XFree(prop->name_str);
   if (prop->values.bytes) XFree(prop->values.bytes);
@@ -59,12 +59,12 @@ void property_free(Property *prop) {
 }
 
 void property_to_gl(Property *prop, Rendering *rendering) {
-  PropertyTypeHandler *type = property_type_get(prop->type);
+  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if (type) type->to_gl(prop, rendering);
 }
 
 void property_print(Property *prop, FILE *fp) {
-  PropertyTypeHandler *type = property_type_get(prop->type);
+  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if (type) {
     type->print(prop, fp);
   } else {
@@ -147,13 +147,20 @@ void property_type_register(PropertyTypeHandler *handler) {
 }
 
 
-PropertyTypeHandler *property_type_get(Atom type) {
+PropertyTypeHandler *property_type_get(Atom type, Atom name) {
   if (!property_types) return NULL;
+  int best_level = -1;
+  PropertyTypeHandler *best_type_handler = NULL;
   for (size_t i = 0; i < property_types->count; i++) {
-    PropertyTypeHandler *property_type = property_types->entries[i];
-    if (property_type->type == type) {
-      return property_type;
+    PropertyTypeHandler *type_handler = property_types->entries[i];
+    if (   (type_handler->type == AnyPropertyType || type_handler->type == type)
+        && (type_handler->name == AnyPropertyType || type_handler->name == name)) {
+      int level = (  (type_handler->name != AnyPropertyType ? 2 : 0)
+                   + (type_handler->type != AnyPropertyType ? 1 : 0));
+      if (level > best_level) {
+        best_type_handler = type_handler;
+      }
     }
   }
-  return NULL;
+  return best_type_handler;
 }

@@ -4,7 +4,7 @@
 #include "debug.h"
 
 #define FL(value) *((float *) &value)
-void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; }
+void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; prop->name = AnyPropertyType; }
 void property_float_load(Property *prop) {
   prop->data = realloc(prop->data, sizeof(float) * prop->nitems);
   for (int i = 0; i < prop->nitems; i++) {
