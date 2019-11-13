@@ -50,9 +50,14 @@ class Shadow(object):
                     self.manager.changes = True
             if key != self.current_key and self.current_key is not None:
                 current_dbkey = "/".join(str(item) for item in self.current_key)
-                cur.execute("""
-                  update shadows set key=? where key=?
-                    """, (dbkey, current_dbkey))
+                try:
+                    cur.execute("""
+                      update shadows set key=? where key=?
+                        """, (dbkey, current_dbkey))
+                except Exception as e:
+                    InfiniteGlass.DEBUG("shadow.database", "Error updating key in db: %s\nkey=%s, dbkey=%s  =>  key=%s dbkey=%s\n" % (
+                        e, self.current_key, current_dbkey, key, dbkey))
+                    self.destroy()
                 self.manager.changes = True
 
         if key == self.current_key:
@@ -157,6 +162,7 @@ class Shadow(object):
             self.manager.display.eventhandlers.remove(self.WMDelete)
             self.manager.display.eventhandlers.remove(self.CloseMessage)
             self.manager.display.eventhandlers.remove(self.Expose)
+            self.window = None
 
     def destroy(self):
         self.deactivate()
