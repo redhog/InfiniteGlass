@@ -2,13 +2,21 @@
 
 exec > /tmp/glass.log 2>&1
 
-session_content() {
-    glass-input &
-    glass-theme &
-    glass-widgets &
-    glass-animator &
-    glass-renderer &
-    xterm
-}
+TMPFILE="$(tempfile)"
+FIFO="$TMPFILE.fifo"
 
-glass-ghosts | { read SESSION_MANAGER; export SESSION_MANAGER; session_content; } 2>&1 | tee ~/.glass-log.txt 
+mkfifo "$FIFO"
+
+glass-ghosts | { read x; echo $x > "$FIFO"; cat; } &
+
+export SESSION_MANAGER="$(cat $FIFO)"
+
+glass-input &
+glass-theme &
+glass-widgets &
+glass-animator &
+glass-renderer &
+
+xterm
+
+rm "$FIFO" "$TMPFILE"
