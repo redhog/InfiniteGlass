@@ -73,10 +73,13 @@ class Shadow(object):
         InfiniteGlass.DEBUG("shadow", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
         for key in self.manager.SET:
             if key in self.properties:
+                InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (key, self.properties[key])); sys.stderr.flush()
                 window[key] = self.properties[key]
                 
     def activate(self):
         InfiniteGlass.DEBUG("shadow", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        for name, value in self.properties.items():
+            InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (name, value)); sys.stderr.flush()
         self.window = self.manager.display.root.create_window(map=False)
         self.window["IG_GHOST"] = "IG_GHOST"
         
@@ -118,8 +121,10 @@ class Shadow(object):
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
+            if not name in self.manager.SHADOW_UPDATE: return
             try:
                 self.properties.update(glass_ghosts.helpers.expand_property(win, name))
+                InfiniteGlass.DEBUG("shadow.property", "%s=%s\n" % (name, self.properties[name])); sys.stderr.flush()
             except:
                 pass
             else:

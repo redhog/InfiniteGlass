@@ -18,11 +18,13 @@ class GhostManager(object):
                  display,
                  MATCH = ("WM_CLASS", "WM_NAME"),
                  SET = ("IG_SIZE", "IG_COORDS"),
+                 SHADOW_UPDATE = ("IG_COORDS",),
                  IGNORE=("WM_TRANSIENT_FOR", "IG_GHOST")):
         self.display = display
 
         self.MATCH = MATCH
         self.SET = SET
+        self.SHADOW_UPDATE = SHADOW_UPDATE
         self.IGNORE = IGNORE
 
         self.changes = False
