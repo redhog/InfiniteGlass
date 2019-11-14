@@ -19,7 +19,8 @@
 #include "property_int.h"
 #include "property_float.h"
 #include "property_svg.h"
-#include "property_icon.h"
+#include "property_wm_hints_icon.h"
+#include "property_net_wm_icon.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 
@@ -118,8 +119,9 @@ int main() {
   property_type_register(&property_int);
   property_type_register(&property_float);
   property_type_register(&property_svg);
-  property_type_register(&property_icon);
-  
+  property_type_register(&property_wm_hints_icon);
+  property_type_register(&property_net_wm_icon);
+
   items_get_from_toplevel_windows();
  
   gl_check_error("start1");
@@ -198,7 +200,7 @@ int main() {
     } else if (cookie->type == GenericEvent) {
       if (XGetEventData(display, cookie)) {
         if (cookie->evtype == XI_RawMotion) {
-          XIRawEvent *re = (XIRawEvent *) cookie->data;
+          // XIRawEvent *re = (XIRawEvent *) cookie->data;
           Window       root_ret, child_ret;
           int          root_x, root_y;
           int          win_x, win_y;

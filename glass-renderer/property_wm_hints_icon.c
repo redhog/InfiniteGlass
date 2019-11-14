@@ -1,4 +1,4 @@
-#include "property_icon.h"
+#include "property_wm_hints_icon.h"
 #include "rendering.h"
 #include "texture.h"
 #include "debug.h"
@@ -17,8 +17,8 @@ typedef struct {
   GLint icon_mask_enabled_location;
 } WmHintsPropertyData;
 
-void property_icon_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "WM_HINTS", False); prop->name = AnyPropertyType; }
-void property_icon_load(Property *prop) {
+void property_wm_hints_icon_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "WM_HINTS", False); prop->name = AnyPropertyType; }
+void property_wm_hints_icon_load(Property *prop) {
   prop->data = malloc(sizeof(WmHintsPropertyData));
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
 
@@ -63,7 +63,7 @@ void property_icon_load(Property *prop) {
   gl_check_error("icon_update_pixmap2");
 }
 
-void property_icon_free(Property *prop) {
+void property_wm_hints_icon_free(Property *prop) {
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
   free(data->icon_str);
   free(data->icon_mask_str);
@@ -73,7 +73,7 @@ void property_icon_free(Property *prop) {
   texture_destroy(&data->icon_mask_texture);
   free(prop->data);
 }
-void property_icon_to_gl(Property *prop, Rendering *rendering) {
+void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
 
   if (rendering->view->picking) return;
@@ -130,13 +130,8 @@ void property_icon_to_gl(Property *prop, Rendering *rendering) {
     rendering->texture_unit++;
   }
 }
-void property_icon_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%s=<icon>", prop->name_str);
-  for (int i = 0; i <prop->nitems; i++) {
-    if (i > 0) fprintf(fp, ",");
-    fprintf(fp, "%li", prop->values.dwords[i]);
-  }
-  fprintf(fp, "\n");
+void property_wm_hints_icon_print(Property *prop, FILE *fp) {
+  fprintf(fp, "%s=<WM_HINTS icon>\n", prop->name_str);
 }
-PropertyTypeHandler property_icon = {&property_icon_init, &property_icon_load, &property_icon_free, &property_icon_to_gl, &property_icon_print};
+PropertyTypeHandler property_wm_hints_icon = {&property_wm_hints_icon_init, &property_wm_hints_icon_load, &property_wm_hints_icon_free, &property_wm_hints_icon_to_gl, &property_wm_hints_icon_print};
 

@@ -1,5 +1,35 @@
 #include "texture.h"
 
+void texture_from_icon(Texture *texture, unsigned long *data) {
+  // Format used by _NET_WM_ICON
+  // This is an array of 32bit packed CARDINAL ARGB with high byte being A, low byte being B.
+  // The first two cardinals are width, height. Data is in rows, left to right and top to bottom.
+  // Note: As usual with window properties in Xlib, 32 bits are delivered to the application as
+  // an unsigned long, even on platforms where the size of unsigned long is 64 bits...
+ 
+  unsigned long width = data[0];
+  unsigned long height = data[1];
+  unsigned char *tmp = malloc(width * height * 4);
+  for (size_t i = 0; i < width * height; i++) {
+    unsigned char *color = (unsigned char *) &(data[2 + i]);
+    tmp[i * 4 + 0] = color[2]; //R
+    tmp[i * 4 + 1] = color[1]; //G 
+    tmp[i * 4 + 2] = color[0]; //B
+    tmp[i * 4 + 3] = color[3]; //A
+  }
+
+  if (!texture->texture_id) {
+    glGenTextures(1, &texture->texture_id);
+    gl_check_error("texture_from_icon");
+  }
+  glBindTexture(GL_TEXTURE_2D, texture->texture_id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  free(tmp);
+  gl_check_error("texture_from_icon");
+}
+
 void texture_from_cairo_surface(Texture *texture, cairo_surface_t *surface) {
   if (!texture->texture_id) {
     glGenTextures(1, &texture->texture_id);
