@@ -22,5 +22,6 @@ setuptools.setup(
             'glass-theme = glass_theme:main',
         ],
     },
+    package_data={'glass_theme': ['*.glsl']},
     include_package_data=True
 )

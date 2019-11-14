@@ -48,7 +48,6 @@ run: all
 install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
 	mkdir -p $(PREFIX)/share/glass
-	cp $(BUILD)/*.glsl $(PREFIX)/share/glass
 	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
 	cp glass.desktop /usr/share/xsessions/glass.desktop
 
