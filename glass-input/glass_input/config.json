@@ -24,16 +24,21 @@
         "Mod4Mask,KeyPress,!Mod1Mask,XK_Next": "zoom",
         "Mod4Mask,KeyPress,!Mod1Mask,XK_Prior": "zoom",
         "Mod4Mask,ButtonPress,2": "pan",
-        "Mod4Mask,ButtonPress,1,ControlMask": "pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Up": "pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Down": "pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Left": "pan",
-        "Mod4Mask,KeyPress,ControlMask,XK_Right": "pan",
-        "Mod4Mask,ButtonPress,1,!ControlMask": "item_pan",
-        "Mod4Mask,KeyPress,XK_Up,!ControlMask": "item_pan",
-        "Mod4Mask,KeyPress,XK_Down,!ControlMask": "item_pan",
-        "Mod4Mask,KeyPress,XK_Left,!ControlMask": "item_pan",
-        "Mod4Mask,KeyPress,XK_Right,!ControlMask": "item_pan"
+        "Mod4Mask,ButtonPress,1,ControlMask,!ShiftMask": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Up,!ShiftMask": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Down,!ShiftMask": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Left,!ShiftMask": "pan",
+        "Mod4Mask,KeyPress,ControlMask,XK_Right,!ShiftMask": "pan",
+        "Mod4Mask,ButtonPress,1,!ControlMask,!ShiftMask": "item_pan",
+        "Mod4Mask,KeyPress,XK_Up,!ControlMask,!ShiftMask": "item_pan",
+        "Mod4Mask,KeyPress,XK_Down,!ControlMask,!ShiftMask": "item_pan",
+        "Mod4Mask,KeyPress,XK_Left,!ControlMask,!ShiftMask": "item_pan",
+        "Mod4Mask,KeyPress,XK_Right,!ControlMask,!ShiftMask": "item_pan",
+        "Mod4Mask,ButtonPress,1,ShiftMask": "item_resize",
+        "Mod4Mask,KeyPress,XK_Up,ShiftMask": "item_resize",
+        "Mod4Mask,KeyPress,XK_Down,ShiftMask": "item_resize",
+        "Mod4Mask,KeyPress,XK_Left,ShiftMask": "item_resize",
+        "Mod4Mask,KeyPress,XK_Right,ShiftMask": "item_resize"
     }},
     "zoom": {"class": "glass_input.zoom.ZoomMode", "keymap": {
         "KeyRelease,!AutoRepeat": "pop",
@@ -105,6 +110,22 @@
         "Mod4Mask,KeyPress,XK_Down,AutoRepeat": {"pan":{"x": 0, "y": 10}},
         
         "Mod4Mask,Button1Mask,MotionNotify": "pan_mouse"
+    }},
+    "item_resize": {"class": "glass_input.item_resize.ItemResizeMode", "keymap": {
+        "KeyRelease": "pop",
+        "ButtonRelease": "pop",
+
+        "Mod4Mask,KeyPress,XK_Left,!AutoRepeat": {"resize":{"x": -1, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Right,!AutoRepeat": {"resize":{"x": 1, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Up,!AutoRepeat": {"resize":{"x": 0, "y": -1}},
+        "Mod4Mask,KeyPress,XK_Down,!AutoRepeat": {"resize":{"x": 0, "y": 1}},
+        
+        "Mod4Mask,KeyPress,XK_Left,AutoRepeat": {"resize":{"x": -10, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Right,AutoRepeat": {"resize":{"x": 10, "y": 0}},
+        "Mod4Mask,KeyPress,XK_Up,AutoRepeat": {"resize":{"x": 0, "y": -10}},
+        "Mod4Mask,KeyPress,XK_Down,AutoRepeat": {"resize":{"x": 0, "y": 10}},
+        
+        "Mod4Mask,Button1Mask,MotionNotify": "resize_mouse"
     }},
     "rofi": {"shell": "rofi -show drun -font 'DejaVu Sans 18' -show-icons &"}
 }
