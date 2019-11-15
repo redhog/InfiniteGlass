@@ -1,5 +1,5 @@
 event_mask_map = {
-    "MotionNotify": ("ButtonMotionMask","Button1MotionMask","Button2MotionMask","Button3MotionMask","Button4MotionMask","Button5MotionMask"),
+    "MotionNotify": ("ButtonMotionMask", "Button1MotionMask", "Button2MotionMask", "Button3MotionMask", "Button4MotionMask", "Button5MotionMask", "PointerMotionMask"),
     "ButtonPress": "ButtonPressMask",
     "ButtonRelease": "ButtonReleaseMask",
     "ColormapNotify": "ColormapChangeMask",
@@ -12,7 +12,6 @@ event_mask_map = {
     "KeymapNotify": "KeymapStateMask",
     "KeyPress": "KeyPressMask",
     "KeyRelease": "KeyReleaseMask",
-    "MotionNotify": "PointerMotionMask",
     "PropertyNotify": "PropertyChangeMask",
     "CirculateNotify": ("StructureNotifyMask", "SubstructureNotifyMask"),
     "ConfigureNotify": ("StructureNotifyMask", "SubstructureNotifyMask"),

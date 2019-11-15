@@ -17,12 +17,12 @@ def find_client_window(win):
             pass
         else:
             return child
-    
+
     for child in tree.children:
         attrs = child.get_attributes()
         if attrs.win_class != Xlib.X.InputOutput or attrs.map_state != Xlib.X.IsViewable: continue
         client = find_client_window(child)
         if client is not None:
             return client
-        
-    return None    
+
+    return None

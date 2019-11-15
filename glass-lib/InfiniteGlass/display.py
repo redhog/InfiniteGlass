@@ -4,14 +4,8 @@ import Xlib.ext.ge
 import Xlib.xobject.drawable
 import Xlib.protocol.event
 import sys
-import struct
-import contextlib
-import importlib
-import array
 import traceback
 import select
-import time
-import math
 from . import mainloop
 from . import eventmask
 from . import valueencoding
@@ -41,11 +35,11 @@ Xlib.display.Display.__init__ = display_init
 
 def fetch_all_pending_events(self):
     while True:
-        r, w, e = select.select([self.display.socket],[],[],0)
+        r, w, e = select.select([self.display.socket], [], [], 0)
         if not r: return
         self.pending_events()
 Xlib.display.Display.fetch_all_pending_events = fetch_all_pending_events
-        
+
 orig_next_event = Xlib.display.Display.next_event
 def next_event(self):
     event = orig_next_event(self)
@@ -89,7 +83,7 @@ def display_on_event(self, event=None, mask=None, **kw):
             if isinstance(e, tuple): e = e[0]
         if hasattr(Xlib.X, e):
             e = getattr(Xlib.X, e)
-        elif hasattr(Xlib.ext.ge, e): 
+        elif hasattr(Xlib.ext.ge, e):
             e = getattr(Xlib.ext.ge, e)
         else:
             raise Exception("Unknown event type specified in on(): %s" % e)
@@ -137,7 +131,8 @@ Xlib.display.Display.keycode = display_keycode
 @property
 def display_mask_to_keysym(self):
     return {name: [keymap.symkeys[self.keycode_to_keysym(keycode, 0)]
-                                for keycode in mapping if keycode != 0 and self.keycode_to_keysym(keycode, 0) != 0]
+                   for keycode in mapping
+                   if keycode != 0 and self.keycode_to_keysym(keycode, 0) != 0]
             for name, mapping in zip(("ShiftMask", "LockMask", "ControlMask", "Mod1Mask", "Mod2Mask", "Mod3Mask", "Mod4Mask", "Mod5Mask"),
                                     self.get_modifier_mapping())}
 Xlib.display.Display.mask_to_keysym = display_mask_to_keysym

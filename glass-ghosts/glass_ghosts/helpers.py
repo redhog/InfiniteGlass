@@ -5,7 +5,7 @@ def expand_property(window, name):
             res["SM_CLIENT_ID"] = res["WM_CLIENT_LEADER"]["SM_CLIENT_ID"]
         except:
             pass
-    return res    
+    return res
 
 def tuplify(value):
     if isinstance(value, list):

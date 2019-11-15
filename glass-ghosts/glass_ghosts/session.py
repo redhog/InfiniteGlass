@@ -2,8 +2,6 @@ import InfiniteGlass
 import pysmlib.server
 import pysmlib.ice
 import pysmlib.iceauth
-import select
-import uuid
 import glass_ghosts.client
 import sys
 
@@ -12,14 +10,14 @@ class Server(pysmlib.server.Server):
         self.display = display
         self.manager = manager
         pysmlib.server.Server.__init__(self)
-        
+
         self.listeners = self.IceListenForConnections()
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
         def accepter(listener):
             InfiniteGlass.DEBUG("session", "LISTENING TO %s @ %s\n" % (listener, listener.IceGetListenConnectionNumber()))
             self.display.mainloop.add(listener.IceGetListenConnectionNumber(), lambda fd: self.accept_connection(listener))
-            
+
         for listener in self.listeners:
             accepter(listener)
 
@@ -33,8 +31,8 @@ class Server(pysmlib.server.Server):
             except Exception as e:
                 print(e)
                 self.display.mainloop.remove(conn.IceConnectionNumber())
-        self.display.mainloop.add(conn.IceConnectionNumber(), process) #lambda fd: conn.IceProcessMessages())
-             
+        self.display.mainloop.add(conn.IceConnectionNumber(), process) # lambda fd: conn.IceProcessMessages())
+
     class Connection(pysmlib.server.PySmsConn):
         def __init__(self, *arg, **kw):
             self.client = None
@@ -44,7 +42,7 @@ class Server(pysmlib.server.Server):
             self.ice_conn.io_error_handler = self.io_error_handler
             self.fd = self.ice_conn.IceConnectionNumber()
             self.do_sleep = False
-            
+
         def error_handler(self, swap, offendingMinorOpcode, offendingSequence, errorClass, severity):
             InfiniteGlass.DEBUG("error", "Error: %s: swap=%s, offendingMinorOpcode=%s, offendingSequence=%s, errorClass=%s, severity=%s)\n" %
                                 (self, swap, offendingMinorOpcode, offendingSequence, errorClass, severity))
@@ -57,7 +55,7 @@ class Server(pysmlib.server.Server):
         def sleep(self):
             self.do_sleep = True
             self.SmsSaveYourself(pysmlib.server.SmSaveBoth, False, pysmlib.server.SmInteractStyleAny, False)
-            
+
         def register_client(self, previous_id):
             InfiniteGlass.DEBUG("session", "register_client client_id=%s\n" % (previous_id,))
             if previous_id is not None and previous_id in self.manager.manager.clients:
@@ -65,7 +63,7 @@ class Server(pysmlib.server.Server):
             else:
                 InfiniteGlass.DEBUG("session", "REGISTERING %s\n" % previous_id)
                 client = glass_ghosts.client.Client(self.manager.manager, previous_id)
-                self.manager.manager.clients[client.client_id] = client            
+                self.manager.manager.clients[client.client_id] = client
             self.client = client
             self.client.add_connection(self)
             InfiniteGlass.DEBUG("session", "REGISTER DONE fd=%s client_id=%s\n" % (self.fd, client.client_id))
@@ -92,7 +90,7 @@ class Server(pysmlib.server.Server):
 
             if self.do_sleep:
                 self.SmsDie()
-            
+
             sys.stderr.flush()
 
         def close_connection(self, *arg, **kw):
@@ -118,4 +116,3 @@ class Server(pysmlib.server.Server):
     def listen_address(self):
         return ",".join(listener.IceGetListenConnectionString().decode("utf-8")
                         for listener in self.listeners)
-    

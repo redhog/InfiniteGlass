@@ -1,21 +1,12 @@
-import InfiniteGlass, Xlib.X
-import struct
-import array
-import pkg_resources
-import sqlite3
+import InfiniteGlass
 import os.path
 import json
-import array
-import base64
 import uuid
-import glass_ghosts.shadow
-import glass_ghosts.helpers
-import sys
 
 class NoValue(object): pass
 
 class Client(object):
-    def __init__(self, manager, client_id = None, properties = None):
+    def __init__(self, manager, client_id=None, properties=None):
         self.manager = manager
         self.client_id = client_id or uuid.uuid4().hex.encode("ascii")
         self._properties = {}
@@ -29,13 +20,13 @@ class Client(object):
 
     def remove_window(self, window):
         self.windows.pop(window.id)
-        
+
     def add_connection(self, conn):
         self.connections[conn.fd] = conn
 
     def remove_connection(self, conn):
         self.connections.pop(conn.fd)
-        
+
     def __getitem__(self, name):
         return self.properties[name]
     def __setitem__(self, name, value):
@@ -50,7 +41,7 @@ class Client(object):
 
     def updatedb(self):
         if self.manager.restoring_clients: return
-        
+
         cur = self.manager.dbconn.cursor()
         for name, value in self.properties.items():
             if self._properties.get(name, NoValue) != value:

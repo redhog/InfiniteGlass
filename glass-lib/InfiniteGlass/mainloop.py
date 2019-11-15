@@ -8,8 +8,8 @@ class MainLoop(object):
     def __init__(self):
         self.handlers = {}
         self.timeouts = {}
-        
-    def add(self, fd, handler = None):
+
+    def add(self, fd, handler=None):
         if handler is None:
             def wrapper(handler):
                 self.add(fd, handler)
@@ -17,7 +17,7 @@ class MainLoop(object):
         self.handlers[fd] = handler
         return fd
 
-    def add_timeout(self, timestamp, handler = None):
+    def add_timeout(self, timestamp, handler=None):
         if handler is None:
             def wrapper(handler):
                 self.add_timeout(timestamp, handler)
@@ -25,7 +25,7 @@ class MainLoop(object):
         self.timeouts[timestamp] = handler
         return timestamp
 
-    def add_interval(self, interval, handler = None):
+    def add_interval(self, interval, handler=None):
         start = time.time()
         if handler is None:
             def wrapper(handler):
@@ -44,7 +44,7 @@ class MainLoop(object):
     def remove(self, fd):
         if fd not in self.handlers: return
         del self.handlers[fd]
-        
+
     def do(self):
         keys = self.handlers.keys()
         rlist, wlist, xlist = select.select(keys, [], [], 0.01)

@@ -1,17 +1,9 @@
-import InfiniteGlass
 import Xlib.X
 import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
 import Xlib.ext.xinput
-import numpy
-import os.path
-import sys
-import pkg_resources
-import json
-import math
-import datetime
 from . import mode
-        
+
 class BaseMode(mode.Mode):
     def __init__(self, **kw):
         mode.Mode.__init__(self, **kw)
@@ -21,7 +13,7 @@ class BaseMode(mode.Mode):
             self.display.root.grab_button(
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
-                Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)           
+                Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
 
     def focus_follows_mouse(self, event):

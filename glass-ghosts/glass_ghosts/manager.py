@@ -1,24 +1,20 @@
-import InfiniteGlass, Xlib.X
-import struct
+import InfiniteGlass
 import array
-import pkg_resources
 import sqlite3
 import os.path
 import json
-import array
 import base64
 import glass_ghosts.shadow
 import glass_ghosts.window
 import glass_ghosts.rootwindow
 import glass_ghosts.session
-import sys
 
 class GhostManager(object):
     def __init__(self,
                  display,
-                 MATCH = ("WM_CLASS", "WM_NAME"),
-                 SET = ("IG_SIZE", "IG_COORDS"),
-                 SHADOW_UPDATE = ("IG_COORDS",),
+                 MATCH=("WM_CLASS", "WM_NAME"),
+                 SET=("IG_SIZE", "IG_COORDS"),
+                 SHADOW_UPDATE=("IG_COORDS",),
                  IGNORE=("WM_TRANSIENT_FOR", "IG_GHOST")):
         self.display = display
 
@@ -31,7 +27,7 @@ class GhostManager(object):
         self.windows = {}
         self.shadows = {}
         self.clients = {}
-        
+
         self.dbdirpath = os.path.expanduser("~/.config/glass")
         if not os.path.exists(self.dbdirpath):
             os.makedirs(self.dbdirpath)
@@ -47,7 +43,7 @@ class GhostManager(object):
 
         self.restore_shadows()
         self.restore_clients()
-        
+
         display.mainloop.add_interval(0.5)(self.save_shadows)
 
         InfiniteGlass.DEBUG("init", "Ghosts handler started\n")
@@ -57,7 +53,7 @@ class GhostManager(object):
             InfiniteGlass.DEBUG("conmmit", "Committing...\n")
             self.dbconn.commit()
             self.changes = False
-    
+
     def restore_shadows(self):
         self.restoring_shadows = True
         cur = self.dbconn.cursor()

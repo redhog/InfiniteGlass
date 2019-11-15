@@ -2,15 +2,7 @@ import Xlib.display
 import Xlib.X
 import Xlib.xobject.drawable
 import Xlib.protocol.event
-import sys
 import struct
-import contextlib
-import importlib
-import array
-import traceback
-import select
-import time
-import math
 from . import eventmask
 from . import valueencoding
 from . import framing
@@ -64,7 +56,7 @@ def window_on_event(self, event=None, mask=None, **kw):
             e = fn.__name__
         if m is None:
             m = eventmask.event_mask_map[e]
-        self.change_attributes(event_mask = self.get_attributes().your_event_mask | getattr(Xlib.X, m))
+        self.change_attributes(event_mask=self.get_attributes().your_event_mask | getattr(Xlib.X, m))
         @self.display.real_display.on(event=e, mask=m, **kw)
         def handler(display, event):
             win = event.window
@@ -88,7 +80,7 @@ def window_require(self, prop):
             pass
         else:
             self.display.real_display.eventhandlers.remove(PropertyNotify)
-            fn(self, value)            
+            fn(self, value)
     return wrapper
 Xlib.xobject.drawable.Window.require = window_require
 
@@ -97,7 +89,7 @@ def create_window(self, x=0, y=0, width=100, height=100, border_width=0, depth=X
     res = _old_create_window(self, x, y, width, height, border_width, depth, *arg, **kw)
     if map:
         res.map()
-    return res    
+    return res
 Xlib.xobject.drawable.Window.create_window = create_window
 
 def window_send(self, window, client_type, *arg, **kw):
@@ -108,9 +100,9 @@ def window_send(self, window, client_type, *arg, **kw):
     data = b''.join(item[1] for item in arg)
     data = data + b'\0' * (20 - len(data))
     event = Xlib.protocol.event.ClientMessage(
-        window = window,
-        client_type = self.display.get_atom(client_type),
-        data = (fmt, data))
+        window=window,
+        client_type=self.display.get_atom(client_type),
+        data=(fmt, data))
     self.send_event(event, **kw)
 Xlib.xobject.drawable.Window.send = window_send
 

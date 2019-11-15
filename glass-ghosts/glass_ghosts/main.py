@@ -3,7 +3,7 @@ import glass_ghosts.manager
 import glass_ghosts.session
 import sys
 import traceback
-        
+
 def main2():
     try:
         with InfiniteGlass.Display() as display:
@@ -15,7 +15,7 @@ def main2():
         print(e)
         traceback.print_exc()
     print("END")
-        
+
 def main():
     import cProfile
     cProfile.runctx('main2()', globals(), locals(), "prof.prof")

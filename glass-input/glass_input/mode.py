@@ -5,10 +5,6 @@ import Xlib.keysymdef.miscellany
 import Xlib.ext.xinput
 import numpy
 import os.path
-import sys
-import pkg_resources
-import json
-import math
 import datetime
 import importlib
 import traceback
@@ -45,7 +41,7 @@ def pop(display):
 
 def handle_event(display, event):
     InfiniteGlass.DEBUG("event", "HANDLE %s\n" % event)
-    for i in range(len(display.input_stack)-1, -1, -1):
+    for i in range(len(display.input_stack) - 1, -1, -1):
         mode = display.input_stack[i]
         if mode.handle(event):
             InfiniteGlass.DEBUG("event", "        BY %s %s\n" % (i, mode))
@@ -55,10 +51,10 @@ def handle_event(display, event):
 
 def view_to_space(screen, size, screenx, screeny):
     screeny = screeny - size[1] # FIXME: Merge into matrix...
-    screen2space = numpy.array(((screen[2]/size[0],0,0,screen[0]),
-                                (0,-screen[3]/size[1],0,screen[1]),
-                                (0,0,1,0),
-                                (0,0,0,1)))
+    screen2space = numpy.array(((screen[2] / size[0], 0, 0, screen[0]),
+                                (0, -screen[3] / size[1], 0, screen[1]),
+                                (0, 0, 1, 0),
+                                (0, 0, 0, 1)))
     space = numpy.array((screenx, screeny, 0., 1.))
     out = screen2space.dot(space)
     return out[:2]
@@ -75,7 +71,7 @@ class Mode(object):
     def enter(self):
         self.state['start'] = datetime.datetime.now()
         return True
-    
+
     def exit(self):
         pass
 
@@ -103,11 +99,12 @@ class Mode(object):
                 statefilters.append((name, operator.lt, float(value)))
             else:
                 filters.append(item)
+        now = datetime.datetime.now()
         for name, op, value in statefilters:
             cvalue = self.state.get(name, 0)
             if isinstance(cvalue, datetime.datetime):
                 cvalue = (now - cvalue).total_seconds()
-            #print("%s %s %s == %s" % (cvalue, op, value, op(cvalue, value)))
+            # print("%s %s %s == %s" % (cvalue, op, value, op(cvalue, value)))
             if not op(cvalue, value):
                 return None
         return filters
@@ -115,7 +112,6 @@ class Mode(object):
     def handle(self, event, keymap=None):
         if keymap is None:
             keymap = self.keymap
-        now = datetime.datetime.now()
         for eventfilter, action in keymap.items():
             filters = self.handle_state_filter(eventfilter.split(","))
             if filters is None or filters and not event[filters]:
@@ -137,7 +133,7 @@ class Mode(object):
                 if push_config(self.display, action, first_event=event, last_event=event):
                     handle_event(self.display, event)
             elif "keymap" in action:
-                self.handle(event, keymap = action["keymap"])
+                self.handle(event, keymap=action["keymap"])
             elif "shell" in action:
                 os.system(action["shell"])
             elif "timer" in action:
@@ -159,11 +155,11 @@ class Mode(object):
         elif isinstance(action, str) and action in config:
             self.action(eventfilter, config[action], event)
         else:
-            InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action)) 
-    
+            InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action))
+
     def pop(self, event):
         pop(self.display)
-    
+
     def get_active_window(self):
         pointer = self.display.root.query_pointer()
 
@@ -203,7 +199,7 @@ class Mode(object):
         for child in self.display.root.query_tree().children:
             if child.get_attributes().map_state != Xlib.X.IsViewable:
                 continue
-            
+
             child = child.find_client_window()
             if not child: continue
             coords = child["IG_COORDS"]
@@ -218,6 +214,5 @@ class Mode(object):
                 and coords[1] - marginy <= view[1] + view[3]):
                 visible.append((child, coords))
             else:
-                invisible.append((child, coords))                
+                invisible.append((child, coords))
         return visible, invisible
-        

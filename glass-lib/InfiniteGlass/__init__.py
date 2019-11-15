@@ -3,15 +3,6 @@ import Xlib.X
 import Xlib.ext.ge
 import Xlib.xobject.drawable
 import Xlib.protocol.event
-import sys
-import struct
-import contextlib
-import importlib
-import array
-import traceback
-import select
-import time
-import math
 from . import display
 from . import window
 from . import eventmask
@@ -107,8 +98,8 @@ def event_getitem(self, item):
 Xlib.protocol.rq.Event.__getitem__ = event_getitem
 
 def client_message_parse(self, *types):
-    display = self.window.display.real_display
+    disp = self.window.display.real_display
     format, data = self.data
-    return [unpack_value(display, t, value)
-            for t, value in zip(types, data)]    
+    return [unpack_value(disp, t, value)
+            for t, value in zip(types, data)]
 Xlib.protocol.event.ClientMessage.parse = client_message_parse

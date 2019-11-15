@@ -2,14 +2,14 @@ import Xlib.xobject.drawable
 import Xlib.X
 import struct
 import array
-from . import keymap 
+from . import keymap
 
 def parse_value(display, value):
     fmt = 32
     if isinstance(value, tuple):
         itemtype, items, fmt = parse_value(display, value[1])
         return display.get_atom(value[0]), items, fmt
-    
+
     if isinstance(value, (list, array.array)):
         items = value
     elif isinstance(value, str):
