@@ -18,18 +18,25 @@ void property_float_free(Property *prop) {
 
 void property_float_to_gl(Property *prop, Rendering *rendering) {
   float *values = (float *) prop->data;
-  if (prop->program != rendering->shader->program) {
-    prop->program = rendering->shader->program;
-    prop->location = glGetUniformLocation(prop->program, prop->name_str);
-    DEBUG("prop", "%ld.%s %s (float) [%d]\n", rendering->shader->program, prop->name_str, (prop->location != -1) ? "enabled" : "disabled", prop->nitems);
+
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
+   
+  if (prop_cache->program != cache->program) {
+    prop_cache->program = cache->program;
+    prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
+    strcpy(prop_cache->name_str, cache->prefix);
+    strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
+    prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
+    DEBUG("prop", "%ld.%s %s (float) [%d]\n", prop_cache->program, prop_cache->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
   }
-  if (prop->location == -1) return;
+  if (prop_cache->location == -1) return;
   switch (prop->nitems) {
-    case 1: glUniform1f(prop->location, values[0]); break;
-    case 2: glUniform2f(prop->location, values[0], values[1]); break;
-    case 3: glUniform3f(prop->location, values[0], values[1], values[2]); break;
+    case 1: glUniform1f(prop_cache->location, values[0]); break;
+    case 2: glUniform2f(prop_cache->location, values[0], values[1]); break;
+    case 3: glUniform3f(prop_cache->location, values[0], values[1], values[2]); break;
     case 4:
-      glUniform4f(prop->location, values[0], values[1], values[2], values[3]);
+      glUniform4f(prop_cache->location, values[0], values[1], values[2], values[3]);
       break;
   }
 }

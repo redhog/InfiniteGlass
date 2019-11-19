@@ -12,11 +12,16 @@ typedef struct PropertyStruct Property;
 struct ItemStruct;
 typedef struct ItemStruct Item;
 
+struct PropertiesStruct;
+typedef struct PropertiesStruct Properties;
+
 typedef struct {
  Item *item;
  View *view;
  Shader *shader;
- List *properties;
+ Properties *properties;
+ char *properties_prefix;
+ size_t program_cache_idx;
  GLuint texture_unit;
 } Rendering;
 

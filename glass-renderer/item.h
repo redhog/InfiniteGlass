@@ -50,7 +50,7 @@ struct ItemStruct {
   int y;
   Window window;
 
-  List *properties;
+  Properties *properties;
   Property *prop_shader;
   Property *prop_size;
   Property *prop_coords;

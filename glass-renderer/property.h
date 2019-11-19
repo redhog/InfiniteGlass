@@ -7,6 +7,28 @@
 #include "rendering.h"
 #include <stdio.h>
 
+#define PROGRAM_CACHE_SIZE 2
+
+struct ProgramCacheStruct;
+typedef struct ProgramCacheStruct ProgramCache;
+
+struct PropertiesStruct;
+typedef struct PropertiesStruct Properties;
+
+struct PropertyProgramCacheStruct;
+typedef struct PropertyProgramCacheStruct PropertyProgramCache;
+
+struct PropertyStruct;
+typedef struct PropertyStruct Property;
+
+
+
+struct PropertyProgramCacheStruct {
+  GLint program; 
+  char *name_str;
+  GLint location;
+  void *data;
+};
 struct PropertyStruct {
   Window window;
   Atom name;
@@ -19,24 +41,33 @@ struct PropertyStruct {
     unsigned short *words;
     unsigned long *dwords;
   } values;
-  GLint program;
-  GLint location; 
-  void *data;
+  PropertyProgramCache programs[PROGRAM_CACHE_SIZE];
+  char *data;
 };
-typedef struct PropertyStruct Property;
 
-extern Property *property_allocate(Atom name);
-extern Bool property_load(Property *prop, Window window);
+extern Property *property_allocate(Properties *properties, Atom name);
+extern Bool property_load(Property *prop);
 extern void property_free(Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_print(Property *prop, FILE *fp);
 
-extern List *properties_load(Window window);
-extern Bool properties_update(List *properties, Window window, Atom name);
-extern void properties_free(List *properties);
-extern void properties_to_gl(List *properties, Rendering *rendering);
-extern void properties_print(List *properties, FILE *fp);
-extern Property *properties_find(List *properties, Atom name);
+struct ProgramCacheStruct {
+  GLint program;
+  char *prefix;
+};
+struct PropertiesStruct {
+  Window window;
+  List *properties;
+  ProgramCache programs[PROGRAM_CACHE_SIZE];
+  size_t programs_pos;
+};
+
+extern Properties *properties_load(Window window);
+extern Bool properties_update(Properties *properties, Atom name);
+extern void properties_free(Properties *properties);
+extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
+extern void properties_print(Properties *properties, FILE *fp);
+extern Property *properties_find(Properties *properties, Atom name);
 
 struct PropertyTypeHandlerT;
 typedef struct PropertyTypeHandlerT PropertyTypeHandler;

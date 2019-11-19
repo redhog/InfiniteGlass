@@ -3,37 +3,39 @@
 #include "rendering.h"
 #include "debug.h"
 
-Property *property_allocate(Atom name) {
+Property *property_allocate(Properties *properties, Atom name) {
   Property *prop = malloc(sizeof(Property));
+  prop->window = properties->window;
   prop->name = name;
-  prop->program = -1;
-  prop->name_str = NULL;
+  prop->name_str = XGetAtomName(display, prop->name);
   prop->values.bytes = NULL;
+  for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
+    prop->programs[i].program = -1;
+    prop->programs[i].data = NULL;
+    prop->programs[i].name_str = NULL;
+    prop->programs[i].location = -1;
+  }
   prop->data = NULL;
   return prop;
 }
 
-Bool property_load(Property *prop, Window window) {
+Bool property_load(Property *prop) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
-
-  prop->window = window;
-  
-  if (!prop->name_str) prop->name_str = XGetAtomName(display, prop->name);
 
   unsigned char *old = prop->values.bytes;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
   prop->values.bytes = NULL;
 
-  XGetWindowProperty(display, window, prop->name, 0, 0, 0, AnyPropertyType,
+  XGetWindowProperty(display, prop->window, prop->name, 0, 0, 0, AnyPropertyType,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (prop->type == None) {
     if (old) { XFree(old); return True; }
     return False;
   }
-  XGetWindowProperty(display, window, prop->name, 0, bytes_after_return, 0, prop->type,
+  XGetWindowProperty(display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
 
@@ -52,7 +54,10 @@ Bool property_load(Property *prop, Window window) {
 
 void property_free(Property *prop) {
   PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
-  if(type) type->free(prop);
+  if (type) type->free(prop);
+  for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
+    if (prop->programs[i].name_str) free(prop->programs[i].name_str);
+  }
   if (prop->name_str) XFree(prop->name_str);
   if (prop->values.bytes) XFree(prop->values.bytes);
   free(prop);
@@ -74,61 +79,82 @@ void property_print(Property *prop, FILE *fp) {
   }
 }
 
-List *properties_load(Window window) {
-  List *prop_list = list_create();
+Properties *properties_load(Window window) {
+  Properties *properties = malloc(sizeof(Properties));
+  properties->window = window;
+  properties->programs_pos = 0; 
+  properties->properties = list_create();
   int nr_props;
   Atom *prop_names = XListProperties(display, window, &nr_props);
   for (int i = 0; i < nr_props; i++) {
-    Property *prop = property_allocate(prop_names[i]);
-    property_load(prop, window);
-    list_append(prop_list, (void *) prop);
+    Property *prop = property_allocate(properties, prop_names[i]);
+    property_load(prop);
+    list_append(properties->properties, (void *) prop);
   }
-  return prop_list;
+  XFree(prop_names);
+  return properties;
 }
 
-Bool properties_update(List *properties, Window window, Atom name) {
-  for (size_t i = 0; i < properties->count; i++) {
-    Property *prop = (Property *) properties->entries[i];
+Bool properties_update(Properties *properties, Atom name) {
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = (Property *) properties->properties->entries[i];
     if (prop->name == name) {
-      return property_load(prop, window);
+      return property_load(prop);
     }   
   }
-  Property *prop = property_allocate(name);
-  property_load(prop, window);
-  list_append(properties, (void *) prop);
+  Property *prop = property_allocate(properties, name);
+  property_load(prop);
+  list_append(properties->properties, (void *) prop);
   return True;
 }
 
-void properties_free(List *properties) {
-  for (size_t i = 0; i < properties->count; i++) {
-    Property *prop = (Property *) properties->entries[i];
+void properties_free(Properties *properties) {
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = (Property *) properties->properties->entries[i];
     property_free(prop);
   }
-  list_destroy(properties);
+  list_destroy(properties->properties);
+  free(properties);
 }
 
-void properties_to_gl(List *properties, Rendering *rendering) {
+int properties_get_program_cache_idx(Rendering *rendering) {
+  for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
+    if (rendering->properties->programs[i].program == rendering->shader->program) {
+      return i;
+    }
+  }
+  rendering->properties->programs_pos = (rendering->properties->programs_pos + 1) % PROGRAM_CACHE_SIZE;
+  return rendering->properties->programs_pos;
+}
+
+void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
+  rendering->properties = properties;
+  rendering->properties_prefix = prefix;
+  rendering->program_cache_idx = properties_get_program_cache_idx(rendering);
+  properties->programs[rendering->program_cache_idx].program = rendering->shader->program;
+  properties->programs[rendering->program_cache_idx].prefix = prefix;
+  
   gl_check_error("properties_to_gl");
-  for (size_t i = 0; i < properties->count; i++) {
-    Property *prop = (Property *) properties->entries[i];
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = (Property *) properties->properties->entries[i];
     property_to_gl(prop, rendering);
     gl_check_error(prop->name_str);
   }
 }
 
-void properties_print(List *properties, FILE *fp) {
+void properties_print(Properties *properties, FILE *fp) {
   fprintf(fp, "Properties:\n");
-  for (size_t i = 0; i < properties->count; i++) {
-    Property *prop = (Property *) properties->entries[i];
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = (Property *) properties->properties->entries[i];
     fprintf(fp, "  ");
     property_print(prop, fp);
   }
   fprintf(fp, "\n");
 }
 
-Property *properties_find(List *properties, Atom name) {
-  for (size_t idx = 0; idx < properties->count; idx++) {
-    Property *p = (Property *) properties->entries[idx];   
+Property *properties_find(Properties *properties, Atom name) {
+  for (size_t idx = 0; idx < properties->properties->count; idx++) {
+    Property *p = (Property *) properties->properties->entries[idx];   
     if (p->name == name) {
       return p;
     }

@@ -75,7 +75,7 @@ void item_type_base_draw(Rendering *rendering) {
       rendering->texture_unit++;
     }
     
-    properties_to_gl(rendering->item->properties, rendering);
+    properties_to_gl(rendering->item->properties, "", rendering);
     gl_check_error("item_draw1");
     
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
