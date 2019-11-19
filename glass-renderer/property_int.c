@@ -8,16 +8,6 @@ void property_int_load(Property *prop) {}
 void property_int_free(Property *prop) {}
 void property_int_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
-   
-  if (prop_cache->program != cache->program) {
-    prop_cache->program = cache->program;
-    prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
-    strcpy(prop_cache->name_str, cache->prefix);
-    strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
-    prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
-    DEBUG("prop", "%ld.%s %s (int) [%d]\n", prop_cache->program, prop_cache->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
-  }
   if (prop_cache->location == -1) return;
   switch (prop->nitems) {
     case 1: glUniform1i(prop_cache->location, prop->values.dwords[0]); break;
@@ -34,4 +24,10 @@ void property_int_print(Property *prop, FILE *fp) {
   }
   fprintf(fp, "\n");
 }
-PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl, &property_int_print};
+void property_int_load_program(Property *prop, Rendering *rendering) {
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+  DEBUG("prop", "%ld.%s %s (int) [%d]\n", prop_cache->program, prop_cache->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
+}
+void property_int_free_program(Property *prop, size_t index) {
+}
+PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl, &property_int_print, &property_int_load_program, &property_int_free_program};

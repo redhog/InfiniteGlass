@@ -9,15 +9,7 @@ void property_atom_load(Property *prop) {}
 void property_atom_free(Property *prop) {}
 void property_atom_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  if (prop_cache->program != cache->program) {
-    prop_cache->program = cache->program;
-    prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
-    strcpy(prop_cache->name_str, cache->prefix);
-    strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
-    prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
-    DEBUG("prop", "%ld.%s %s (atom) [%d]\n", rendering->shader->program, prop->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
-  }
-  if (prop->location == -1) return;
+  if (prop_cache->location == -1) return;
   switch (prop->nitems) {
     case 1: glUniform1i(prop_cache->location, prop->values.dwords[0]); break;
     case 2: glUniform2i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1]); break;
@@ -35,4 +27,10 @@ void property_atom_print(Property *prop, FILE *fp) {
   }
   fprintf(fp, "\n");
 }
-PropertyTypeHandler property_atom = {&property_atom_init, &property_atom_load, &property_atom_free, &property_atom_to_gl, &property_atom_print};
+void property_atom_load_program(Property *prop, Rendering *rendering) {
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+  DEBUG("prop", "%ld.%s %s (atom) [%d]\n", rendering->shader->program, prop->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
+}
+void property_atom_free_program(Property *prop, size_t index) {
+}
+PropertyTypeHandler property_atom = {&property_atom_init, &property_atom_load, &property_atom_free, &property_atom_to_gl, &property_atom_print, &property_atom_load_program, &property_atom_free_program};

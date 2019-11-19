@@ -32,10 +32,8 @@ typedef struct {
 } SvgPropertyProgramData;
 
 void property_svg_update_drawing(Property *prop, Rendering *rendering) {
-  PropertyProgramCache *prop_cache = (PropertyProgramCache *) &prop->programs[rendering->program_cache_idx];
- 
   View *view = rendering->view;
-  SvgPropertyData *data = (SvgPropertyData *) prop_cache->data;
+  SvgPropertyData *data = (SvgPropertyData *) prop->data;
 
   float x1, y1, x2, y2;
   int px1, py1, px2, py2;
@@ -126,10 +124,11 @@ void property_svg_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(dis
 void property_svg_load(Property *prop) {
   prop->data = malloc(sizeof(SvgPropertyData));
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
-
-  texture_initialize(&data->texture);
+  
   data->surface = NULL;
   data->cairo_ctx = NULL;
+  data->rsvg = NULL;
+  texture_initialize(&data->texture);
 
   GError *error = NULL;
   unsigned char *src = (unsigned char *) prop->values.bytes;
@@ -147,48 +146,17 @@ void property_svg_free(Property *prop) {
   if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
   if (data->surface) cairo_surface_destroy(data->surface);
   texture_destroy(&data->texture);
-  if (data->rsvg) g_object_unref(data->rsvg); 
-  for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
-    PropertyProgramCache *prop_cache = &prop->programs[i];
-    if (!prop_cache->data) continue;
-    SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
-    free(program_data->transform_str);
-    free(program_data);
-    prop_cache->data = NULL;
-  }
+  if (data->rsvg) g_object_unref(data->rsvg);
+  data->cairo_ctx = NULL;
+  data->surface = NULL;
+  data->rsvg = NULL;
 }
 
 void property_svg_to_gl(Property *prop, Rendering *rendering) {
   if (rendering->view->picking) return;
-
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  SvgPropertyProgramData *program_data;
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
-  
-  if (!prop_cache->data) {
-    prop_cache->data = malloc(sizeof(SvgPropertyData));
-    program_data = (SvgPropertyProgramData *) prop_cache->data;
- 
-    program_data->transform_str = malloc(strlen(prop_cache->name_str) + strlen("_transform") + 1);
-    strcpy(program_data->transform_str, prop_cache->name_str);
-    strcpy(program_data->transform_str + strlen(prop_cache->name_str), "_transform");
-
-    program_data->texture_location = glGetUniformLocation(prop_cache->program, prop_cache->name_str);
-    program_data->transform_location = glGetUniformLocation(prop_cache->program, program_data->transform_str);
-    char *status = NULL;
-    if (program_data->texture_location != -1 && program_data->transform_location != -1) {
-      status = "enabled";
-    } else if (program_data->transform_location != -1) {
-      status = "only transform enabled";
-    } else if (program_data->texture_location != -1) {
-      status = "only texture enabled";
-    } else {
-      status = "disabled";
-    }
-    DEBUG("prop", "%ld.%s %s (svg) [%d]\n",
-          rendering->shader->program, prop->name_str, status, prop->nitems);
-  }
-  program_data = (SvgPropertyProgramData *) prop_cache->data;
+  SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
   
   if (program_data->texture_location == -1 || program_data->transform_location == -1) return;
 
@@ -215,4 +183,37 @@ void property_svg_print(Property *prop, FILE *fp) {
 
   fprintf(fp, "\n");
 }
-PropertyTypeHandler property_svg = {&property_svg_init, &property_svg_load, &property_svg_free, &property_svg_to_gl, &property_svg_print};
+void property_svg_load_program(Property *prop, Rendering *rendering) {
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+
+  prop_cache->data = malloc(sizeof(SvgPropertyData));
+  SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
+
+  program_data->transform_str = malloc(strlen(prop_cache->name_str) + strlen("_transform") + 1);
+  strcpy(program_data->transform_str, prop_cache->name_str);
+  strcpy(program_data->transform_str + strlen(prop_cache->name_str), "_transform");
+
+  program_data->texture_location = glGetUniformLocation(prop_cache->program, prop_cache->name_str);
+  program_data->transform_location = glGetUniformLocation(prop_cache->program, program_data->transform_str);
+  char *status = NULL;
+  if (program_data->texture_location != -1 && program_data->transform_location != -1) {
+    status = "enabled";
+  } else if (program_data->transform_location != -1) {
+    status = "only transform enabled";
+  } else if (program_data->texture_location != -1) {
+    status = "only texture enabled";
+  } else {
+    status = "disabled";
+  }
+  DEBUG("prop", "%ld.%s %s (svg) [%d]\n",
+        rendering->shader->program, prop->name_str, status, prop->nitems);
+}
+void property_svg_free_program(Property *prop, size_t index) {
+  PropertyProgramCache *prop_cache = &prop->programs[index];
+  if (!prop_cache->data) return;
+  SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
+  free(program_data->transform_str);
+  free(program_data);
+  prop_cache->data = NULL;
+}
+PropertyTypeHandler property_svg = {&property_svg_init, &property_svg_load, &property_svg_free, &property_svg_to_gl, &property_svg_print, &property_svg_load_program, &property_svg_free_program};

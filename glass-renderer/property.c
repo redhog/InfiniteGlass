@@ -56,6 +56,7 @@ void property_free(Property *prop) {
   PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if (type) type->free(prop);
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
+    if (type) type->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
   }
   if (prop->name_str) XFree(prop->name_str);
@@ -64,8 +65,21 @@ void property_free(Property *prop) {
 }
 
 void property_to_gl(Property *prop, Rendering *rendering) {
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
   PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
-  if (type) type->to_gl(prop, rendering);
+  if (!type) return;
+  
+  if (prop_cache->program != cache->program) {
+    if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
+    prop_cache->program = cache->program;
+    prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
+    strcpy(prop_cache->name_str, cache->prefix);
+    strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
+    prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
+    type->load_program(prop, rendering);
+  }
+  type->to_gl(prop, rendering);
 }
 
 void property_print(Property *prop, FILE *fp) {
