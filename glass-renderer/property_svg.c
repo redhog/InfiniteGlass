@@ -8,7 +8,6 @@
 #include "debug.h"
 #include <librsvg/rsvg.h>
 
-
 typedef struct {
   int x;
   int y;
@@ -16,7 +15,7 @@ typedef struct {
   int height;
   int itemwidth;
   int itemheight;
- 
+
   RsvgHandle *rsvg;
   RsvgDimensionData dimension;
  
@@ -24,11 +23,13 @@ typedef struct {
   cairo_t *cairo_ctx;
  
   Texture texture;
+} SvgPropertyData;
 
+typedef struct { 
   char *transform_str;
   GLint transform_location;
   GLint texture_location;
-} SvgPropertyData;
+} SvgPropertyProgramData;
 
 void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   View *view = rendering->view;
@@ -123,16 +124,12 @@ void property_svg_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(dis
 void property_svg_load(Property *prop) {
   prop->data = malloc(sizeof(SvgPropertyData));
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
-
-  texture_initialize(&data->texture);
+  
   data->surface = NULL;
   data->cairo_ctx = NULL;
   data->rsvg = NULL;
+  texture_initialize(&data->texture);
 
-  data->transform_str = malloc(strlen(prop->name_str) + strlen("_transform") + 1);
-  strcpy(data->transform_str, prop->name_str);
-  strcpy(data->transform_str + strlen(prop->name_str), "_transform");
-  
   GError *error = NULL;
   unsigned char *src = (unsigned char *) prop->values.bytes;
   data->rsvg = rsvg_handle_new_from_data(src, strlen((char *) src), &error);
@@ -141,43 +138,27 @@ void property_svg_load(Property *prop) {
     fflush(stdout);
     return;
   }
-  rsvg_handle_get_dimensions(data->rsvg, &data->dimension);
+  rsvg_handle_get_dimensions(data->rsvg, &data->dimension);  
 }
 
 void property_svg_free(Property *prop) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
-  free(data->transform_str);
   if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
   if (data->surface) cairo_surface_destroy(data->surface);
   texture_destroy(&data->texture);
   if (data->rsvg) g_object_unref(data->rsvg);
-  free(prop->data);
+  data->cairo_ctx = NULL;
+  data->surface = NULL;
+  data->rsvg = NULL;
 }
 
 void property_svg_to_gl(Property *prop, Rendering *rendering) {
-  SvgPropertyData *data = (SvgPropertyData *) prop->data;
-
   if (rendering->view->picking) return;
-  if (!data->rsvg) return;
-
-  if (prop->program != rendering->shader->program) {
-    prop->program = rendering->shader->program;
-    data->texture_location = glGetUniformLocation(prop->program, prop->name_str);
-    data->transform_location = glGetUniformLocation(prop->program, data->transform_str);
-    char *status = NULL;
-    if (data->texture_location != -1 && data->transform_location != -1) {
-      status = "enabled";
-    } else if (data->transform_location != -1) {
-      status = "only transform enabled";
-    } else if (data->texture_location != -1) {
-      status = "only texture enabled";
-    } else {
-      status = "disabled";
-    }
-    DEBUG("prop", "%ld.%s %s (svg) [%d]\n",
-          rendering->shader->program, prop->name_str, status, prop->nitems);
-  }
-  if (data->texture_location == -1 || data->transform_location == -1) return;
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+  SvgPropertyData *data = (SvgPropertyData *) prop->data;
+  SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
+  
+  if (program_data->texture_location == -1 || program_data->transform_location == -1) return;
 
   property_svg_update_drawing(prop, rendering);
   
@@ -187,9 +168,9 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
                         (float) data->y / (float) data->itemheight,
                         (float) data->width / (float) data->itemwidth,
                         (float) data->height / (float) data->itemheight};
-  glUniform4fv(data->transform_location, 1, transform);
+  glUniform4fv(program_data->transform_location, 1, transform);
 
-  glUniform1i(data->texture_location, rendering->texture_unit);
+  glUniform1i(program_data->texture_location, rendering->texture_unit);
   glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
   glBindTexture(GL_TEXTURE_2D, data->texture.texture_id);
   glBindSampler(rendering->texture_unit, 0);
@@ -202,4 +183,37 @@ void property_svg_print(Property *prop, FILE *fp) {
 
   fprintf(fp, "\n");
 }
-PropertyTypeHandler property_svg = {&property_svg_init, &property_svg_load, &property_svg_free, &property_svg_to_gl, &property_svg_print};
+void property_svg_load_program(Property *prop, Rendering *rendering) {
+  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
+
+  prop_cache->data = malloc(sizeof(SvgPropertyData));
+  SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
+
+  program_data->transform_str = malloc(strlen(prop_cache->name_str) + strlen("_transform") + 1);
+  strcpy(program_data->transform_str, prop_cache->name_str);
+  strcpy(program_data->transform_str + strlen(prop_cache->name_str), "_transform");
+
+  program_data->texture_location = glGetUniformLocation(prop_cache->program, prop_cache->name_str);
+  program_data->transform_location = glGetUniformLocation(prop_cache->program, program_data->transform_str);
+  char *status = NULL;
+  if (program_data->texture_location != -1 && program_data->transform_location != -1) {
+    status = "enabled";
+  } else if (program_data->transform_location != -1) {
+    status = "only transform enabled";
+  } else if (program_data->texture_location != -1) {
+    status = "only texture enabled";
+  } else {
+    status = "disabled";
+  }
+  DEBUG("prop", "%ld.%s %s (svg) [%d]\n",
+        rendering->shader->program, prop->name_str, status, prop->nitems);
+}
+void property_svg_free_program(Property *prop, size_t index) {
+  PropertyProgramCache *prop_cache = &prop->programs[index];
+  if (!prop_cache->data) return;
+  SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
+  free(program_data->transform_str);
+  free(program_data);
+  prop_cache->data = NULL;
+}
+PropertyTypeHandler property_svg = {&property_svg_init, &property_svg_load, &property_svg_free, &property_svg_to_gl, &property_svg_print, &property_svg_load_program, &property_svg_free_program};
