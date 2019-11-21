@@ -15,9 +15,78 @@ the root window.
 
 ## Shader programs
 
-Rendering is controlled by OpenGL shader programs. The programs must be specified on the root window, and can then be selected individually for each window. All window properties are available to the shader code as uniforms. Note: You must specify the right type as well as item count, e.g. "vec4 MY_PROP" corresponds to MY_PROP being of type XA_FLOAT and having 4 items.
+Rendering is controlled by OpenGL shader programs. The programs must
+be specified on the root window, and can then be selected individually
+for each window.
 
-Shader programs are responsible for drawing in two modes - normal visible mode, and a mode used for picking, where each pixel value corresponds to the window id and coordinates of that window.
+Shader programs are responsible for drawing in two modes - normal
+visible mode, and a mode used for picking, where each pixel value
+corresponds to the window id and coordinates of that window.
+
+### Shader property mapping
+All window properties are available to the shader code as uniforms.
+You must specify the right type as well as item count, e.g. "vec4
+MY_PROP" corresponds to MY_PROP being of type XA_FLOAT and having 4
+items. Windows and atoms are mapped to int. Uniforms for properties
+that are not set on a window, are set to 0 for integers, and NaN for
+floats.
+
+Root window properties are available with the prefix "root_", e.g.
+"int root__NET_ACTIVE_WINDOW" corresponds to the _NET_ACTIVE_WINDOW
+property on the root window.
+
+### Shader atom mapping
+Atom values are also available as integer uniforms, so that properties
+of type atom can be compared to them, their names prefixed by "atom_",
+e.g. "int atom__NET_WM_STATE_MODAL" for the atom _NET_WM_STATE_MODAL.
+
+### Complex property types
+For some more complex types, the mapping is less straight forward, and
+a single property is mapped to a set of uniforms, all with a single
+name prefix.
+
+All texture uniforms come with a corresponding int uniform with the
+suffix enabled that is set to 1 when the property is set on the
+window, and 0 otherwize.
+
+#### WM_HINTS icons
+
+WM_HINTS icons are mapped as two textures - one for the alpha channel,
+one for the color:
+
+    uniform sampler2D WM_HINTS_icon;
+    uniform sampler2D WM_HINTS_icon_mask;
+    uniform int WM_HINTS_icon_enabled;
+    uniform int WM_HINTS_icon_mask_enabled;
+
+#### _NET_WM_ICON icons
+
+_NET_WM_ICON icons are mapped to textures
+
+    uniform sampler2D _NET_WM_ICON;
+    uniform int _NET_WM_ICON_enabled;
+
+#### IG_SVG
+
+To be able to render the SVG at full resolution at any zoom level an
+SVG can not just be a texture - it would be too big when you zoom in
+enough. Instead, it comes as a texture and transformation vector to
+offset and scale the texture:
+
+    uniform sampler2D IG_CONTENT;
+    uniform vec4 IG_CONTENT_transform;
+
+To render the texture correctly, you should do something like this
+
+    mat4 transform_mat = transpose(mat4(
+      1./IG_CONTENT_transform[2], 0., 0., -IG_CONTENT_transform[0]/IG_CONTENT_transform[2],
+      0., 1./IG_CONTENT_transform[3], 0., -IG_CONTENT_transform[1]/IG_CONTENT_transform[3],
+      0., 0., 1., 0.,
+      0., 0., 0., 1.
+    ));
+    vec4 texture_coord = transform_mat * vec4(window_coord, 0, 1.);
+    fragColor = texture(IG_CONTENT, texture_coord.xy).rgba;
+
 
 ## Window properties
 
@@ -85,17 +154,33 @@ ClientMessage with the following properties:
 
 # Coordinate systems
 
-Windows have coordinates in the desktop (space) coordinate system, which is similar to the OpenGL one - x grows towards right, y upwards. Desktop coordinates have no natural units, as the desktop can be zoomed to any level, and there is nothing special about the 0 zoom level.
+Windows have coordinates in the desktop (space) coordinate system,
+which is similar to the OpenGL one - x grows towards right, y upwards.
+Desktop coordinates have no natural units, as the desktop can be
+zoomed to any level, and there is nothing special about the 0 zoom
+level.
 
-Window coordinates are for the top left corner of windows. Width and height are in the same units as x and y. Therefore, the coordinates occupied by a window ranges from ]x..x+w[,]y-h..y[.
+Window coordinates are for the top left corner of windows. Width and
+height are in the same units as x and y. Therefore, the coordinates
+occupied by a window ranges from ]x..x+w[,]y-h..y[.
 
 # About the FLOAT datatype
 
-The FLOAT datatype is encoded as a 32 bit float stored in a 32 bit item in properties and events according to the normal 32 bit item rules of XGetWindowProperty etc - that is, it is stored on the X server in network byte order, and converted to/from local byte order by Xlib. Note: On 64 bit platforms, XGetWindowProperty returns an array of long, which are 64, not 32 bits each. That means that the whole array CAN NOT be casted to an array of float, but each array item must be reinterpreted separately:
+The FLOAT datatype is encoded as a 32 bit float stored in a 32 bit
+item in properties and events according to the normal 32 bit item
+rules of XGetWindowProperty etc - that is, it is stored on the X
+server in network byte order, and converted to/from local byte order
+by Xlib. Note: On 64 bit platforms, XGetWindowProperty returns an
+array of long, which are 64, not 32 bits each. That means that the
+whole array CAN NOT be casted to an array of float, but each array
+item must be reinterpreted separately:
 
     float items[nr_items];
-    XGetWindowProperty(display, window, property_name_atom, 0, sizeof(float)*nr_items, 0, AnyPropertyType,
-                       &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+    XGetWindowProperty(
+      display, window, property_name_atom, 0,
+      sizeof(float)*nr_items, 0, AnyPropertyType,
+      &type_return, &format_return, &nitems_return,
+      &bytes_after_return, &prop_return);
     if (type_return != Success) return NULL;
     for (int i = 0; i < nr_items; i++) {
      items[i] = *(float *) (i + (long *) prop_return);
