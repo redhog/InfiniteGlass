@@ -119,6 +119,7 @@ Shader *shader_loadX(Atom name) {
   shader->size_attr = glGetUniformLocation(shader->program, "size");
   shader->picking_mode_attr = glGetUniformLocation(shader->program, "picking_mode");
   shader->window_id_attr = glGetUniformLocation(shader->program, "window_id");
+  shader->window_attr = glGetUniformLocation(shader->program, "window");
   shader->window_sampler_attr = glGetUniformLocation(shader->program, "window_sampler");
   gl_check_error("standard_properties2");
 

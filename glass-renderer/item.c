@@ -96,7 +96,8 @@ void item_type_base_draw(Rendering *rendering) {
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     
     glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
-
+    glUniform1i(shader->window_attr, rendering->item->window);
+    
     gl_check_error("item_draw2");
     
     glDrawArrays(GL_POINTS, 0, 1);
