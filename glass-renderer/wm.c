@@ -147,7 +147,7 @@ int main() {
       Item *item = (Item *) item_get_from_window(e.xproperty.window, False);
       
       if (e.xproperty.window != root && item) {
-        if (!properties_update(item->properties, item->window, e.xproperty.atom)) {
+        if (!properties_update(item->properties, e.xproperty.atom)) {
           changed = False;
         }
         if (e.xproperty.atom == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);

@@ -10,43 +10,52 @@
 #include "rendering.h"
 #include <X11/Xatom.h>
 
+List *items_all = NULL;
+size_t items_all_id = 0;
+Item *root_item = NULL;
 
 void item_type_base_constructor(Item *item, void *args) {
   Window window = *(Window *) args;
   
   item->window = window;
 
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return = NULL;
-  XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return == None) {
+  if (window == root) {
+    item->layer = XInternAtom(display, "IG_LAYER_ROOT", False);
+    item->is_mapped = False;
+  } else {
+    Atom type_return;
+    int format_return;
+    unsigned long nitems_return;
+    unsigned long bytes_after_return;
+    unsigned char *prop_return = NULL;
+    XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
+                       &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+    if (type_return == None) {
+      XWindowAttributes attr;
+      XGetWindowAttributes(display, window, &attr);
+      if (attr.override_redirect) {
+        item->layer = IG_LAYER_MENU;
+      } else {
+        item->layer = IG_LAYER_DESKTOP;
+      }
+      if (item->window != root)
+      XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &item->layer, 1);
+    } else {
+      item->layer = *(Atom *) prop_return;
+    }
+    XFree(prop_return);
+
+    long value = 1;
+    if (item->window != root) XChangeProperty(display, window, WM_STATE, XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
+
     XWindowAttributes attr;
     XGetWindowAttributes(display, window, &attr);
-    if (attr.override_redirect) {
-      item->layer = IG_LAYER_MENU;
-    } else {
-      item->layer = IG_LAYER_DESKTOP;
-    }
-    XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &item->layer, 1);
-  } else {
-    item->layer = *(Atom *) prop_return;
+    item->is_mapped = attr.map_state == IsViewable;
+    item_type_window_update_space_pos_from_window(item);
+
+    XSelectInput(display, window, PropertyChangeMask);
   }
-  XFree(prop_return);
-
-  long value = 1;
-  XChangeProperty(display, window, WM_STATE, XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
-  
-  XWindowAttributes attr;
-  XGetWindowAttributes(display, window, &attr);
-  item->is_mapped = attr.map_state == IsViewable;
-  item_type_window_update_space_pos_from_window(item);
-
-  XSelectInput(display, window, PropertyChangeMask);
-
+ 
   item->properties = properties_load(window);
   item->prop_shader = properties_find(item->properties, IG_SHADER);
   item->prop_size = properties_find(item->properties, IG_SIZE);
@@ -61,6 +70,7 @@ void item_type_base_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
 void item_type_base_draw(Rendering *rendering) {
+  if (rendering->item->window == root) return;
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
     Shader *shader = rendering->shader;
@@ -74,9 +84,12 @@ void item_type_base_draw(Rendering *rendering) {
       glBindSampler(rendering->texture_unit, 0);
       rendering->texture_unit++;
     }
+
     
-    properties_to_gl(rendering->item->properties, rendering);
-    gl_check_error("item_draw1");
+    properties_to_gl(root_item->properties, "root_", rendering);
+    gl_check_error("item_draw_root_properties");
+    properties_to_gl(rendering->item->properties, "", rendering);
+    gl_check_error("item_draw_properties");
     
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
@@ -92,6 +105,7 @@ void item_type_base_draw(Rendering *rendering) {
   }
 }
 void item_type_base_update(Item *item) {
+  if (item->window == root) return;
   if (!item->is_mapped) return;
   item->_is_mapped = item->is_mapped;
 
@@ -168,9 +182,6 @@ ItemType item_type_base = {
   &item_type_base_print
 };
 
-List *items_all = NULL;
-size_t items_all_id = 0;
-
 Bool item_isinstance(Item *item, ItemType *type) {
   ItemType *item_type;
   for (item_type = item->type; item_type && item_type != type; item_type = item_type->base);
@@ -212,6 +223,8 @@ void item_remove(Item *item) {
 
 void item_type_window_update_space_pos_from_window(Item *item) {
   XWindowAttributes attr;
+  if (item->window == root) return;
+  
   XGetWindowAttributes(display, item->window, &attr);
 
   item->x                   = attr.x;
@@ -282,8 +295,10 @@ Item *item_get_from_window(Window window, int create) {
 void items_get_from_toplevel_windows() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
+  root_item = item_get_from_window(root, True);
+  
   XGrabServer(display);
-
+  
   Window returned_root, returned_parent;
   Window* top_level_windows;
   unsigned int num_top_level_windows;

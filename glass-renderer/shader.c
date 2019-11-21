@@ -131,9 +131,9 @@ Shader *shader_loadX(Atom name) {
     GLsizei  length;
     glGetActiveUniform(shader->program, i, sizeof(uniform->uniform_name), &length, &uniform->size, &uniform->uniform_type, uniform->uniform_name);
 
-    if (memcmp("ATOM_", uniform->uniform_name, strlen("ATOM_")) == 0) {
+    if (memcmp("atom_", uniform->uniform_name, strlen("atom_")) == 0) {
       uniform->type = UNIFORM_ATOM;
-      uniform->base_name = uniform->uniform_name + strlen("ATOM_");
+      uniform->base_name = uniform->uniform_name + strlen("atom_");
       glUniform1i(i, XInternAtom(display, uniform->base_name, False));
     } else {
       uniform->type = UNIFORM_PROPERTY;

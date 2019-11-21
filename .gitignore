@@ -13,3 +13,4 @@ dist
 env
 .eggs
 testing
+build

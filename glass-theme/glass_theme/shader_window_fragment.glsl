@@ -22,13 +22,13 @@ uniform float window_id;
 uniform sampler2D IG_CONTENT;
 uniform vec4 IG_CONTENT_transform;
 
-uniform int ATOM_IG_LAYER_MENU;
+uniform int atom_IG_LAYER_MENU;
 uniform int IG_LAYER;
 
 out vec4 fragColor;
 
 void draw_border() {
-  if (IG_LAYER == ATOM_IG_LAYER_MENU) {
+  if (IG_LAYER == atom_IG_LAYER_MENU) {
     fragColor = vec4(0., 0., 0., 0.);
   } else {
     vec2 dcoord = window_coord;
@@ -92,7 +92,7 @@ void main() {
     draw_border();
   } else if (!isnan(IG_CONTENT_transform[0])) {
     draw_svg_content();
-  } else if (IG_LAYER == ATOM_IG_LAYER_MENU || geometry_size > ICON_CUTOFF_1) {
+  } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_size > ICON_CUTOFF_1) {
     fragColor = get_pixmap();
   } else if (geometry_size > ICON_CUTOFF_2) {
     float scale = (geometry_size - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
