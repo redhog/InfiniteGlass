@@ -10,6 +10,9 @@
 #include "rendering.h"
 #include <X11/Xatom.h>
 
+List *items_all = NULL;
+size_t items_all_id = 0;
+Item *root_item = NULL;
 
 void item_type_base_constructor(Item *item, void *args) {
   Window window = *(Window *) args;
@@ -81,9 +84,12 @@ void item_type_base_draw(Rendering *rendering) {
       glBindSampler(rendering->texture_unit, 0);
       rendering->texture_unit++;
     }
+
     
+    properties_to_gl(root_item->properties, "root_", rendering);
+    gl_check_error("item_draw_root_properties");
     properties_to_gl(rendering->item->properties, "", rendering);
-    gl_check_error("item_draw1");
+    gl_check_error("item_draw_properties");
     
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
@@ -175,9 +181,6 @@ ItemType item_type_base = {
   &item_type_base_get_shader,
   &item_type_base_print
 };
-
-List *items_all = NULL;
-size_t items_all_id = 0;
 
 Bool item_isinstance(Item *item, ItemType *type) {
   ItemType *item_type;
@@ -292,7 +295,7 @@ Item *item_get_from_window(Window window, int create) {
 void items_get_from_toplevel_windows() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
 
-  item_get_from_window(root, True);
+  root_item = item_get_from_window(root, True);
   
   XGrabServer(display);
   

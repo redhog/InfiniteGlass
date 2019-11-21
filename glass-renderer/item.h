@@ -39,25 +39,20 @@ struct ItemStruct {
   ItemType *type;
 
   int id;
- 
-  uint is_mapped; 
-
+  Window window;
   Atom layer;
  
+  uint is_mapped; 
   uint _is_mapped;
 
   int x;
   int y;
-  Window window;
 
   Properties *properties;
   Property *prop_shader;
   Property *prop_size;
   Property *prop_coords;
 
-
-
- 
   Damage damage;
  
   Pixmap window_pixmap;
@@ -67,6 +62,7 @@ struct ItemStruct {
 extern ItemType item_type_base;
 
 extern List *items_all;
+extern Item *root_item;
 
 Bool item_isinstance(Item *item, ItemType *type);
 Item *item_create(ItemType *type, void *args);
