@@ -15,8 +15,15 @@ class BaseMode(mode.Mode):
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
+        self.focus = None
 
     def focus_follows_mouse(self, event):
         win = self.get_active_window()
-        if win:
-            win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
+        if win == self.focus: return
+        if not win: return
+        print("XXXXXXXXXXXXX", win)
+        win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
+        self.display.root["_NET_ACTIVE_WINDOW"] = win
+        self.display.flush()
+        # Xlib.X.NONE
+        self.focus = win

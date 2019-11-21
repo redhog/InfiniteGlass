@@ -16,6 +16,7 @@
 #include "fps.h"
 #include "property.h"
 #include "property_atom.h"
+#include "property_window.h"
 #include "property_int.h"
 #include "property_float.h"
 #include "property_svg.h"
@@ -116,6 +117,7 @@ int main() {
   DEBUG("start", "Initialized views and shaders.\n");
 
   property_type_register(&property_atom);
+  property_type_register(&property_window);
   property_type_register(&property_int);
   property_type_register(&property_float);
   property_type_register(&property_svg);
@@ -146,7 +148,7 @@ int main() {
       Bool changed = True;
       Item *item = (Item *) item_get_from_window(e.xproperty.window, False);
       
-      if (e.xproperty.window != root && item) {
+      if (item) {
         if (!properties_update(item->properties, e.xproperty.atom)) {
           changed = False;
         }
