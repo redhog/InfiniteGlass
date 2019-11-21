@@ -9,6 +9,11 @@ in vec2 window_coord;
 in float geometry_size;
 
 uniform ivec2 size;
+uniform int picking_mode;
+uniform float window_id;
+uniform int window;
+
+uniform int atom_IG_LAYER_MENU;
 
 uniform sampler2D window_sampler;
 uniform sampler2D WM_HINTS_icon;
@@ -17,20 +22,19 @@ uniform int WM_HINTS_icon_enabled;
 uniform int WM_HINTS_icon_mask_enabled;
 uniform sampler2D _NET_WM_ICON;
 uniform int _NET_WM_ICON_enabled;
-uniform int picking_mode;
-uniform float window_id;
 uniform sampler2D IG_CONTENT;
 uniform vec4 IG_CONTENT_transform;
-
-uniform int atom_IG_LAYER_MENU;
 uniform int IG_LAYER;
+
+uniform int root__NET_ACTIVE_WINDOW;
+
 
 out vec4 fragColor;
 
 void draw_border() {
   if (IG_LAYER == atom_IG_LAYER_MENU) {
     fragColor = vec4(0., 0., 0., 0.);
-  } else {
+  } else if (root__NET_ACTIVE_WINDOW == window) {
     vec2 dcoord = window_coord;
     if (dcoord.x >= 0. && dcoord.x <= 1.) dcoord.x = 0.;
     if (dcoord.y >= 0. && dcoord.y <= 1.) dcoord.y = 0.;
@@ -42,6 +46,18 @@ void draw_border() {
     } else if ((dist.x == 4 && abs(dist.y) < 5) || (dist.y == 4 && abs(dist.x) < 5)) {
       fragColor = vec4(1., 1., 1., 1.);
     } else if (dist.x > 4 || dist.y > 4) {
+      fragColor = vec4(0., 0., 0., 1.);
+    } else {
+      fragColor = vec4(0., 0., 0., 0.);
+    }
+  } else {
+    vec2 dcoord = window_coord;
+    if (dcoord.x >= 0. && dcoord.x <= 1.) dcoord.x = 0.;
+    if (dcoord.y >= 0. && dcoord.y <= 1.) dcoord.y = 0.;
+    if (dcoord.x > 1.) dcoord.x = dcoord.x - 1.;
+    if (dcoord.y > 1.) dcoord.y = dcoord.y - 1.;
+    ivec2 dist = ivec2(ceil(abs(dcoord) / window_coord_per_pixel));
+    if (dist.x > 5 || dist.y > 5) {
       fragColor = vec4(0., 0., 0., 1.);
     } else {
       fragColor = vec4(0., 0., 0., 0.);
