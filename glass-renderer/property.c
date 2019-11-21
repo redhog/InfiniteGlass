@@ -88,7 +88,7 @@ void property_print(Property *prop, FILE *fp) {
     type->print(prop, fp);
   } else {
     char *type_name = XGetAtomName(display, prop->type);
-    fprintf(fp, "%s=<%s>\n", prop->name_str, type_name);
+    fprintf(fp, "%ld.%s=<%s>\n", prop->window, prop->name_str, type_name);
     XFree(type_name);
   }
 }
@@ -157,13 +157,10 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
 }
 
 void properties_print(Properties *properties, FILE *fp) {
-  fprintf(fp, "Properties:\n");
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
-    fprintf(fp, "  ");
     property_print(prop, fp);
   }
-  fprintf(fp, "\n");
 }
 
 Property *properties_find(Properties *properties, Atom name) {

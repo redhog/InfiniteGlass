@@ -18,7 +18,7 @@ void property_atom_to_gl(Property *prop, Rendering *rendering) {
   }
 }
 void property_atom_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%s=<atom>", prop->name_str);
+  fprintf(fp, "%ld.%s=<atom>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
     char *name = XGetAtomName(display, (Atom) prop->values.dwords[i]);
@@ -29,7 +29,9 @@ void property_atom_print(Property *prop, FILE *fp) {
 }
 void property_atom_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  DEBUG("prop", "%ld.%s %s (atom) [%d]\n", rendering->shader->program, prop->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
+  DEBUG("prop", "%ld[%ld].%s %s (atom) [%d]\n",
+        prop->window, rendering->shader->program, prop->name_str,
+        (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
 }
 void property_atom_free_program(Property *prop, size_t index) {
 }

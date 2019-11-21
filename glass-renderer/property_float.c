@@ -31,7 +31,7 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
 }
 void property_float_print(Property *prop, FILE *fp) {
   float *values = (float *) prop->data;
-  fprintf(fp, "%s=<int>", prop->name_str);
+  fprintf(fp, "%ld.%s=<int>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
     fprintf(fp, "%f", values[i]);
@@ -40,7 +40,9 @@ void property_float_print(Property *prop, FILE *fp) {
 }
 void property_float_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  DEBUG("prop", "%ld.%s %s (float) [%d]\n", prop_cache->program, prop_cache->name_str, (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
+  DEBUG("prop", "%ld[%ld].%s %s (float) [%d]\n",
+        prop->window, prop_cache->program, prop_cache->name_str,
+        (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
 }
 void property_float_free_program(Property *prop, size_t index) {
 }

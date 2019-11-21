@@ -80,7 +80,7 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
   }
 }
 void property_wm_hints_icon_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%s=<WM_HINTS icon>\n", prop->name_str);
+  fprintf(fp, "%ld.%s=<WM_HINTS icon>\n", prop->window, prop->name_str);
 }
 void property_wm_hints_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
@@ -126,7 +126,8 @@ void property_wm_hints_load_program(Property *prop, Rendering *rendering) {
     all_status = "disabled";
   }
 
-  DEBUG("prop", "%ld.%s %s%s%s%s%s (icon) [%d]\n",
+  DEBUG("prop", "%ld[%ld].%s %s%s%s%s%s (icon) [%d]\n",
+        prop->window,
         rendering->shader->program, prop->name_str,
         icon_status,
         icon_mask_status,

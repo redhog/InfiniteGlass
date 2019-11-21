@@ -43,7 +43,7 @@ void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
   rendering->texture_unit++;
 }
 void property_net_wm_icon_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%s=<_NET_WM_ICON icon>\n", prop->name_str);
+  fprintf(fp, "%ld.%s=<_NET_WM_ICON icon>\n", prop->window, prop->name_str);
 }
 void property_net_wm_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
@@ -69,8 +69,10 @@ void property_net_wm_load_program(Property *prop, Rendering *rendering) {
     all_status = "disabled";
   }
 
-  DEBUG("prop", "%ld.%s %s%s%s (icon) [%d]\n",
-        rendering->shader->program, prop->name_str,
+  DEBUG("prop", "%ld[%ld].%s %s%s%s (icon) [%d]\n",
+        prop->window,
+        rendering->shader->program,
+        prop->name_str,
         icon_status,
         icon_enabled_status,
         all_status,

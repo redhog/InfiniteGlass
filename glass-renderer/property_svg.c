@@ -179,9 +179,7 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   gl_check_error("property_svg_to_gl2");
 }
 void property_svg_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%s=<svg>", prop->name_str);
-
-  fprintf(fp, "\n");
+  fprintf(fp, "%ld.%s=<svg>\n", prop->window, prop->name_str);
 }
 void property_svg_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
@@ -205,7 +203,8 @@ void property_svg_load_program(Property *prop, Rendering *rendering) {
   } else {
     status = "disabled";
   }
-  DEBUG("prop", "%ld.%s %s (svg) [%d]\n",
+  DEBUG("prop", "%ld[%ld].%s %s (svg) [%d]\n",
+        prop->window,
         rendering->shader->program, prop->name_str, status, prop->nitems);
 }
 void property_svg_free_program(Property *prop, size_t index) {
