@@ -22,8 +22,16 @@ class RootWindow(object):
             client_win = win.find_client_window()
             if client_win is None: return
 
-            if set(self.manager.IGNORE).intersection(set(client_win.keys())):
-                return
+            props = client_win.keys()
+            for ignore in self.manager.IGNORE:
+                if isinstance(ignore, tuple):
+                    name, value = ignore
+                    if name in props:
+                        propvals = client_win[name]
+                        if value == propvals or value in propvals:
+                            return
+                elif ignore in props:
+                    return
 
             if client_win.__window__() not in self.manager.windows:
                 self.manager.windows[client_win.__window__()] = glass_ghosts.window.Window(self.manager, client_win)

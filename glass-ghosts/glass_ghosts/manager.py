@@ -15,7 +15,15 @@ class GhostManager(object):
                  MATCH=("WM_CLASS", "WM_NAME"),
                  SET=("IG_SIZE", "IG_COORDS"),
                  SHADOW_UPDATE=("IG_COORDS",),
-                 IGNORE=("WM_TRANSIENT_FOR", "IG_GHOST")):
+                 IGNORE=("WM_TRANSIENT_FOR",
+                         "IG_GHOST",
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"),
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DOCK"),
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_TOOLBAR"),
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"),
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"),
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"),
+                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DIALOG"))):
         self.display = display
 
         self.MATCH = MATCH
