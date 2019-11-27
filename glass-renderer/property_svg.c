@@ -99,11 +99,11 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
     data->cairo_ctx = cairo_create(data->surface);
   }  
 
-  DEBUG("window.svg", "RENDER %d,%d[%d,%d] = [%d,%d]\n",
+  DEBUG("window.svg", "RENDER %d,%d[%f,%f] = [%d,%d]\n",
         -data->x,
         -data->y,
-        dimension.width,
-        dimension.height,
+        dimension.em,
+        dimension.ex,
         data->itemwidth,
         data->itemheight);
   
@@ -111,8 +111,8 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
                   -data->x,
                   -data->y);
   cairo_scale(data->cairo_ctx,
-              (float) data->itemwidth / (float) dimension.width,
-              (float) data->itemheight / (float) dimension.height);
+              (float) data->itemwidth / (float) dimension.em,
+              (float) data->itemheight / (float) dimension.ex);
   
   rsvg_handle_render_cairo(data->rsvg, data->cairo_ctx);
   cairo_surface_flush(data->surface);  
@@ -159,7 +159,8 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
   
   if (program_data->texture_location == -1 || program_data->transform_location == -1) return;
-
+  if (!data->rsvg) return;
+  
   property_svg_update_drawing(prop, rendering);
   
   gl_check_error("property_svg_to_gl1");
