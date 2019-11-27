@@ -3,16 +3,7 @@ import numpy
 from . import mode
 import Xlib.X
 
-class TitleSearchMode(mode.Mode):
-    def __init__(self, **kw):
-        mode.Mode.__init__(self, **kw)
-        self.x = 0
-        self.y = 0
-        self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
-        self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-        self.windows = list(self.get_all_windows())
-        print("All windows:", ",".join(w["name"] for w in self.windows))
-        
+class TitleSearchMode(mode.Mode):        
     def query(self, query=""):
         for win in self.windows:
             if query in win["name"]:
@@ -30,11 +21,21 @@ class TitleSearchMode(mode.Mode):
     def bbox_view(self, query=""):
         res = self.bbox(query)
         if not res: return res
-        return [res[0], res[1] - res[3], res[2], res[3]]
+        res[3] = res[2] / self.aspect_ratio
+        res[1] -= res[3]
+        return res
         
     def enter(self):
         mode.Mode.enter(self)
-        self.input = "MÅxGjg"
+
+        self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+        self.aspect_ratio = self.orig_view[2] / self.orig_view[3]
+        
+        self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+        self.windows = list(self.get_all_windows())
+        print("All windows:", ",".join(w["name"] for w in self.windows))
+        
+        self.input = ""
         
         self.label_window = self.display.root.create_window(map=False)
         self.label_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
@@ -102,7 +103,7 @@ class TitleSearchMode(mode.Mode):
                     height="%(h)smm">
                     <rect x="%(bx2)s" y="%(by2)s" width="%(bw2)s" height="%(bh2)s" style="fill-opacity:0;stroke-width:2;stroke:#000000;" />
                     <rect x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s" style="fill:#ffffff;stroke-width:1;stroke:#000000;" />
-                    <text x="%(tx)s" y="%(ty)s" style="font-size: %(th)s; fill:#000000;">%(content)s</text>
+                    <text x="%(tx)s" y="%(ty)s" style="font-size: %(th)s; fill:#000000;">%(content)s|</text>
                   </svg>""" % {
                       "w": w, "h": h,
                       "bw": bw, "bh": bh, "bx": bx, "by": by,
@@ -123,19 +124,20 @@ class TitleSearchMode(mode.Mode):
         
         window_svg = [
             """
-              <!-- rect x="%(x)s" y="%(y)s" width="%(w)s" height="%(h)s" style="fill: #ffffff; stroke: red; stroke-width: 0.01; opacity: 0.5;" / -->
+              <rect x="%(x)s" y="%(y)s" width="%(w)s" height="%(h)s" style="fill: #ffffff; opacity: 1.0;" />
               <text
                 xml:space="preserve"
                 style="font-size:%(fontsize)spx;font-family:'Times New Roman';fill:#000000;"
                 x="%(x)s"
-                y="%(y)s">%(name)s</text>
+                y="%(ty)s">%(name)s</text>
 
             """ % {
                 "fontsize": window["coords"][3] * 0.1,
                 "x": window["coords"][0],
-                "y": -window["coords"][1],
+                "ty": -window["coords"][1] - window["coords"][3] * 0.1,
+                "y": -window["coords"][1] - window["coords"][3] * 0.2,
                 "w": window["coords"][2],
-                "h": window["coords"][3],
+                "h": window["coords"][3] * 0.15,
                 "name": window["name"].strip()
             } for window in self.windows
         ]
