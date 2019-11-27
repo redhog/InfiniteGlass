@@ -16,7 +16,8 @@
         "KeyPress,XK_D": "send_debug",
         "KeyPress,XK_C": "send_close",
         "KeyPress,XK_S": "send_sleep",
-
+        "KeyPress,XK_T": "title_search",
+        
         "KeyPress,!Mod1Mask,XK_Home": "zoom_home",
         "ButtonPress,!Mod1Mask,4": "zoom",
         "ButtonPress,!Mod1Mask,5": "zoom",
@@ -45,6 +46,10 @@
         "KeyPress,Mod1Mask,XK_Down,ControlMask": "item_resize",
         "KeyPress,Mod1Mask,XK_Left,ControlMask": "item_resize",
         "KeyPress,Mod1Mask,XK_Right,ControlMask": "item_resize"
+    }},
+    "title_search": {"class": "glass_input.title_search.TitleSearchMode", "keymap": {
+        "KeyPress,XK_Escape": "pop",
+        "KeyPress,!XK_Escape": "write"
     }},
     "zoom": {"class": "glass_input.zoom.ZoomMode", "keymap": {
         "KeyRelease,!AutoRepeat": "pop",
