@@ -21,7 +21,12 @@ class TitleSearchMode(mode.Mode):
     def bbox_view(self, query=""):
         res = self.bbox(query)
         if not res: return res
-        res[3] = res[2] / self.aspect_ratio
+        h = res[2] / self.aspect_ratio
+        w = res[3] * self.aspect_ratio
+        if h > res[3]:
+            res[3] = h
+        else:
+            res[2] = w
         res[1] -= res[3]
         return res
         
@@ -50,6 +55,8 @@ class TitleSearchMode(mode.Mode):
         self.input_window["IG_LAYER"] = "IG_LAYER_MENU"
         
         self.input_window.map()
+
+        self.display.flush()
         
         return True
 
