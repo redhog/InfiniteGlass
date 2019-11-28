@@ -89,12 +89,12 @@ class TitleSearchMode(mode.Mode):
         w = self.size[0]
         h = self.size[1]
         bw = w * 0.5
-        bh = h * 0.2
+        bh = h * 0.1
         bx = (w - bw) / 2
         by = (h - bh) / 2
-        th = h * 0.16
-        tx = bx + w * 0.02
-        ty = by + th
+        th = h * 0.10
+        tx = w * 0.02
+        ty = th * 0.8
         by2 = by - 3
         bx2 = bx - 3
         bw2 = bw + 6
@@ -110,7 +110,9 @@ class TitleSearchMode(mode.Mode):
                     height="%(h)smm">
                     <rect x="%(bx2)s" y="%(by2)s" width="%(bw2)s" height="%(bh2)s" style="fill-opacity:0;stroke-width:2;stroke:#000000;" />
                     <rect x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s" style="fill:#ffffff;stroke-width:1;stroke:#000000;" />
-                    <text x="%(tx)s" y="%(ty)s" style="font-size: %(th)s; fill:#000000;">%(content)s|</text>
+                    <svg x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s">
+                      <text x="%(tx)s" y="%(ty)s" style="font-size: %(th)s; fill:#000000;">%(content)s|</text>
+                    </svg>
                   </svg>""" % {
                       "w": w, "h": h,
                       "bw": bw, "bh": bh, "bx": bx, "by": by,
@@ -132,17 +134,20 @@ class TitleSearchMode(mode.Mode):
         window_svg = [
             """
               <rect x="%(x)s" y="%(y)s" width="%(w)s" height="%(h)s" style="fill: #ffffff; opacity: 1.0;" />
-              <text
-                xml:space="preserve"
-                style="font-size:%(fontsize)spx;font-family:'Times New Roman';fill:#000000;"
-                x="%(x)s"
-                y="%(ty)s">%(name)s</text>
+              <svg x="%(x)s" y="%(y)s" width="%(w)s" height="%(h)s">
+                <text
+                  xml:space="preserve"
+                  style="font-size:%(fontsize)spx;font-family:'Times New Roman';fill:#000000;"
+                  x="%(tx)s"
+                  y="%(ty)s">%(name)s</text>
+              </svg>
 
             """ % {
                 "fontsize": window["coords"][3] * 0.1,
                 "x": window["coords"][0],
-                "ty": -window["coords"][1] - window["coords"][3] * 0.1,
-                "y": -window["coords"][1] - window["coords"][3] * 0.2,
+                "y": -window["coords"][1],
+                "tx": window["coords"][2] * 0.05, 
+                "ty": window["coords"][3] * 0.1, 
                 "w": window["coords"][2],
                 "h": window["coords"][3] * 0.15,
                 "name": window["name"].strip()
