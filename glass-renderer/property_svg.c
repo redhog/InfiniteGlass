@@ -13,6 +13,8 @@ typedef struct {
   int y;
   int width;
   int height;
+  int _width;
+  int _height;
   int itemwidth;
   int itemheight;
 
@@ -92,12 +94,19 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   rsvg_handle_get_dimensions(data->rsvg, &dimension);
 
   // Check if current surface size is wrong before recreating...
-  if (1 || !data->surface) {
+  if (!data->surface || data->_width != data->width || data->_height != data->height) {
     if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
     if (data->surface) cairo_surface_destroy(data->surface);
     data->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, data->width, data->height);
     data->cairo_ctx = cairo_create(data->surface);
-  }  
+    data->_width = data->width;
+    data->_height = data->height;
+  } else {
+    cairo_identity_matrix (data->cairo_ctx);
+    cairo_set_operator(data->cairo_ctx, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(data->cairo_ctx);
+    cairo_set_operator(data->cairo_ctx, CAIRO_OPERATOR_OVER);
+  }
 
   DEBUG("window.svg", "RENDER %d,%d[%f,%f] = [%d,%d]\n",
         -data->x,
@@ -122,14 +131,21 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
 
 void property_svg_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "IG_SVG", False); prop->name = AnyPropertyType; }
 void property_svg_load(Property *prop) {
-  prop->data = malloc(sizeof(SvgPropertyData));
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
-  
-  data->surface = NULL;
-  data->cairo_ctx = NULL;
-  data->rsvg = NULL;
-  texture_initialize(&data->texture);
+  if (!data) {
+    prop->data = malloc(sizeof(SvgPropertyData));
+    data = (SvgPropertyData *) prop->data;
 
+    data->surface = NULL;
+    data->cairo_ctx = NULL;
+    data->rsvg = NULL;
+
+    texture_initialize(&data->texture);
+  } else {
+    if (data->rsvg) g_object_unref(data->rsvg);
+    data->rsvg = NULL;
+  }
+    
   GError *error = NULL;
   unsigned char *src = (unsigned char *) prop->values.bytes;
   data->rsvg = rsvg_handle_new_from_data(src, strlen((char *) src), &error);
@@ -143,6 +159,7 @@ void property_svg_load(Property *prop) {
 
 void property_svg_free(Property *prop) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
+  if (!data) return;
   if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
   if (data->surface) cairo_surface_destroy(data->surface);
   texture_destroy(&data->texture);
@@ -150,6 +167,8 @@ void property_svg_free(Property *prop) {
   data->cairo_ctx = NULL;
   data->surface = NULL;
   data->rsvg = NULL;
+  free(data);
+  prop->data = NULL;
 }
 
 void property_svg_to_gl(Property *prop, Rendering *rendering) {
