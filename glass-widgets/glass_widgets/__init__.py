@@ -14,6 +14,7 @@ def main(*arg, **kw):
             w["WM_CLASS"] = b"glass-widget"
             w["IG_LAYER"] = "IG_LAYER_OVERLAY"
             w["IG_COORDS"] = [0.01, 0.60 + 0.05 * idx, 0.05, 0.05]
+            w["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
             with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/%s.svg" % icon) as f:
                 data = f.read()
                 w["IG_CONTENT"] = ("IG_SVG", data)
@@ -35,6 +36,7 @@ def main(*arg, **kw):
         w["WM_CLASS"] = b"glass-widget"
         w["IG_LAYER"] = "IG_LAYER_OVERLAY"
         w["IG_COORDS"] = [0.01, 0.55, 0.05, 0.05]
+        w["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
         with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg") as f:
             data = f.read()
             w["IG_CONTENT"] = ("IG_SVG", data)

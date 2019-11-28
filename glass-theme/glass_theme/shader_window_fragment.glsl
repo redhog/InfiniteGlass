@@ -14,6 +14,7 @@ uniform float window_id;
 uniform int window;
 
 uniform int atom_IG_LAYER_MENU;
+uniform int atom__NET_WM_WINDOW_TYPE_NORMAL;
 
 uniform sampler2D window_sampler;
 uniform sampler2D WM_HINTS_icon;
@@ -25,6 +26,7 @@ uniform int _NET_WM_ICON_enabled;
 uniform sampler2D IG_CONTENT;
 uniform vec4 IG_CONTENT_transform;
 uniform int IG_LAYER;
+uniform int _NET_WM_WINDOW_TYPE;
 
 uniform int root__NET_ACTIVE_WINDOW;
 
@@ -32,7 +34,7 @@ uniform int root__NET_ACTIVE_WINDOW;
 out vec4 fragColor;
 
 void draw_border() {
-  if (IG_LAYER == atom_IG_LAYER_MENU) {
+  if (IG_LAYER == atom_IG_LAYER_MENU || (_NET_WM_WINDOW_TYPE != 0 &&_NET_WM_WINDOW_TYPE != atom__NET_WM_WINDOW_TYPE_NORMAL)) {
     fragColor = vec4(0., 0., 0., 0.);
   } else if (root__NET_ACTIVE_WINDOW == window) {
     vec2 dcoord = window_coord;
