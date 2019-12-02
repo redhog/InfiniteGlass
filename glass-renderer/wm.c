@@ -51,6 +51,24 @@ void draw() {
   draw_fps();
 }
 
+Bool drawn_this_cycle = False;
+int draw_cycles_left = 0;
+
+void cycle_draw() {
+  if (draw_cycles_left == 0) return;
+  draw();
+  drawn_this_cycle = False;
+  draw_cycles_left--;
+}
+
+void trigger_draw() {
+  draw_cycles_left = 10;
+  if (!drawn_this_cycle) {
+    draw();
+    drawn_this_cycle = True;
+  }
+}
+
 void pick(int x, int y, int *winx, int *winy, Item **item) {
   View *view = (View *) views->entries[0];
   gl_check_error("pick1");
@@ -159,7 +177,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           }
         }
       }
-      draw();
+      trigger_draw();
     }
   } else if (cookie->type == GenericEvent) {
     if (XGetEventData(display, cookie)) {
@@ -203,7 +221,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
 
     // Subtract all the damage, repairing the window.
-    draw();
+    trigger_draw();
     x_try();
     XDamageSubtract(display, ((XDamageNotifyEvent *) event)->damage, None, None);
     x_catch(&error);
@@ -237,7 +255,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
         item->type->update((Item *) item);
         gl_check_error("item_update_pixmap");
-        draw();
+        trigger_draw();
       } else {
         DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", event->xconfigurerequest.window);
       }
@@ -282,7 +300,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       long arr[2] = {event->xconfigure.width, event->xconfigure.height};
       XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
       item->type->update((Item *) item);
-      draw();
+      trigger_draw();
     }
     // FIXME: Update width/height regardless of window type...
   } else if (event->type == DestroyNotify) {
@@ -298,7 +316,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       } else {
         item_remove(item);
       }
-      draw();
+      trigger_draw();
     }
   } else if (event->type == MapNotify) {
     if (event->xmap.window != overlay) {
@@ -306,7 +324,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       Item *item = item_get_from_window(event->xmap.window, True);
       item->is_mapped = True;
       item->type->update(item);
-      draw();
+      trigger_draw();
 
       char *window_name;
       if (XFetchName(display, event->xmap.window, &window_name) && window_name) {
@@ -318,7 +336,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     Item *item = item_get_from_window(event->xunmap.window, False);
     if (item) {
       item->is_mapped = False;
-      draw();
+      trigger_draw();
     }
   } else if (event->type == MapRequest) {
     XMapWindow(display, event->xmaprequest.window);
@@ -352,6 +370,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   return True;
 }
 
+void draw_timeout_handler_function(TimeoutHandler *handler, struct timeval *current_time) {
+  cycle_draw();
+}
+
 int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
@@ -381,12 +403,22 @@ int main() {
  
   gl_check_error("start1");
 
-  draw();
+  trigger_draw();
 
   gl_check_error("start2");
 
   DEBUG("start", "Renderer started.\n");
 
+  TimeoutHandler draw_timeout_handler;
+  draw_timeout_handler.interval.tv_sec = 0;
+  draw_timeout_handler.interval.tv_usec = 10000;
+  if (gettimeofday(&draw_timeout_handler.next, NULL) != 0) {
+    ERROR("gettimeofday", "gettimeofday() returned error");
+  }
+  draw_timeout_handler.handler = &draw_timeout_handler_function;
+  draw_timeout_handler.data = NULL;
+  timeout_handler_install(&draw_timeout_handler);
+  
   EventHandler main_event_handler;
   main_event_handler.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask;
   event_mask_unset(main_event_handler.match_event);

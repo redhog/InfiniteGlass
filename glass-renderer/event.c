@@ -93,16 +93,19 @@ void event_mainloop() {
     
     FD_ZERO(&in_fds);
     FD_SET(display_fd, &in_fds);
-    timeout.tv_usec = 100000;
+    timeout.tv_usec = 30000;
     timeout.tv_sec = 0;
 
-    select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
-    
-    while (XPending(display)) {
-      timeout_handle();
-      XNextEvent(display, &e);
-      event_handle(&e);
+    int count = select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
+
+    if (count) {
+      while (XPending(display)) {
+        XNextEvent(display, &e);
+        event_handle(&e);
+      }
     }
+      
+    timeout_handle();
   }
 }
 
