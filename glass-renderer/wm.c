@@ -416,7 +416,7 @@ int main() {
 
   TimeoutHandler draw_timeout_handler;
   draw_timeout_handler.interval.tv_sec = 0;
-  draw_timeout_handler.interval.tv_usec = 10000;
+  draw_timeout_handler.interval.tv_usec = 30000;
   if (gettimeofday(&draw_timeout_handler.next, NULL) != 0) {
     ERROR("gettimeofday", "gettimeofday() returned error");
   }
