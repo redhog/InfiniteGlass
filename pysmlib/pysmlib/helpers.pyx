@@ -8,7 +8,7 @@ cdef object smprops_to_dict(int numProps, SmProp **props):
     for idx in range(numProps):
         values = []
         for valueidx in range(props[idx].num_vals):
-            values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length-1).decode("utf-8"))
+            values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length).decode("utf-8"))
         propdict[bytes(props[idx].name).decode("utf-8")] = (bytes(props[idx].type).decode("utf-8"), values)
     return propdict
 
