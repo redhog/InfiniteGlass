@@ -54,6 +54,7 @@ void item_type_base_constructor(Item *item, void *args) {
     item_type_window_update_space_pos_from_window(item);
 
     XSelectInput(display, window, PropertyChangeMask);
+    item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
   }
  
   item->properties = properties_load(window);
@@ -63,8 +64,6 @@ void item_type_base_constructor(Item *item, void *args) {
 
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
-
-  item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
 }
 void item_type_base_destructor(Item *item) {
   texture_destroy(&item->window_texture);
