@@ -25,6 +25,9 @@
 #include "property_net_wm_icon.h"
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
+#include <backtrace.h>
+
+struct backtrace_state *trace_state;
 
 List *views = NULL;
 List *shaders = NULL;
@@ -219,7 +222,6 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == damage_event + XDamageNotify) {
     XErrorEvent error;
     DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
-
     // Subtract all the damage, repairing the window.
     trigger_draw();
     x_try();
@@ -375,6 +377,9 @@ void draw_timeout_handler_function(TimeoutHandler *handler, struct timeval *curr
 }
 
 int main() {
+  trace_state = backtrace_create_state(NULL, 0, NULL, NULL);
+// backtrace_print (trace_state, 0, stdout);
+  
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
