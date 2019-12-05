@@ -8,6 +8,7 @@ class MainLoop(object):
     def __init__(self):
         self.handlers = {}
         self.timeouts = {}
+        self.hf = set()
 
     def add(self, fd, handler=None):
         if handler is None:
@@ -17,6 +18,14 @@ class MainLoop(object):
         self.handlers[fd] = handler
         return fd
 
+    def add_hf(self, handler=None):
+        if handler is None:
+            def wrapper(handler):
+                self.add_hf(handler)
+            return wrapper
+        self.hf.add(handler)
+        return handler
+    
     def add_timeout(self, timestamp, handler=None):
         if handler is None:
             def wrapper(handler):
@@ -64,3 +73,11 @@ class MainLoop(object):
                 sys.stderr.write("%s\n" % e)
                 traceback.print_exc(file=sys.stderr)
                 sys.stderr.flush()
+        for handler in self.hf:
+            try:
+                handler()
+            except Exception as e:
+                sys.stderr.write("%s\n" % e)
+                traceback.print_exc(file=sys.stderr)
+                sys.stderr.flush()
+            

@@ -20,6 +20,9 @@ def display_init(self, *arg, **kw):
     self.mainloop = mainloop.MainLoop()
     @self.mainloop.add(self.fileno())
     def handle_x_event(fd):
+        pass
+    @self.mainloop.add_hf()
+    def handle_x_event():
         for idx in range(self.pending_events()):
             event = self.next_event()
             for handler in self.eventhandlers:
