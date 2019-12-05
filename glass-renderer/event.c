@@ -89,23 +89,18 @@ void event_mainloop() {
   XEvent e;
     
   while (!exit_mainloop_flag) {
-    XSync(display, False);
-    
     FD_ZERO(&in_fds);
     FD_SET(display_fd, &in_fds);
     timeout.tv_usec = 30000;
     timeout.tv_sec = 0;
 
-    int count = select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
-
-    if (count) {
-      while (XPending(display)) {
-        XNextEvent(display, &e);
-        event_handle(&e);
-      }
-    }
-      
+    select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
     timeout_handle();
+    while (XPending(display)) {
+      XNextEvent(display, &e);
+      event_handle(&e);
+      XSync(display, False);
+    }
   }
 }
 
