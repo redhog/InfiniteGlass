@@ -1,7 +1,7 @@
 CC=gcc
 PACKAGES=librsvg-2.0 pangocairo cairo xi x11 gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
-CFLAGS=-ggdb $(shell pkg-config --cflags $(PACKAGES)) -O0 -Wall $(EXTRA_CFLAGS)
-LIBS:=-lSOIL $(shell pkg-config --libs $(PACKAGES))
+CFLAGS=-rdynamic -g -ggdb $(shell pkg-config --cflags $(PACKAGES)) -O0 -Wall $(EXTRA_CFLAGS)
+LIBS:=-lbacktrace -lSOIL $(shell pkg-config --libs $(PACKAGES))
 
 ifeq ($(GLASS_DMALLOC),)
 else
