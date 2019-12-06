@@ -30,23 +30,13 @@ class Window(object):
         @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
         def ClientMessage(win, event):
             InfiniteGlass.DEBUG("message", "RECEIVED SLEEP %s %s %s" % (win, event, self.client)); sys.stderr.flush()
-            if self.client:
-                for conn in self.client.connections.values():
-                    conn.sleep()
+            self.sleep()
         self.SleepMessage = ClientMessage
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
             InfiniteGlass.DEBUG("message", "RECEIVED CLOSE %s %s %s" % (win, event, self.client)); sys.stderr.flush()
-            if self.client:
-                if len(self.client.windows) <= 1:
-                    for conn in self.client.connections.values():
-                        conn.sleep()
-                    return
-            if "WM_PROTOCOLS" in self.window and "WM_DELETE_WINDOW" in self.window["WM_PROTOCOLS"]:
-                self.window.send(self.window, "WM_PROTOCOLS", "WM_DELETE_WINDOW", Xlib.X.CurrentTime)
-            else:
-                self.window.destroy()
+            self.close()
         self.CloseMessage = ClientMessage
 
         @window.on(mask="StructureNotifyMask")
@@ -57,6 +47,24 @@ class Window(object):
         self.DestroyNotify = DestroyNotify
         self.PropertyNotify = PropertyNotify
 
+    def sleep(self):
+        if self.client:
+            for conn in self.client.connections.values():
+                conn.sleep()
+        else:
+            self.close()
+
+    def close(self):
+        if self.client:
+            if len(self.client.windows) <= 1:
+                for conn in self.client.connections.values():
+                    conn.sleep()
+                return
+        if "WM_PROTOCOLS" in self.window and "WM_DELETE_WINDOW" in self.window["WM_PROTOCOLS"]:
+            self.window.send(self.window, "WM_PROTOCOLS", "WM_DELETE_WINDOW", Xlib.X.CurrentTime)
+        else:
+            self.window.destroy()
+            
     def key(self):
         return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
 
