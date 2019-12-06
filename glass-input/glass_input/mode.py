@@ -95,6 +95,8 @@ class Mode(object):
         self.orig_view = self.display.root.get("IG_VIEW_DESKTOP_VIEW", None)
         self.orig_size = self.display.root.get("IG_VIEW_DESKTOP_SIZE", None)
         self.state['start'] = datetime.datetime.now()
+        if hasattr(self, "load"):
+            self.action("load", self.load, None)
         return True
 
     def exit(self):
@@ -149,13 +151,13 @@ class Mode(object):
             return True
         return True
 
-    def action(self, eventfilter, action, event):
+    def action(self, eventfilter, action, event, **kw):
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)
         elif isinstance(action, dict):
             if "class" in action:
-                if push_config(self.display, action, first_event=event, last_event=event):
+                if push_config(self.display, action, first_event=event, last_event=event, **kw):
                     handle_event(self.display, event)
             elif "keymap" in action:
                 self.handle(event, keymap=action["keymap"])
@@ -170,17 +172,17 @@ class Mode(object):
             elif "inc" in action:
                 name = action['inc']
                 self.state[name] = self.state.get(name, 0) + 1
-            elif len(action.keys()) == 1 and hasattr(self, next(iter(action.keys()))):
+            elif len(action.keys()) == 1:
                 name = next(iter(action.keys()))
-                getattr(self, name)(event, **action[name])
+                self.action(eventfilter, name, event, **action[name])
             else:
                 InfiniteGlass.DEBUG("error", "Unknown action parameters: %s" % (action,))
         elif isinstance(action, str) and action in config["modes"]:
-            self.action(eventfilter, config["modes"][action], event)
+            self.action(eventfilter, config["modes"][action], event, **kw)
         elif isinstance(action, str) and hasattr(self, action):
-            getattr(self, action)(event)
+            getattr(self, action)(event, **kw)
         elif isinstance(action, str) and action in functions:
-            functions[action](self, event)
+            functions[action](self, event, **kw)
         else:
             InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action))
 

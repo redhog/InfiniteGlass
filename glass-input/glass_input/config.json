@@ -1,138 +1,165 @@
 {
-    "base": {"class": "glass_input.base.BaseMode", "keymap": {
-        "GenericEventCode": "focus_follows_mouse",
-        "ButtonPress,Mod4Mask": "grabbed",
-        "KeyPress,Mod4Mask": "grabbed",
-        "KeyPress,XK_Super_L": "grabbed"
-    }},
-    "grabbed": {"class": "glass_input.grabbed.GrabbedMode", "keymap": {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-        "KeyPress,XK_space": "rofi",
-        "KeyPress,XK_Escape": "toggle_overlay",
-        "Mod4Mask,KeyPress,XK_F1": "send_debug",
-        "Mod4Mask,KeyPress,XK_F4": "send_close",
-        "Mod4Mask,KeyPress,XK_F5": "send_sleep",
-        "KeyPress,XK_D": "send_debug",
-        "KeyPress,XK_C": "send_close",
-        "KeyPress,XK_S": "send_sleep",
-        "KeyPress,XK_T": "title_search",
-        
-        "KeyPress,!Mod1Mask,XK_Home": "zoom_home",
-        "ButtonPress,!Mod1Mask,4": "zoom",
-        "ButtonPress,!Mod1Mask,5": "zoom",
-        "KeyPress,!Mod1Mask,XK_Next": "zoom",
-        "KeyPress,!Mod1Mask,XK_Prior": "zoom",
-        "ButtonPress,!Mod1Mask,2": "pan",
-        "ButtonPress,!Mod1Mask,1": "pan",
-        "KeyPress,!Mod1Mask,XK_Up": "pan",
-        "KeyPress,!Mod1Mask,XK_Down": "pan",
-        "KeyPress,!Mod1Mask,XK_Left": "pan",
-        "KeyPress,!Mod1Mask,XK_Right": "pan",
+    "imports": [
+        "glass_input.actions.focus",
+        "glass_input.actions.title_search",
+        "glass_input.actions.pan",
+        "glass_input.actions.zoom",
+        "glass_input.actions.zoom_to",
+        "glass_input.actions.item_pan",
+        "glass_input.actions.item_zoom",
+        "glass_input.actions.item_pan",
+        "glass_input.actions.item_resize",
+        "glass_input.actions.item_zoom_to",
+        "glass_input.actions.modeswitch"
+    ],
+    "modes": {
+        "base": {"class": "glass_input.base.BaseMode", "keymap": {
+            "GenericEventCode": "focus_follows_mouse",
+            "ButtonPress,Mod4Mask": "grabbed",
+            "KeyPress,Mod4Mask": "grabbed",
+            "KeyPress,XK_Super_L": "grabbed"
+        }},
+        "grabbed": {"class": "glass_input.grabbed.GrabbedMode", "keymap": {
+            "KeyRelease": "pop",
+            "ButtonRelease": "pop",
+            "KeyPress,XK_space": "rofi",
+            "KeyPress,XK_Escape": "toggle_overlay",
+            "Mod4Mask,KeyPress,XK_F1": "send_debug",
+            "Mod4Mask,KeyPress,XK_F4": "send_close",
+            "Mod4Mask,KeyPress,XK_F5": "send_sleep",
+            "KeyPress,XK_D": "send_debug",
+            "KeyPress,XK_C": "send_close",
+            "KeyPress,XK_S": "send_sleep",
+            "KeyPress,XK_T": "title_search",
+            
+            "KeyPress,!Mod1Mask,XK_Home": "zoom_home",
+            "ButtonPress,!Mod1Mask,4": "zoom",
+            "ButtonPress,!Mod1Mask,5": "zoom",
+            "KeyPress,!Mod1Mask,XK_Next": "zoom",
+            "KeyPress,!Mod1Mask,XK_Prior": "zoom",
+            "ButtonPress,!Mod1Mask,2": "pan",
+            "ButtonPress,!Mod1Mask,1": "pan",
+            "KeyPress,!Mod1Mask,XK_Up": "pan",
+            "KeyPress,!Mod1Mask,XK_Down": "pan",
+            "KeyPress,!Mod1Mask,XK_Left": "pan",
+            "KeyPress,!Mod1Mask,XK_Right": "pan",
 
-        "KeyPress,Mod1Mask,!ShiftMask,XK_Home": "zoom_1_1_1",
-        "KeyPress,Mod1Mask,ShiftMask,XK_Home": "item_zoom",
-        "ButtonPress,Mod1Mask,4": "item_zoom",
-        "ButtonPress,Mod1Mask,5": "item_zoom",
-        "KeyPress,Mod1Mask,XK_Next": "item_zoom",
-        "KeyPress,Mod1Mask,XK_Prior": "item_zoom",
-        "ButtonPress,Mod1Mask,1,!ControlMask": "item_pan",
-        "KeyPress,Mod1Mask,XK_Up,!ControlMask": "item_pan",
-        "KeyPress,Mod1Mask,XK_Down,!ControlMask": "item_pan",
-        "KeyPress,Mod1Mask,XK_Left,!ControlMask": "item_pan",
-        "KeyPress,Mod1Mask,XK_Right,!ControlMask": "item_pan",
-        "ButtonPress,Mod1Mask,1,ControlMask": "item_resize",
-        "KeyPress,Mod1Mask,XK_Up,ControlMask": "item_resize",
-        "KeyPress,Mod1Mask,XK_Down,ControlMask": "item_resize",
-        "KeyPress,Mod1Mask,XK_Left,ControlMask": "item_resize",
-        "KeyPress,Mod1Mask,XK_Right,ControlMask": "item_resize"
-    }},
-    "title_search": {"class": "glass_input.title_search.TitleSearchMode", "keymap": {
-        "KeyPress,XK_Escape": "pop",
-        "KeyPress,XK_Return": "pop",
-        "KeyPress,!XK_Escape,!XK_Return": "write"
-    }},
-    "zoom": {"class": "glass_input.zoom.ZoomMode", "keymap": {
-        "KeyRelease,!AutoRepeat": "pop",
-        "ButtonRelease": "pop",
+            "KeyPress,Mod1Mask,!ShiftMask,XK_Home": "zoom_1_1_1",
+            "KeyPress,Mod1Mask,ShiftMask,XK_Home": "item_zoom",
+            "ButtonPress,Mod1Mask,4": "item_zoom",
+            "ButtonPress,Mod1Mask,5": "item_zoom",
+            "KeyPress,Mod1Mask,XK_Next": "item_zoom",
+            "KeyPress,Mod1Mask,XK_Prior": "item_zoom",
+            "ButtonPress,Mod1Mask,1,!ControlMask": "item_pan",
+            "KeyPress,Mod1Mask,XK_Up,!ControlMask": "item_pan",
+            "KeyPress,Mod1Mask,XK_Down,!ControlMask": "item_pan",
+            "KeyPress,Mod1Mask,XK_Left,!ControlMask": "item_pan",
+            "KeyPress,Mod1Mask,XK_Right,!ControlMask": "item_pan",
+            "ButtonPress,Mod1Mask,1,ControlMask": "item_resize",
+            "KeyPress,Mod1Mask,XK_Up,ControlMask": "item_resize",
+            "KeyPress,Mod1Mask,XK_Down,ControlMask": "item_resize",
+            "KeyPress,Mod1Mask,XK_Left,ControlMask": "item_resize",
+            "KeyPress,Mod1Mask,XK_Right,ControlMask": "item_resize"
+        }},
+        "title_search": {"class": "glass_input.title_search.TitleSearchMode", "keymap": {
+            "KeyPress,XK_Escape": "pop",
+            "KeyPress,XK_Return": "pop",
+            "KeyPress,!XK_Escape,!XK_Return": "write"
+        }},
+        "zoom": {"class": "glass_input.mode.Mode", "keymap": {
+            "KeyRelease,!AutoRepeat": "pop",
+            "ButtonRelease": "pop",
 
-        "ButtonRelease,4,ShiftMask": ["zoom_in", "pop"],
-        "ButtonRelease,5,ShiftMask": ["zoom_out", "pop"],
+            "ButtonRelease,4,ShiftMask": ["zoom_in", "pop"],
+            "ButtonRelease,5,ShiftMask": ["zoom_out", "pop"],
 
-        "ButtonPress,4,!ShiftMask": "zoom_to_fewer_windows",
-        "ButtonPress,5,!ShiftMask": "zoom_to_more_windows",
+            "ButtonPress,4,!ShiftMask": "zoom_to_fewer_windows",
+            "ButtonPress,5,!ShiftMask": "zoom_to_more_windows",
 
-        "KeyPress,XK_Prior,!ShiftMask": "zoom_to_fewer_windows",
-        "KeyPress,XK_Next,!ShiftMask": "zoom_to_more_windows",
-        
-        "KeyPress,XK_Prior,ShiftMask": "zoom_in",
-        "KeyPress,XK_Next,ShiftMask": "zoom_out"
-    }},
-    "pan": {"class": "glass_input.pan.PanMode", "keymap": {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-        "KeyPress,XK_Left,ShiftMask,!AutoRepeat": {"pan":{"x": 1, "y": 0}},
-        "KeyPress,XK_Right,ShiftMask,!AutoRepeat": {"pan":{"x": -1, "y": 0}},
-        "KeyPress,XK_Up,ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": 1}},
-        "KeyPress,XK_Down,ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": -1}},
-        
-        "KeyPress,XK_Left,ShiftMask,AutoRepeat": {"pan":{"x": 10, "y": 0}},
-        "KeyPress,XK_Right,ShiftMask,AutoRepeat": {"pan":{"x": -10, "y": 0}},
-        "KeyPress,XK_Up,ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": 10}},
-        "KeyPress,XK_Down,ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": -10}},
-        
-        "KeyPress,XK_Left,!ShiftMask": "zoom_to_window_to_the_left",
-        "KeyPress,XK_Right,!ShiftMask": "zoom_to_window_to_the_right",
-        "KeyPress,XK_Up,!ShiftMask": "zoom_to_window_above",
-        "KeyPress,XK_Down,!ShiftMask": "zoom_to_window_below",
-        "ButtonPress": "pan_mouse",
-        "MotionNotify": "pan_mouse"
-    }},
-    "item_zoom": {"class": "glass_input.item_zoom.ItemZoomMode", "keymap": {
-        "KeyRelease": "pop",
+            "KeyPress,XK_Prior,!ShiftMask": "zoom_to_fewer_windows",
+            "KeyPress,XK_Next,!ShiftMask": "zoom_to_more_windows",
+            
+            "KeyPress,XK_Prior,ShiftMask": "zoom_in",
+            "KeyPress,XK_Next,ShiftMask": "zoom_out"
+        }},
+        "pan": {"class": "glass_input.mode.Mode", "keymap": {
+            "KeyRelease": "pop",
+            "ButtonRelease": "pop",
+            "KeyPress,XK_Left,ShiftMask,!AutoRepeat": {"pan":{"x": 1, "y": 0}},
+            "KeyPress,XK_Right,ShiftMask,!AutoRepeat": {"pan":{"x": -1, "y": 0}},
+            "KeyPress,XK_Up,ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": 1}},
+            "KeyPress,XK_Down,ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": -1}},
+            
+            "KeyPress,XK_Left,ShiftMask,AutoRepeat": {"pan":{"x": 10, "y": 0}},
+            "KeyPress,XK_Right,ShiftMask,AutoRepeat": {"pan":{"x": -10, "y": 0}},
+            "KeyPress,XK_Up,ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": 10}},
+            "KeyPress,XK_Down,ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": -10}},
+            
+            "KeyPress,XK_Left,!ShiftMask": "zoom_to_window_to_the_left",
+            "KeyPress,XK_Right,!ShiftMask": "zoom_to_window_to_the_right",
+            "KeyPress,XK_Up,!ShiftMask": "zoom_to_window_above",
+            "KeyPress,XK_Down,!ShiftMask": "zoom_to_window_below",
+            "ButtonPress": "pan_mouse",
+            "MotionNotify": "pan_mouse"
+        }},
+        "item_zoom": {
+            "class": "glass_input.mode.Mode",
+            "load": {"ifnowin": {}},
+            "keymap": {
+                "KeyRelease": "pop",
 
-        "KeyPress,Mod1Mask,ShiftMask,XK_Home": "zoom_1_1_to_window",
-        
-        "Mod1Mask,ButtonRelease,ShiftMask,4": "zoom_1_1_to_sreen",
-        "Mod1Mask,KeyPress,ShiftMask,XK_Prior": "zoom_1_1_to_sreen",
-        "Mod1Mask,ButtonRelease,ShiftMask,5": "zoom_1_1_to_window",
-        "Mod1Mask,KeyPress,ShiftMask,XK_Next": "zoom_1_1_to_window",
-        "Mod1Mask,ButtonRelease,4": "zoom_in",
-        "Mod1Mask,KeyPress,XK_Prior": "zoom_in",
-        "Mod1Mask,ButtonRelease,5": "zoom_out",
-        "Mod1Mask,KeyPress,XK_Next": "zoom_out"
-    }},
-    "item_pan": {"class": "glass_input.item_pan.ItemPanMode", "keymap": {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-
-        "KeyPress,XK_Left,!AutoRepeat": {"pan":{"x": -1, "y": 0}},
-        "KeyPress,XK_Right,!AutoRepeat": {"pan":{"x": 1, "y": 0}},
-        "KeyPress,XK_Up,!AutoRepeat": {"pan":{"x": 0, "y": -1}},
-        "KeyPress,XK_Down,!AutoRepeat": {"pan":{"x": 0, "y": 1}},
-        
-        "KeyPress,XK_Left,AutoRepeat": {"pan":{"x": -10, "y": 0}},
-        "KeyPress,XK_Right,AutoRepeat": {"pan":{"x": 10, "y": 0}},
-        "KeyPress,XK_Up,AutoRepeat": {"pan":{"x": 0, "y": -10}},
-        "KeyPress,XK_Down,AutoRepeat": {"pan":{"x": 0, "y": 10}},
-        
-        "Button1Mask,MotionNotify": "pan_mouse"
-    }},
-    "item_resize": {"class": "glass_input.item_resize.ItemResizeMode", "keymap": {
-        "KeyRelease": "pop",
-        "ButtonRelease": "pop",
-
-        "KeyPress,XK_Left,!AutoRepeat": {"resize":{"x": -1, "y": 0}},
-        "KeyPress,XK_Right,!AutoRepeat": {"resize":{"x": 1, "y": 0}},
-        "KeyPress,XK_Up,!AutoRepeat": {"resize":{"x": 0, "y": -1}},
-        "KeyPress,XK_Down,!AutoRepeat": {"resize":{"x": 0, "y": 1}},
-        
-        "KeyPress,XK_Left,AutoRepeat": {"resize":{"x": -10, "y": 0}},
-        "KeyPress,XK_Right,AutoRepeat": {"resize":{"x": 10, "y": 0}},
-        "KeyPress,XK_Up,AutoRepeat": {"resize":{"x": 0, "y": -10}},
-        "KeyPress,XK_Down,AutoRepeat": {"resize":{"x": 0, "y": 10}},
-        
-        "Button1Mask,MotionNotify": "resize_mouse"
-    }},
-    "rofi": {"shell": "rofi -show drun -font 'DejaVu Sans 18' -show-icons &"}
+                "KeyPress,Mod1Mask,ShiftMask,XK_Home": "item_zoom_1_1_to_window",
+                
+                "Mod1Mask,ButtonRelease,ShiftMask,4": "item_zoom_1_1_to_sreen",
+                "Mod1Mask,KeyPress,ShiftMask,XK_Prior": "item_zoom_1_1_to_sreen",
+                "Mod1Mask,ButtonRelease,ShiftMask,5": "item_zoom_1_1_to_window",
+                "Mod1Mask,KeyPress,ShiftMask,XK_Next": "item_zoom_1_1_to_window",
+                "Mod1Mask,ButtonRelease,4": "item_zoom_in",
+                "Mod1Mask,KeyPress,XK_Prior": "item_zoom_in",
+                "Mod1Mask,ButtonRelease,5": "item_zoom_out",
+                "Mod1Mask,KeyPress,XK_Next": "item_zoom_out"
+            }
+        },
+        "item_pan": {
+            "class": "glass_input.mode.Mode",
+            "load": {"ifnowin": {"mode": "pan"}},
+            "keymap": {
+                "KeyRelease": "pop",
+                "ButtonRelease": "pop",
+                
+                "KeyPress,XK_Left,!AutoRepeat": {"item_pan":{"x": -1, "y": 0}},
+                "KeyPress,XK_Right,!AutoRepeat": {"item_pan":{"x": 1, "y": 0}},
+                "KeyPress,XK_Up,!AutoRepeat": {"item_pan":{"x": 0, "y": -1}},
+                "KeyPress,XK_Down,!AutoRepeat": {"item_pan":{"x": 0, "y": 1}},
+                
+                "KeyPress,XK_Left,AutoRepeat": {"item_pan":{"x": -10, "y": 0}},
+                "KeyPress,XK_Right,AutoRepeat": {"item_pan":{"x": 10, "y": 0}},
+                "KeyPress,XK_Up,AutoRepeat": {"item_pan":{"x": 0, "y": -10}},
+                "KeyPress,XK_Down,AutoRepeat": {"item_pan":{"x": 0, "y": 10}},
+                
+                "Button1Mask,MotionNotify": "item_pan_mouse"
+            }
+        },
+        "item_resize": {
+            "class": "glass_input.mode.Mode",
+            "load": {"ifnowin": {"mode": "resize"}},
+            "keymap": {
+                "KeyRelease": "pop",
+                "ButtonRelease": "pop",
+                
+                "KeyPress,XK_Left,!AutoRepeat": {"item_resize":{"x": -1, "y": 0}},
+                "KeyPress,XK_Right,!AutoRepeat": {"item_resize":{"x": 1, "y": 0}},
+                "KeyPress,XK_Up,!AutoRepeat": {"item_resize":{"x": 0, "y": -1}},
+                "KeyPress,XK_Down,!AutoRepeat": {"item_resize":{"x": 0, "y": 1}},
+                
+                "KeyPress,XK_Left,AutoRepeat": {"item_resize":{"x": -10, "y": 0}},
+                "KeyPress,XK_Right,AutoRepeat": {"item_resize":{"x": 10, "y": 0}},
+                "KeyPress,XK_Up,AutoRepeat": {"item_resize":{"x": 0, "y": -10}},
+                "KeyPress,XK_Down,AutoRepeat": {"item_resize":{"x": 0, "y": 10}},
+                
+                "Button1Mask,MotionNotify": "item_resize_mouse"
+            }
+        },
+        "rofi": {"shell": "rofi -show drun -font 'DejaVu Sans 18' -show-icons &"}
+    }
 }
