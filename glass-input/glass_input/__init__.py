@@ -23,10 +23,10 @@ def main(*arg, **kw):
                     outf.write(inf.read())
 
         with open(configpath) as f:
-            mode.config = json.load(f)
+            mode.set_config(json.load(f))
     else:
         with pkg_resources.resource_stream("glass_input", "config.json") as f:
-            mode.config = json.load(f)
+            mode.set_config(json.load(f))
 
     with InfiniteGlass.Display() as display:
 

@@ -9,11 +9,24 @@ import datetime
 import importlib
 import traceback
 import operator
+import types
 
 config = {}
+functions = {}
+
+def set_config(cfg):
+    global config
+    config = cfg    
+    for module_name in config["imports"]:
+        module = importlib.import_module(module_name)
+        functions.update({
+            name: getattr(module, name)
+            for name in dir(module)
+            if isinstance(getattr(module, name), types.FunctionType)
+        })
 
 def push(display, Mode, **kw):
-    InfiniteGlass.DEBUG("modes.push", "PUSH %s\n" % Mode)
+    InfiniteGlass.DEBUG("modes.push", "PUSH %s: %s\n" % (Mode, kw))
     if not hasattr(display, "input_stack"):
         display.input_stack = []
     mode = Mode(display=display, **kw)
@@ -31,7 +44,7 @@ def push_config(display, config, **kw):
     return push(display, cls, **cfg)
 
 def push_by_name(display, name, **kw):
-    return push_config(display, config[name], **kw)
+    return push_config(display, config["modes"][name], **kw)
 
 def pop(display):
     res = display.input_stack.pop()
@@ -162,10 +175,12 @@ class Mode(object):
                 getattr(self, name)(event, **action[name])
             else:
                 InfiniteGlass.DEBUG("error", "Unknown action parameters: %s" % (action,))
+        elif isinstance(action, str) and action in config["modes"]:
+            self.action(eventfilter, config["modes"][action], event)
         elif isinstance(action, str) and hasattr(self, action):
             getattr(self, action)(event)
-        elif isinstance(action, str) and action in config:
-            self.action(eventfilter, config[action], event)
+        elif isinstance(action, str) and action in functions:
+            functions[action](self, event)
         else:
             InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action))
 
