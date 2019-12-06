@@ -3,18 +3,10 @@ from . import mode
 class ItemResizeMode(mode.Mode):
     def enter(self):
         mode.Mode.enter(self)
-        self.window = self.get_event_window(self.first_event)
         if not self.window or self.window == self.display.root:
             mode.pop(self.display)
             mode.push_by_name(self.display, "resize", first_event=self.first_event, last_event=self.last_event)
             return True
-        self.x = 0
-        self.y = 0
-        self.orig_coords = self.window["IG_COORDS"]
-        self.orig_size = self.window["IG_SIZE"]
-        # FIXME: Get the right view...
-        self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
-        self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
         return True
 
     def resize(self, event, x=None, y=None):
@@ -25,25 +17,25 @@ class ItemResizeMode(mode.Mode):
             self.x += x
             self.y += y
 
-        space_orig = mode.view_to_space(self.orig_view, self.size, 0, 0)
-        space = mode.view_to_space(self.orig_view, self.size, self.x, self.y)
+        space_orig = mode.view_to_space(self.orig_view, self.orig_size, 0, 0)
+        space = mode.view_to_space(self.orig_view, self.orig_size, self.x, self.y)
 
         coords = list(self.orig_coords)
         coords[2] = self.orig_coords[2] + (space[0] - space_orig[0])
         coords[3] = self.orig_coords[3] - (space[1] - space_orig[1])
 
         self.window["IG_COORDS"] = coords
-        self.window["IG_SIZE"] = [int((self.orig_size[0] / self.orig_coords[2]) * coords[2]),
-                                  int((self.orig_size[0] / self.orig_coords[2]) * coords[3])]
+        self.window["IG_SIZE"] = [int((self.orig_window_size[0] / self.orig_coords[2]) * coords[2]),
+                                  int((self.orig_window_size[0] / self.orig_coords[2]) * coords[3])]
 
     def resize_mouse(self, event):
-        space_orig = mode.view_to_space(self.orig_view, self.size, self.first_event.root_x, self.first_event.root_y)
-        space = mode.view_to_space(self.orig_view, self.size, event.root_x, event.root_y)
+        space_orig = mode.view_to_space(self.orig_view, self.orig_size, self.first_event.root_x, self.first_event.root_y)
+        space = mode.view_to_space(self.orig_view, self.orig_size, event.root_x, event.root_y)
 
         coords = list(self.orig_coords)
         coords[2] = self.orig_coords[2] + (space[0] - space_orig[0])
         coords[3] = self.orig_coords[3] - (space[1] - space_orig[1])
 
         self.window["IG_COORDS"] = coords
-        self.window["IG_SIZE"] = [int((self.orig_size[0] / self.orig_coords[2]) * coords[2]),
-                                  int((self.orig_size[0] / self.orig_coords[2]) * coords[3])]
+        self.window["IG_SIZE"] = [int((self.orig_window_size[0] / self.orig_coords[2]) * coords[2]),
+                                  int((self.orig_window_size[0] / self.orig_coords[2]) * coords[3])]

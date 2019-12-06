@@ -64,11 +64,23 @@ def modulo(a, b):
 
 class Mode(object):
     def __init__(self, **kw):
+        self.first_event = None
         self.state = {}
         for key, value in kw.items():
             setattr(self, key, value)
 
     def enter(self):
+        self.window = self.get_event_window(self.first_event)
+        self.x = 0
+        self.y = 0
+        if self.window:
+            self.orig_window_coords = self.window.get("IG_COORDS", None)
+            self.orig_window_size = self.window.get("IG_SIZE", None)
+        else:
+            self.orig_window_coords = None
+            self.orig_window_size = None
+        self.orig_view = self.display.root.get("IG_VIEW_DESKTOP_VIEW", None)
+        self.orig_size = self.display.root.get("IG_VIEW_DESKTOP_SIZE", None)
         self.state['start'] = datetime.datetime.now()
         return True
 
