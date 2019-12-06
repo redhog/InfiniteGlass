@@ -36,6 +36,10 @@ def window_getitem(self, name):
     return res
 Xlib.xobject.drawable.Window.__getitem__ = window_getitem
 
+def window_contains(self, name):
+    return name in self.keys()
+Xlib.xobject.drawable.Window.__contains__ = window_contains
+
 def window_get(self, name, default=None):
     try:
         return self[name]
