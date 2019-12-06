@@ -10,6 +10,7 @@
         "glass_input.actions.item_pan",
         "glass_input.actions.item_resize",
         "glass_input.actions.item_zoom_to",
+        "glass_input.actions.actions",
         "glass_input.actions.modeswitch"
     ],
     "modes": {

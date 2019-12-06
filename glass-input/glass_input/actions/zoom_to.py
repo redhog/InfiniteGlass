@@ -93,3 +93,9 @@ def zoom_to_more_windows(self, event):
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
+
+def zoom_home(self, event):
+    InfiniteGlass.DEBUG("zoom", "ZOOM HOME\n")
+    old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+    self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
+    self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
