@@ -127,6 +127,7 @@ class Shadow(object):
 
         @self.window.on()
         def ButtonPress(win, event):
+            if "SM_CLIENT_ID" not in self.properties: return
             self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
 
         @self.window.on()
