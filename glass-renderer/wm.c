@@ -58,9 +58,12 @@ Bool drawn_this_cycle = False;
 int draw_cycles_left = 0;
 
 void cycle_draw() {
-  if (draw_cycles_left == 0) return;
+  if (draw_cycles_left == 0) {
+    drawn_this_cycle = False;
+    return;
+  }
   draw();
-  drawn_this_cycle = False;
+  drawn_this_cycle = True;
   draw_cycles_left--;
 }
 
