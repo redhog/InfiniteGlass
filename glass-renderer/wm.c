@@ -223,13 +223,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       DEBUG("event", "Unknown GenericEvent without EventData\n");
     }
   } else if (event->type == damage_event + XDamageNotify) {
-    XErrorEvent error;
     DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
     // Subtract all the damage, repairing the window.
     trigger_draw();
-    x_try();
-    XDamageSubtract(display, ((XDamageNotifyEvent *) event)->damage, None, None);
-    x_catch(&error);
   } else if (event->type == shape_event + ShapeNotify) {
    //fprintf(stderr, "Received ShapeNotify\n");
    //XShapeEvent *event = (XShapeEvent*) &e;

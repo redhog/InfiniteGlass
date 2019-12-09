@@ -102,6 +102,13 @@ void item_type_base_draw(Rendering *rendering) {
     glDrawArrays(GL_POINTS, 0, 1);
 
     gl_check_error("item_draw3");
+
+    if (!rendering->view->picking) {
+      XErrorEvent error;
+      x_try();
+      XDamageSubtract(display, item->damage, None, None);
+      x_catch(&error);
+    }
   }
 }
 void item_type_base_update(Item *item) {
