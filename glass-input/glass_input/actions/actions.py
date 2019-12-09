@@ -18,14 +18,14 @@ def send_debug(self, event):
     self.display.flush()
 
 def send_close(self, event):
-    win = self.get_active_window()
+    win = InfiniteGlass.windows.get_active_window(self.display)
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
         win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
         self.display.flush()
 
 def send_sleep(self, event):
-    win = self.get_active_window()
+    win = InfiniteGlass.windows.get_active_window(self.display)
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)

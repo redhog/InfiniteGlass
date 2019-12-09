@@ -1,4 +1,5 @@
 from .. import mode
+import InfiniteGlass
 
 def item_pan(self, event, x=None, y=None):
     if x is None and y is None:
@@ -8,8 +9,8 @@ def item_pan(self, event, x=None, y=None):
         self.x += x
         self.y += y
 
-    space_orig = mode.view_to_space(self.orig_view, self.orig_size, 0, 0)
-    space = mode.view_to_space(self.orig_view, self.orig_size, self.x, self.y)
+    space_orig = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, 0, 0)
+    space = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, self.x, self.y)
 
     coords = list(self.orig_window_coords)
     coords[0] = self.orig_window_coords[0] + (space[0] - space_orig[0])
@@ -18,8 +19,8 @@ def item_pan(self, event, x=None, y=None):
     self.window["IG_COORDS"] = coords
 
 def item_pan_mouse(self, event):
-    space_orig = mode.view_to_space(self.orig_view, self.orig_size, self.first_event.root_x, self.first_event.root_y)
-    space = mode.view_to_space(self.orig_view, self.orig_size, event.root_x, event.root_y)
+    space_orig = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, self.first_event.root_x, self.first_event.root_y)
+    space = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, event.root_x, event.root_y)
 
     coords = list(self.orig_window_coords)
     coords[0] = self.orig_window_coords[0] + (space[0] - space_orig[0])

@@ -37,7 +37,7 @@ class TitleSearchMode(mode.Mode):
         self.aspect_ratio = self.orig_view[2] / self.orig_view[3]
         
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-        self.windows = list(self.get_all_windows())
+        self.windows = list(InfiniteGlass.windows.get_all_windows(self.display))
         print("All windows:", ",".join(w["name"] for w in self.windows))
         
         self.input = ""

@@ -6,6 +6,8 @@ import Xlib.protocol.event
 from . import display
 from . import window
 from . import eventmask
+from . import coords
+from . import windows
 from .keymap import *
 from .valueencoding import *
 from .debug import *

@@ -1,7 +1,8 @@
 import Xlib.X
+import InfiniteGlass
 
 def focus_follows_mouse(self, event):
-    win = self.get_active_window()
+    win = InfiniteGlass.windows.get_active_window(self.display)
     if win == getattr(self, "focus", None): return
     if not win: return
     win.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
