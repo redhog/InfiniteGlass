@@ -75,7 +75,8 @@ class Shadow(object):
         InfiniteGlass.DEBUG("shadow", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
         for name, value in self.properties.items():
             InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (name, str(value)[:100])); sys.stderr.flush()
-        self.window = self.manager.display.root.create_window(map=False)
+        
+        self.window = self.manager.display.root.create_window(map=False, **self.properties.get("__attributes__", {}))
         self.window["IG_GHOST"] = "IG_GHOST"
 
         with pkg_resources.resource_stream("glass_ghosts", "ghost.svg") as f:

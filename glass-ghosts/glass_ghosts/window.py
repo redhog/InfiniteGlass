@@ -17,7 +17,7 @@ class Window(object):
         InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
         self.match()
 
-        @window.on()
+        @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
             try:
@@ -26,6 +26,17 @@ class Window(object):
                 pass
             else:
                 self.match()
+        self.PropertyNotify = PropertyNotify
+
+        @self.window.on(mask="StructureNotifyMask")
+        def ConfigureNotify(win, event):
+            self.properties.update({"__attributes__": {
+                "x": event.x,
+                "y": event.y,
+                "width": event.width,
+                "height": event.height
+            }})
+        self.ConfigureNotify = ConfigureNotify
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
         def ClientMessage(win, event):
@@ -39,13 +50,11 @@ class Window(object):
             self.close()
         self.CloseMessage = ClientMessage
 
-        @window.on(mask="StructureNotifyMask")
+        @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
             InfiniteGlass.DEBUG("window", "WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             self.destroy()
-
         self.DestroyNotify = DestroyNotify
-        self.PropertyNotify = PropertyNotify
 
     def sleep(self):
         if self.client:
@@ -80,6 +89,7 @@ class Window(object):
         self.manager.display.eventhandlers.remove(self.CloseMessage)
         self.manager.display.eventhandlers.remove(self.SleepMessage)
         self.manager.display.eventhandlers.remove(self.DestroyNotify)
+        self.manager.display.eventhandlers.remove(self.ConfigureNotify)
         if self.client:
             self.client.remove_window(self)
 
