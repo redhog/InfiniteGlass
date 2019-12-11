@@ -18,6 +18,6 @@ setuptools.setup(name='glass-ghosts',
               'glass-ghosts = glass_ghosts.main:main',
           ],
       },
-      package_data={'glass_ghosts': ['*.svg']},
+      package_data={'glass_ghosts': ['*.svg', '*.json']},
       include_package_data=True
   )

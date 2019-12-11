@@ -18,7 +18,7 @@ class Shadow(object):
         InfiniteGlass.DEBUG("shadow", "SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
     def key(self):
-        return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
+        return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.config["match"]))
 
     def update_key(self):
         key = self.key()
@@ -66,7 +66,7 @@ class Shadow(object):
 
     def apply(self, window):
         InfiniteGlass.DEBUG("shadow", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
-        for key in self.manager.SET:
+        for key in self.manager.config["set"]:
             if key in self.properties:
                 InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
                 window[key] = self.properties[key]
@@ -117,7 +117,7 @@ class Shadow(object):
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
-            if name not in self.manager.SHADOW_UPDATE: return
+            if name not in self.manager.config["shadow_update"]: return
             try:
                 self.properties.update(glass_ghosts.helpers.expand_property(win, name))
                 InfiniteGlass.DEBUG("shadow.property", "%s=%s\n" % (name, self.properties[name])); sys.stderr.flush()

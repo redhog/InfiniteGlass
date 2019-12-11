@@ -23,7 +23,7 @@ class RootWindow(object):
             if client_win is None: return
 
             props = client_win.keys()
-            for ignore in self.manager.IGNORE:
+            for ignore in self.manager.config["ignore"]:
                 if isinstance(ignore, tuple):
                     name, value = ignore
                     if name in props:

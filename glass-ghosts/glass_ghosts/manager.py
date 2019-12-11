@@ -8,28 +8,31 @@ import glass_ghosts.shadow
 import glass_ghosts.window
 import glass_ghosts.rootwindow
 import glass_ghosts.session
+import pkg_resources
 
 class GhostManager(object):
-    def __init__(self,
-                 display,
-                 MATCH=("WM_CLASS", "WM_NAME"),
-                 SET=("IG_SIZE", "IG_COORDS"),
-                 SHADOW_UPDATE=("IG_COORDS",),
-                 IGNORE=("WM_TRANSIENT_FOR",
-                         "IG_GHOST",
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"),
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DOCK"),
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_TOOLBAR"),
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"),
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"),
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"),
-                         ("_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DIALOG"))):
-        self.display = display
+    def __init__(self, display):
 
-        self.MATCH = MATCH
-        self.SET = SET
-        self.SHADOW_UPDATE = SHADOW_UPDATE
-        self.IGNORE = IGNORE
+        configpath = os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.json")
+        if configpath:
+            configpath = os.path.expanduser(configpath)
+
+            configdirpath = os.path.dirname(configpath)
+            if not os.path.exists(configdirpath):
+                os.makedirs(configdirpath)
+
+            if not os.path.exists(configpath):
+                with pkg_resources.resource_stream("glass_ghosts", "config.json") as inf:
+                    with open(configpath, "wb") as outf:
+                        outf.write(inf.read())
+
+            with open(configpath) as f:
+                self.config = json.load(f)
+        else:
+            with pkg_resources.resource_stream("glass_ghosts", "config.json") as f:
+                self.config = json.load(f)
+        
+        self.display = display
 
         self.changes = False
         self.windows = {}

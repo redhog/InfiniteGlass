@@ -75,7 +75,7 @@ class Window(object):
             self.window.destroy()
             
     def key(self):
-        return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.MATCH))
+        return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.config["match"]))
 
     def destroy(self):
         if not self.shadow:

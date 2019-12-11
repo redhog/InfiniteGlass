@@ -1,0 +1,14 @@
+{
+    "ignore": ["WM_TRANSIENT_FOR",
+               "IG_GHOST",
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"],
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DOCK"],
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_TOOLBAR"],
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"],
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"],
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"],
+               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DIALOG"]],
+    "match": ["WM_CLASS", "WM_NAME"],
+    "set": ["IG_SIZE", "IG_COORDS"],
+    "shadow_update": ["IG_COORDS"]
+}
