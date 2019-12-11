@@ -10,5 +10,6 @@
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DIALOG"]],
     "match": ["WM_CLASS", "WM_NAME"],
     "set": ["IG_SIZE", "IG_COORDS"],
+    "shadow_set": ["IG_SIZE", "IG_COORDS"],
     "shadow_update": ["IG_COORDS"]
 }

@@ -64,9 +64,9 @@ class Shadow(object):
         self.current_key = key
         self.manager.shadows[self.current_key] = self
 
-    def apply(self, window):
+    def apply(self, window, type="set"):
         InfiniteGlass.DEBUG("shadow", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
-        for key in self.manager.config["set"]:
+        for key in self.manager.config[type]:
             if key in self.properties:
                 InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
                 window[key] = self.properties[key]
@@ -94,7 +94,7 @@ class Shadow(object):
                 ghost_image = ghost_image.replace(key, value)
                 self.window["IG_CONTENT"] = ("IG_SVG", ghost_image)
                 self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
-        self.apply(self.window)
+        self.apply(self.window, type="shadow_set")
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
