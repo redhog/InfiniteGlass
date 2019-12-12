@@ -103,18 +103,20 @@ class GhostManager(object):
 
     def tojson(self, obj):
         if isinstance(obj, array.array):
-            return list(obj)
-        if isinstance(obj, bytes):
+            return {"__jsonclass__": ["array", obj.typecode, list(obj)]}
+        elif isinstance(obj, bytes):
             return {"__jsonclass__": ["base64", base64.b64encode(obj).decode("ascii")]}
-        if type(obj).__name__ == "Window":
+        elif type(obj).__name__ == "Window":
             return {"__jsonclass__": ["Window", obj.__window__()]}
         return obj
 
     def fromjson(self, obj):
         if "__jsonclass__" in obj:
             cls = obj.pop("__jsonclass__")
+            if cls[0] == "array":
+                return array.array(cls[1], cls[2])
             if cls[0] == "base64":
                 return base64.b64decode(cls[1])
-            if cls[0] == "Window":
+            elif cls[0] == "Window":
                 return self.display.create_resource_object("window", cls[1])
         return obj
