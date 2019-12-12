@@ -6,11 +6,22 @@ import struct
 from . import eventmask
 from . import valueencoding
 from . import framing
+import sys
 
 def window_setitem(self, key, value):
-    key = self.display.get_atom(key)
-    itemtype, items, fmt = valueencoding.format_value(self, value)
-    self.change_property(key, itemtype, fmt, items)
+    try:
+        keyatom = self.display.get_atom(key)
+        itemtype, items, fmt = valueencoding.format_value(self, value)
+        remaining = []
+        if len(items) > 0xfffc:
+            remaining = items[0xfffc:]
+            items = items[:0xfffc]
+        self.change_property(keyatom, itemtype, fmt, items)
+        while remaining:
+            self.change_property(keyatom, itemtype, fmt, remaining[:0xfffc], Xlib.X.PropModeAppend)
+            remaining = remaining[0xfffc:]
+    except Exception as e:
+        raise Exception("Unable to set %s.%s = %s: %s" % (self, key, repr(value)[:100], e))
 Xlib.xobject.drawable.Window.__setitem__ = window_setitem
 
 def window_keys(self):

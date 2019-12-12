@@ -22,7 +22,30 @@ def parse_value(display, value):
                 items = [float(item) for item in items]
             else:
                 items = [int(item) for item in items]
-    if isinstance(items[0], Xlib.xobject.drawable.Window):
+    if isinstance(value, array.array):
+        if value.typecode == 'b':
+            itemtype = display.get_atom("STRING")
+            fmt = 8
+        elif value.typecode == 'B':
+            itemtype = display.get_atom("STRING")
+            fmt = 8
+        elif value.typecode == 'h':
+            itemtype = display.get_atom("INTEGER")
+        elif value.typecode == 'H':
+            itemtype = display.get_atom("CARDINAL")
+        elif value.typecode == 'i':
+            itemtype = display.get_atom("INTEGER")
+        elif value.typecode == 'I':
+            itemtype = display.get_atom("CARDINAL")
+        elif value.typecode == 'l':
+            itemtype = display.get_atom("INTEGER")
+        elif value.typecode == 'L':
+            itemtype = display.get_atom("CARDINAL")
+        elif value.typecode == 'f':
+            itemtype = display.get_atom("FLOAT")
+        else:
+            raise ValueError("Unsupported array type")
+    elif isinstance(items[0], Xlib.xobject.drawable.Window):
         itemtype = display.get_atom("WINDOW")
         items = [item.__window__() for item in items]
     elif isinstance(items[0], int):
@@ -54,7 +77,9 @@ def parse_value(display, value):
 def format_value(window, value):
     itemtype, items, fmt = parse_value(window.display, value)
 
-    if isinstance(items[0], int):
+    if itemtype == window.display.get_atom("CARDINAL"):
+        items = struct.pack("<" + "I" * len(items), *items)
+    elif isinstance(items[0], int):
         items = struct.pack("<" + "i" * len(items), *items)
     elif isinstance(items[0], float):
         items = struct.pack("<" + "f" * len(items), *items)
