@@ -13,7 +13,7 @@
   * [Cursor tracking using XInput2](https://keithp.com/blogs/Cursor_tracking/)
 * Window manager protocols
   * [ICCCM](https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html)
-  * [ewmh](https://www.freedesktop.org/wiki/Specifications/wm-spec/)
+  * [ewmh](https://specifications.freedesktop.org/wm-spec/wm-spec-1.5.html)
 * Session manager protocols
   * [XSMP](https://www.x.org/releases/X11R7.6/doc/libSM/SMlib.html)
   * [ICE](https://www.x.org/releases/X11R7.6/doc/libICE/ICElib.html)
