@@ -7,9 +7,9 @@ import socket
 import signal
 
 class MyConnection(pysmlib.client.PySmcConn):
-    def __init__(self, wrapper):
+    def __init__(self, wrapper, *arg, **kw):
         self.wrapper = wrapper
-        pysmlib.client.PySmcConn.__init__(self)
+        pysmlib.client.PySmcConn.__init__(self, *arg, **kw)
     def signal_save_yourself(self, *arg):
         print("SAVE_YOURSELF", arg)
         print("Restart command: %s" % (["glass-session-wrapper"] + self.wrapper.argv,))
@@ -29,27 +29,82 @@ class MyConnection(pysmlib.client.PySmcConn):
 class Wrapper(object):
     def __init__(self, argv):
         self.argv = argv
+        
+        options = {}
+        for idx, arg in enumerate(argv):
+            if not arg.startswith("--"):
+                execargs = argv[idx:]
+                break
+            arg = arg[2:]
+            value = True
+            if "=" in arg:
+                arg, value = arg.split("=", 1)
+            options[arg] = value
+            
+        if "help" in options or not self.argv:
+            print("""glass-session-wrapper OPTIONS COMMAND ARG1 ARG2...
 
+Wraps applications that do not support the session manager protocol
+but that support saving their state on exit to a session directory,
+The application needs to set the WM_CLIENT_MACHINE and _NET_WM_PID
+properties on its windows.
+
+Where COMMAND and ARGx is the program to start and its arguments. The
+command and arguments can contain tokens to be replaced on the form
+%(NAME)s.
+
+Available tokens:
+
+   %(sessionid)s The current session id string. Guaranteed to not
+    contain a '/' character.
+
+Available options:
+
+--sessionid=SESSIONID Specify a previously used session id to reuse.
+  Mainly used when the application is restarted by the session
+  manager.
+
+
+Example:
+
+    glass-session-wrapper \
+      chromium-browser \
+      --user-data-dir=chrome-sessions/%(sessionid)s
+""")
+            sys.exit(0)
+
+
+        previous_id = None
+        if "sessionid" in options:
+            previous_id = options["sessionid"].encode("utf-8")
+        self.conn = MyConnection(self, previous_id = previous_id)
+        self.client_id = self.conn.client_id.decode("utf-8")
+        print("Session ID: ", self.client_id)
+        if "sessionid" not in options:
+            self.argv[0:0] = ["--sessionid=%s" % self.client_id]
+            options["sessionid"] = self.client_id
+            
         self.status_r, self.status_w = os.pipe()
         signal.signal(
             signal.SIGCHLD,
             self.sig_child)
         
         self.machine = socket.gethostname()
+
+        execargs = [arg % options for arg in execargs]
+
+        print("Session wrapper executing: %s" % " ".join(repr(item) for item in execargs))
         
         self.pid = os.fork()
         if self.pid == 0:
             os.close(self.status_r)
             os.close(self.status_w)
-            os.execvp(argv[0], argv)
+            os.execvp(execargs[0], execargs)
             os._exit(127) # This shouldn't happen...
         else:
             with InfiniteGlass.Display() as self.display:
                 self.display.mainloop.add(self.status_r, self.child_done)
-                self.conn = MyConnection(self)
                 self.display.mainloop.add(self.conn.iceconn.IceConnectionNumber(), lambda fd: self.conn.iceconn.IceProcessMessages())
-                self.client_id = self.conn.client_id.decode("utf-8")
-                print("Session ID: ", self.client_id)
 
                 @self.display.root.on(mask="SubstructureNotifyMask")
                 def MapNotify(win, event):
