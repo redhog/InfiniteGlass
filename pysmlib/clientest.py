@@ -3,7 +3,11 @@ import pysmlib.client
 class MyConnection(pysmlib.client.PySmcConn):
     def signal_save_yourself(self, *arg):
         print("SAVE_YOURSELF", arg)
-        self.save_yourself_done()
+        self.SmcSetProperties({
+            "RestartCommand": ["foo"],
+            "SmCurrentDirectory": "bar"
+        })
+        self.SmcSaveYourselfDone(True)
     def signal_die(self, *arg):
         print("DIE", arg)
     def signal_save_complete(self, *arg):

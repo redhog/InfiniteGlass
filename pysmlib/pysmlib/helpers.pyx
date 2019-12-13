@@ -2,6 +2,7 @@ from pysmlib.SMlib cimport *
 from pysmlib.Python cimport *
 from pysmlib.helpers cimport *
 from libc.stdlib cimport malloc, free
+from libc.string cimport strcpy, strlen
 
 cdef object smprops_to_dict(int numProps, SmProp **props):
     propdict = {}
@@ -9,8 +10,20 @@ cdef object smprops_to_dict(int numProps, SmProp **props):
         values = []
         for valueidx in range(props[idx].num_vals):
             values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length).decode("utf-8"))
-        propdict[bytes(props[idx].name).decode("utf-8")] = (bytes(props[idx].type).decode("utf-8"), values)
+        name = bytes(props[idx].name).decode("utf-8")
+        type = bytes(props[idx].type).decode("utf-8")
+        propdict[name] = (type, values)
     return propdict
+
+cdef char *tostr_malloc(obj):
+    cdef char *res
+    if not isinstance(obj, (bytes, str)):
+        obj = str(obj)
+    if isinstance(obj, str):
+        obj = obj.encode("utf-8")
+    res = <char *> malloc(len(obj) + 1)
+    strcpy(res, obj)
+    return res
 
 cdef void dict_to_smprops(object propsdict, int *numProps, SmProp ***props):
     cdef SmProp **propsarr
@@ -20,13 +33,14 @@ cdef void dict_to_smprops(object propsdict, int *numProps, SmProp ***props):
 
     propsarr = <SmProp **>malloc(sizeof(SmProp *) * len(propsdict))
     props[0] = propsarr
-    
+
+    if isinstance(propsdict, dict):
+        propsdict = propsdict.items()
     for idx, (name, value) in enumerate(propsdict):
         prop = <SmProp *>malloc(sizeof(SmProp))
         propsarr[idx] = prop
          
-        name = name.encode("utf-8")
-        prop.name = name
+        prop.name = tostr_malloc(name)
 
         if isinstance(value, (tuple, list)):
             prop.type = b"SmLISTofARRAY8"
@@ -40,13 +54,16 @@ cdef void dict_to_smprops(object propsdict, int *numProps, SmProp ***props):
             
         prop.vals = <SmPropValue*> malloc(sizeof(SmPropValue) * len(value))
         for idx in range(len(value)):
-            prop.vals[idx].length = len(value[idx]) + 1
-            prop.vals[idx].value = <char*> value[idx]
+            prop.vals[idx].length = len(value[idx])
+            prop.vals[idx].value = tostr_malloc(value[idx])
         
 cdef void free_smprops(int numProps, SmProp **props):
     cdef SmProp *prop
     for idx in range(numProps):
         prop = props[idx]
+        free(prop.name)
+        for validx in range(prop.num_vals):
+            free(prop.vals[validx].value)
         free(prop.vals)
         free(prop)
     free(props)
