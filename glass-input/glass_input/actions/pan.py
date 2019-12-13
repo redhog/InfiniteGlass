@@ -50,7 +50,7 @@ def zoom_to_window_to_the(self, event, direction):
         return 2 * numpy.pi - diff
 
     windows = []
-    visible, invisible = self.get_windows(view)
+    visible, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     for child, coords in invisible:
         if child.get("IG_LAYER", "IG_LAYER_DESKTOP") != "IG_LAYER_DESKTOP":
             continue
