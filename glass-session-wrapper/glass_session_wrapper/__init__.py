@@ -109,13 +109,14 @@ Example:
                 @self.display.root.on(mask="SubstructureNotifyMask")
                 def MapNotify(win, event):
                     self.match(event.window)
+                print("Waiting for application windows to open...")
 
     def match(self, win):
-        win = win.find_client_window()
-        if not win: return
+        print("MapNotify(%s)" % win)
+        win = win.find_client_window() or win
         machine = win.get("WM_CLIENT_MACHINE", b"").decode("utf-8")
         pid = win.get("_NET_WM_PID", None)
-        name = win.get("WM_NAME", "").decode("utf-8")
+        name = win.get("WM_NAME", b"").decode("utf-8")
         print("MATCHING %s: %s/%s against %s/%s" % (name, machine, pid, self.machine, self.pid))
         if pid == self.pid and machine == self.machine:
             print("Found matching window %s" % win)
