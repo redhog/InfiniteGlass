@@ -2,7 +2,7 @@ import InfiniteGlass
 from .. import mode
 
 def item_zoom_1_1_to_sreen(self, event):
-    win = InfiniteGlass.windows.get_active_window()
+    win = InfiniteGlass.windows.get_active_window(self.display)
     if not win or win == self.display.root:
         return
 
@@ -17,7 +17,7 @@ def item_zoom_1_1_to_sreen(self, event):
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
 
 def item_zoom_1_1_to_window(self, event):
-    win = InfiniteGlass.windows.get_active_window()
+    win = InfiniteGlass.windows.get_active_window(self.display)
     if not win or win == self.display.root:
         return
 
@@ -36,7 +36,7 @@ def item_zoom_1_1_to_window(self, event):
 
 def zoom_1_1_1(self, event):
     # zoom_screen_to_window_and_window_to_screen
-    win = InfiniteGlass.windows.get_active_window()
+    win = InfiniteGlass.windows.get_active_window(self.display)
     if not win or win == self.display.root:
         return
     InfiniteGlass.DEBUG("zoom", "zoom_screen_to_window_and_window_to_screen\n")
