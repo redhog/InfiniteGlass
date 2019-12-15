@@ -1,4 +1,6 @@
 {
+    # Python modules to import action functions from. Action functions
+    # are functions taking (mode, event) parameters.
     "imports": [
         "glass_input.actions.focus",
         "glass_input.actions.title_search",
@@ -13,13 +15,33 @@
         "glass_input.actions.actions",
         "glass_input.actions.modeswitch"
     ],
+    # Input modes represent different states glass-input can be in,
+    # and defines what actions are bound to which keys in that mode,
+    # as well as how to transition to other modes.
+    # Input modes have a keymapping defining a mapping from event
+    # filters to actions. An action can be:
+    #  * The name of another mode to switch to.
+    #  * The word "pop" that goes back to the previous mode.
+    #  * The name of an action function imported above
+    #  * A dictionary with one key, the name of an action function,
+    #    with a value that is a dictionary of extra parameters to that
+    #    action function.
+    #  * A dictionary with the key shell, who's value is a shell command to execute.
+    #  * A list of actions to preform in order.
     "modes": {
+        # Input mode entered when glass-input starts. Generally
+        # reverted to once all keys are released by the user after an
+        # action.
         "base_mode": {"class": "glass_input.base.BaseMode", "keymap": {
             "GenericEventCode": "focus_follows_mouse",
             "ButtonPress,Mod4Mask": "grabbed_mode",
             "KeyPress,Mod4Mask": "grabbed_mode",
             "KeyPress,XK_Super_L": "grabbed_mode"
         }},
+        # Grabbed mode is entered once the main trigger key has been
+        # pressed, and quickly dispatches to one of the other modes as
+        # soon as enough other keys/buttons are pressed to know which
+        # one to use.
         "grabbed_mode": {"class": "glass_input.grabbed.GrabbedMode", "keymap": {
             "KeyRelease": "pop",
             "ButtonRelease": "pop",
