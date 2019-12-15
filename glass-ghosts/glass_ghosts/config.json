@@ -1,4 +1,6 @@
 {
+    # Do not make shadows for windows with any of these properties or
+    # property values (in the case of name-value pairs)
     "ignore": ["WM_TRANSIENT_FOR",
                "IG_GHOST",
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"],
@@ -8,12 +10,15 @@
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DIALOG"]],
+    # Use these properties to match a window to an existing shadow
     "match": ["WM_CLASS", "WM_NAME"],
+    # Set these stored properties on a window that has been matched to a shadow
     "set": ["IG_SIZE",
             "IG_COORDS",
             "_NET_WM_DESKTOP",
             "_NET_WM_ICON_GEOMETRY"
            ],
+    # Set these stored properties on a shadow
     "shadow_set": ["IG_SIZE",
                    "IG_COORDS",
                    "WM_NAME",
@@ -32,5 +37,6 @@
                    "_NET_WM_ICON_GEOMETRY",
                    "_NET_WM_ICON"
                   ],
+    # Update these stored properties from properties set on a shadow
     "shadow_update": ["IG_COORDS"]
 }
