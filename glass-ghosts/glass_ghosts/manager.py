@@ -3,6 +3,7 @@ import array
 import sqlite3
 import os.path
 import yaml
+import json
 import base64
 import glass_ghosts.shadow
 import glass_ghosts.window
@@ -31,7 +32,7 @@ class GhostManager(object):
         else:
             with pkg_resources.resource_stream("glass_ghosts", "config.json") as f:
                 self.config = yaml.load(f, Loader=yaml.SafeLoader)
-        
+       
         self.display = display
 
         self.changes = False
