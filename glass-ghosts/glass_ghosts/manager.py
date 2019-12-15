@@ -2,7 +2,7 @@ import InfiniteGlass
 import array
 import sqlite3
 import os.path
-import json
+import yaml
 import base64
 import glass_ghosts.shadow
 import glass_ghosts.window
@@ -27,10 +27,10 @@ class GhostManager(object):
                         outf.write(inf.read())
 
             with open(configpath) as f:
-                self.config = json.load(f)
+                self.config = yaml.load(f, Loader=yaml.SafeLoader)
         else:
             with pkg_resources.resource_stream("glass_ghosts", "config.json") as f:
-                self.config = json.load(f)
+                self.config = yaml.load(f, Loader=yaml.SafeLoader)
         
         self.display = display
 

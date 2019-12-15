@@ -12,6 +12,7 @@ setuptools.setup(name='glass-input',
       url='https://github.com/redhog/InfiniteGlass',
       packages=setuptools.find_packages(),
       install_requires=[
+          "pyyaml"
       ],
       entry_points={
           'console_scripts': [

@@ -5,7 +5,7 @@ import Xlib.keysymdef.miscellany
 import Xlib.ext.xinput
 import os.path
 import pkg_resources
-import json
+import yaml
 from . import mode
 
 def main(*arg, **kw):
@@ -23,10 +23,10 @@ def main(*arg, **kw):
                     outf.write(inf.read())
 
         with open(configpath) as f:
-            mode.set_config(json.load(f))
+            mode.set_config(yaml.load(f, Loader=yaml.SafeLoader))
     else:
         with pkg_resources.resource_stream("glass_input", "config.json") as f:
-            mode.set_config(json.load(f))
+            mode.set_config(yaml.load(f, Loader=yaml.SafeLoader))
 
     with InfiniteGlass.Display() as display:
 
