@@ -37,7 +37,7 @@ class TitleSearchMode(mode.Mode):
         self.aspect_ratio = self.orig_view[2] / self.orig_view[3]
         
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-        self.windows = list(self.get_all_windows(self.display))
+        self.windows = list(self.get_all_windows())
         print("All windows:", ",".join(w["name"] for w in self.windows))
         
         self.input = ""
@@ -50,6 +50,8 @@ class TitleSearchMode(mode.Mode):
 
         self.orig_menu_view = self.display.root["IG_VIEW_MENU_VIEW"]
         self.input_window = self.display.root.create_window(map=False)
+        self.input_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
+
         self.update_input()
         self.input_window["IG_COORDS"] = [self.orig_menu_view[0], self.orig_menu_view[1] + self.orig_menu_view[3], self.orig_menu_view[2], self.orig_menu_view[3]]
         self.input_window["IG_LAYER"] = "IG_LAYER_MENU"

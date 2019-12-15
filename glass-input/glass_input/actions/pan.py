@@ -1,6 +1,7 @@
 import InfiniteGlass
 import numpy
 from .. import mode
+import sys
 
 def pan(self, event, x=None, y=None):
     if x is None and y is None:

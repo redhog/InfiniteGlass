@@ -54,7 +54,7 @@ def main(*arg, **kw):
                 return False
             return mode.handle_event(display, event)
 
-        mode.push_by_name(display, "base")
+        mode.push_by_name(display, "base_mode")
 
         display.root.xinput_select_events([
             (Xlib.ext.xinput.AllDevices, Xlib.ext.xinput.RawMotionMask),

@@ -142,6 +142,7 @@ class Mode(object):
         return True
 
     def action(self, eventfilter, action, event, **kw):
+        InfiniteGlass.DEBUG("action", "Action %s(%s) [%s]" % (action, kw, eventfilter))
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)

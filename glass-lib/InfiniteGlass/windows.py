@@ -29,9 +29,10 @@ def get_event_window(display, event):
     if event == "ButtonPress":
         return get_active_window(display)
     else:
-        focus = display.get_input_focus().focus
-        if focus == Xlib.X.PointerRoot:
-            return None
+        return display.root.get("_NET_ACTIVE_WINDOW", None)
+        #focus = display.get_input_focus().focus
+        #if focus == Xlib.X.PointerRoot:
+        #    return None
         return focus
 
 def get_windows(display, view, margin=0.01):
