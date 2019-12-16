@@ -68,7 +68,7 @@
             "KeyPress,!Mod1Mask,XK_Right": "pan_mode",
 
             "KeyPress,Mod1Mask,!ShiftMask,XK_Home": "zoom_1_1_1",
-            "KeyPress,Mod1Mask,ShiftMask,XK_Home": "item_zoom_mode",
+            "KeyPress,Mod1Mask,ShiftMask,XK_Home": "item_zoom_1_1_to_window",
             "ButtonPress,Mod1Mask,4": "item_zoom_mode",
             "ButtonPress,Mod1Mask,5": "item_zoom_mode",
             "KeyPress,Mod1Mask,XK_Next": "item_zoom_mode",
@@ -129,18 +129,15 @@
             "class": "glass_input.mode.Mode",
             "load": {"ifnowin": {}},
             "keymap": {
-                "KeyRelease": "pop",
-
-                "KeyPress,Mod1Mask,ShiftMask,XK_Home": "item_zoom_1_1_to_window",
-                
-                "Mod1Mask,ButtonRelease,ShiftMask,4": "item_zoom_1_1_to_sreen",
-                "Mod1Mask,KeyPress,ShiftMask,XK_Prior": "item_zoom_1_1_to_sreen",
-                "Mod1Mask,ButtonRelease,ShiftMask,5": "item_zoom_1_1_to_window",
-                "Mod1Mask,KeyPress,ShiftMask,XK_Next": "item_zoom_1_1_to_window",
-                "Mod1Mask,ButtonRelease,4": "item_zoom_in",
-                "Mod1Mask,KeyPress,XK_Prior": "item_zoom_in",
-                "Mod1Mask,ButtonRelease,5": "item_zoom_out",
-                "Mod1Mask,KeyPress,XK_Next": "item_zoom_out"
+                "KeyRelease": "pop",                
+                "Mod1Mask,ButtonRelease,ShiftMask,4": "item_zoom_in",
+                "Mod1Mask,KeyPress,ShiftMask,XK_Prior": "item_zoom_in",
+                "Mod1Mask,ButtonRelease,ShiftMask,5": "item_zoom_out",
+                "Mod1Mask,KeyPress,ShiftMask,XK_Next": "item_zoom_out",
+                "Mod1Mask,ButtonRelease,4": "item_zoom_in_or_1_1",
+                "Mod1Mask,KeyPress,XK_Prior": "item_zoom_in_or_1_1",
+                "Mod1Mask,ButtonRelease,5": "item_zoom_out_or_1_1",
+                "Mod1Mask,KeyPress,XK_Next": "item_zoom_out_or_1_1"
             }
         },
         "item_pan_mode": {

@@ -1,20 +1,45 @@
 import InfiniteGlass
 from .. import mode
 
-def item_zoom_1_1_to_sreen(self, event):
-    win = InfiniteGlass.windows.get_active_window(self.display)
-    if not win or win == self.display.root:
-        return
-
+def item_zoom_1_1_to_sreen_calc(self, win):
     size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
     coords = win["IG_COORDS"]
     screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
 
-    geom = [int(size[0] * coords[2] / screen[2]),
+    return [int(size[0] * coords[2] / screen[2]),
             int(size[1] * coords[3] / screen[3])]
 
-    win["IG_SIZE_ANIMATE"] = geom
+def item_zoom_1_1_to_sreen(self, event):
+    win = InfiniteGlass.windows.get_active_window(self.display)
+    if not win or win == self.display.root:
+        return None
+
+    win["IG_SIZE_ANIMATE"] = item_zoom_1_1_to_sreen_calc(self, win)
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
+
+def item_zoom_in_or_1_1(self, event):
+    win = InfiniteGlass.windows.get_active_window(self.display)
+    if not win or win == self.display.root:
+        return None
+
+    geom = item_zoom_1_1_to_sreen_calc(self, win)
+    if win["IG_SIZE"][0] > geom[0] or win["IG_SIZE"][1] > geom[1]:
+        win["IG_SIZE_ANIMATE"] = geom
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
+    else:
+        win["IG_SIZE"] = [int(item * 1 / 1.1) for item in win["IG_SIZE"]]
+
+def item_zoom_out_or_1_1(self, event):
+    win = InfiniteGlass.windows.get_active_window(self.display)
+    if not win or win == self.display.root:
+        return None
+
+    geom = item_zoom_1_1_to_sreen_calc(self, win)
+    if win["IG_SIZE"][0] < geom[0] or win["IG_SIZE"][1] < geom[1]:
+        win["IG_SIZE_ANIMATE"] = geom
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", win, "IG_SIZE", .5)
+    else:
+        win["IG_SIZE"] = [int(item * 1.1) for item in win["IG_SIZE"]]
 
 def item_zoom_1_1_to_window(self, event):
     win = InfiniteGlass.windows.get_active_window(self.display)
