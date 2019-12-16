@@ -1,6 +1,7 @@
 import InfiniteGlass
 import math
 from .. import mode
+from . import zoom
 
 def zoom_to_window(self, event):
     print("ZOOM IN TO WINDOW")
@@ -27,8 +28,8 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
         d = math.sqrt((x - vx)**2 + (y - vy)**2)
         windows.append((d, coords, child))
 
-    if len(windows) == 1:
-        return
+    if len(windows) <= 1:
+        return zoom.zoom_in(self, event)
 
     windows.sort(key=lambda a: a[0])
 
@@ -72,7 +73,7 @@ def zoom_to_more_windows(self, event):
         windows.append((d, coords, child))
 
     if not windows:
-        return
+        return zoom.zoom_out(self, event)
 
     windows.sort(key=lambda a: a[0])
     d, window, w = windows[0]
