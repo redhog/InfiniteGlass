@@ -12,9 +12,30 @@ out vec2 window_coord_per_pixel;
 out vec2 window_coord;
 out float geometry_size;
 
-vec2 snap2pixel(vec2 xy) {
-  return vec2(floor(xy.x * size[0] / 2.) * 2. / size[0],
-              floor(xy.y * size[1] / 2.) * 2. / size[1]);
+ivec4 pixelclipscreen(ivec4 xy) {
+  if (xy.x < 0) xy.x = 0;
+  if (xy.x >= size.x) xy.x = size.x -1;
+  if (xy.y < 0) xy.y = 0;
+  if (xy.y >= size.y) xy.y = size.y -1;
+  return xy;
+}
+
+vec4 pixel2glscreen(ivec4 xy) {
+  return transpose(mat4(
+    2./size[0], 0., 0., -1.,
+    0., 2./size[1], 0., -1.,
+    0., 0., 0., 0.,
+    0., 0., 0., 1.
+  )) * vec4(xy);
+}
+
+ivec4 glscreen2pixel(vec4 xy) {
+  return ivec4(transpose(mat4(
+    size[0]/2., 0., 0., size[0]/2.,
+    0., size[1]/2., 0., size[1]/2.,
+    0., 0., 0., 0.,
+    0., 0., 0., 1.
+  )) * xy);
 }
 
 mat4 screen2glscreen = transpose(mat4(
@@ -28,10 +49,10 @@ void main() {
   int width = size[0];
   int height = size[1];
 
-  float margin_left = 6. * 2. / width;
-  float margin_right = 6. * 2. / width;
-  float margin_top = 6. * 2. / height;
-  float margin_bottom = 6. * 2. / height;
+  int margin_left = 6;
+  int margin_right = 6;
+  int margin_top = 6;
+  int margin_bottom = 6;
 
   mat4 space2screen = screen2glscreen * transpose(mat4(
     1./screen[2], 0., 0., -screen.x/screen[2],
@@ -55,27 +76,42 @@ void main() {
   ));
 
   float window_size = distance(space2screen * vec4(left, bottom, 0., 1.),
-                         space2screen * vec4(right, top, 0., 1.));
+                               space2screen * vec4(right, top, 0., 1.));
 
   window_coord_per_pixel = abs(  (space2windowcoord * screen2space * vec4(2./width, 2./height, 0., 0.)).xy
                                - (space2windowcoord * screen2space * vec4(0., 0., 0., 0.)).xy);
 
-  gl_Position = space2screen * vec4(left, bottom, 0., 1.) + vec4(-margin_left, -margin_bottom, 0., 0.);
+  ivec4 px_bottom_left = glscreen2pixel(space2screen * vec4(left, bottom, 0., 1.));
+  ivec4 px_top_right = glscreen2pixel(space2screen * vec4(right, top, 0., 1.));
+  
+  if (abs((px_top_right - px_bottom_left).x - width) < 2) {
+    px_top_right.x = px_bottom_left.x + width;
+  }
+  if (abs((px_top_right - px_bottom_left).y - height) < 2) {
+    px_top_right.y = px_bottom_left.y + height;
+  }
+  px_bottom_left = px_bottom_left - ivec4(margin_left, margin_bottom, 0, 0);
+  px_top_right = px_top_right + ivec4(margin_right, margin_top, 0, 0);
+
+  ivec4 px_top_left = ivec4(px_bottom_left.x, px_top_right.y, 0, 1);
+  ivec4 px_bottom_right = ivec4(px_top_right.x, px_bottom_left.y, 0, 1);
+
+  gl_Position = pixel2glscreen(pixelclipscreen(px_bottom_left));
   window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
-  gl_Position = space2screen * vec4(left, top, 0., 1.) + vec4(-margin_left, +margin_top, 0., 0.);
+  gl_Position = pixel2glscreen(pixelclipscreen(px_top_left));
   window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
-  gl_Position = space2screen * vec4(right, bottom, 0., 1.) + vec4(margin_right, -margin_bottom, 0., 0.);
+  gl_Position = pixel2glscreen(pixelclipscreen(px_bottom_right));
   window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
 
-  gl_Position = space2screen * vec4(right, top, 0., 1.) + vec4(margin_right, margin_top, 0., 0.);
+  gl_Position = pixel2glscreen(pixelclipscreen(px_top_right));
   window_coord = (space2windowcoord * screen2space * gl_Position).xy;
   geometry_size = window_size;
   EmitVertex();
