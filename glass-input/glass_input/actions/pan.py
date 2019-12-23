@@ -65,33 +65,36 @@ def zoom_to_window_to_the(self, event, direction):
             windows.append((wdist * (1 + wdir), (x, y), coords, child))
 
     if not windows:
-        return
-
-    windows.sort(key=lambda a: a[0])
-    dist, center, coords, w = windows[0]
-    InfiniteGlass.DEBUG(
-        "visible",
-        "Visible: %s\n" % (
-            ",".join(
-                "%s/%s[%s] @ %s" % (v.get("WM_NAME", None),
-                                    v.get("WM_CLASS", None),
-                                    v.__window__(),
-                                    c)
-                for v, c in visible),))
-    InfiniteGlass.DEBUG("next", "Next window %s/%s[%s] @ %s\n" % (w.get("WM_NAME", None), w.get("WM_CLASS", None), w.__window__(), coords))
-    wx, wy = center
-
-    if wx > vx:
-        newx = wx + (coords[2] - view[2]) / 2
+        screeny = numpy.sin(direction)
+        screenx = numpy.cos(direction)
+        
+        view = [view[0] + screenx * view[2], view[1] + screeny * view[3]] + view[2:]
     else:
-        newx = wx - (coords[2] - view[2]) / 2
-    if wy > vy:
-        newy = wy + (coords[3] - view[3]) / 2
-    else:
-        newy = wy - (coords[3] - view[3]) / 2
+        windows.sort(key=lambda a: a[0])
+        dist, center, coords, w = windows[0]
+        InfiniteGlass.DEBUG(
+            "visible",
+            "Visible: %s\n" % (
+                ",".join(
+                    "%s/%s[%s] @ %s" % (v.get("WM_NAME", None),
+                                        v.get("WM_CLASS", None),
+                                        v.__window__(),
+                                        c)
+                    for v, c in visible),))
+        InfiniteGlass.DEBUG("next", "Next window %s/%s[%s] @ %s\n" % (w.get("WM_NAME", None), w.get("WM_CLASS", None), w.__window__(), coords))
+        wx, wy = center
 
-    view[0] = newx - view[2] / 2.
-    view[1] = newy - view[3] / 2.
+        if wx > vx:
+            newx = wx + (coords[2] - view[2]) / 2
+        else:
+            newx = wx - (coords[2] - view[2]) / 2
+        if wy > vy:
+            newy = wy + (coords[3] - view[3]) / 2
+        else:
+            newy = wy - (coords[3] - view[3]) / 2
+
+        view[0] = newx - view[2] / 2.
+        view[1] = newy - view[3] / 2.
 
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view

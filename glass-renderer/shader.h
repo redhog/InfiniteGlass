@@ -37,7 +37,8 @@ typedef struct {
  
   GLint screen_attr;
   GLint size_attr;
- 
+  GLint border_width_attr;
+
   GLint picking_mode_attr;
   GLint window_id_attr;
   GLint window_attr;
