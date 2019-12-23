@@ -31,9 +31,8 @@ void item_type_base_constructor(Item *item, void *args) {
     XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
     if (type_return == None) {
-      XWindowAttributes attr;
-      XGetWindowAttributes(display, window, &attr);
-      if (attr.override_redirect) {
+      XGetWindowAttributes(display, window, &item->attr);
+      if (item->attr.override_redirect) {
         item->layer = IG_LAYER_MENU;
       } else {
         item->layer = IG_LAYER_DESKTOP;
@@ -48,9 +47,8 @@ void item_type_base_constructor(Item *item, void *args) {
     long value = 1;
     if (item->window != root) XChangeProperty(display, window, WM_STATE, XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
 
-    XWindowAttributes attr;
-    XGetWindowAttributes(display, window, &attr);
-    item->is_mapped = attr.map_state == IsViewable;
+    XGetWindowAttributes(display, window, &item->attr);
+    item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
     item_type_window_update_space_pos_from_window(item);
 
     XSelectInput(display, window, PropertyChangeMask);
@@ -93,6 +91,7 @@ void item_type_base_draw(Rendering *rendering) {
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
+    glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
     
     glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
     glUniform1i(shader->window_attr, rendering->item->window);
@@ -125,19 +124,21 @@ void item_type_base_update(Item *item) {
   }
   item->window_pixmap = XCompositeNameWindowPixmap(display, item->window);
 
-  Window root_return;
-  int x_return;
-  int y_return;
-  unsigned int width_return;
-  unsigned int height_return;
-  unsigned int border_width_return;
-  unsigned int depth_return;
-  
-  int res = XGetGeometry(display, item->window_pixmap,
-                         &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
-  DEBUG("window.update",
-        "XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
-         item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);
+  if (DEBUG_ENABLED("window.update")) {
+    Window root_return;
+    int x_return;
+    int y_return;
+    unsigned int width_return;
+    unsigned int height_return;
+    unsigned int border_width_return;
+    unsigned int depth_return;
+
+    int res = XGetGeometry(display, item->window_pixmap,
+                           &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
+    DEBUG("window.update",
+          "XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
+           item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);
+  }
   
   texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
@@ -229,15 +230,14 @@ void item_remove(Item *item) {
 }
 
 void item_type_window_update_space_pos_from_window(Item *item) {
-  XWindowAttributes attr;
   if (item->window == root) return;
   
-  XGetWindowAttributes(display, item->window, &attr);
+  XGetWindowAttributes(display, item->window, &item->attr);
 
-  item->x                   = attr.x;
-  item->y                   = attr.y;
-  int width                 = attr.width;
-  int height                = attr.height;
+  item->x                   = item->attr.x;
+  item->y                   = item->attr.y;
+  int width                 = item->attr.width;
+  int height                = item->attr.height;
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
   long arr[2] = {width, height};
@@ -273,7 +273,7 @@ void item_type_window_update_space_pos_from_window(Item *item) {
     if (item->layer == IG_LAYER_MENU) {
       DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
             item->window,
-            attr.x, attr.y, attr.width, attr.height,
+            item->attr.x, item->attr.y, item->attr.width, item->attr.height,
             coords[0],coords[1],coords[2],coords[3]);
    }
         

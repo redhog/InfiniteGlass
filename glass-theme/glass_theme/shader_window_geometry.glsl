@@ -8,6 +8,7 @@ uniform vec4 IG_COORDS;
 uniform ivec2 IG_SIZE;
 uniform vec4 screen; // x,y,w,h in space
 uniform ivec2 size;
+uniform int border_width;
 
 out vec2 px_window_bottom_left;
 out vec2 px_window_top_right;
@@ -78,10 +79,10 @@ void main() {
   px_top_right = glscreen2pixel(space2screen * vec4(right, top, 0., 1.));
   
   if (abs((px_top_right - px_bottom_left).x - IG_SIZE.x) < 10) {
-    px_top_right.x = px_bottom_left.x + IG_SIZE.x;
+    px_top_right.x = px_bottom_left.x + IG_SIZE.x + 2 * border_width;
   }
   if (abs((px_top_right - px_bottom_left).y - IG_SIZE.y) < 10) {
-    px_top_right.y = px_bottom_left.y + IG_SIZE.y;
+    px_top_right.y = px_bottom_left.y + IG_SIZE.y + 2 * border_width;
   }
 
   px_window_bottom_left = px_bottom_left;

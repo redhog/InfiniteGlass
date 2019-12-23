@@ -41,6 +41,7 @@ struct ItemStruct {
   int id;
   Window window;
   Atom layer;
+  XWindowAttributes attr;
  
   uint is_mapped; 
   uint _is_mapped;
