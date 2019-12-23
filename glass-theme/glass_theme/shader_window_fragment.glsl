@@ -17,7 +17,6 @@ uniform int window;
 uniform int atom_IG_LAYER_MENU;
 uniform int atom__NET_WM_WINDOW_TYPE_NORMAL;
 
-uniform ivec2 IG_SIZE;
 uniform sampler2D window_sampler;
 uniform sampler2D WM_HINTS_icon;
 uniform sampler2D WM_HINTS_icon_mask;
@@ -104,7 +103,7 @@ void main() {
   window_coord = px_coord - px_window_bottom_left;
   window_size = px_window_top_right - px_window_bottom_left;
   scaled_window_coord = vec2(window_coord.x / window_size.x, 1. - window_coord.y / window_size.y);
-  
+
   if (picking_mode == 1) {
     if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
       fragColor = vec4(0.,0.,0.,0.);

@@ -4,11 +4,10 @@ layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 
 
+uniform sampler2D window_sampler;
 uniform vec4 IG_COORDS;
-uniform ivec2 IG_SIZE;
 uniform vec4 screen; // x,y,w,h in space
 uniform ivec2 size;
-uniform int border_width;
 
 out vec2 px_window_bottom_left;
 out vec2 px_window_top_right;
@@ -77,12 +76,15 @@ void main() {
 
   px_bottom_left = glscreen2pixel(space2screen * vec4(left, bottom, 0., 1.));
   px_top_right = glscreen2pixel(space2screen * vec4(right, top, 0., 1.));
-  
-  if (abs((px_top_right - px_bottom_left).x - IG_SIZE.x) < 10) {
-    px_top_right.x = px_bottom_left.x + IG_SIZE.x + 2 * border_width;
+
+  vec2 texture_size = textureSize(window_sampler, 0);
+
+
+  if (abs((px_top_right - px_bottom_left).x - texture_size.x) < 10) {
+    px_top_right.x = px_bottom_left.x + texture_size.x;
   }
-  if (abs((px_top_right - px_bottom_left).y - IG_SIZE.y) < 10) {
-    px_top_right.y = px_bottom_left.y + IG_SIZE.y + 2 * border_width;
+  if (abs((px_top_right - px_bottom_left).y - texture_size.y) < 10) {
+    px_top_right.y = px_bottom_left.y + texture_size.y;
   }
 
   px_window_bottom_left = px_bottom_left;
