@@ -45,6 +45,9 @@
         "grabbed_mode": {"class": "glass_input.grabbed.GrabbedMode", "keymap": {
             "KeyRelease": "pop",
             "ButtonRelease": "pop",
+
+            "KeyPress,XK_R": "reload",
+
             "KeyPress,XK_space": "rofi_mode",
             "KeyPress,XK_Escape": "toggle_overlay",
             "Mod4Mask,KeyPress,XK_F1": "send_debug",

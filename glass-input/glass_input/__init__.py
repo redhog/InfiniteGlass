@@ -9,24 +9,7 @@ import yaml
 from . import mode
 
 def main(*arg, **kw):
-    configpath = os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.json")
-    if configpath:
-        configpath = os.path.expanduser(configpath)
-
-        configdirpath = os.path.dirname(configpath)
-        if not os.path.exists(configdirpath):
-            os.makedirs(configdirpath)
-
-        if not os.path.exists(configpath):
-            with pkg_resources.resource_stream("glass_input", "config.json") as inf:
-                with open(configpath, "wb") as outf:
-                    outf.write(inf.read())
-
-        with open(configpath) as f:
-            mode.set_config(yaml.load(f, Loader=yaml.SafeLoader))
-    else:
-        with pkg_resources.resource_stream("glass_input", "config.json") as f:
-            mode.set_config(yaml.load(f, Loader=yaml.SafeLoader))
+    mode.load_config()
 
     with InfiniteGlass.Display() as display:
 

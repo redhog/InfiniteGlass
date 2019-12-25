@@ -4,21 +4,45 @@ import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
 import Xlib.ext.xinput
 import numpy
+import os
 import os.path
 import datetime
 import importlib
 import traceback
 import operator
 import types
+import pkg_resources
+import yaml
 
 config = {}
 functions = {}
+
+def load_config():
+    configpath = os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.json")
+    if configpath:
+        configpath = os.path.expanduser(configpath)
+
+        configdirpath = os.path.dirname(configpath)
+        if not os.path.exists(configdirpath):
+            os.makedirs(configdirpath)
+
+        if not os.path.exists(configpath):
+            with pkg_resources.resource_stream("glass_input", "config.json") as inf:
+                with open(configpath, "wb") as outf:
+                    outf.write(inf.read())
+
+        with open(configpath) as f:
+            set_config(yaml.load(f, Loader=yaml.SafeLoader))
+    else:
+        with pkg_resources.resource_stream("glass_input", "config.json") as f:
+            set_config(yaml.load(f, Loader=yaml.SafeLoader))
 
 def set_config(cfg):
     global config
     config = cfg    
     for module_name in config["imports"]:
         module = importlib.import_module(module_name)
+        importlib.reload(module)
         functions.update({
             name: getattr(module, name)
             for name in dir(module)

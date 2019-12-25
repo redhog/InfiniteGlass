@@ -1,6 +1,6 @@
 import Xlib.X
 import InfiniteGlass
-
+from .. import mode
 
 def toggle_overlay(self, event):
     old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
@@ -30,3 +30,6 @@ def send_sleep(self, event):
         InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
         self.display.flush()
+
+def reload(self, event):
+    mode.load_config()
