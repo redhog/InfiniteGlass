@@ -4,6 +4,7 @@ import pysmlib.ice
 import pysmlib.iceauth
 import glass_ghosts.client
 import sys
+import os
 
 class Server(pysmlib.server.Server):
     def __init__(self, manager, display):
@@ -14,6 +15,8 @@ class Server(pysmlib.server.Server):
         self.listeners = self.IceListenForConnections()
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
+        os.environ["SESSION_MANAGER"] = self.listen_address()
+        
         def accepter(listener):
             InfiniteGlass.DEBUG("session", "LISTENING TO %s @ %s\n" % (listener, listener.IceGetListenConnectionNumber()))
             self.display.mainloop.add(listener.IceGetListenConnectionNumber(), lambda fd: self.accept_connection(listener))

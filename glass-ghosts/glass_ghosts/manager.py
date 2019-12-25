@@ -8,6 +8,7 @@ import base64
 import glass_ghosts.shadow
 import glass_ghosts.window
 import glass_ghosts.rootwindow
+import glass_ghosts.components
 import glass_ghosts.session
 import pkg_resources
 
@@ -52,12 +53,13 @@ class GhostManager(object):
 
         self.session = glass_ghosts.session.Server(self, display)
         self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
+        self.components = glass_ghosts.components.Components(self, display)
 
         self.restore_shadows()
         self.restore_clients()
 
         display.mainloop.add_interval(0.5)(self.save_shadows)
-
+                
         InfiniteGlass.DEBUG("init", "Ghosts handler started\n")
 
     def save_shadows(self, current_time, idx):
