@@ -18,6 +18,11 @@ void item_type_base_constructor(Item *item, void *args) {
   Window window = *(Window *) args;
   
   item->window = window;
+  item->properties = NULL;
+  item->prop_layer = NULL;
+  item->prop_shader = NULL;
+  item->prop_size = NULL;
+  item->prop_coords = NULL;
 
   if (window == root) {
     Atom layer = XInternAtom(display, "IG_LAYER_ROOT", False);
