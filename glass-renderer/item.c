@@ -20,7 +20,8 @@ void item_type_base_constructor(Item *item, void *args) {
   item->window = window;
 
   if (window == root) {
-    item->layer = XInternAtom(display, "IG_LAYER_ROOT", False);
+    Atom layer = XInternAtom(display, "IG_LAYER_ROOT", False);
+    XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
     item->is_mapped = False;
   } else {
     Atom type_return;
@@ -31,16 +32,13 @@ void item_type_base_constructor(Item *item, void *args) {
     XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
     if (type_return == None) {
+      Atom layer = IG_LAYER_DESKTOP;
       XGetWindowAttributes(display, window, &item->attr);
       if (item->attr.override_redirect) {
-        item->layer = IG_LAYER_MENU;
-      } else {
-        item->layer = IG_LAYER_DESKTOP;
+        layer = IG_LAYER_MENU;
       }
       if (item->window != root)
-      XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &item->layer, 1);
-    } else {
-      item->layer = *(Atom *) prop_return;
+      XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
     }
     XFree(prop_return);
 
@@ -56,6 +54,7 @@ void item_type_base_constructor(Item *item, void *args) {
   }
  
   item->properties = properties_load(window);
+  item->prop_layer = properties_find(item->properties, IG_LAYER);
   item->prop_shader = properties_find(item->properties, IG_SHADER);
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
@@ -254,8 +253,8 @@ void item_type_window_update_space_pos_from_window(Item *item) {
     XFree(prop_return);
   } else {
     View *v = NULL;
-    if (views) {
-      v = view_find(views, item->layer);
+    if (views && item->prop_layer) {
+     v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
     }
     float coords[4];
     if (v) {
@@ -270,7 +269,7 @@ void item_type_window_update_space_pos_from_window(Item *item) {
       coords[3] = ((float) (height)) / (float) overlay_attr.width;
     }
 
-    if (item->layer == IG_LAYER_MENU) {
+    if (item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == IG_LAYER_MENU) {
       DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
             item->window,
             item->attr.x, item->attr.y, item->attr.width, item->attr.height,

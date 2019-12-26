@@ -35,7 +35,7 @@ GLuint picking_fb;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
-  return item->layer == current_layer;
+  return item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == current_layer;
 }
 
 void draw() {
@@ -138,6 +138,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       if (!properties_update(item->properties, event->xproperty.atom)) {
         changed = False;
       }
+      if (event->xproperty.atom == IG_LAYER && !item->prop_layer) item->prop_layer = properties_find(item->properties, IG_LAYER);
       if (event->xproperty.atom == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
       if (event->xproperty.atom == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
       if (event->xproperty.atom == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);        
@@ -200,7 +201,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         Item *item;
 
         pick(root_x, root_y, &winx, &winy, &item);
-        if (item && item->layer != IG_LAYER_MENU && item_isinstance(item, &item_type_base)) {
+        if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != IG_LAYER_MENU) && item_isinstance(item, &item_type_base)) {
           XWindowChanges values;
           values.x = root_x - winx;
           values.y = root_y - winy;
@@ -264,11 +265,11 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == ConfigureNotify) {
     DEBUG("event.configure", "Received ConfigureNotify for %ld\n", event->xconfigure.window);
     Item *item = item_get_from_window(event->xconfigure.window, False);
-    if (item && item->layer == IG_LAYER_MENU) {
+    if (item && item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == IG_LAYER_MENU) {
       float coords[4];
       View *v = NULL;
       if (views) {
-        v = view_find(views, item->layer);
+        v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
       }
       if (v) {
         coords[0] = v->screen[0] + (v->screen[2] * (float) event->xconfigure.x) / (float) v->width;
