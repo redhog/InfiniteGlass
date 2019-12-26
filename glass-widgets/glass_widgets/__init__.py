@@ -46,6 +46,23 @@ def main(*arg, **kw):
                               "IG_EXIT",
                               event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
 
+
+        w = display.root.create_window()
+        w["WM_NAME"] = b"debug"
+        w["WM_CLASS"] = b"glass-widget"
+        w["IG_LAYER"] = "IG_LAYER_OVERLAY"
+        w["IG_COORDS"] = [0.01, 0.50, 0.05, 0.05]
+        w["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
+        with pkg_resources.resource_stream("glass_widgets", "fontawesome-free-5.9.0-desktop/svgs/solid/bug.svg") as f:
+            data = f.read()
+            w["IG_CONTENT"] = ("IG_SVG", data)
+        @w.on()
+        def ButtonPress(win, event):
+            display.root.send(display.root,
+                              "IG_DEBUG",
+                              event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+
+            
         @display.root.on(mask="PointerMotionMask")
         def ClientMessage(win, event):
             coords = [struct.unpack("<" + "f", struct.pack("<L", event.data[1][i]))
