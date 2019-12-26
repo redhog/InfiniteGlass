@@ -8,6 +8,7 @@ import pkg_resources
 import json
 import click
 import sys
+import sqlite3
 
 @click.group()
 @click.pass_context
@@ -68,3 +69,55 @@ def send(ctx, window, mask, event):
         else:
             send_msg(display, window, mask, event)
             sys.exit(0)
+
+@main.group()
+@click.pass_context
+def shadow(ctx, **kw):
+    pass
+
+@shadow.command()
+@click.pass_context
+def list(ctx):
+    dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
+    dbconn = sqlite3.connect(dbpath)
+    cur = dbconn.cursor()
+    cur.execute("select key from shadows group by key order by key")
+    for (key,) in cur:
+        print(key)
+
+@shadow.command()
+@click.argument("key")
+@click.pass_context
+def export(ctx, key):
+    dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
+    dbconn = sqlite3.connect(dbpath)
+    cur = dbconn.cursor()
+    cur.execute('select name, value from shadows where key = ?', (key,))
+    properties = {}
+    currentkey = None
+    for name, value in cur:
+        properties[name] = json.loads(value)
+    print(json.dumps({"key": key, "properties": properties}))
+
+@shadow.command(name="import")
+@click.pass_context
+def imp(ctx):
+    shadow = json.load(sys.stdin)
+    dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
+    dbconn = sqlite3.connect(dbpath)
+    cur = dbconn.cursor()
+    for name, value in shadow["properties"].items():
+        cur.execute("insert into shadows (key, name, value) values (?, ?, ?)",
+                    (shadow["key"], name, json.dumps(value)))
+    dbconn.commit()
+
+
+@shadow.command()
+@click.argument("key")
+@click.pass_context
+def delete(ctx, key):
+    dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
+    dbconn = sqlite3.connect(dbpath)
+    cur = dbconn.cursor()
+    cur.execute('delete from shadows where key = ?', (key,))
+    dbconn.commit()
