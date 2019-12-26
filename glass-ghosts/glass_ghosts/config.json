@@ -41,6 +41,7 @@
     "shadow_update": ["IG_COORDS"],
 
     "components": {
+        "xkb": {"command": ["setxkbmap", "-model", "pc101", "-layout", "us", "-variant", ""]},
         "glass-input": {"command": ["glass-input"]},
         "glass-theme": {"command": ["glass-theme"]},
         "glass-widgets": {"command": ["glass-widgets"]},
