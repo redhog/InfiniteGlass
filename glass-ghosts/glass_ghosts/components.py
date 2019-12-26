@@ -3,6 +3,7 @@ import glass_ghosts.shadow
 import glass_ghosts.window
 import json
 import os
+import signal
 
 class Components(object):
     def __init__(self, manager, display):
