@@ -9,4 +9,6 @@ fi
   
 . ./build/env/bin/activate
 
+export PATH=$(pwd)/build:$PATH
+
 glass-ghosts
