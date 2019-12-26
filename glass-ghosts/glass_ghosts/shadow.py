@@ -8,10 +8,11 @@ import sys
 class NoValue: pass
 
 class Shadow(object):
-    def __init__(self, manager, properties):
+    def __init__(self, manager, properties, from_config=False):
         self.manager = manager
         self._properties = {}
         self.properties = properties
+        self.from_config = from_config
         self.window = None
         self.current_key = None
         self.update_key()
@@ -27,7 +28,7 @@ class Shadow(object):
             InfiniteGlass.DEBUG("shadow", "DUPLICATE SHADOW %s\n" % (self,))
             self.destroy()
 
-        if not self.manager.restoring_shadows:
+        if not self.manager.restoring_shadows and not self.from_config:
 
             cur = self.manager.dbconn.cursor()
             dbkey = "/".join(str(item) for item in key)
@@ -171,12 +172,13 @@ class Shadow(object):
 
         self.manager.shadows.pop(self.key(), None)
 
-        dbkey = str(self)
-        cur = self.manager.dbconn.cursor()
-        cur.execute("""
-            delete from shadows where key = ?
-        """, (dbkey,))
-        self.manager.dbconn.commit()
+        if not self.from_config:
+            dbkey = str(self)
+            cur = self.manager.dbconn.cursor()
+            cur.execute("""
+                delete from shadows where key = ?
+            """, (dbkey,))
+            self.manager.dbconn.commit()
 
     def __str__(self):
         return "/".join(str(item) for item in self.key())

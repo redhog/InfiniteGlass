@@ -86,29 +86,33 @@ def list(ctx):
         print(key)
 
 @shadow.command()
-@click.argument("key")
+@click.argument("key", nargs=-1)
 @click.pass_context
 def export(ctx, key):
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()
-    cur.execute('select name, value from shadows where key = ?', (key,))
-    properties = {}
-    currentkey = None
-    for name, value in cur:
-        properties[name] = json.loads(value)
-    print(json.dumps({"key": key, "properties": properties}))
+    res = {}
+    for k in key:
+        cur.execute('select name, value from shadows where key = ?', (k,))
+        properties = {}
+        currentkey = None
+        for name, value in cur:
+            properties[name] = json.loads(value)
+        res[k] = properties
+    print(json.dumps(res))
 
 @shadow.command(name="import")
 @click.pass_context
 def imp(ctx):
-    shadow = json.load(sys.stdin)
+    shadows = json.load(sys.stdin)
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()
-    for name, value in shadow["properties"].items():
-        cur.execute("insert into shadows (key, name, value) values (?, ?, ?)",
-                    (shadow["key"], name, json.dumps(value)))
+    for key, shadow in shadows.items():
+        for name, value in shadow.items():
+            cur.execute("insert into shadows (key, name, value) values (?, ?, ?)",
+                        (key, name, json.dumps(value)))
     dbconn.commit()
 
 

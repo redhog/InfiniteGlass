@@ -55,6 +55,7 @@ class GhostManager(object):
         self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
         self.components = glass_ghosts.components.Components(self, display)
 
+        self.restore_config_shadows()
         self.restore_shadows()
         self.restore_clients()
 
@@ -68,6 +69,13 @@ class GhostManager(object):
             self.dbconn.commit()
             self.changes = False
 
+    def restore_config_shadows(self):
+        self.restoring_shadows = True
+        shadows = json.loads(json.dumps(self.config.get("shadows", {})), object_hook=self.fromjson)
+        for key, properties in shadows.items():
+            glass_ghosts.shadow.Shadow(self, properties, from_config=True).activate()
+        self.restoring_shadows = False
+        
     def restore_shadows(self):
         self.restoring_shadows = True
         cur = self.dbconn.cursor()
@@ -108,7 +116,10 @@ class GhostManager(object):
         if isinstance(obj, array.array):
             return {"__jsonclass__": ["array", obj.typecode, list(obj)]}
         elif isinstance(obj, bytes):
-            return {"__jsonclass__": ["base64", base64.b64encode(obj).decode("ascii")]}
+            try:
+                return {"__jsonclass__": ["string", obj.decode("utf-8")]}
+            except:
+                return {"__jsonclass__": ["base64", base64.b64encode(obj).decode("ascii")]}
         elif type(obj).__name__ == "Window":
             return {"__jsonclass__": ["Window", obj.__window__()]}
         return obj
@@ -118,7 +129,9 @@ class GhostManager(object):
             cls = obj.pop("__jsonclass__")
             if cls[0] == "array":
                 return array.array(cls[1], cls[2])
-            if cls[0] == "base64":
+            elif cls[0] == "string":
+                return cls[1].encode("utf-8")
+            elif cls[0] == "base64":
                 return base64.b64decode(cls[1])
             elif cls[0] == "Window":
                 return self.display.create_resource_object("window", cls[1])
