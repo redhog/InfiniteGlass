@@ -32,12 +32,14 @@ setuptools.setup(
     url='https://github.com/redhog/InfiniteGlass',
     packages=setuptools.find_packages(),
     install_requires=[
+          "pyyaml"
     ],
     entry_points={
         'console_scripts': [
             'glass-widgets = glass_widgets:main',
         ],
     },
-    include_package_data=True,
+    package_data={'glass_input': ['*.json']},
+    include_package_data=True
     cmdclass={"install": install_wrapper, "develop": develop_wrapper},
 )

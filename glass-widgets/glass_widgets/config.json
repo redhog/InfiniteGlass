@@ -1,0 +1,44 @@
+{
+    "widgets": {
+        "search-plus": {
+            "properties": {
+                "WM_NAME": "data://Zoom in",
+                "IG_COORDS": [0.01, 0.45, 0.05, 0.05],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-plus.svg"]}
+            },
+            "action": "zoom_to_fewer_windows"
+        },
+        "search-minus": {
+            "properties": {
+                "WM_NAME": "data://Zoom out",
+                "IG_COORDS": [0.01, 0.50, 0.05, 0.05],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-minus.svg"]}
+            },
+            "action": "zoom_to_more_windows"
+        },
+        "search-location": {
+            "properties": {
+                "WM_NAME": "data://Zoom home",
+                "IG_COORDS": [0.01, 0.55, 0.05, 0.05],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-location.svg"]}
+            },
+            "action": "zoom_home"
+        },
+        "eject": {
+            "properties": {
+                "WM_NAME": "data://Exit",
+                "IG_COORDS": [0.01, 0.60, 0.05, 0.05],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg"]}
+            },
+            "action": "exit"
+        },
+        "debug": {
+            "properties": {
+                "WM_NAME": "data://Debug",
+                "IG_COORDS": [0.01, 0.65, 0.05, 0.05],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/bug.svg"]}
+            },
+            "action": "debug"
+        }
+    }
+}
