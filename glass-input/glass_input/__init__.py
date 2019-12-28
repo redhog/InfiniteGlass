@@ -6,6 +6,8 @@ import Xlib.ext.xinput
 import os.path
 import pkg_resources
 import yaml
+import json
+import sys
 from . import mode
 
 def main(*arg, **kw):
@@ -31,6 +33,13 @@ def main(*arg, **kw):
         def animate_window(root, win):
             display.animate_window = win
 
+        @display.root.on(mask="SubstructureNotifyMask", client_type="IG_INPUT_ACTION")
+        def ClientMessage(win, event):
+            win, atom = event.parse("WINDOW", "ATOM")
+            action = json.loads(win[atom])
+            InfiniteGlass.DEBUG("message", "RECEIVED INPUT ACTION %s" % (action,)); sys.stderr.flush()
+            display.input_stack[-1].action(None, action, None)
+            
         @display.eventhandlers.append
         def handle(event):
             if display.animate_window == -1:

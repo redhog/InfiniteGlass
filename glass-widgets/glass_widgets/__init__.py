@@ -43,11 +43,14 @@ def main(*arg, **kw):
             for key, value in properties.items():
                 w[key] = value
 
+            w.widget = widget
+            
             @w.on()
             def ButtonPress(win, event):
-                w["IG_INPUT_ACTION"] = json.dumps(widget["action"]).encode("utf-8")
+                win["IG_INPUT_ACTION"] = json.dumps(win.widget["action"]).encode("utf-8")
                 display.root.send(display.root,
-                                  "IG_INPUT_ACTION", w, "IG_INPUT_ACTION",
+                                  "IG_INPUT_ACTION", win, "IG_INPUT_ACTION",
                                   event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
-
+                display.flush()
+                
         InfiniteGlass.DEBUG("init", "Widgets started\n")
