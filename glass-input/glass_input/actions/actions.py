@@ -2,6 +2,15 @@ import Xlib.X
 import InfiniteGlass
 from .. import mode
 
+def debug(self, event):
+    self.display.root.send(self.display.root,
+                      "IG_DEBUG",
+                      event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
+    self.display.flush()
+
+def exit(self, event):
+    pass
+    
 def toggle_overlay(self, event):
     old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
     if old[0] == 0.:
