@@ -1,6 +1,7 @@
 import Xlib.X
 import glass_ghosts.shadow
 import glass_ghosts.window
+import sys
 
 class RootWindow(object):
     def __init__(self, manager, display):
@@ -11,6 +12,11 @@ class RootWindow(object):
         def MapNotify(win, event):
             self.map_window(event.window)
 
+        @display.root.on(mask="StructureNotifyMask", client_type="IG_GHOSTS_EXIT")
+        def ClientMessage(win, event):
+            print("message", "RECEIVED EXIT"); sys.stderr.flush()
+            self.manager.shutdown()
+            
         for child in display.root.query_tree().children:
             self.map_window(child)
 

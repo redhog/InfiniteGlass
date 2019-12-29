@@ -11,6 +11,7 @@ import glass_ghosts.rootwindow
 import glass_ghosts.components
 import glass_ghosts.session
 import pkg_resources
+import sys
 
 class GhostManager(object):
     def __init__(self, display):
@@ -63,6 +64,19 @@ class GhostManager(object):
                 
         InfiniteGlass.DEBUG("init", "Ghosts handler started\n")
 
+    def shutdown(self):
+        @self.display.mainloop.add_interval(0.1)
+        def attempt_shutdown(timestamp, idx):
+            waiting = 0
+            for client_id, client in self.clients.items():
+                for fd, conn in client.connections.items():
+                    conn.sleep()
+                    waiting += 1
+            if not waiting:
+                InfiniteGlass.DEBUG("conmmit", "Committing...\n")
+                self.dbconn.commit()
+                sys.exit(0)
+        
     def save_shadows(self, current_time, idx):
         if self.changes:
             InfiniteGlass.DEBUG("conmmit", "Committing...\n")
