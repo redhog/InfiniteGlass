@@ -30,7 +30,7 @@
                 "IG_COORDS": [0.01, 0.60, 0.05, 0.05],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg"]}
             },
-            "action": "exit"
+            "action": "send_exit"
         },
         "debug": {
             "properties": {
@@ -38,7 +38,7 @@
                 "IG_COORDS": [0.01, 0.65, 0.05, 0.05],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/bug.svg"]}
             },
-            "action": "debug"
+            "action": "send_debug"
         }
     }
 }
