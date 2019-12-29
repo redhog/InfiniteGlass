@@ -11,6 +11,7 @@ import glass_ghosts.rootwindow
 import glass_ghosts.components
 import glass_ghosts.session
 import pkg_resources
+import sys
 
 class GhostManager(object):
     def __init__(self, display):
@@ -63,6 +64,19 @@ class GhostManager(object):
                 
         InfiniteGlass.DEBUG("init", "Ghosts handler started\n")
 
+    def shutdown(self):
+        @self.display.mainloop.add_interval(0.1)
+        def attempt_shutdown(timestamp, idx):
+            waiting = 0
+            for client_id, client in self.clients.items():
+                for fd, conn in client.connections.items():
+                    conn.sleep()
+                    waiting += 1
+            if not waiting:
+                InfiniteGlass.DEBUG("conmmit", "Committing...\n")
+                self.dbconn.commit()
+                sys.exit(0)
+        
     def save_shadows(self, current_time, idx):
         if self.changes:
             InfiniteGlass.DEBUG("conmmit", "Committing...\n")
@@ -71,7 +85,7 @@ class GhostManager(object):
 
     def restore_config_shadows(self):
         self.restoring_shadows = True
-        shadows = json.loads(json.dumps(self.config.get("shadows", {})), object_hook=self.fromjson)
+        shadows = json.loads(json.dumps(self.config.get("shadows", {})), object_hook=InfiniteGlass.fromjson(self.display))
         for key, properties in shadows.items():
             glass_ghosts.shadow.Shadow(self, properties, from_config=True).activate()
         self.restoring_shadows = False
@@ -88,7 +102,7 @@ class GhostManager(object):
                     glass_ghosts.shadow.Shadow(self, properties).activate()
                 properties = {}
                 currentkey = key
-            properties[name] = json.loads(value, object_hook=self.fromjson)
+            properties[name] = json.loads(value, object_hook=InfiniteGlass.fromjson(self.display))
         if currentkey:
             glass_ghosts.shadow.Shadow(self, properties).activate()
         self.restoring_shadows = False
@@ -106,33 +120,8 @@ class GhostManager(object):
                     self.clients[client.client_id] = client
                 properties = {}
                 currentkey = key
-            properties[name] = json.loads(value, object_hook=self.fromjson)
+            properties[name] = json.loads(value, object_hook=InfiniteGlass.fromjson(self.display))
         if currentkey:
             client = glass_ghosts.client.Client(self, currentkey, properties)
             self.clients[client.client_id] = client
         self.restoring_clients = False
-
-    def tojson(self, obj):
-        if isinstance(obj, array.array):
-            return {"__jsonclass__": ["array", obj.typecode, list(obj)]}
-        elif isinstance(obj, bytes):
-            try:
-                return {"__jsonclass__": ["string", obj.decode("utf-8")]}
-            except:
-                return {"__jsonclass__": ["base64", base64.b64encode(obj).decode("ascii")]}
-        elif type(obj).__name__ == "Window":
-            return {"__jsonclass__": ["Window", obj.__window__()]}
-        return obj
-
-    def fromjson(self, obj):
-        if "__jsonclass__" in obj:
-            cls = obj.pop("__jsonclass__")
-            if cls[0] == "array":
-                return array.array(cls[1], cls[2])
-            elif cls[0] == "string":
-                return cls[1].encode("utf-8")
-            elif cls[0] == "base64":
-                return base64.b64decode(cls[1])
-            elif cls[0] == "Window":
-                return self.display.create_resource_object("window", cls[1])
-        return obj

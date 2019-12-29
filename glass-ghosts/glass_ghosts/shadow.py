@@ -36,7 +36,7 @@ class Shadow(object):
                 if self._properties.get(name, NoValue) != value:
                     cur.execute("""
                       insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
-                    """, (dbkey, name, json.dumps(value, default=self.manager.tojson)))
+                    """, (dbkey, name, json.dumps(value, default=InfiniteGlass.tojson(self.manager.display))))
                     self.manager.changes = True
             for name, value in self._properties.items():
                 if name not in self.properties:

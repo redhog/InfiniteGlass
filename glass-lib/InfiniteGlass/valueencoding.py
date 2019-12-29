@@ -2,6 +2,7 @@ import Xlib.xobject.drawable
 import Xlib.X
 import struct
 import array
+import pkg_resources
 from . import keymap
 
 def parse_value(display, value):
@@ -12,7 +13,7 @@ def parse_value(display, value):
 
     if isinstance(value, (list, array.array)):
         items = value
-    elif isinstance(value, str):
+    elif isinstance(value, str) and "://" not in value:
         items = value.split(" ")
     else:
         items = [value]
@@ -55,13 +56,26 @@ def parse_value(display, value):
     elif isinstance(items[0], bytes):
         itemtype = display.get_atom("STRING")
         fmt = 8
-    elif items[0].startswith("@"):
+    elif items[0].startswith("@") or "://" in items[0]:
         itemtype = display.get_atom("STRING")
         fmt = 8
         res = []
         for item in items:
-            with open(value[1:], "rb") as f:
-                res.append(f.read())
+            if item[0] == "@": item = item[1:]
+            urltype = "path"
+            if "://" in item:
+                urltype, item = item.split("://")
+
+            if urltype == "resource":
+                pkg, item = item.split("/", 1)
+                with pkg_resources.resource_stream(pkg, item) as f:
+                    res.append(f.read())
+            elif urltype == "data":
+                res.append(item.encode("utf-8"))
+            #elif urltype == "path":
+            else:
+                with open(item, "rb") as f:
+                    res.append(f.read())                
         items = res
     elif items[0] in keymap.keysyms:
         itemtype = display.get_atom("KEYCODE")
@@ -98,3 +112,36 @@ def unpack_value(display, value_type, value):
     if value_type == "WINDOW":
         value = display.create_resource_object("window", value)
     return value
+
+def tojson(display):
+    def tojson(obj):
+        if isinstance(obj, array.array):
+            return {"__jsonclass__": ["array", obj.typecode, list(obj)]}
+        elif isinstance(obj, bytes):
+            try:
+                return {"__jsonclass__": ["string", obj.decode("utf-8")]}
+            except:
+                return {"__jsonclass__": ["base64", base64.b64encode(obj).decode("ascii")]}
+        elif type(obj).__name__ == "Window":
+            return {"__jsonclass__": ["Window", obj.__window__()]}
+        elif isinstance(obj, tuple):
+            return {"__jsonclass__": ["tuple", ] + list(obj)}
+        return obj
+    return tojson
+    
+def fromjson(display):
+    def fromjson(obj):
+        if "__jsonclass__" in obj:
+            cls = obj.pop("__jsonclass__")
+            if cls[0] == "array":
+                return array.array(cls[1], cls[2])
+            elif cls[0] == "string":
+                return cls[1].encode("utf-8")
+            elif cls[0] == "base64":
+                return base64.b64decode(cls[1])
+            elif cls[0] == "Window":
+                return display.create_resource_object("window", cls[1])
+            elif cls[0] == "tuple":
+                return tuple(cls[1:])
+        return obj
+    return fromjson

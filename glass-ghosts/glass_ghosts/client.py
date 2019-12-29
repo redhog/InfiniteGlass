@@ -47,7 +47,7 @@ class Client(object):
             if self._properties.get(name, NoValue) != value:
                 cur.execute("""
                   insert or replace into clients (key, name, value) VALUES (?, ?, ?)
-                """, (self.client_id, name, json.dumps(value, default=self.manager.tojson)))
+                """, (self.client_id, name, json.dumps(value, default=InfiniteGlass.tojson(self.manager.display))))
                 self.manager.changes = True
         for name, value in self._properties.items():
             if name not in self.properties:
