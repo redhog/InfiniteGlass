@@ -42,30 +42,23 @@
     # Update these stored properties from properties set on a shadow
     "shadow_update": ["IG_COORDS"],
 
-    # Components are programs to start at startup. Components can be
-    # restarted or replaced using their names without restarting the
-    # whole session.
     "components": {
-        "panelterm": {"command": ["xterm", "-title", "panelterm"]},
-        "xkb": {"command": ["setxkbmap", "-model", "pc101", "-layout", "us", "-variant", ""]},
         "glass-input": {"command": ["glass-input"]},
         "glass-theme": {"command": ["glass-theme"]},
         "glass-widgets": {"command": ["glass-widgets"]},
         "glass-animator": {"command": ["glass-animator"]},
-        "glass-renderer": {"command": ["glass-renderer"]}
+        "glass-renderer": {"command": ["glass-renderer"]},
+        "xkb": {"command": ["setxkbmap", "-model", "pc101", "-layout", "se,us,se,ir", "-variant", "swerty,,runes,"]},
+        "panelterm": {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]}
     },
 
-    # Shadows that are always present regardless of the database
-    # content. Mainly to be used in conjunction with programs started
-    # as components.
     "shadows": {
         "(b'xterm', b'XTerm', b'')/b'panelterm'": {
-            "IG_COORDS": [0.0, 0.75, 0.998046875, 0.0224609375],
+            "IG_COORDS": [0.0, 0.75, 0.998046875, 0.0576171875],
             "IG_LAYER": "IG_LAYER_OVERLAY",
-            "IG_SIZE": {"__jsonclass__": ["array", "I", [1022, 23]]},
+            "IG_SIZE": {"__jsonclass__": ["array", "I", [1022, 59]]},
             "WM_CLASS": [{"__jsonclass__": ["string", "xterm"]}, {"__jsonclass__": ["string", "XTerm"]}, {"__jsonclass__": ["string", ""]}],
             "WM_NAME": {"__jsonclass__": ["string", "panelterm"]},
         }
     }
-
 }

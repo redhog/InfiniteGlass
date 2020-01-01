@@ -40,6 +40,6 @@ setuptools.setup(
         ],
     },
     package_data={'glass_input': ['*.json']},
-    include_package_data=True
+    include_package_data=True,
     cmdclass={"install": install_wrapper, "develop": develop_wrapper},
 )

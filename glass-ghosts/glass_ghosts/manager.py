@@ -52,13 +52,13 @@ class GhostManager(object):
             self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
             self.dbconn.execute("create table clients (key text, name text, value text, primary key (key, name))")
 
-        self.session = glass_ghosts.session.Server(self, display)
-        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
-        self.components = glass_ghosts.components.Components(self, display)
-
         self.restore_config_shadows()
         self.restore_shadows()
         self.restore_clients()
+
+        self.session = glass_ghosts.session.Server(self, display)
+        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
+        self.components = glass_ghosts.components.Components(self, display)
 
         display.mainloop.add_interval(0.5)(self.save_shadows)
                 

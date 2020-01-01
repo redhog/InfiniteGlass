@@ -2,6 +2,7 @@ import Xlib.X
 import glass_ghosts.shadow
 import glass_ghosts.window
 import sys
+import traceback
 
 class RootWindow(object):
     def __init__(self, manager, display):
@@ -41,5 +42,7 @@ class RootWindow(object):
 
             if client_win.__window__() not in self.manager.windows:
                 self.manager.windows[client_win.__window__()] = glass_ghosts.window.Window(self.manager, client_win)
-        except Xlib.error.BadWindow:
-            pass
+        except Xlib.error.BadWindow as e:
+            print("map_window(%s): %s" % (win, e))
+            traceback.print_exc()
+
