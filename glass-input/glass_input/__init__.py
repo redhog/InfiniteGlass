@@ -33,6 +33,12 @@ def main(*arg, **kw):
         def animate_window(root, win):
             display.animate_window = win
 
+        # Do not allow setting the input focus to None as that makes our keygrabs break...
+        @display.root.on()
+        def FocusIn(win, event):
+            if event.detail == Xlib.X.NotifyDetailNone:
+                display.root.set_input_focus(Xlib.X.RevertToNone, Xlib.X.CurrentTime)
+            
         @display.root.on(mask="SubstructureNotifyMask", client_type="IG_INPUT_ACTION")
         def ClientMessage(win, event):
             win, atom = event.parse("WINDOW", "ATOM")
