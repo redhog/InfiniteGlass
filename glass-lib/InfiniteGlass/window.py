@@ -32,19 +32,10 @@ def window_getitem(self, name):
     res = self.get_property(self.display.get_atom(name), Xlib.X.AnyPropertyType, 0, 100000)
     if res is None:
         raise KeyError("Window %s has no property %s" % (self.__window__(), name))
-    property_type = self.display.real_display.get_atom_name(res.property_type)
-    res = res.value
-    if property_type == "ATOM":
-        res = [self.display.real_display.get_atom_name(item) for item in res]
-    if property_type == "FLOAT":
-        res = list(struct.unpack("<" + "f" * len(res), res.tobytes()))
-    if property_type == "WINDOW":
-        res = [self.display.real_display.create_resource_object("window", item) for item in res]
-    if property_type == "STRING":
-        res = res.split(b"\0")
-    if len(res) == 1:
-        res = res[0]
-    return res
+    return valueencoding.unpack_values(
+        self.display,
+        self.display.real_display.get_atom_name(res.property_type),
+        res.value)
 Xlib.xobject.drawable.Window.__getitem__ = window_getitem
 
 def window_contains(self, name):

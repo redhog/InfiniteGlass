@@ -3,6 +3,7 @@ import Xlib.X
 import struct
 import array
 import pkg_resources
+import json
 from . import keymap
 
 def parse_value(display, value):
@@ -56,6 +57,10 @@ def parse_value(display, value):
     elif isinstance(items[0], bytes):
         itemtype = display.get_atom("STRING")
         fmt = 8
+    elif isinstance(items[0], dict):
+        itemtype = display.get_atom("JSON")
+        fmt = 8        
+        items = [json.dumps(item).encode("utf-8") for item in items]
     elif items[0].startswith("@") or "://" in items[0]:
         itemtype = display.get_atom("STRING")
         fmt = 8
@@ -112,6 +117,22 @@ def unpack_value(display, value_type, value):
     if value_type == "WINDOW":
         value = display.create_resource_object("window", value)
     return value
+
+def unpack_values(display, value_type, values):
+    if value_type == "ATOM":
+        values = [display.real_display.get_atom_name(item) for item in values]
+    if value_type == "FLOAT":
+        values = list(struct.unpack("<" + "f" * len(values), values.tobytes()))
+    if value_type == "WINDOW":
+        values = [display.real_display.create_resource_object("window", item) for item in values]
+    if value_type == "STRING":
+        values = values.split(b"\0")
+    if value_type == "JSON":
+        values = values.split(b"\0")
+        values = [json.loads(item.decode("utf-8")) for item in values]
+    if len(values) == 1:
+        values = values[0]
+    return values
 
 def tojson(display):
     def tojson(obj):
