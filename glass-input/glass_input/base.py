@@ -14,4 +14,4 @@ class BaseMode(mode.Mode):
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)
-        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.2, .2, .6, 0.0]
+        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.4, .4, .2, 0.0]

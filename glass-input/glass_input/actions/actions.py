@@ -5,7 +5,7 @@ from .. import mode
 def toggle_overlay(self, event):
     old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
     if old[0] == 0.:
-        self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.2, .2, .6, .6 * old[3] / old[2]]
+        self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.4, .4, .2, .2 * old[3] / old[2]]
     else:
         self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
