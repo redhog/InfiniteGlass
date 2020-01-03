@@ -5,25 +5,61 @@ import array
 import pkg_resources
 import json
 from . import keymap
+import sakstig
 
-def parse_value(display, value):
+class apply(sakstig.Function):
+    def call(self, global_qs, local_qs, args):
+        return args[0].map(lambda fn: fn(*args[1:]))
+
+def parse_string_value(display, item, **context):    
+    if not isinstance(item, str):
+        return (item,)
+        
+    if item.startswith("@") or "://" in item:
+        if item[0] == "@": item = item[1:]
+        urltype = "path"
+        if "://" in item:
+            urltype, item = item.split("://")
+
+        if urltype == "eq":
+            return sakstig.QuerySet([context]).execute(item)
+        elif urltype == "resource":
+            pkg, item = item.split("/", 1)
+            with pkg_resources.resource_stream(pkg, item) as f:
+                return (f.read(),)
+        elif urltype == "data":
+            return(item.encode("utf-8"),)
+        #elif urltype == "path":
+        else:
+            with open(item, "rb") as f:
+                return (f.read(),)                
+    
+    if item[0] in '0123456789-':
+        if "." in value:
+            return (float(item),)
+        else:
+            return (int(item),)
+
+    return (item,)
+
+def parse_value(display, value, **context):
+    context["root"] = display.root
     fmt = 32
+    
     if isinstance(value, tuple):
         itemtype, items, fmt = parse_value(display, value[1])
         return display.get_atom(value[0]), items, fmt
-
+    
     if isinstance(value, (list, array.array)):
         items = value
     elif isinstance(value, str) and "://" not in value:
         items = value.split(" ")
     else:
         items = [value]
-    if isinstance(value, str):
-        if value[0] in '0123456789-':
-            if "." in value:
-                items = [float(item) for item in items]
-            else:
-                items = [int(item) for item in items]
+
+    if isinstance(items, list):
+        items = [res for item in items for res in parse_string_value(display, item, **context)]
+                
     if isinstance(value, array.array):
         if value.typecode == 'b':
             itemtype = display.get_atom("STRING")
@@ -61,40 +97,23 @@ def parse_value(display, value):
         itemtype = display.get_atom("JSON")
         fmt = 8        
         items = [json.dumps(item).encode("utf-8") for item in items]
-    elif items[0].startswith("@") or "://" in items[0]:
-        itemtype = display.get_atom("STRING")
-        fmt = 8
-        res = []
-        for item in items:
-            if item[0] == "@": item = item[1:]
-            urltype = "path"
-            if "://" in item:
-                urltype, item = item.split("://")
-
-            if urltype == "resource":
-                pkg, item = item.split("/", 1)
-                with pkg_resources.resource_stream(pkg, item) as f:
-                    res.append(f.read())
-            elif urltype == "data":
-                res.append(item.encode("utf-8"))
-            #elif urltype == "path":
-            else:
-                with open(item, "rb") as f:
-                    res.append(f.read())                
-        items = res
-    elif items[0] in keymap.keysyms:
-        itemtype = display.get_atom("KEYCODE")
-        items = [display.keycode(item) for item in items]
-    elif hasattr(Xlib.X, items[0]):
-        itemtype = display.get_atom("XCONST")
-        items = [getattr(Xlib.X, item) for item in items]
+    elif isinstance(items[0], str):
+        if items[0] in keymap.keysyms:
+            itemtype = display.get_atom("KEYCODE")
+            items = [display.keycode(item) for item in items]
+        elif hasattr(Xlib.X, items[0]):
+            itemtype = display.get_atom("XCONST")
+            items = [getattr(Xlib.X, item) for item in items]
+        else:
+            itemtype = display.get_atom("ATOM")
+            items = [display.get_atom(item) for item in items]
     else:
-        itemtype = display.get_atom("ATOM")
-        items = [display.get_atom(item) for item in items]
+        raise ValueError("Unsupported type %s" % type(items[0]))
+
     return itemtype, items, fmt
 
-def format_value(window, value):
-    itemtype, items, fmt = parse_value(window.display, value)
+def format_value(window, value, **context):
+    itemtype, items, fmt = parse_value(window.display.real_display, value, window=window, **context)
 
     if itemtype == window.display.get_atom("CARDINAL"):
         items = struct.pack("<" + "I" * len(items), *items)

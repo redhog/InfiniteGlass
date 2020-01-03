@@ -13,7 +13,8 @@ setuptools.setup(name='glass-lib',
       packages=setuptools.find_packages(),
       install_requires=[
           "numpy",
-          "python-xlib>=0.25"
+          "python-xlib>=0.25",
+          "sakstig",
       ],
       include_package_data=True
   )
