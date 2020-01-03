@@ -6,7 +6,7 @@ GLASS_DEBUGGER=
 
 ifeq ($(XSERVEROPTS),)
   ifeq ($(XSERVER),Xephyr)
-    XSERVEROPTS= :100 -ac -screen 1024x768 -host-cursor
+    XSERVEROPTS= :100 -ac -screen 1280x768 -host-cursor
   else
     XSERVEROPTS= :100 -ac
   endif

@@ -54,9 +54,9 @@
 
     "shadows": {
         "(b'xterm', b'XTerm', b'')/b'panelterm'": {
-            "IG_COORDS": [0.0, 0.75, 0.998046875, 0.0576171875],
+            "IG_COORDS": [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875],
+            "IG_SIZE": ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"],
             "IG_LAYER": "IG_LAYER_OVERLAY",
-            "IG_SIZE": {"__jsonclass__": ["array", "I", [1022, 59]]},
             "WM_CLASS": [{"__jsonclass__": ["string", "xterm"]}, {"__jsonclass__": ["string", "XTerm"]}, {"__jsonclass__": ["string", ""]}],
             "WM_NAME": {"__jsonclass__": ["string", "panelterm"]},
         }
