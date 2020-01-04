@@ -11,11 +11,7 @@ def find_client_window(win):
     tree = win.query_tree()
 
     for child in tree.children:
-        try:
-            child["WM_STATE"]
-        except KeyError:
-            pass
-        else:
+        if "WM_STATE" in child or "WM_NAME" in child:
             return child
 
     for child in tree.children:
