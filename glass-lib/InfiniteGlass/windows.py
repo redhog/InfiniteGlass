@@ -35,7 +35,7 @@ def get_event_window(display, event):
         #    return None
         return focus
 
-def get_windows(display, view, margin=0.01):
+def get_windows(display, view, margin=0.01, layer="IG_LAYER_DESKTOP"):
     visible = []
     invisible = []
     for child in display.root.query_tree().children:
@@ -45,7 +45,9 @@ def get_windows(display, view, margin=0.01):
         child = child.find_client_window()
         if not child: continue
         coords = child["IG_COORDS"]
-
+        if child.get("IG_LAYER", "IG_LAYER_DESKTOP") != layer:
+            continue
+        
         # Margins to not get stuck due to rounding errors of
         # windows that sit right on the edge...
         marginx = view[2] * margin
