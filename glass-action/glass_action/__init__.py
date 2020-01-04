@@ -125,3 +125,45 @@ def delete(ctx, key):
     cur = dbconn.cursor()
     cur.execute('delete from shadows where key = ?', (key,))
     dbconn.commit()
+
+
+@main.group()
+@click.pass_context
+def component(ctx, **kw):
+    pass
+
+@component.command()
+@click.pass_context
+def list(ctx):
+    with InfiniteGlass.Display() as display:
+        for key in display.root.keys():
+            if key.startswith("IG_COMPONENT_"):
+                print(key[len("IG_COMPONENT_"):])
+    
+@component.command()
+@click.argument("name")
+@click.argument("command", nargs=-1)
+@click.pass_context
+def start(ctx, name, command):
+    with InfiniteGlass.Display() as display:
+        key = "IG_COMPONENT_%s" % name
+        display.root[key] = json.dumps({"command": command, "name": name}).encode("utf-8")
+        display.flush()
+
+
+@component.command()
+@click.argument("name")
+@click.pass_context
+def show(ctx, name):
+    with InfiniteGlass.Display() as display:
+        key = "IG_COMPONENT_%s" % name
+        print(" ".join(json.loads(display.root[key].decode("utf-8"))["command"]))
+        
+@component.command()
+@click.argument("name")
+@click.pass_context
+def restart(ctx, name):
+    with InfiniteGlass.Display() as display:
+        key = "IG_COMPONENT_%s" % name
+        display.root[key] = display.root[key]
+        display.flush()
