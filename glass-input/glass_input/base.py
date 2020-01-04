@@ -2,6 +2,7 @@ import Xlib.X
 import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
 import Xlib.ext.xinput
+from .actions import actions
 from . import mode
 
 class BaseMode(mode.Mode):
@@ -14,4 +15,4 @@ class BaseMode(mode.Mode):
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)
-        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [.4, .4, .2, 0.0]
+        actions.toggle_overlay(self, None, False)

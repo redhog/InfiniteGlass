@@ -2,12 +2,15 @@ import Xlib.X
 import InfiniteGlass
 from .. import mode
     
-def toggle_overlay(self, event):
-    old = self.display.root["IG_VIEW_OVERLAY_VIEW"]
-    if old[0] == 0.:
-        self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.4, .4, .2, .2 * old[3] / old[2]]
+def toggle_overlay(self, event, show=None):
+    size = self.display.root["IG_VIEW_OVERLAY_SIZE"]
+    if show is None: show = self.display.root["IG_VIEW_OVERLAY_VIEW"][0] != 0.
+    height = size[1] / size[0]
+    
+    if show:
+        self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., height]
     else:
-        self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]
+        self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.4, .4 * height, .2, .2 * height]
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
 
 def send_exit(self, event):
