@@ -2,6 +2,7 @@
 #include "shader.h"
 #include "rendering.h"
 #include "debug.h"
+#include <math.h>
 
 #define FL(value) *((float *) &value)
 void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; prop->name = AnyPropertyType; }
@@ -17,16 +18,16 @@ void property_float_free(Property *prop) {
 }
 
 void property_float_to_gl(Property *prop, Rendering *rendering) {
-  float *values = (float *) prop->data;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
-  switch (prop->nitems) {
-    case 1: glUniform1f(prop_cache->location, values[0]); break;
-    case 2: glUniform2f(prop_cache->location, values[0], values[1]); break;
-    case 3: glUniform3f(prop_cache->location, values[0], values[1], values[2]); break;
-    case 4:
-      glUniform4f(prop_cache->location, values[0], values[1], values[2], values[3]);
-      break;
+  
+  float *data = (float *) prop->data;
+  #define D(idx) ((idx < prop->nitems) ? data[idx] : nanf("initial"))
+  switch (prop_cache->type) {
+    case GL_FLOAT: glUniform1f(prop_cache->location, D(0)); break;
+    case GL_FLOAT_VEC2: glUniform2f(prop_cache->location, D(0), D(1)); break;
+    case GL_FLOAT_VEC3: glUniform3f(prop_cache->location, D(0), D(1), D(2)); break;
+    case GL_FLOAT_VEC4: glUniform4f(prop_cache->location, D(0), D(1), D(2), D(3)); break;
   }
 }
 void property_float_print(Property *prop, FILE *fp) {

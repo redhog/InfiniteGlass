@@ -27,6 +27,8 @@ struct PropertyProgramCacheStruct {
   GLint program; 
   char *name_str;
   GLint location;
+  GLint size;
+  GLenum type;
   void *data;
 };
 struct PropertyStruct {

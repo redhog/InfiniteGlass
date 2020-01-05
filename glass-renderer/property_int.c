@@ -2,6 +2,7 @@
 #include "shader.h"
 #include "rendering.h"
 #include "debug.h"
+#include "glapi.h"
 
 void property_int_init(PropertyTypeHandler *prop) { prop->type = XA_INTEGER; prop->name = AnyPropertyType; }
 void property_int_load(Property *prop) {}
@@ -9,11 +10,14 @@ void property_int_free(Property *prop) {}
 void property_int_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
-  switch (prop->nitems) {
-    case 1: glUniform1i(prop_cache->location, prop->values.dwords[0]); break;
-    case 2: glUniform2i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1]); break;
-    case 3: glUniform3i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1], prop->values.dwords[2]); break;
-    case 4: glUniform4i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1], prop->values.dwords[2], prop->values.dwords[3]); break;
+
+  unsigned long *data = prop->values.dwords;
+  #define D(idx) ((idx < prop->nitems) ? data[idx] : -1)
+  switch (prop_cache->type) {
+    case GL_INT: glUniform1i(prop_cache->location, D(0)); break;
+    case GL_INT_VEC2: glUniform2i(prop_cache->location, D(0), D(1)); break;
+    case GL_INT_VEC3: glUniform3i(prop_cache->location, D(0), D(1), D(2)); break;
+    case GL_INT_VEC4: glUniform4i(prop_cache->location, D(0), D(1), D(2), D(3)); break;
   }
 }
 void property_int_print(Property *prop, FILE *fp) {
