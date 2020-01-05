@@ -15,4 +15,7 @@ class BaseMode(mode.Mode):
                 Xlib.X.AnyButton, Xlib.X.Mod4Mask | mod, False,
                 Xlib.X.ButtonPressMask | Xlib.X.ButtonReleaseMask | Xlib.X.PointerMotionMask,
                 Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync, self.display.root, self.display.input_cursor)
-        actions.toggle_overlay(self, None, False)
+
+        @self.display.root.require("IG_VIEW_OVERLAY_SIZE")
+        def overlay_size(root, value):
+            actions.toggle_overlay(self, None, False)

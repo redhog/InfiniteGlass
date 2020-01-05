@@ -78,11 +78,10 @@ def pop(display):
 
 def handle_event(display, event):
     InfiniteGlass.DEBUG("event", "HANDLE %s\n" % event)
-    for i in range(len(display.input_stack) - 1, -1, -1):
-        mode = display.input_stack[i]
-        if mode.handle(event):
-            InfiniteGlass.DEBUG("event", "        BY %s %s\n" % (i, mode))
-            return True
+    mode = display.input_stack[-1]
+    if mode.handle(event):
+        InfiniteGlass.DEBUG("event", "        BY %s\n" % (mode,))
+        return True
     InfiniteGlass.DEBUG("event", "        UNHANDLED\n")
     return False
 
@@ -163,7 +162,7 @@ class Mode(object):
                 print(e)
                 traceback.print_exc()
             return True
-        return True
+        return False
 
     def action(self, eventfilter, action, event, **kw):
         InfiniteGlass.DEBUG("action", "Action %s(%s) [%s]" % (action, kw, eventfilter))

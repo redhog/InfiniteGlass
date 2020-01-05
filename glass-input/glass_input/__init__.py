@@ -32,7 +32,7 @@ def main(*arg, **kw):
         @display.root.require("IG_ANIMATE")
         def animate_window(root, win):
             display.animate_window = win
-
+            
         # Do not allow setting the input focus to None as that makes our keygrabs break...
         @display.root.on()
         def FocusIn(win, event):
