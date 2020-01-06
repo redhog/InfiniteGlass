@@ -1,6 +1,7 @@
 import InfiniteGlass
 import numpy
 from .. import mode
+from . import item_zoom_to
 import sys
 
 def pan(self, event, x=None, y=None):
@@ -69,6 +70,7 @@ def zoom_to_window_to_the(self, event, direction):
         screenx = numpy.cos(direction)
         
         view = [view[0] + screenx * view[2], view[1] + screeny * view[3]] + view[2:]
+
     else:
         windows.sort(key=lambda a: a[0])
         dist, center, coords, w = windows[0]
@@ -94,8 +96,13 @@ def zoom_to_window_to_the(self, event, direction):
             newy = wy - (coords[3] - view[3]) / 2
 
         view[0] = newx - view[2] / 2.
-        view[1] = newy - view[3] / 2.
+        view[1] = newy - view[3] / 2.            
 
+    visible, invisible = InfiniteGlass.windows.get_windows(self.display, view)
+    if len(visible) == 1:
+        item_zoom_to.item_zoom_1_1_to_window(self, win=visible[0][0])
+        return
+        
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)

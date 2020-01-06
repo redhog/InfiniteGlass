@@ -41,10 +41,11 @@ def item_zoom_out_or_1_1(self, event):
     else:
         win["IG_SIZE"] = [int(item * 1.1) for item in win["IG_SIZE"]]
 
-def item_zoom_1_1_to_window(self, event):
-    win = InfiniteGlass.windows.get_active_window(self.display)
-    if not win or win == self.display.root:
-        return
+def item_zoom_1_1_to_window(self, event=None, win=None):
+    if win is None:
+        win = InfiniteGlass.windows.get_active_window(self.display)
+        if not win or win == self.display.root:
+            return
 
     winsize = win["IG_SIZE"]
     size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
