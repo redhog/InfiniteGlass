@@ -52,8 +52,8 @@ def zoom_to_window_to_the(self, event, direction):
         return 2 * numpy.pi - diff
 
     windows = []
-    visible, invisible = InfiniteGlass.windows.get_windows(self.display, view)
-    for child, coords in invisible:
+    visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
+    for child, coords in invisible + overlap:
         if child.get("IG_LAYER", "IG_LAYER_DESKTOP") != "IG_LAYER_DESKTOP":
             continue
 
@@ -98,10 +98,10 @@ def zoom_to_window_to_the(self, event, direction):
         view[0] = newx - view[2] / 2.
         view[1] = newy - view[3] / 2.            
 
-    visible, invisible = InfiniteGlass.windows.get_windows(self.display, view)
-    if len(visible) == 1:
-        item_zoom_to.item_zoom_1_1_to_window(self, win=visible[0][0])
-        return
+    visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
+    if len(visible) == 1 or (not visible and len(overlap) == 1):
+       item_zoom_to.item_zoom_1_1_to_window(self, win=(visible + overlap)[0][0])
+       return
         
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view

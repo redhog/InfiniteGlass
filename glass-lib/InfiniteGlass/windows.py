@@ -37,6 +37,7 @@ def get_event_window(display, event):
 
 def get_windows(display, view, margin=0.01, layer="IG_LAYER_DESKTOP"):
     visible = []
+    overlap = []
     invisible = []
     for child in display.root.query_tree().children:
         if child.get_attributes().map_state != Xlib.X.IsViewable:
@@ -52,11 +53,20 @@ def get_windows(display, view, margin=0.01, layer="IG_LAYER_DESKTOP"):
         # windows that sit right on the edge...
         marginx = view[2] * margin
         marginy = view[3] * margin
-        if (    coords[0] + marginx >= view[0]
-            and coords[0] + coords[2] - marginx <= view[0] + view[2]
-            and coords[1] - coords[3] + marginy >= view[1]
-            and coords[1] - marginy <= view[1] + view[3]):
+
+        win = list(coords)
+        win[1] -= win[3]
+            
+        visiblex = win[0] + marginx >= view[0] and win[0] + win[2] - marginx <= view[0] + view[2]
+        visibley = win[1] + marginy >= view[1] and win[1] + win[3] - marginy <= view[1] + view[3]
+        
+        invisiblex = win[0] + marginx >= view[0] + view[2] or win[0] + win[2] - marginx <= view[0]
+        invisibley = win[1] + marginx >= view[1] + view[3] or win[1] + win[3] - marginx <= view[1]
+
+        if visiblex and visibley:
             visible.append((child, coords))
-        else:
+        elif invisiblex or invisibley:
             invisible.append((child, coords))
-    return visible, invisible
+        else:
+            overlap.append((child, coords))
+    return visible, overlap, invisible
