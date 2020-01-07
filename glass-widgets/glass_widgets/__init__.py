@@ -7,24 +7,9 @@ import yaml
 import json
 
 def main(*arg, **kw):
-    configpath = os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/widgets.json")
-    if configpath:
-        configpath = os.path.expanduser(configpath)
-
-        configdirpath = os.path.dirname(configpath)
-        if not os.path.exists(configdirpath):
-            os.makedirs(configdirpath)
-
-        if not os.path.exists(configpath):
-            with pkg_resources.resource_stream("glass_widgets", "config.json") as inf:
-                with open(configpath, "wb") as outf:
-                    outf.write(inf.read())
-
-        with open(configpath) as f:
-            config = yaml.load(f, Loader=yaml.SafeLoader)
-    else:
-        with pkg_resources.resource_stream("glass_widgets", "config.json") as f:
-            config = yaml.load(f, Loader=yaml.SafeLoader)
+    configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.json"))
+    with open(configpath) as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
             
     with InfiniteGlass.Display() as display:
         for name, widget in config["widgets"].items():

@@ -11,4 +11,5 @@ fi
 
 export PATH=$(pwd)/build:$PATH
 
+glass-config-init
 glass-ghosts

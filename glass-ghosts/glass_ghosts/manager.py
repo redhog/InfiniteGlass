@@ -16,24 +16,9 @@ import sys
 class GhostManager(object):
     def __init__(self, display):
 
-        configpath = os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.json")
-        if configpath:
-            configpath = os.path.expanduser(configpath)
-
-            configdirpath = os.path.dirname(configpath)
-            if not os.path.exists(configdirpath):
-                os.makedirs(configdirpath)
-
-            if not os.path.exists(configpath):
-                with pkg_resources.resource_stream("glass_ghosts", "config.json") as inf:
-                    with open(configpath, "wb") as outf:
-                        outf.write(inf.read())
-
-            with open(configpath) as f:
-                self.config = yaml.load(f, Loader=yaml.SafeLoader)
-        else:
-            with pkg_resources.resource_stream("glass_ghosts", "config.json") as f:
-                self.config = yaml.load(f, Loader=yaml.SafeLoader)
+        configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.json"))
+        with open(configpath) as f:
+            self.config = yaml.load(f, Loader=yaml.SafeLoader)
        
         self.display = display
 

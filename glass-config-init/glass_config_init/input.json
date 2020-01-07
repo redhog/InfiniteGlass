@@ -183,6 +183,6 @@
                 "Button1Mask,MotionNotify": "item_resize_mouse"
             }
         },
-        "rofi_mode": {"shell": "rofi -show drun -font 'DejaVu Sans 18' -show-icons &"}
+        "rofi_mode": {"shell": "rofi -show drun -theme ~/.config/glass/rofi-theme.config -show-icons &"}
     }
 }

@@ -6,4 +6,5 @@ if [ -e ~/.config/glass/session.sh ]; then
   source ~/.config/glass/session.sh
 fi
 
+glass-config-init
 glass-ghosts
