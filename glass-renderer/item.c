@@ -52,7 +52,6 @@ void item_type_base_constructor(Item *item, void *args) {
 
     XGetWindowAttributes(display, window, &item->attr);
     item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
-    item_type_window_update_space_pos_from_window(item);
 
     XSelectInput(display, window, PropertyChangeMask);
     item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
@@ -64,6 +63,10 @@ void item_type_base_constructor(Item *item, void *args) {
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
 
+  if (window != root) {
+    item_type_window_update_space_pos_from_window(item);
+  }
+  
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
 }
@@ -259,7 +262,7 @@ void item_type_window_update_space_pos_from_window(Item *item) {
   } else {
     View *v = NULL;
     if (views && item->prop_layer) {
-     v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
+      v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
     }
     float coords[4];
     if (v) {
