@@ -1,11 +1,7 @@
 import Xlib.X
 
 def find_client_window(win):
-    try:
-        win["WM_STATE"]
-    except KeyError:
-        pass
-    else:
+    if "WM_STATE" in win or "WM_NAME" in win:
         return win
 
     tree = win.query_tree()
