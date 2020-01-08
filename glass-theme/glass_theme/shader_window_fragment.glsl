@@ -1,13 +1,12 @@
 #version 330 core
 precision highp float;
 
-#define ICON_CUTOFF_1 .5
+#define ICON_CUTOFF_1 .4
 #define ICON_CUTOFF_2 .3
 
 in vec2 px_window_bottom_left;
 in vec2 px_window_top_right;
 in vec2 px_coord;
-in float geometry_size;
 
 uniform ivec2 size;
 uniform int picking_mode;
@@ -104,6 +103,10 @@ void main() {
   window_size = px_window_top_right - px_window_bottom_left;
   scaled_window_coord = vec2(window_coord.x / window_size.x, 1. - window_coord.y / window_size.y);
 
+  vec2 texture_size = textureSize(window_sampler, 0);
+  vec2 geometry_size = window_size / texture_size;
+  float geometry_scale = sqrt(pow(geometry_size.x, 2) + pow(geometry_size.y, 2));
+
   if (picking_mode == 1) {
     if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
       fragColor = vec4(0.,0.,0.,0.);
@@ -114,10 +117,10 @@ void main() {
     draw_border();
   } else if (!isnan(IG_CONTENT_transform[0])) {
     draw_svg_content();
-  } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_size > ICON_CUTOFF_1) {
+  } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_scale > ICON_CUTOFF_1) {
     fragColor = get_pixmap();
-  } else if (geometry_size > ICON_CUTOFF_2) {
-    float scale = (geometry_size - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
+  } else if (geometry_scale > ICON_CUTOFF_2) {
+    float scale = (geometry_scale - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
     fragColor = scale * get_pixmap() + (1 - scale) * get_icon();
   } else {
     fragColor = get_icon();

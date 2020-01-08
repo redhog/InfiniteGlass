@@ -12,7 +12,6 @@ uniform ivec2 size;
 out vec2 px_window_bottom_left;
 out vec2 px_window_top_right;
 out vec2 px_coord;
-out float geometry_size;
 
 
 vec2 pixelclipscreen(vec2 xy) {
@@ -71,9 +70,6 @@ void main() {
   float right = left + IG_COORDS[2];
   float bottom = top - IG_COORDS[3];
 
-  float window_size = distance(space2screen * vec4(left, bottom, 0., 1.),
-                               space2screen * vec4(right, top, 0., 1.));
-
   px_bottom_left = glscreen2pixel(space2screen * vec4(left, bottom, 0., 1.));
   px_top_right = glscreen2pixel(space2screen * vec4(right, top, 0., 1.));
 
@@ -98,22 +94,18 @@ void main() {
 
   gl_Position = pixel2glscreen(pixelclipscreen(px_bottom_left));
   px_coord = pixelclipscreen(px_bottom_left).xy;
-  geometry_size = window_size;
   EmitVertex();
 
   gl_Position = pixel2glscreen(pixelclipscreen(px_top_left));
   px_coord = pixelclipscreen(px_top_left).xy;
-  geometry_size = window_size;
   EmitVertex();
 
   gl_Position = pixel2glscreen(pixelclipscreen(px_bottom_right));
   px_coord = pixelclipscreen(px_bottom_right).xy;
-  geometry_size = window_size;
   EmitVertex();
 
   gl_Position = pixel2glscreen(pixelclipscreen(px_top_right));
   px_coord = pixelclipscreen(px_top_right).xy;
-  geometry_size = window_size;
   EmitVertex();
 
   EndPrimitive();
