@@ -39,13 +39,17 @@ $(BUILD)/env:
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
-.PHONY: all
+.PHONY: all run install devinstall install-binaries
 all: $(BINARIES) $(PYTHONAPPS)
 
 run: all
 	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" ./xstartup.sh
 
-install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
+install: install-binaries $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
+
+devinstall: install-binaries $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS))
+
+install-binaries: $(BINARIES)
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
 	mkdir -p $(PREFIX)/share/glass
 	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
@@ -53,6 +57,9 @@ install: $(BINARIES) $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 
 $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
 	cd $(patsubst install-%,%,$@); python3 setup.py install
+
+$(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS)):
+	cd $(patsubst devinstall-%,%,$@); python3 setup.py develop
 
 clean:
 	rm -rf $(BUILD)
