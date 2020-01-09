@@ -26,6 +26,7 @@
 #include <X11/extensions/XInput2.h>
 #include <SOIL/SOIL.h>
 #include <backtrace.h>
+#include <math.h>
 
 struct backtrace_state *trace_state;
 
@@ -283,7 +284,11 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         coords[3] = ((float) (event->xconfigure.height)) / (float) overlay_attr.width;
       }
 
-      float *old_coords = (float *) item->prop_coords->data;
+      float old_coords_nan[4] = {nanf("initial"), nanf("initial"), nanf("initial"), nanf("initial")};
+      float *old_coords = old_coords_nan;
+      if (item->prop_coords) {
+        old_coords = (float *) item->prop_coords->data;
+      }
       DEBUG("menu.reconfigure", "%ld: %d,%d->%d,%d[%d,%d]   %f,%f,%f,%f->%f,%f,%f,%f\n",
             item->window,
             item->x, item->y, event->xconfigure.x, event->xconfigure.y, event->xconfigure.width, event->xconfigure.height,
