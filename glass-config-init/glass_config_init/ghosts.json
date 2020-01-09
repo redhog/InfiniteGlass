@@ -50,16 +50,22 @@
         "glass-renderer": {"command": ["glass-renderer"]},
         "xkb": {"command": ["setxkbmap", "-model", "pc101", "-layout", "se,us,se,ir", "-variant", "swerty,,runes,"]},
         "panelterm": {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]},
-        "stalonetray": {"command": ["stalonetray", "-i", "32"]}
+        "stalonetray": {"command": ["stalonetray", "-i", "32", "--window-type", "normal", "--window-layer", "normal", "--decorations", "all"]}
     },
 
     "shadows": {
-        "(b'xterm', b'XTerm', b'')/b'panelterm'": {
+        "xterm-xterm-panelterm": {
             "IG_COORDS": [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875],
             "IG_SIZE": ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"],
             "IG_LAYER": "IG_LAYER_OVERLAY",
             "WM_CLASS": [{"__jsonclass__": ["string", "xterm"]}, {"__jsonclass__": ["string", "XTerm"]}, {"__jsonclass__": ["string", ""]}],
             "WM_NAME": {"__jsonclass__": ["string", "panelterm"]},
+        },
+        "stalonetray-stalonetray--stalonetray": {
+            "IG_COORDS": [0.01, "eq://0.3 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05],
+            "IG_LAYER": "IG_LAYER_OVERLAY",
+            "WM_CLASS": [{"__jsonclass__": ["string", "stalonetray"]}, {"__jsonclass__": ["string", "stalonetray"]}, {"__jsonclass__": ["string", ""]}],
+            "WM_NAME": {"__jsonclass__": ["string", "stalonetray"]},
         },
 
         
