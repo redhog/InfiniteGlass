@@ -1,5 +1,7 @@
 import Xlib.X
+import Xlib.error
 from . import coords as coordsmod 
+from . import debug
 
 def get_active_window(display):
     pointer = display.root.query_pointer()
@@ -13,16 +15,19 @@ def get_active_window(display):
     spacecoords = {layer: coordsmod.view_to_space(view, size, pointer.root_x, pointer.root_y)
                    for layer, (view, size) in views.items()}
     for child in display.root.query_tree().children:
-        if child.get_attributes().map_state != Xlib.X.IsViewable: continue
-        coords = child.get("IG_COORDS", None)
-        if coords is None: continue
-        layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
-        pointer = spacecoords[layer]
-        if (pointer[0] >= coords[0]
-            and pointer[0] <= coords[0] + coords[2]
-            and pointer[1] <= coords[1]
-            and pointer[1] >= coords[1] - coords[3]):
-            return child
+        try:
+            if child.get_attributes().map_state != Xlib.X.IsViewable: continue
+            coords = child.get("IG_COORDS", None)
+            if coords is None: continue
+            layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
+            pointer = spacecoords[layer]
+            if (pointer[0] >= coords[0]
+                and pointer[0] <= coords[0] + coords[2]
+                and pointer[1] <= coords[1]
+                and pointer[1] >= coords[1] - coords[3]):
+                return child
+        except Xlib.error.BadWindow as e:
+            debug.DEBUG("get_active_window", "%s: %s" % (child.__window__(), e))
     return None
 
 def get_event_window(display, event):
