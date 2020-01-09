@@ -19,7 +19,7 @@ class Shadow(object):
         InfiniteGlass.DEBUG("shadow", "SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
     def key(self):
-        return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.config["match"]))
+        return glass_ghosts.helpers.shadow_key(self.properties, self.manager.config["match"])
 
     def update_key(self):
         key = self.key()
@@ -31,28 +31,26 @@ class Shadow(object):
         if not self.manager.restoring_shadows and not self.from_config:
 
             cur = self.manager.dbconn.cursor()
-            dbkey = "/".join(str(item) for item in key)
             for name, value in self.properties.items():
                 if self._properties.get(name, NoValue) != value:
                     cur.execute("""
                       insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
-                    """, (dbkey, name, json.dumps(value, default=InfiniteGlass.tojson(self.manager.display))))
+                    """, (key, name, json.dumps(value, default=InfiniteGlass.tojson(self.manager.display))))
                     self.manager.changes = True
             for name, value in self._properties.items():
                 if name not in self.properties:
                     cur.execute("""
                       delete from shadows where key=? and name=?
-                    """, (dbkey, name))
+                    """, (key, name))
                     self.manager.changes = True
             if key != self.current_key and self.current_key is not None:
-                current_dbkey = "/".join(str(item) for item in self.current_key)
                 try:
                     cur.execute("""
                       update shadows set key=? where key=?
-                        """, (dbkey, current_dbkey))
+                        """, (key, self.current_key))
                 except Exception as e:
-                    InfiniteGlass.DEBUG("shadow.database", "Error updating key in db: %s\nkey=%s, dbkey=%s  =>  key=%s dbkey=%s\n" % (
-                        e, self.current_key, current_dbkey, key, dbkey))
+                    InfiniteGlass.DEBUG("shadow.database", "Error updating key in db: %s\nkey=%s =>  key=%s\n" % (
+                        e, self.current_key, key))
                     self.destroy()
                 self.manager.changes = True
 
@@ -173,12 +171,11 @@ class Shadow(object):
         self.manager.shadows.pop(self.key(), None)
 
         if not self.from_config:
-            dbkey = str(self)
             cur = self.manager.dbconn.cursor()
             cur.execute("""
                 delete from shadows where key = ?
-            """, (dbkey,))
+            """, (self.key(),))
             self.manager.dbconn.commit()
 
     def __str__(self):
-        return "/".join(str(item) for item in self.key())
+        return self.key()

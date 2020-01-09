@@ -75,7 +75,7 @@ class Window(object):
             self.window.destroy()
             
     def key(self):
-        return tuple(glass_ghosts.helpers.tuplify(self.properties.get(name, None)) for name in sorted(self.manager.config["match"]))
+        return glass_ghosts.helpers.shadow_key(self.properties, self.manager.config["match"])
 
     def destroy(self):
         if not self.shadow:
@@ -120,7 +120,7 @@ class Window(object):
 
     def __str__(self):
         res = str(self.window.__window__())
-        res += ": " + "/".join(str(item) for item in self.key())
+        res += ": " + self.key()
         if self.shadow is not None:
             res += " (has shadow)"
         return res

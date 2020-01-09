@@ -12,7 +12,8 @@ setuptools.setup(name='glass-ghosts',
       url='https://github.com/redhog/InfiniteGlass',
       packages=setuptools.find_packages(),
       install_requires=[
-          "pyyaml"
+          "pyyaml",
+          "python-slugify"
       ],
       entry_points={
           'console_scripts': [
