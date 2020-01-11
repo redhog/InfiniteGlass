@@ -17,6 +17,9 @@
 * Session manager protocols
   * [XSMP](https://www.x.org/releases/X11R7.6/doc/libSM/SMlib.html)
   * [ICE](https://www.x.org/releases/X11R7.6/doc/libICE/ICElib.html)
+  * [GNOME Session](https://people.gnome.org/~mccann/gnome-session/docs/gnome-session.html)
+    * [MATE server implementation](https://github.com/mate-desktop/mate-session-manager/tree/master/mate-session)
+  
   
 ## Software
 
