@@ -18,3 +18,8 @@
   * [XSMP](https://www.x.org/releases/X11R7.6/doc/libSM/SMlib.html)
   * [ICE](https://www.x.org/releases/X11R7.6/doc/libICE/ICElib.html)
   
+## Software
+
+* [Rofi main menu](https://github.com/davatorium/rofi)
+  * [Various rofi menus](https://gitlab.com/vahnrr/rofi-menus)
+  
