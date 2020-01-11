@@ -158,9 +158,19 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           XWindowChanges values;
           values.width = ((long *) prop_return)[0];
           values.height = ((long *) prop_return)[1];
-          XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-          DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-          item->type->update((Item *) item);
+          // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
+          if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
+            long arr[2];
+            XWindowAttributes attr;
+            XGetWindowAttributes(display, event->xproperty.window, &attr);
+            arr[0] = attr.width;
+            arr[1] = attr.height;
+            XChangeProperty(display, event->xproperty.window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+          } else {
+            XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
+            DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
+            item->type->update((Item *) item);
+          }
         }
         XFree(prop_return);
       } else if (event->xproperty.window == root && event->xproperty.atom == IG_VIEWS) {
