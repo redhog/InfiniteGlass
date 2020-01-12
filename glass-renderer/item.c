@@ -27,7 +27,9 @@ void item_type_base_constructor(Item *item, void *args) {
   if (window == root) {
     Atom layer = XInternAtom(display, "IG_LAYER_ROOT", False);
     XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
-    item->is_mapped = False;
+    Atom shader = XInternAtom(display, "IG_SHADER_ROOT", False);
+    XChangeProperty(display, window, IG_SHADER, XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
+    item->is_mapped = True;
   } else {
     Atom type_return;
     int format_return;
@@ -42,13 +44,12 @@ void item_type_base_constructor(Item *item, void *args) {
       if (item->attr.override_redirect) {
         layer = IG_LAYER_MENU;
       }
-      if (item->window != root)
       XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
     }
     XFree(prop_return);
 
     long value = 1;
-    if (item->window != root) XChangeProperty(display, window, WM_STATE, XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
+    XChangeProperty(display, window, WM_STATE, XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
 
     XGetWindowAttributes(display, window, &item->attr);
     item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
@@ -74,7 +75,6 @@ void item_type_base_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
 void item_type_base_draw(Rendering *rendering) {
-  if (rendering->item->window == root) return;
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
     Shader *shader = rendering->shader;
