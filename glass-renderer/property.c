@@ -76,11 +76,20 @@ void property_to_gl(Property *prop, Rendering *rendering) {
     prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
     strcpy(prop_cache->name_str, cache->prefix);
     strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
+    prop_cache->uniform = True;
     prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
     if (prop_cache->location != -1) {
       char name[1];
       glGetActiveUniform(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+    } else {
+      prop_cache->uniform = False;
+      prop_cache->location = glGetAttribLocation(cache->program, prop_cache->name_str);
+      if (prop_cache->location != -1) {
+        char name[1];
+        glGetActiveAttrib(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+      }
     }
+    
     type->load_program(prop, rendering);
   }
   type->to_gl(prop, rendering);

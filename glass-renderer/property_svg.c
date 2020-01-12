@@ -177,7 +177,7 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;
   
-  if (program_data->texture_location == -1 || program_data->transform_location == -1) return;
+  if (!prop_cache->uniform || program_data->texture_location == -1 || program_data->transform_location == -1) return;
   if (!data->rsvg) return;
   
   property_svg_update_drawing(prop, rendering);

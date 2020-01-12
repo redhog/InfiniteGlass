@@ -21,13 +21,16 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
   
-  float *data = (float *) prop->data;
-  #define D(idx) ((idx < prop->nitems) ? data[idx] : nanf("initial"))
-  switch (prop_cache->type) {
-    case GL_FLOAT: glUniform1f(prop_cache->location, D(0)); break;
-    case GL_FLOAT_VEC2: glUniform2f(prop_cache->location, D(0), D(1)); break;
-    case GL_FLOAT_VEC3: glUniform3f(prop_cache->location, D(0), D(1), D(2)); break;
-    case GL_FLOAT_VEC4: glUniform4f(prop_cache->location, D(0), D(1), D(2), D(3)); break;
+  if (prop_cache->uniform) {
+    float *data = (float *) prop->data;
+    #define D(idx) ((idx < prop->nitems) ? data[idx] : nanf("initial"))
+    switch (prop_cache->type) {
+      case GL_FLOAT: glUniform1f(prop_cache->location, D(0)); break;
+      case GL_FLOAT_VEC2: glUniform2f(prop_cache->location, D(0), D(1)); break;
+      case GL_FLOAT_VEC3: glUniform3f(prop_cache->location, D(0), D(1), D(2)); break;
+      case GL_FLOAT_VEC4: glUniform4f(prop_cache->location, D(0), D(1), D(2), D(3)); break;
+    }
+  } else {
   }
 }
 void property_float_print(Property *prop, FILE *fp) {
