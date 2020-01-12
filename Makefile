@@ -39,7 +39,7 @@ $(BUILD)/env:
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python setup.py develop
 
-.PHONY: all run install devinstall install-binaries
+.PHONY: all run install devinstall uninstall install-binaries uninstall-binaries
 all: $(BINARIES) $(PYTHONAPPS)
 
 run: all
@@ -49,17 +49,28 @@ install: install-binaries $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 
 devinstall: install-binaries $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS))
 
+uninstall: uninstall-binaries $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS))
+
 install-binaries: $(BINARIES)
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
 	mkdir -p $(PREFIX)/share/glass
 	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
 	cp glass.desktop /usr/share/xsessions/glass.desktop
 
+uninstall-binaries:
+	rm $(PREFIX)/bin/glass-renderer
+	rm -rf $(PREFIX)/share/glass
+	rm $(PREFIX)/bin/glass-startup.sh
+	rm /usr/share/xsessions/glass.desktop
+
 $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
 	cd $(patsubst install-%,%,$@); python3 setup.py install
 
 $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS)):
 	cd $(patsubst devinstall-%,%,$@); python3 setup.py develop
+
+$(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS)):
+	pip3 uninstall $(patsubst uninstall-%,%,$@)
 
 clean:
 	rm -rf $(BUILD)
