@@ -105,7 +105,7 @@ void item_type_base_draw(Rendering *rendering) {
     
     gl_check_error("item_draw2");
     
-    glDrawArrays(GL_POINTS, 0, 1);
+    glDrawArrays(GL_POINTS, 0, rendering->array_length);
 
     gl_check_error("item_draw3");
 
