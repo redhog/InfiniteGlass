@@ -11,6 +11,7 @@ Property *property_allocate(Properties *properties, Atom name) {
   prop->values.bytes = NULL;
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     prop->programs[i].program = -1;
+    prop->programs[i].prefix = NULL;
     prop->programs[i].data = NULL;
     prop->programs[i].name_str = NULL;
     prop->programs[i].location = -1;
@@ -70,9 +71,10 @@ void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if (!type) return;
   
-  if (prop_cache->program != cache->program) {
+  if (prop_cache->program != cache->program || prop_cache->prefix != cache->prefix) {
     if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
     prop_cache->program = cache->program;
+    prop_cache->prefix = cache->prefix;
     prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
     strcpy(prop_cache->name_str, cache->prefix);
     strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
