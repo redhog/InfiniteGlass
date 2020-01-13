@@ -54,7 +54,8 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   Rendering rendering;
   rendering.shader = NULL;
   rendering.view = view;
- 
+  rendering.array_length = 1;
+  
   List *to_delete = NULL;
   if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {

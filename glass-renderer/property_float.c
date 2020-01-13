@@ -31,11 +31,29 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
       case GL_FLOAT_VEC4: glUniform4f(prop_cache->location, D(0), D(1), D(2), D(3)); break;
     }
   } else {
+    glBindBuffer(GL_ARRAY_BUFFER, prop_cache->buffer);
+    glEnableVertexAttribArray(prop_cache->location);
+
+    GLint size;
+    switch (prop_cache->type) {
+      case GL_FLOAT: size=1; break;
+      case GL_FLOAT_VEC2: size=2; break;
+      case GL_FLOAT_VEC3: size=3; break;
+      case GL_FLOAT_VEC4: size=4; break;
+    }
+    glVertexAttribPointer(prop_cache->location, size, GL_FLOAT, False, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, prop_cache->buffer);
+    glBufferData(GL_ARRAY_BUFFER, prop->nitems * sizeof(float), prop->data, GL_STATIC_DRAW);
+
+    if (rendering->array_length < prop->nitems / size) {
+      rendering->array_length = prop->nitems / size;
+    }
   }
 }
 void property_float_print(Property *prop, FILE *fp) {
   float *values = (float *) prop->data;
-  fprintf(fp, "%ld.%s=<int>", prop->window, prop->name_str);
+  fprintf(fp, "%ld.%s=<float>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
     fprintf(fp, "%f", values[i]);

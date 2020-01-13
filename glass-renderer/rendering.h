@@ -23,6 +23,7 @@ typedef struct {
  char *properties_prefix;
  size_t program_cache_idx;
  GLuint texture_unit;
+ size_t array_length;
 } Rendering;
 
 #endif

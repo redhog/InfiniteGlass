@@ -29,6 +29,7 @@ struct PropertyProgramCacheStruct {
   char *name_str;
   Bool uniform;
   GLint location;
+  GLuint buffer;
   GLint size;
   GLenum type;
   void *data;

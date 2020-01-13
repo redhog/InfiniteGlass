@@ -15,6 +15,7 @@ Property *property_allocate(Properties *properties, Atom name) {
     prop->programs[i].data = NULL;
     prop->programs[i].name_str = NULL;
     prop->programs[i].location = -1;
+    prop->programs[i].buffer = -1;
   }
   prop->data = NULL;
   return prop;
@@ -59,6 +60,7 @@ void property_free(Property *prop) {
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     if (type) type->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
+    if (prop->programs[i].buffer != -1) glDeleteBuffers(1, &prop->programs[i].buffer);
   }
   if (prop->name_str) XFree(prop->name_str);
   if (prop->values.bytes) XFree(prop->values.bytes);
@@ -89,6 +91,7 @@ void property_to_gl(Property *prop, Rendering *rendering) {
       if (prop_cache->location != -1) {
         char name[1];
         glGetActiveAttrib(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+        glCreateBuffers(1, &prop_cache->buffer);
       }
     }
     
