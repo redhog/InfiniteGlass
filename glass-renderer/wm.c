@@ -15,6 +15,7 @@
 #include "list.h"
 #include "debug.h"
 #include "fps.h"
+#include "item.h"
 #include "property.h"
 #include "property_atom.h"
 #include "property_window.h"
@@ -143,6 +144,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       if (event->xproperty.atom == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
       if (event->xproperty.atom == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
       if (event->xproperty.atom == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);        
+      if (event->xproperty.atom == IG_DRAW_TYPE && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);        
     }
 
     if (changed) {
@@ -398,7 +400,8 @@ int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
-
+  if (!init_items()) return 1;
+  
   manager_selection_create(XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
                            &selection_sn_clear,

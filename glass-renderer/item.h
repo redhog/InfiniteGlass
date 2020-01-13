@@ -10,6 +10,8 @@
 #include "property.h"
 #include "rendering.h"
 
+extern Atom IG_DRAW_TYPE;
+
 struct ItemTypeStruct;
 struct ItemStruct;
 
@@ -53,6 +55,7 @@ struct ItemStruct {
   Property *prop_shader;
   Property *prop_size;
   Property *prop_coords;
+  Property *prop_draw_type;
 
   Damage damage;
  
@@ -64,6 +67,8 @@ extern ItemType item_type_base;
 
 extern List *items_all;
 extern Item *root_item;
+
+Bool init_items();
 
 Bool item_isinstance(Item *item, ItemType *type);
 Item *item_create(ItemType *type, void *args);

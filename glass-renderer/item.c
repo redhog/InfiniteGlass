@@ -14,7 +14,41 @@ List *items_all = NULL;
 size_t items_all_id = 0;
 Item *root_item = NULL;
 
+Atom IG_DRAW_TYPE;
+Atom IG_DRAW_TYPE_POINTS;
+Atom IG_DRAW_TYPE_LINES;
+Atom IG_DRAW_TYPE_LINE_STRIP;
+Atom IG_DRAW_TYPE_LINES_ADJACENCY;
+Atom IG_DRAW_TYPE_LINE_STRIP_ADJACENCY;
+Atom IG_DRAW_TYPE_TRIANGLES;
+Atom IG_DRAW_TYPE_TRIANGLE_STRIP;
+Atom IG_DRAW_TYPE_TRIANGLE_FAN;
+Atom IG_DRAW_TYPE_TRIANGLES_ADJACENCY;
+Atom IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY;
+ 
+Bool init_items() {
+  IG_DRAW_TYPE = XInternAtom(display, "IG_DRAW_TYPE", False);
+  IG_DRAW_TYPE_POINTS = XInternAtom(display, "IG_DRAW_TYPE_POINTS", False);
+  IG_DRAW_TYPE_LINES = XInternAtom(display, "IG_DRAW_TYPE_LINES", False);
+  IG_DRAW_TYPE_LINE_STRIP = XInternAtom(display, "IG_DRAW_TYPE_LINE_STRIP", False);
+  IG_DRAW_TYPE_LINES_ADJACENCY = XInternAtom(display, "IG_DRAW_TYPE_LINES_ADJACENCY", False);
+  IG_DRAW_TYPE_LINE_STRIP_ADJACENCY = XInternAtom(display, "IG_DRAW_TYPE_LINE_STRIP_ADJACENCY", False);
+  IG_DRAW_TYPE_TRIANGLES = XInternAtom(display, "IG_DRAW_TYPE_TRIANGLES", False);
+  IG_DRAW_TYPE_TRIANGLE_STRIP = XInternAtom(display, "IG_DRAW_TYPE_TRIANGLE_STRIP", False);
+  IG_DRAW_TYPE_TRIANGLE_FAN = XInternAtom(display, "IG_DRAW_TYPE_TRIANGLE_FAN", False);
+  IG_DRAW_TYPE_TRIANGLES_ADJACENCY = XInternAtom(display, "IG_DRAW_TYPE_TRIANGLES_ADJACENCY", False);
+  IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY = XInternAtom(display, "IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY", False);
+  return True;
+}
+
+
 void item_type_base_constructor(Item *item, void *args) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return = NULL;
+
   Window window = *(Window *) args;
   
   item->window = window;
@@ -23,7 +57,8 @@ void item_type_base_constructor(Item *item, void *args) {
   item->prop_shader = NULL;
   item->prop_size = NULL;
   item->prop_coords = NULL;
-
+  item->prop_draw_type = NULL;
+  
   if (window == root) {
     Atom layer = XInternAtom(display, "IG_LAYER_ROOT", False);
     XChangeProperty(display, window, IG_LAYER, XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
@@ -31,11 +66,6 @@ void item_type_base_constructor(Item *item, void *args) {
     XChangeProperty(display, window, IG_SHADER, XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
     item->is_mapped = True;
   } else {
-    Atom type_return;
-    int format_return;
-    unsigned long nitems_return;
-    unsigned long bytes_after_return;
-    unsigned char *prop_return = NULL;
     XGetWindowProperty(display, window, IG_LAYER, 0, sizeof(Atom), 0, XA_ATOM,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
     if (type_return == None) {
@@ -57,13 +87,22 @@ void item_type_base_constructor(Item *item, void *args) {
     XSelectInput(display, window, PropertyChangeMask);
     item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
   }
- 
+
+  XGetWindowProperty(display, window, IG_DRAW_TYPE, 0, sizeof(Atom), 0, XA_ATOM,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return == None) {
+    Atom draw_type = IG_DRAW_TYPE_POINTS;
+    XChangeProperty(display, window, IG_DRAW_TYPE, XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
+  }
+  XFree(prop_return);
+  
   item->properties = properties_load(window);
   item->prop_layer = properties_find(item->properties, IG_LAYER);
   item->prop_shader = properties_find(item->properties, IG_SHADER);
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
-
+  item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);
+  
   if (window != root) {
     item_type_window_update_space_pos_from_window(item);
   }
@@ -105,8 +144,24 @@ void item_type_base_draw(Rendering *rendering) {
     
     gl_check_error("item_draw2");
     
-    glDrawArrays(GL_POINTS, 0, rendering->array_length);
+    DEBUG("draw_arrays", "%ld.draw(%ld items)\n", rendering->item->window, rendering->array_length);
 
+    GLuint draw_type = GL_POINTS;
+    if (item->prop_draw_type) {
+      Atom prop_draw_type = *(Atom *) item->prop_draw_type->data;
+      if (prop_draw_type == IG_DRAW_TYPE_POINTS) draw_type = GL_POINTS;
+      else if (prop_draw_type == IG_DRAW_TYPE_LINES) draw_type = GL_LINES;
+      else if (prop_draw_type == IG_DRAW_TYPE_LINE_STRIP) draw_type = GL_LINE_STRIP;
+      else if (prop_draw_type == IG_DRAW_TYPE_LINES_ADJACENCY) draw_type = GL_LINES_ADJACENCY;
+      else if (prop_draw_type == IG_DRAW_TYPE_LINE_STRIP_ADJACENCY) draw_type = GL_LINE_STRIP_ADJACENCY;
+      else if (prop_draw_type == IG_DRAW_TYPE_TRIANGLES) draw_type = GL_TRIANGLES;
+      else if (prop_draw_type == IG_DRAW_TYPE_TRIANGLE_STRIP) draw_type = GL_TRIANGLE_STRIP;
+      else if (prop_draw_type == IG_DRAW_TYPE_TRIANGLE_FAN) draw_type = GL_TRIANGLE_FAN;
+      else if (prop_draw_type == IG_DRAW_TYPE_TRIANGLES_ADJACENCY) draw_type = GL_TRIANGLES_ADJACENCY;
+      else if (prop_draw_type == IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY) draw_type = GL_TRIANGLE_STRIP_ADJACENCY;
+    }  
+    glDrawArrays(draw_type, 0, rendering->array_length);
+    
     gl_check_error("item_draw3");
 
     if (!rendering->view->picking) {
