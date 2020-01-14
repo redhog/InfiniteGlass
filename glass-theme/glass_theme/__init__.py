@@ -7,20 +7,16 @@ def linestrings2texture(f):
     coastline = json.load(f)
 
     size = 0
-    count = 0
     for feature in coastline["features"]:
-        size += len(feature["geometry"]["coordinates"]) * 2
-        count += 1
+        size += len(feature["geometry"]["coordinates"])
 
-    data = numpy.zeros(size + count)
-    pos = 0
+    res = []
     for feature in coastline["features"]:
-        coords = [item for coord in feature["geometry"]["coordinates"] for item in coord]
-        data[pos] = len(coords)
-        data[pos+1:] = coords
-        pos += 1 + len(coords)
+        coords = feature["geometry"]["coordinates"]
+        coords = list(zip(coords[:-1], coords[1:]))
+        res.extend([z for x in coords for y in x for z in y])
 
-    return data.tobytes()
+    return res
         
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
@@ -50,15 +46,16 @@ def main(*arg, **kw):
 
         display.root["IG_SHADERS"] = ["IG_SHADER_ROOT", "IG_SHADER_DEFAULT"]
 
-        #with pkg_resources.resource_stream("glass_theme", "coastline50.geojson") as f:
-        #    display.root["IG_COASTLINE"] = linestrings2texture(f)
+        display.root["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINES"
+        with pkg_resources.resource_stream("glass_theme", "coastline50.geojson") as f:
+            display.root["IG_COASTLINE"] = linestrings2texture(f)
 
-        display.root["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINE_STRIP"
-        display.root["SERPENT"] = [
-            c for s in range(9, 0, -1) for c in [-.1 * s, -.1 * (s + 1),
-                                                 -.1 * s, .1 *s,
-                                                 .1 * s, .1 * s,
-                                                 .1 * s, -.1 * s]]
+        # display.root["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINE_STRIP"
+        # display.root["SERPENT"] = [
+        #     c for s in range(9, 0, -1) for c in [-.1 * s, -.1 * (s + 1),
+        #                                          -.1 * s, .1 *s,
+        #                                          .1 * s, .1 * s,
+        #                                          .1 * s, -.1 * s]]
         
         InfiniteGlass.DEBUG("init", "Theme started\n")
 
