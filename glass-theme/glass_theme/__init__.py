@@ -50,13 +50,8 @@ def main(*arg, **kw):
         with pkg_resources.resource_stream("glass_theme", "coastline50.geojson") as f:
             display.root["IG_COASTLINE"] = linestrings2texture(f)
 
-        # display.root["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINE_STRIP"
-        # display.root["SERPENT"] = [
-        #     c for s in range(9, 0, -1) for c in [-.1 * s, -.1 * (s + 1),
-        #                                          -.1 * s, .1 *s,
-        #                                          .1 * s, .1 * s,
-        #                                          .1 * s, -.1 * s]]
-        
+        display.root["IG_WORLD_ZOOM"] = .3
+            
         InfiniteGlass.DEBUG("init", "Theme started\n")
 
         display.sync()
