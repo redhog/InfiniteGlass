@@ -148,7 +148,7 @@ void item_type_base_draw(Rendering *rendering) {
 
     GLuint draw_type = GL_POINTS;
     if (item->prop_draw_type) {
-      Atom prop_draw_type = *(Atom *) item->prop_draw_type->data;
+      Atom prop_draw_type = (Atom) item->prop_draw_type->values.dwords[0];
       if (prop_draw_type == IG_DRAW_TYPE_POINTS) draw_type = GL_POINTS;
       else if (prop_draw_type == IG_DRAW_TYPE_LINES) draw_type = GL_LINES;
       else if (prop_draw_type == IG_DRAW_TYPE_LINE_STRIP) draw_type = GL_LINE_STRIP;
@@ -161,7 +161,7 @@ void item_type_base_draw(Rendering *rendering) {
       else if (prop_draw_type == IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY) draw_type = GL_TRIANGLE_STRIP_ADJACENCY;
     }  
     glDrawArrays(draw_type, 0, rendering->array_length);
-    
+
     gl_check_error("item_draw3");
 
     if (!rendering->view->picking) {
