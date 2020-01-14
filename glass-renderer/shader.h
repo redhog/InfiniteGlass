@@ -23,6 +23,8 @@ typedef struct {
   Atom vertex;
   Atom fragment;
 
+  char *name_str;
+ 
   GLchar *geometry_src;
   GLchar *vertex_src;
   GLchar *fragment_src;

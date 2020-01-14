@@ -8,7 +8,7 @@
 #include "debug.h"
 #include <math.h>
 
-int checkShaderError(char *name, char *src, GLuint shader) {
+int checkShaderError(char *name, char *part, char *src, GLuint shader) {
   GLint res;
   GLint len;
   GLchar *log;
@@ -17,12 +17,12 @@ int checkShaderError(char *name, char *src, GLuint shader) {
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
-  ERROR("shader", "%s shader compilation failed: %s [%d]\n\n%s\n\n", name, log, len, src);
+  ERROR("shader", "%s.%s shader compilation failed: %s [%d]\n\n%s\n\n", name, part, log, len, src);
   gl_check_error(name);
   return 0;
 }
 
-int checkProgramError(GLuint program) {
+int checkProgramError(char *name, GLuint program) {
   GLint res;
   GLint len;
   GLchar *log;
@@ -31,7 +31,7 @@ int checkProgramError(GLuint program) {
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetProgramInfoLog(program, len, &len, log);
-  DEBUG("shader", "Program linkage failed: %s [%d]\n", log, len);
+  DEBUG("shader", "%s shader linkage failed: %s [%d]\n", name, log, len);
   gl_check_error("checkProgramError");
   return 0;
 }
@@ -52,9 +52,10 @@ char *atom_load_string(Display *display, Window window, Atom name) {
 }
 
 Shader *shader_loadX(Atom name) {
-  Shader *shader = malloc(sizeof(Shader));
+  Shader *shader = malloc(sizeof(Shader));  
   shader->name = name;
- 
+  shader->name_str = XGetAtomName(display, name);
+  
   shader->geometry = atom_append(display, shader->name, "_GEOMETRY");
   shader->vertex = atom_append(display, shader->name, "_VERTEX");
   shader->fragment = atom_append(display, shader->name, "_FRAGMENT");
@@ -68,7 +69,7 @@ Shader *shader_loadX(Atom name) {
   }
   glShaderSource(shader->geometry_shader, 1, (const GLchar**)&(shader->geometry_src), 0);
   glCompileShader(shader->geometry_shader);
-  if (!checkShaderError("geometry", shader->geometry_src, shader->geometry_shader)) {
+  if (!checkShaderError(shader->name_str, "geometry", shader->geometry_src, shader->geometry_shader)) {
     XFree(shader->geometry_src);
     free(shader);
     return NULL;
@@ -78,7 +79,7 @@ Shader *shader_loadX(Atom name) {
   shader->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(shader->vertex_shader, 1, (const GLchar**)&(shader->vertex_src), 0);
   glCompileShader(shader->vertex_shader);
-  if (!checkShaderError("vertex", shader->vertex_src, shader->vertex_shader)) {
+  if (!checkShaderError(shader->name_str, "vertex", shader->vertex_src, shader->vertex_shader)) {
     XFree(shader->geometry_src);
     XFree(shader->vertex_src);
     free(shader);
@@ -89,7 +90,7 @@ Shader *shader_loadX(Atom name) {
   shader->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(shader->fragment_shader, 1, (const GLchar**)&(shader->fragment_src), 0);
   glCompileShader(shader->fragment_shader);
-  if (!checkShaderError("fragment", shader->fragment_src, shader->fragment_shader)) {
+  if (!checkShaderError(shader->name_str, "fragment", shader->fragment_src, shader->fragment_shader)) {
     XFree(shader->geometry_src);
     XFree(shader->vertex_src);
     XFree(shader->fragment_src);
@@ -104,7 +105,7 @@ Shader *shader_loadX(Atom name) {
   glAttachShader(shader->program, shader->fragment_shader);
 
   glLinkProgram(shader->program);
-  if (!checkProgramError(shader->program)) {
+  if (!checkProgramError(shader->name_str, shader->program)) {
     XFree(shader->geometry_src);
     XFree(shader->vertex_src);
     XFree(shader->fragment_src);
@@ -183,6 +184,7 @@ List *shader_load_all(void) {
 }
 
 void shader_free(Shader *shader) {
+  XFree(shader->name_str);
   XFree(shader->geometry_src);
   XFree(shader->vertex_src);
   XFree(shader->fragment_src);
