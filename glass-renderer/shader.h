@@ -48,6 +48,10 @@ typedef struct {
   GLint window_sampler_attr; 
 } Shader;
 
+extern Atom IG_SHADERS;
+
+extern Bool init_shader();
+
 extern Shader *shader_loadX(Atom name);
 extern List *shader_load_all(void);
 extern void shader_free(Shader *shader);

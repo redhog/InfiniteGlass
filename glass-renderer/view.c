@@ -255,6 +255,7 @@ void view_free(View *view) {
 }
 
 void view_free_all(List *views) {
+  if (!views) return;
   for (size_t idx = 0; idx < views->count; idx++) {
     free(views->entries[idx]);
   }
@@ -276,6 +277,7 @@ void view_update(View *view) {
 }
 
 View *view_find(List *views, Atom name) {
+  if (!views) return NULL;
   for (size_t idx = 0; idx < views->count; idx++) {
     View *v = (View *) views->entries[idx];   
     if (v->layer == name) {

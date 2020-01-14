@@ -36,6 +36,12 @@ int checkProgramError(char *name, GLuint program) {
   return 0;
 }
 
+Atom IG_SHADERS = -1;
+
+Bool init_shader() {
+  IG_SHADERS = XInternAtom(display, "IG_SHADERS", False);
+}
+
 char *atom_load_string(Display *display, Window window, Atom name) {
   Atom type_return;
   int format_return;
@@ -196,6 +202,7 @@ void shader_free(Shader *shader) {
 }
 
 void shader_free_all(List *shaders) {
+  if (!shaders) return;
   for (size_t idx = 0; idx < shaders->count; idx++) {
    shader_free((Shader *) shaders->entries[idx]);
   }
@@ -203,6 +210,7 @@ void shader_free_all(List *shaders) {
 }
 
 Shader *shader_find(List *shaders, Atom name) {
+  if (!shaders) return NULL;
   for (size_t idx = 0; idx < shaders->count; idx++) {
     Shader *s = (Shader *) shaders->entries[idx];   
     if (s->name == name) {
