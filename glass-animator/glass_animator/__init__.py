@@ -46,17 +46,23 @@ def animate_sequence(display, window, atom, timeframe=0.0):
         step = dict(step)
         step_win = display.create_resource_object("window", step.pop("window"))
         step_atom = step.pop("atom")
-        step_timeframe = factor * step.pop("timeframe")
+        step_timeframe = factor * step.pop("timeframe", 0.0)
         for part in animate_anything(display, step_win, step_atom, step_timeframe, **step):
             yield part
 
 def animate_property(display, window, atom, timeframe, src=None, dst=None):
-    if src is None:
-        src = window[atom]
-    if not isinstance(src, (tuple, list, array.array)): src = [src]
     if dst is None:
         dst = window[atom + "_ANIMATE"]
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
+    if timeframe == 0.0:
+        def animationfn():
+            window[atom] = dst
+            display.flush()
+            yield
+        return animationfn()
+    if src is None:
+        src = window[atom]
+    if not isinstance(src, (tuple, list, array.array)): src = [src]
     isint = isinstance(src[0], int)
     values = list(zip(src, dst))
     start = time.time()
