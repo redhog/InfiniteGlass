@@ -25,29 +25,37 @@ def animate(display):
 def start_animation(animationid, animation):
     animations[animationid] = animation
 
-def animate_anything(display, window, atom, timeframe):
+def animate_anything(display, window, atom, timeframe=0.0, **kw):
     if atom == "__GEOMETRY__":
-        return animate_geometry(display, window, timeframe)
+        return animate_geometry(display, window, timeframe, **kw)
     elif atom.endswith("_SEQUENCE"):
-        return animate_sequence(display, window, atom, timeframe)
+        return animate_sequence(display, window, atom, timeframe, **kw)
     else:
-        return animate_property(display, window, atom, timeframe)
+        return animate_property(display, window, atom, timeframe, **kw)
     
-def animate_sequence(display, window, atom, timeframe):
+def animate_sequence(display, window, atom, timeframe=0.0):
     sequence = window[atom]
 
-    total_time = sum(step[2] for step in sequence["steps"])
-    factor = timeframe / total_time
+    if timeframe == 0.0:
+        factor = 1
+    else:
+        total_time = sum(step[2] for step in sequence["steps"])
+        factor = timeframe / total_time
 
-    for step_win, step_atom, step_timeframe in sequence["steps"] :
-        step_win = display.create_resource_object("window", step_win)
-        for part in animate_anything(display, step_win, step_atom, factor * step_timeframe):
+    for step in sequence["steps"]:
+        step = dict(step)
+        step_win = display.create_resource_object("window", step.pop("window"))
+        step_atom = step.pop("atom")
+        step_timeframe = factor * step.pop("timeframe")
+        for part in animate_anything(display, step_win, step_atom, step_timeframe, **step):
             yield part
 
-def animate_property(display, window, atom, timeframe):
-    src = window[atom]
+def animate_property(display, window, atom, timeframe, src=None, dst=None):
+    if src is None:
+        src = window[atom]
     if not isinstance(src, (tuple, list, array.array)): src = [src]
-    dst = window[atom + "_ANIMATE"]
+    if dst is None:
+        dst = window[atom + "_ANIMATE"]
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
     isint = isinstance(src[0], int)
     values = list(zip(src, dst))
@@ -77,10 +85,12 @@ def animate_property(display, window, atom, timeframe):
             yield
     return animationfn()
 
-def animate_geometry(display, window, timeframe):
-    src = window.get_geometry()
-    src = [src.x, src.y, src.width, src.height]
-    dst = window["__GEOMETRY__ANIMATE"]
+def animate_geometry(display, window, timeframe, src=None, dst=None):
+    if src is None:
+        src = window.get_geometry()
+        src = [src.x, src.y, src.width, src.height]
+    if dst is None:
+        dst = window["__GEOMETRY__ANIMATE"]
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
     values = list(zip(src, dst))
     start = time.time()
