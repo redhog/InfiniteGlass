@@ -63,11 +63,12 @@ def main(*arg, **kw):
         
         display.root["IG_INITIAL_ANIMATION_SEQUENCE"] = {
             "steps": [
-                {"window": w.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 2.0, "dst": 2.0},
+                {"window": w.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 2.0, "dst": 20.0},
                 
-                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-5.0, height * -5.0, 10.0, height * 10.0]},
+                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
+                {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP"]},
+                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 2.0, "dst": [0.0, 0.0, 1.0, height]},
                 {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
-                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 2.0, "dst": [0.0, 0.0, 1.0, height]}
             ]}
         anim = display.root["IG_ANIMATE"]
         anim.send(anim, "IG_ANIMATE", display.root, "IG_INITIAL_ANIMATION_SEQUENCE", 0.0, event_mask=Xlib.X.PropertyChangeMask)
