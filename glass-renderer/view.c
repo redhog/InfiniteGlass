@@ -91,30 +91,30 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
 }
 
 void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
-  gl_check_error("draw0");
+  GL_CHECK_ERROR("draw0", "%s", XGetAtomName(display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glEnablei(GL_BLEND, 0);
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
-  gl_check_error("draw1");
+  GL_CHECK_ERROR("draw1", "%s", XGetAtomName(display, view->name));
   view->picking = 0;
   view_abstract_draw(view, items, filter);
-  gl_check_error("draw2");
+  GL_CHECK_ERROR("draw2", "%s", XGetAtomName(display, view->name));
 }
 
 void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
-  gl_check_error("view_draw_picking1");
+  GL_CHECK_ERROR("view_draw_picking1", "%s", XGetAtomName(display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   view->picking = 1;
   view_abstract_draw(view, items, filter);
-  gl_check_error("view_draw_picking2");
+  GL_CHECK_ERROR("view_draw_picking2", "%s", XGetAtomName(display, view->name));
 }
   
 void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **returnitem) {
   float data[4];
   memset(data, 0, sizeof(data));
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
-  gl_check_error("pick2");
+  GL_CHECK_ERROR("pick2", "%s", XGetAtomName(display, view->name));
   DEBUG("pick", "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   *winx = 0;
   *winy = 0;

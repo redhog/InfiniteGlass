@@ -86,7 +86,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
     return;
   }
   View *view = (View *) views->entries[0];
-  gl_check_error("pick1");
+  GL_CHECK_ERROR("pick1", "");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glEnable(GL_SCISSOR_TEST);
   glScissor(x, view->height - y, 1, 1);
@@ -137,7 +137,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
   unsigned long start_time = get_timestamp();
 
-  gl_check_error("loop");
+  GL_CHECK_ERROR("loop", "");
 
   if (event->type == PropertyNotify) {
     Bool changed = True;
@@ -281,7 +281,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 
         item->type->update((Item *) item);
-        gl_check_error("item_update_pixmap");
+        GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
         trigger_draw();
       } else {
         DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", event->xconfigurerequest.window);
@@ -439,11 +439,11 @@ int main() {
 
   items_get_from_toplevel_windows();
  
-  gl_check_error("start1");
+  GL_CHECK_ERROR("start1", "");
 
   trigger_draw();
 
-  gl_check_error("start2");
+  GL_CHECK_ERROR("start2", "");
 
   DEBUG("start", "Renderer started.\n");
 

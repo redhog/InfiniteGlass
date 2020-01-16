@@ -20,20 +20,20 @@ void texture_from_icon(Texture *texture, unsigned long *data) {
 
   if (!texture->texture_id) {
     glGenTextures(1, &texture->texture_id);
-    gl_check_error("texture_from_icon");
+    GL_CHECK_ERROR("texture_from_icon", "");
   }
   glBindTexture(GL_TEXTURE_2D, texture->texture_id);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   free(tmp);
-  gl_check_error("texture_from_icon");
+  GL_CHECK_ERROR("texture_from_icon", "");
 }
 
 void texture_from_cairo_surface(Texture *texture, cairo_surface_t *surface) {
   if (!texture->texture_id) {
     glGenTextures(1, &texture->texture_id);
-    gl_check_error("texture_from_cairo_surface1");
+    GL_CHECK_ERROR("texture_from_cairo_surface1", "");
   }
 
   glBindTexture(GL_TEXTURE_2D, texture->texture_id);
@@ -50,22 +50,22 @@ void texture_from_cairo_surface(Texture *texture, cairo_surface_t *surface) {
                cairo_image_surface_get_data(surface));
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl_check_error("texture_from_cairo_surface2");
+  GL_CHECK_ERROR("texture_from_cairo_surface2", "");
 }
 
 void texture_from_glpixmap(Texture *texture) {
   if (!texture->texture_id) {
     glGenTextures(1, &texture->texture_id);
-    gl_check_error("texture_from_pixmap1");
+    GL_CHECK_ERROR("texture_from_pixmap1", "");
   }
   glBindTexture(GL_TEXTURE_2D, texture->texture_id);
-  gl_check_error("texture_from_pixmap2");
+  GL_CHECK_ERROR("texture_from_pixmap2", "");
   glXBindTexImageEXT(display, texture->glxpixmap, GLX_FRONT_EXT, NULL);
-  gl_check_error("texture_from_pixmap3");
+  GL_CHECK_ERROR("texture_from_pixmap3", "");
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  gl_check_error("texture_from_pixmap4");
+  GL_CHECK_ERROR("texture_from_pixmap4", "");
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  gl_check_error("texture_from_pixmap5");
+  GL_CHECK_ERROR("texture_from_pixmap5", "");
 }
 
 void texture_from_pixmap(Texture *texture, Pixmap pixmap) {
@@ -79,7 +79,7 @@ void texture_from_pixmap(Texture *texture, Pixmap pixmap) {
     GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGB_EXT,
     None
   };
-  gl_check_error("texture_from_pixmap1");
+  GL_CHECK_ERROR("texture_from_pixmap1", "");
 
   // Make sure to generate a BadDrawable here if the pixmap is broken,
   // as glXBindTexImageEXT will SIGSEGV if that happens...!

@@ -46,7 +46,7 @@ void property_wm_hints_icon_load(Property *prop) {
   if (data->wm_hints.flags & IconMaskHint) {
     texture_from_pixmap(&data->icon_mask_texture, data->wm_hints.icon_mask);
   }
-  gl_check_error("icon_update_pixmap2");
+  GL_CHECK_ERROR("icon_update_pixmap2", "%ld", prop->window);
 }
 
 void property_wm_hints_icon_free(Property *prop) {

@@ -19,7 +19,7 @@ void property_net_wm_icon_load(Property *prop) {
 
   texture_initialize(&data->texture);
   texture_from_icon(&data->texture, prop->values.dwords);
-  gl_check_error("property_net_wm_icon_load");
+  GL_CHECK_ERROR("property_net_wm_icon_load", "%ld", prop->window);
 }
 
 void property_net_wm_icon_free(Property *prop) {

@@ -166,11 +166,11 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   properties->programs[rendering->program_cache_idx].program = rendering->shader->program;
   properties->programs[rendering->program_cache_idx].prefix = prefix;
   
-  gl_check_error("properties_to_gl");
+  GL_CHECK_ERROR("properties_to_gl", "%ld", properties->window);
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
     property_to_gl(prop, rendering);
-    gl_check_error(prop->name_str);
+    GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
   }
 }
 

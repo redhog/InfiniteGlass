@@ -18,7 +18,7 @@ int checkShaderError(char *name, char *part, char *src, GLuint shader) {
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
   ERROR("shader", "%s.%s shader compilation failed: %s [%d]\n\n%s\n\n", name, part, log, len, src);
-  gl_check_error(name);
+  GL_CHECK_ERROR("shader", "%s.%s", name, part);
   return 0;
 }
 
@@ -31,8 +31,8 @@ int checkProgramError(char *name, GLuint program) {
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetProgramInfoLog(program, len, &len, log);
-  DEBUG("shader", "%s shader linkage failed: %s [%d]\n", name, log, len);
-  gl_check_error("checkProgramError");
+  ERROR("shader", "%s shader linkage failed: %s [%d]\n", name, log, len);
+  GL_CHECK_ERROR("checkProgramError", "%s", name);
   return 0;
 }
 
@@ -40,6 +40,7 @@ Atom IG_SHADERS = -1;
 
 Bool init_shader() {
   IG_SHADERS = XInternAtom(display, "IG_SHADERS", False);
+  return True;
 }
 
 char *atom_load_string(Display *display, Window window, Atom name) {
@@ -68,11 +69,6 @@ Shader *shader_loadX(Atom name) {
 
   shader->geometry_src = atom_load_string(display, root, shader->geometry);
   shader->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
-  if (!gl_check_error("shader_load")) {
-    XFree(shader->geometry_src);
-    free(shader);
-    return NULL;
-  }
   glShaderSource(shader->geometry_shader, 1, (const GLchar**)&(shader->geometry_src), 0);
   glCompileShader(shader->geometry_shader);
   if (!checkShaderError(shader->name_str, "geometry", shader->geometry_src, shader->geometry_shader)) {
@@ -121,7 +117,7 @@ Shader *shader_loadX(Atom name) {
 
   glUseProgram(shader->program);
   
-  gl_check_error("standard_properties1");
+  GL_CHECK_ERROR("standard_properties1", "%s", shader->name_str);
   shader->screen_attr = glGetUniformLocation(shader->program, "screen");
   shader->size_attr = glGetUniformLocation(shader->program, "size");
   shader->border_width_attr = glGetUniformLocation(shader->program, "border_width");
@@ -129,7 +125,7 @@ Shader *shader_loadX(Atom name) {
   shader->window_id_attr = glGetUniformLocation(shader->program, "window_id");
   shader->window_attr = glGetUniformLocation(shader->program, "window");
   shader->window_sampler_attr = glGetUniformLocation(shader->program, "window_sampler");
-  gl_check_error("standard_properties2");
+  GL_CHECK_ERROR("standard_properties2", "%s", shader->name_str);
 
   shader->uniforms = list_create();
 
@@ -236,7 +232,7 @@ void shader_reset_uniforms(Shader *shader) {
     Uniform *uniform = (Uniform *) shader->uniforms->entries[i];
     if (uniform->type != UNIFORM_PROPERTY) continue;
     
-    gl_check_error("reset_uniforms1");
+    GL_CHECK_ERROR("reset_uniforms1", "%s", shader->name_str);
     switch(uniform->uniform_type) {
       case GL_FLOAT: glUniform1f(i, f); break;
       case GL_FLOAT_VEC2: glUniform2f(i, f, f);  break;
@@ -256,6 +252,6 @@ void shader_reset_uniforms(Shader *shader) {
       case GL_SAMPLER_2D: glUniform1i(i, 0); break;
       case GL_SAMPLER_CUBE: glUniform1i(i, 0); break;
     }
-    gl_check_error(uniform->uniform_name);
+    GL_CHECK_ERROR(uniform->uniform_name, "%s", shader->name_str);
   }
 }

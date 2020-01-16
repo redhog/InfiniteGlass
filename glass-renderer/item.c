@@ -130,9 +130,9 @@ void item_type_base_draw(Rendering *rendering) {
 
     
     properties_to_gl(root_item->properties, "root_", rendering);
-    gl_check_error("item_draw_root_properties");
+    GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
     properties_to_gl(rendering->item->properties, "", rendering);
-    gl_check_error("item_draw_properties");
+    GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
@@ -142,13 +142,14 @@ void item_type_base_draw(Rendering *rendering) {
     glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
     glUniform1i(shader->window_attr, rendering->item->window);
     
-    gl_check_error("item_draw2");
+    GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, rendering->shader->name_str);
     
     DEBUG("draw_arrays", "%ld.draw(%ld items)\n", rendering->item->window, rendering->array_length);
 
+    Atom prop_draw_type = IG_DRAW_TYPE_POINTS;
     GLuint draw_type = GL_POINTS;
     if (item->prop_draw_type) {
-      Atom prop_draw_type = (Atom) item->prop_draw_type->values.dwords[0];
+      prop_draw_type = (Atom) item->prop_draw_type->values.dwords[0];
       if (prop_draw_type == IG_DRAW_TYPE_POINTS) draw_type = GL_POINTS;
       else if (prop_draw_type == IG_DRAW_TYPE_LINES) draw_type = GL_LINES;
       else if (prop_draw_type == IG_DRAW_TYPE_LINE_STRIP) draw_type = GL_LINE_STRIP;
@@ -162,7 +163,9 @@ void item_type_base_draw(Rendering *rendering) {
     }  
     glDrawArrays(draw_type, 0, rendering->array_length);
 
-    gl_check_error("item_draw3");
+    GL_CHECK_ERROR("item_draw3", "%ld.%s: %s(%ld)",
+                   item->window, rendering->shader->name_str,
+                   XGetAtomName(display, prop_draw_type), rendering->array_length);
 
     if (!rendering->view->picking) {
       XErrorEvent error;
@@ -204,7 +207,7 @@ void item_type_base_update(Item *item) {
   
   texture_from_pixmap(&item->window_texture, item->window_pixmap);
 
-  gl_check_error("item_update_pixmap2");
+  GL_CHECK_ERROR("item_update_pixmap2", "%ld", item->window);
 
   x_pop_error_context();  
 }

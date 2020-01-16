@@ -182,7 +182,7 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   
   property_svg_update_drawing(prop, rendering);
   
-  gl_check_error("property_svg_to_gl1");
+  GL_CHECK_ERROR("property_svg_to_gl1", "%ld", prop->window);
   
   float transform[4] = {(float) data->x / (float) data->itemwidth,
                         (float) data->y / (float) data->itemheight,
@@ -196,7 +196,7 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   glBindSampler(rendering->texture_unit, 0);
   rendering->texture_unit++;
   
-  gl_check_error("property_svg_to_gl2");
+  GL_CHECK_ERROR("property_svg_to_gl2", "%ld", prop->window);
 }
 void property_svg_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<svg>\n", prop->window, prop->name_str);
