@@ -2,6 +2,8 @@ import InfiniteGlass
 import pkg_resources
 import json
 import numpy
+import Xlib.X
+import sys
 
 def linestrings2texture(f):
     coastline = json.load(f)
@@ -20,38 +22,58 @@ def linestrings2texture(f):
         
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
+        display.root["IG_SHADER"] = "IG_SHADER_ROOT"
+        
+        display.root["IG_VIEW_SPLASH_LAYER"] = "IG_LAYER_SPLASH"
+        display.root["IG_VIEW_SPLASH_VIEW"] = [0.0, 0.0, 1.0, 0.0]
+        
         display.root["IG_VIEW_MENU_LAYER"] = "IG_LAYER_MENU"
         display.root["IG_VIEW_MENU_VIEW"] = [0.0, 0.0, 1.0, 0.0]
         display.root["IG_VIEW_OVERLAY_LAYER"] = "IG_LAYER_OVERLAY"
         display.root["IG_VIEW_OVERLAY_VIEW"] = [0.0, 0.0, 1.0, 0.0]
         display.root["IG_VIEW_DESKTOP_LAYER"] = "IG_LAYER_DESKTOP"
         display.root["IG_VIEW_DESKTOP_VIEW"] = [0.0, 0.0, 1.0, 0.0]
+
         display.root["IG_VIEW_ROOT_LAYER"] = "IG_LAYER_ROOT"
         display.root["IG_VIEW_ROOT_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-        display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
+        
+        display.root["IG_VIEWS"] = ["IG_VIEW_SPLASH"]
 
-        with pkg_resources.resource_stream("glass_theme", "shader_window_geometry.glsl") as f:
-            display.root["IG_SHADER_DEFAULT_GEOMETRY"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_window_vertex.glsl") as f:
-            display.root["IG_SHADER_DEFAULT_VERTEX"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_window_fragment.glsl") as f:
-            display.root["IG_SHADER_DEFAULT_FRAGMENT"] = f.read()
+        shaders = ("DEFAULT", "ROOT", "SPLASH")
+        for SHADER in shaders:
+            shader = SHADER.lower()
+            for PART in ("GEOMETRY", "VERTEX", "FRAGMENT"):
+                part = PART.lower()
+                with pkg_resources.resource_stream("glass_theme", "shader_%s_%s.glsl" % (shader, part)) as f:
+                    display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = f.read()
+        display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
-        with pkg_resources.resource_stream("glass_theme", "shader_root_geometry.glsl") as f:
-            display.root["IG_SHADER_ROOT_GEOMETRY"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_root_vertex.glsl") as f:
-            display.root["IG_SHADER_ROOT_VERTEX"] = f.read()
-        with pkg_resources.resource_stream("glass_theme", "shader_root_fragment.glsl") as f:
-            display.root["IG_SHADER_ROOT_FRAGMENT"] = f.read()
 
-        display.root["IG_SHADERS"] = ["IG_SHADER_ROOT", "IG_SHADER_DEFAULT"]
+        w = display.root.create_window()
 
-        display.root["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINES"
+        w["IG_LAYER"] = "IG_LAYER_SPLASH"
+        w["IG_SHADER"] = "IG_SHADER_SPLASH"
+        w["IG_WORLD_ZOOM"] = .05
+        w["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINES"
         with pkg_resources.resource_stream("glass_theme", "coastline50.geojson") as f:
-            display.root["IG_COASTLINE"] = linestrings2texture(f)
+            w["IG_COASTLINE"] = linestrings2texture(f)
+        
+        display.root["IG_INITIAL_ANIMATION_SEQUENCE"] = {
+            "steps": [
+                {"window": w.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 5.0, "dst": 5.0},
 
-        display.root["IG_WORLD_ZOOM"] = .3
-            
+                {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
+                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 5.0, "dst": [0.0, 0.0, 1.0, 0.0]}
+            ]}
+        anim = display.root["IG_ANIMATE"]
+        anim.send(anim, "IG_ANIMATE", display.root, "IG_INITIAL_ANIMATION_SEQUENCE", 0.0, event_mask=Xlib.X.PropertyChangeMask)
+
+        @display.root.on()
+        def PropertyNotify(win, event):
+            if display.get_atom_name(event.atom) == "IG_VIEWS":
+                w.destroy()
+                sys.exit(0)
+                
+        display.flush()
+        
         InfiniteGlass.DEBUG("init", "Theme started\n")
-
-        display.sync()
