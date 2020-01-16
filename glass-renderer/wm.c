@@ -15,6 +15,7 @@
 #include "list.h"
 #include "debug.h"
 #include "fps.h"
+#include "item.h"
 #include "property.h"
 #include "property_atom.h"
 #include "property_window.h"
@@ -45,10 +46,12 @@ void draw() {
   glDisable(GL_SCISSOR_TEST);
   glClearColor(1.0, 1.0, 1., 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-  for (size_t idx = 0; idx < views->count; idx++) {
-    View *v = (View *) views->entries[idx];
-    current_layer = v->layer;
-    view_draw(0, v, items_all, &filter_by_layer);
+  if (views) {
+    for (size_t idx = 0; idx < views->count; idx++) {
+      View *v = (View *) views->entries[idx];
+      current_layer = v->layer;
+      view_draw(0, v, items_all, &filter_by_layer);
+    }
   }
   glFlush();
   glXSwapBuffers(display, overlay);
@@ -77,8 +80,13 @@ void trigger_draw() {
 }
 
 void pick(int x, int y, int *winx, int *winy, Item **item) {
+  if (!views) {
+    *winy = *winx = 0;
+    *item = NULL;
+    return;
+  }
   View *view = (View *) views->entries[0];
-  gl_check_error("pick1");
+  GL_CHECK_ERROR("pick1", "");
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glEnable(GL_SCISSOR_TEST);
   glScissor(x, view->height - y, 1, 1);
@@ -129,7 +137,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
   unsigned long start_time = get_timestamp();
 
-  gl_check_error("loop");
+  GL_CHECK_ERROR("loop", "");
 
   if (event->type == PropertyNotify) {
     Bool changed = True;
@@ -143,8 +151,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       if (event->xproperty.atom == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
       if (event->xproperty.atom == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
       if (event->xproperty.atom == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);        
+      if (event->xproperty.atom == IG_DRAW_TYPE && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);        
     }
-
+    
     if (changed) {
       if (event->xproperty.window != root && item && event->xproperty.atom == IG_SIZE) {
         Atom type_return;
@@ -176,16 +185,21 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       } else if (event->xproperty.window == root && event->xproperty.atom == IG_VIEWS) {
         view_free_all(views);
         views = view_load_all();
+      } else if (event->xproperty.window == root && event->xproperty.atom == IG_SHADERS) {
+        shader_free_all(shaders);
+        shaders = shader_load_all();       
       } else if (event->xproperty.window == root) {
         Bool handled = False;
-        for (size_t idx = 0; idx < views->count; idx++) {
-          View *v = (View *) views->entries[idx];
-          if (event->xproperty.atom == v->attr_layer) {
-            view_load_layer(v);
-            handled=True;
-          } else if (event->xproperty.atom == v->attr_view) {
-            view_load_screen(v);
-            handled=True;
+        if (views) {
+          for (size_t idx = 0; idx < views->count; idx++) {
+            View *v = (View *) views->entries[idx];
+            if (event->xproperty.atom == v->attr_layer) {
+              view_load_layer(v);
+              handled=True;
+            } else if (event->xproperty.atom == v->attr_view) {
+              view_load_screen(v);
+              handled=True;
+            }
           }
         }
         if (!handled) {
@@ -267,7 +281,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 
         item->type->update((Item *) item);
-        gl_check_error("item_update_pixmap");
+        GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
         trigger_draw();
       } else {
         DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", event->xconfigurerequest.window);
@@ -359,11 +373,13 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     XMapWindow(display, event->xmaprequest.window);
   } else if (event->type == ClientMessage && event->xclient.message_type == IG_DEBUG) {
     printf("DEBUG LIST VIEWS\n");
-    for (size_t idx = 0; idx < views->count; idx++) {
-      View *view = (View *) views->entries[idx];
-      view_print(view);
+    if (views) {
+      for (size_t idx = 0; idx < views->count; idx++) {
+        View *view = (View *) views->entries[idx];
+        view_print(view);
+      }
     }
-
+    
     printf("DEBUG LIST VIEWS END\n");
     printf("DEBUG LIST ITEMS\n");
     for (size_t idx = 0; idx < items_all->count; idx++) {
@@ -398,7 +414,9 @@ int main() {
   if (!xinit()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
-
+  if (!init_shader()) return 1;
+  if (!init_items()) return 1;
+  
   manager_selection_create(XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
                            &selection_sn_clear,
@@ -406,11 +424,11 @@ int main() {
   
   DEBUG("start", "Initialized X and GL.\n");
 
-  while (!(views = view_load_all())) sleep(1);
-  while (!(shaders = shader_load_all())) sleep(1);
+  views = view_load_all();
+  shaders = shader_load_all();
 
-  DEBUG("start", "Initialized views and shaders.\n");
-
+  DEBUG("XXXXXXXXXXX1", "views=%ld shaders=%ld\n", views, shaders);
+  
   property_type_register(&property_atom);
   property_type_register(&property_window);
   property_type_register(&property_int);
@@ -421,11 +439,11 @@ int main() {
 
   items_get_from_toplevel_windows();
  
-  gl_check_error("start1");
+  GL_CHECK_ERROR("start1", "");
 
   trigger_draw();
 
-  gl_check_error("start2");
+  GL_CHECK_ERROR("start2", "");
 
   DEBUG("start", "Renderer started.\n");
 

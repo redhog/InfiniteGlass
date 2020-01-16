@@ -37,6 +37,7 @@ Atom IG_ACTIVE_WINDOW;
 Atom WM_STATE;
 Atom XA_MANAGER;
 
+
 Display* display;
 Window root;
 Window overlay;

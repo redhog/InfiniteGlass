@@ -70,6 +70,19 @@ def send(ctx, window, mask, event):
             send_msg(display, window, mask, event)
             sys.exit(0)
 
+@main.command()
+@click.argument("name")
+@click.argument("animation")
+@click.pass_context
+def animate(ctx, name, animation):
+    with InfiniteGlass.Display() as display:
+        anim = display.root["IG_ANIMATE"]
+        name += "_SEQUENCE"
+        display.root[name] = json.loads(animation)
+        anim.send(anim, "IG_ANIMATE", display.root, name, 0.0, event_mask=Xlib.X.PropertyChangeMask)
+        display.flush()
+        sys.exit(0)
+            
 @main.group()
 @click.pass_context
 def shadow(ctx, **kw):

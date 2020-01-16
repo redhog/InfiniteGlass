@@ -11,9 +11,11 @@ Property *property_allocate(Properties *properties, Atom name) {
   prop->values.bytes = NULL;
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     prop->programs[i].program = -1;
+    prop->programs[i].prefix = NULL;
     prop->programs[i].data = NULL;
     prop->programs[i].name_str = NULL;
     prop->programs[i].location = -1;
+    prop->programs[i].buffer = -1;
   }
   prop->data = NULL;
   return prop;
@@ -58,6 +60,7 @@ void property_free(Property *prop) {
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     if (type) type->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
+    if (prop->programs[i].buffer != -1) glDeleteBuffers(1, &prop->programs[i].buffer);
   }
   if (prop->name_str) XFree(prop->name_str);
   if (prop->values.bytes) XFree(prop->values.bytes);
@@ -70,17 +73,28 @@ void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
   if (!type) return;
   
-  if (prop_cache->program != cache->program) {
+  if (prop_cache->program != cache->program || prop_cache->prefix != cache->prefix) {
     if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
     prop_cache->program = cache->program;
+    prop_cache->prefix = cache->prefix;
     prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
     strcpy(prop_cache->name_str, cache->prefix);
     strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
+    prop_cache->uniform = True;
     prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
     if (prop_cache->location != -1) {
       char name[1];
       glGetActiveUniform(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+    } else {
+      prop_cache->uniform = False;
+      prop_cache->location = glGetAttribLocation(cache->program, prop_cache->name_str);
+      if (prop_cache->location != -1) {
+        char name[1];
+        glGetActiveAttrib(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+        glCreateBuffers(1, &prop_cache->buffer);
+      }
     }
+    
     type->load_program(prop, rendering);
   }
   type->to_gl(prop, rendering);
@@ -152,11 +166,11 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   properties->programs[rendering->program_cache_idx].program = rendering->shader->program;
   properties->programs[rendering->program_cache_idx].prefix = prefix;
   
-  gl_check_error("properties_to_gl");
+  GL_CHECK_ERROR("properties_to_gl", "%ld", properties->window);
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
     property_to_gl(prop, rendering);
-    gl_check_error(prop->name_str);
+    GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
   }
 }
 

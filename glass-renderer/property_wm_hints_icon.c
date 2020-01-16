@@ -46,7 +46,7 @@ void property_wm_hints_icon_load(Property *prop) {
   if (data->wm_hints.flags & IconMaskHint) {
     texture_from_pixmap(&data->icon_mask_texture, data->wm_hints.icon_mask);
   }
-  gl_check_error("icon_update_pixmap2");
+  GL_CHECK_ERROR("icon_update_pixmap2", "%ld", prop->window);
 }
 
 void property_wm_hints_icon_free(Property *prop) {
@@ -60,7 +60,7 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   WmHintsPropertyProgramData *program_data = (WmHintsPropertyProgramData *) prop_cache->data;
-  if (program_data->icon_location == -1 || program_data->icon_mask_location == -1) return;
+  if (!prop_cache->uniform || program_data->icon_location == -1 || program_data->icon_mask_location == -1) return;
 
   if (data->wm_hints.flags & IconPixmapHint) {
     glUniform1i(program_data->icon_enabled_location, 1);

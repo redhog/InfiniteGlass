@@ -8,10 +8,23 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include "debug.h"
 
 GLXFBConfig *configs;
 
-int gl_check_error(char *msg);
+
+#define GL_CHECK_ERROR(entry, ...) ({ \
+  GLenum errCode; \
+  const GLubyte *errString; \
+  \
+  if ((errCode = glGetError()) != GL_NO_ERROR) { \
+    errString = gluErrorString(errCode); \
+    debug_print(stderr, 1, "GLASS_ERROR.renderer", __FILE__, __func__, entry, __VA_ARGS__); \
+    if (ERROR_ENABLED(entry)) fprintf(stderr, " OpenGL error: %s\n", errString); \
+  }; \
+  errCode != GL_NO_ERROR; \
+})
+
 int glinit(Window window);
 
 #endif

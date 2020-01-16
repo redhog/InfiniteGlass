@@ -25,8 +25,11 @@ typedef struct PropertyStruct Property;
 
 struct PropertyProgramCacheStruct {
   GLint program; 
+  char *prefix;
   char *name_str;
+  Bool uniform;
   GLint location;
+  GLuint buffer;
   GLint size;
   GLenum type;
   void *data;

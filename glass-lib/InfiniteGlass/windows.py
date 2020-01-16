@@ -20,6 +20,7 @@ def get_active_window(display):
             coords = child.get("IG_COORDS", None)
             if coords is None: continue
             layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
+            if layer not in spacecoords: continue
             pointer = spacecoords[layer]
             if (pointer[0] >= coords[0]
                 and pointer[0] <= coords[0] + coords[2]
