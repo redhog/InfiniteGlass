@@ -49,21 +49,25 @@ def main(*arg, **kw):
         display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
 
-        w = display.root.create_window()
-
+        geom = display.root.get_geometry()
+        height = float(geom.height) / float(geom.width)
+        
+        w = display.root.create_window(map=False)
         w["IG_LAYER"] = "IG_LAYER_SPLASH"
         w["IG_SHADER"] = "IG_SHADER_SPLASH"
         w["IG_WORLD_ZOOM"] = .05
         w["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINES"
         with pkg_resources.resource_stream("glass_theme", "coastline50.geojson") as f:
             w["IG_COASTLINE"] = linestrings2texture(f)
+        w.map()
         
         display.root["IG_INITIAL_ANIMATION_SEQUENCE"] = {
             "steps": [
-                {"window": w.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 5.0, "dst": 5.0},
-
+                {"window": w.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 2.0, "dst": 2.0},
+                
+                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-5.0, height * -5.0, 10.0, height * 10.0]},
                 {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
-                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 5.0, "dst": [0.0, 0.0, 1.0, 0.0]}
+                {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 2.0, "dst": [0.0, 0.0, 1.0, height]}
             ]}
         anim = display.root["IG_ANIMATE"]
         anim.send(anim, "IG_ANIMATE", display.root, "IG_INITIAL_ANIMATION_SEQUENCE", 0.0, event_mask=Xlib.X.PropertyChangeMask)
