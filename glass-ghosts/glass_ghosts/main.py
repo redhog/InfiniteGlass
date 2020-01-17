@@ -10,6 +10,14 @@ def main2():
     manager = None
     try:
         with InfiniteGlass.Display() as display:
+            overlay = display.root.composite_get_overlay_window().overlay_window
+            overlay_geom = overlay.get_geometry()
+            
+            gc = overlay.create_gc(
+                foreground = display.screen().black_pixel,
+                background = display.screen().white_pixel)
+            overlay.rectangle(gc, 0, 0, overlay_geom.width, overlay_geom.height, onerror = None)
+            
             manager = glass_ghosts.manager.GhostManager(display)
             sys.stdout.write("%s\n" % manager.session.listen_address())
             sys.stdout.flush()
