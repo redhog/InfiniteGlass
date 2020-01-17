@@ -38,7 +38,7 @@ def main(*arg, **kw):
 
         display.root["IG_VIEW_ROOT_LAYER"] = "IG_LAYER_ROOT"
         display.root["IG_VIEW_ROOT_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-        
+
         display.root["IG_VIEWS"] = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
 
         shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
@@ -52,7 +52,8 @@ def main(*arg, **kw):
 
         
         #display.root["IG_WORLD_ZOOM"] = 1.
-        display.root["IG_WORLD_ZOOM"] = .1
+        display.root["IG_WORLD_ZOOM"] = .01
+        display.root["IG_WORLD_ALPHA"] = 1.
         
         geom = display.root.get_geometry()
         height = float(geom.height) / float(geom.width)
@@ -69,14 +70,14 @@ def main(*arg, **kw):
         w["IG_LAYER"] = "IG_LAYER_SPLASH_BACKGROUND"
         w["IG_SHADER"] = "IG_SHADER_SPLASH_BACKGROUND"
         w.map()
-        
+
         display.root["IG_INITIAL_ANIMATION_SEQUENCE"] = {
             "steps": [
                 {"timeframe": 1.0},
                 {"window": display.root.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 10.0},
-                
                 {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
-                {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP"]},
+                {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]},
+                {"window": display.root.__window__(), "atom": "IG_WORLD_ALPHA", "timeframe": 0.5, "dst": 0.0},                
                 {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 2.0, "dst": [0.0, 0.0, 1.0, height]},
                 {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
             ]}

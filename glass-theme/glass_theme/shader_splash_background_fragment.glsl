@@ -3,6 +3,7 @@ precision highp float;
 
 uniform ivec2 size;
 uniform float root_IG_WORLD_ZOOM;
+uniform float root_IG_WORLD_ALPHA;
 
 in vec2 px_coord;
 
@@ -17,10 +18,8 @@ void main() {
   if (dist < radius) {
     float w = PI/2. - asin(dist / radius);
     float l = w / (PI/2.);
-    //fragColor = vec4(gl_FragCoord.z, 0., 1. - gl_FragCoord.z, .5);
-    fragColor = vec4(l, l, l, 1.);
-    //fragColor = vec4(px_coord.x/size.x, px_coord.y/size.y, 1.-px_coord.x/size.x, 1.); //vec4(1., 1., 1., 1.); 
+    fragColor = vec4(l, l, l, root_IG_WORLD_ALPHA);
   } else {
-    fragColor = vec4(0., 0., 0., 1.);
+    fragColor = vec4(0., 0., 0., root_IG_WORLD_ALPHA);
   }
 }
