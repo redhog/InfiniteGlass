@@ -26,7 +26,9 @@ def start_animation(animationid, animation):
     animations[animationid] = animation
 
 def animate_anything(display, window, atom, timeframe=0.0, **kw):
-    if atom == "__GEOMETRY__":
+    if atom is None:
+        return animate_nothing(display, timeframe)
+    elif atom == "__GEOMETRY__":
         return animate_geometry(display, window, timeframe, **kw)
     elif atom.endswith("_SEQUENCE"):
         return animate_sequence(display, window, atom, timeframe, **kw)
@@ -44,12 +46,27 @@ def animate_sequence(display, window, atom, timeframe=0.0):
 
     for step in sequence["steps"]:
         step = dict(step)
-        step_win = display.create_resource_object("window", step.pop("window"))
-        step_atom = step.pop("atom")
+        step_win = step.pop("window", None)
+        step_win = step_win and display.create_resource_object("window", step_win)
+        step_atom = step.pop("atom", None)
         step_timeframe = factor * step.pop("timeframe", 0.0)
         for part in animate_anything(display, step_win, step_atom, step_timeframe, **step):
             yield part
 
+def animate_nothing(display, timeframe):
+    start = time.time()
+    InfiniteGlass.DEBUG("begin", "ANIMATE NOTHING %ss\n" % (timeframe,))
+    def animationfn():
+        while True:
+            current = time.time()
+            progress = (current - start) / timeframe
+            if progress > 1.:
+                InfiniteGlass.DEBUG("final", "ANIMATION FINAL\n")
+                return
+            yield
+    return animationfn()
+
+            
 def animate_property(display, window, atom, timeframe, src=None, dst=None):
     if dst is None:
         dst = window[atom + "_ANIMATE"]
