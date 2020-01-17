@@ -5,7 +5,7 @@ layout(line_strip, max_vertices=4) out;
 
 uniform ivec2 size;
 
-uniform float IG_WORLD_ZOOM;
+uniform float root_IG_WORLD_ZOOM;
 
 in vec2 coastline[];
 out vec2 px_coord;
@@ -25,9 +25,9 @@ void main() {
   float frac = float(size.y) / float(size.x);
   
   mat4 sphere2gl = transpose(mat4(
-    IG_WORLD_ZOOM * frac, 0., 0., 0.,
-    0., IG_WORLD_ZOOM, 0., 0.,
-    0., 0., IG_WORLD_ZOOM, min(0., -(IG_WORLD_ZOOM-1.)),
+    root_IG_WORLD_ZOOM * frac, 0., 0., 0.,
+    0., root_IG_WORLD_ZOOM, 0., 0.,
+    0., 0., root_IG_WORLD_ZOOM, min(0., -(root_IG_WORLD_ZOOM-1.)),
     0., 0., 0., 1.
   ));
 

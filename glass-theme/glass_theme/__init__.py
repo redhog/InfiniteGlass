@@ -26,6 +26,8 @@ def main(*arg, **kw):
         
         display.root["IG_VIEW_SPLASH_LAYER"] = "IG_LAYER_SPLASH"
         display.root["IG_VIEW_SPLASH_VIEW"] = [0.0, 0.0, 1.0, 0.0]
+        display.root["IG_VIEW_SPLASH_BACKGROUND_LAYER"] = "IG_LAYER_SPLASH_BACKGROUND"
+        display.root["IG_VIEW_SPLASH_BACKGROUND_VIEW"] = [0.0, 0.0, 1.0, 0.0]
         
         display.root["IG_VIEW_MENU_LAYER"] = "IG_LAYER_MENU"
         display.root["IG_VIEW_MENU_VIEW"] = [0.0, 0.0, 1.0, 0.0]
@@ -37,9 +39,9 @@ def main(*arg, **kw):
         display.root["IG_VIEW_ROOT_LAYER"] = "IG_LAYER_ROOT"
         display.root["IG_VIEW_ROOT_VIEW"] = [0.0, 0.0, 1.0, 0.0]
         
-        display.root["IG_VIEWS"] = ["IG_VIEW_SPLASH"]
+        display.root["IG_VIEWS"] = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
 
-        shaders = ("DEFAULT", "ROOT", "SPLASH")
+        shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
         for SHADER in shaders:
             shader = SHADER.lower()
             for PART in ("GEOMETRY", "VERTEX", "FRAGMENT"):
@@ -48,22 +50,29 @@ def main(*arg, **kw):
                     display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = f.read()
         display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
-
+        
+        display.root["IG_WORLD_ZOOM"] = .1
+        
         geom = display.root.get_geometry()
         height = float(geom.height) / float(geom.width)
         
         w = display.root.create_window(map=False)
         w["IG_LAYER"] = "IG_LAYER_SPLASH"
         w["IG_SHADER"] = "IG_SHADER_SPLASH"
-        w["IG_WORLD_ZOOM"] = .05
         w["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINES"
         with pkg_resources.resource_stream("glass_theme", "coastline50.geojson") as f:
             w["IG_COASTLINE"] = linestrings2texture(f)
         w.map()
+
+        w = display.root.create_window(map=False)
+        w["IG_LAYER"] = "IG_LAYER_SPLASH_BACKGROUND"
+        w["IG_SHADER"] = "IG_SHADER_SPLASH_BACKGROUND"
+        w.map()
         
         display.root["IG_INITIAL_ANIMATION_SEQUENCE"] = {
             "steps": [
-                {"window": w.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 2.0, "dst": 20.0},
+                {"timeframe": 2.0},
+                {"window": display.root.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 10.0},
                 
                 {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
                 {"window": display.root.__window__(), "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP"]},
