@@ -71,7 +71,7 @@ def main(*arg, **kw):
         
         display.root["IG_INITIAL_ANIMATION_SEQUENCE"] = {
             "steps": [
-                {"timeframe": 2.0},
+                {"timeframe": 1.0},
                 {"window": display.root.__window__(), "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 10.0},
                 
                 {"window": display.root.__window__(), "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
