@@ -65,8 +65,10 @@ int glinit(Window window) {
  	-1.,
  	1.,
  	1.,
- 	-1.);
+ 	2.);
   glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+  glDepthFunc(GL_GEQUAL);
   
   DEBUG("init.opengl", "OpenGL: %s:%s(%s)\nGLSL: %s\n", vendor, renderer, version, glsl_ver);
   return 1;

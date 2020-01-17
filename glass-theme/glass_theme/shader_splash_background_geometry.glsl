@@ -7,19 +7,19 @@ uniform ivec2 size;
 out vec2 px_coord;
 
 void main() {
-  gl_Position = vec4(-1., -1., 0., 1.);
+  gl_Position = vec4(-1., -1., 1., 1.);
   px_coord = ivec2(0, size.y);
   EmitVertex();
 
-  gl_Position = vec4(-1., 1., 0., 1.);
+  gl_Position = vec4(-1., 1., 1., 1.);
   px_coord = ivec2(0, 0);
   EmitVertex();
 
-  gl_Position = vec4(1., -1., 0., 1.);
+  gl_Position = vec4(1., -1., 1., 1.);
   px_coord = ivec2(size.x, size.y);
   EmitVertex();
 
-  gl_Position = vec4(1., 1., 0., 1.);
+  gl_Position = vec4(1., 1., 1., 1.);
   px_coord = ivec2(size.x, 0);
   EmitVertex();
   EndPrimitive();

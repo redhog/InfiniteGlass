@@ -26,7 +26,7 @@ vec4 pixel2glscreen(vec2 xy) {
   return transpose(mat4(
     2./size.x, 0., 0., -1.,
     0., 2./size.y, 0., -1.,
-    0., 0., 0., 0.,
+    0., 0., 0., 1.,
     0., 0., 0., 1.
   )) * vec4(xy, 0., 1.);
 }

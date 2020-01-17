@@ -27,7 +27,7 @@ void main() {
   mat4 sphere2gl = transpose(mat4(
     root_IG_WORLD_ZOOM * frac, 0., 0., 0.,
     0., root_IG_WORLD_ZOOM, 0., 0.,
-    0., 0., root_IG_WORLD_ZOOM, min(0., -(root_IG_WORLD_ZOOM-1.)),
+    0., 0., root_IG_WORLD_ZOOM, 1.,
     0., 0., 0., 1.
   ));
 

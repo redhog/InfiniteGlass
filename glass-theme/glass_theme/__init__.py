@@ -51,6 +51,7 @@ def main(*arg, **kw):
         display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
         
+        #display.root["IG_WORLD_ZOOM"] = 1.
         display.root["IG_WORLD_ZOOM"] = .1
         
         geom = display.root.get_geometry()
