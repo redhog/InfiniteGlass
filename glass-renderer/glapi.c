@@ -60,7 +60,14 @@ int glinit(Window window) {
   glBindVertexArray(VAO);
   
   glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
-
+  glFrustum(-1.,
+ 	1.,
+ 	-1.,
+ 	1.,
+ 	1.,
+ 	-1.);
+  glEnable(GL_DEPTH_TEST);
+  
   DEBUG("init.opengl", "OpenGL: %s:%s(%s)\nGLSL: %s\n", vendor, renderer, version, glsl_ver);
   return 1;
 }
