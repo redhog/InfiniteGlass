@@ -56,8 +56,6 @@ def animate_parallel(display, timeframe=0.0, tasks=None, **kw):
     active_tasks = {}
     for task in tasks:
         task = dict(task)
-        if "window" in task:
-            task["window"] = display.create_resource_object("window", task["window"])
         if "timeframe" in task:
             task["timeframe"] *= factor
         active_task = animate_anything(display, **task)
@@ -79,8 +77,6 @@ def animate_sequence(display, timeframe=0.0, steps=None, **kw):
 
     for step in steps:
         step = dict(step)
-        if "window" in step:
-            step["window"] = display.create_resource_object("window", step["window"])
         if "timeframe" in step:
             step["timeframe"] *= factor
         for part in animate_anything(display, **step):

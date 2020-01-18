@@ -96,7 +96,7 @@ def parse_value(display, value, **context):
     elif isinstance(items[0], dict):
         itemtype = display.get_atom("JSON")
         fmt = 8        
-        items = [json.dumps(item).encode("utf-8") for item in items]
+        items = [json.dumps(item, default=tojson(display)).encode("utf-8") for item in items]
     elif isinstance(items[0], str):
         if items[0] in keymap.keysyms:
             itemtype = display.get_atom("KEYCODE")
@@ -148,7 +148,7 @@ def unpack_values(display, value_type, values):
         values = values.split(b"\0")
     if value_type == "JSON":
         values = values.split(b"\0")
-        values = [json.loads(item.decode("utf-8")) for item in values]
+        values = [json.loads(item.decode("utf-8"), object_hook=fromjson(display.real_display)) for item in values]
     if len(values) == 1:
         values = values[0]
     return values
