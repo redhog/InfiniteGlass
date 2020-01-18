@@ -25,35 +25,68 @@ def animate(display):
 def start_animation(animationid, animation):
     animations[animationid] = animation
 
-def animate_anything(display, window, atom, timeframe=0.0, **kw):
-    if atom is None:
-        return animate_nothing(display, timeframe)
-    elif atom == "__GEOMETRY__":
-        return animate_geometry(display, window, timeframe, **kw)
-    elif atom.endswith("_SEQUENCE"):
-        return animate_sequence(display, window, atom, timeframe, **kw)
+def animate_anything(display, **kw):
+    window = kw.get("window", None)
+    atom = kw.get("atom", None)
+    if window and atom:
+        dst = window.get(atom + "_ANIMATE", None)
+        if dst is not None:
+            if isinstance(dst, dict):
+                kw.update(dst)
+            else:
+                kw["dst"] = dst
+    if atom == "__GEOMETRY__":
+        return animate_geometry(display, **kw)
+    elif "steps" in kw:
+        return animate_sequence(display, **kw)
+    elif "tasks" in kw:
+        return animate_parallel(display, **kw)
+    elif atom is not None:
+        return animate_property(display, **kw)
     else:
-        return animate_property(display, window, atom, timeframe, **kw)
-    
-def animate_sequence(display, window, atom, timeframe=0.0):
-    sequence = window[atom]
+        return animate_nothing(display, **kw)
 
+def animate_parallel(display, timeframe=0.0, tasks=None, **kw):
     if timeframe == 0.0:
         factor = 1
     else:
-        total_time = sum(step[2] for step in sequence["steps"])
+        total_time = max(task[2] for task in tasks)
         factor = timeframe / total_time
 
-    for step in sequence["steps"]:
+    active_tasks = {}
+    for task in tasks:
+        task = dict(task)
+        if "window" in task:
+            task["window"] = display.create_resource_object("window", task["window"])
+        if "timeframe" in task:
+            task["timeframe"] *= factor
+        active_task = animate_anything(display, **task)
+        active_tasks[id(active_task)] = active_task
+
+    while active_tasks:
+        for task_id, active_task in list(active_tasks.items()):
+            try:
+                yield next(active_task)
+            except StopIteration:
+                del active_tasks[task_id]
+    
+def animate_sequence(display, timeframe=0.0, steps=None, **kw):
+    if timeframe == 0.0:
+        factor = 1
+    else:
+        total_time = sum(step[2] for step in steps)
+        factor = timeframe / total_time
+
+    for step in steps:
         step = dict(step)
-        step_win = step.pop("window", None)
-        step_win = step_win and display.create_resource_object("window", step_win)
-        step_atom = step.pop("atom", None)
-        step_timeframe = factor * step.pop("timeframe", 0.0)
-        for part in animate_anything(display, step_win, step_atom, step_timeframe, **step):
+        if "window" in step:
+            step["window"] = display.create_resource_object("window", step["window"])
+        if "timeframe" in step:
+            step["timeframe"] *= factor
+        for part in animate_anything(display, **step):
             yield part
 
-def animate_nothing(display, timeframe):
+def animate_nothing(display, timeframe, **kw):
     start = time.time()
     InfiniteGlass.DEBUG("begin", "ANIMATE NOTHING %ss\n" % (timeframe,))
     def animationfn():
@@ -67,9 +100,7 @@ def animate_nothing(display, timeframe):
     return animationfn()
 
             
-def animate_property(display, window, atom, timeframe, src=None, dst=None):
-    if dst is None:
-        dst = window[atom + "_ANIMATE"]
+def animate_property(display, window, atom, timeframe=0.0, src=None, dst=None, **kw):
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
     if timeframe == 0.0:
         def animationfn():
@@ -108,12 +139,10 @@ def animate_property(display, window, atom, timeframe, src=None, dst=None):
             yield
     return animationfn()
 
-def animate_geometry(display, window, timeframe, src=None, dst=None):
+def animate_geometry(display, window, timeframe, src=None, dst=None, **kw):
     if src is None:
         src = window.get_geometry()
         src = [src.x, src.y, src.width, src.height]
-    if dst is None:
-        dst = window["__GEOMETRY__ANIMATE"]
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
     values = list(zip(src, dst))
     start = time.time()
@@ -155,6 +184,6 @@ def main(*arg, **kw):
         def ClientMessage(win, event):
             window, atom, timeframe = event.parse("WINDOW", "ATOM", "FLOAT")
             animationid = (window.__window__(), atom)
-            start_animation(animationid, animate_anything(display, window, atom, timeframe))
+            start_animation(animationid, animate_anything(display, window=window, atom=atom, timeframe=timeframe))
 
         InfiniteGlass.DEBUG("init", "Animator started\n")
