@@ -72,27 +72,30 @@ def main(*arg, **kw):
         display.flush()
         
         if False:
-            display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
+            display.root["IG_VIEW_DESKTOP_VIEW"] = [-50.0, height * -50.0, 100.0, height * 100.0]
+            display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
             display.root["IG_WORLD_ALPHA"] = 0.5
-            display.root["IG_WORLD_ZOOM"] = 1.
+            display.root["IG_WORLD_ZOOM"] = 10.
         else:
             display.root["IG_INITIAL_ANIMATE"] = {
                 "steps": [
-                    {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 5.0, "dst": 10.0},
                     {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
-                    {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]},
+                    {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 10.0},
+                    {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]},
                     {"tasks": [
-                      {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 2.0, "dst": 0.0},
+                      {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 3.0, "dst": 0.0},
+                      {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 20.0},
                       {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 3.0, "dst": [0.0, 0.0, 1.0, height]}
                     ]},
                     {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
+                    {"window": display.root, "atom": "IG_THEME", "dst": 1.0},
                 ]}
             anim = display.root["IG_ANIMATE"]
             anim.send(anim, "IG_ANIMATE", display.root, "IG_INITIAL", 0.0, event_mask=Xlib.X.PropertyChangeMask)
 
         @display.root.on()
         def PropertyNotify(win, event):
-            if display.get_atom_name(event.atom) == "IG_VIEWS":
+            if display.get_atom_name(event.atom) == "IG_THEME":
                 w.destroy()
                 sys.exit(0)
                 

@@ -7,21 +7,22 @@ import traceback
 animations = {}
 
 def animate(display):
-    while True:
-        if display.pending_events():
-            return
-        r, w, e = select.select([display], [], [], 0.01)
-        if r or w or e:
-            return
-        for animationid, animation in list(animations.items()):
+    for animationid, animation in list(animations.items()):
+        try:
+            next(animation)
+        except StopIteration:
             try:
-                next(animation)
-            except StopIteration:
                 del animations[animationid]
-            except Exception as e:
-                print("Animation failed: ", e)
-                traceback.print_exc()
-
+            except:
+                pass
+        except Exception as e:
+            print("Animation failed: ", e)
+            traceback.print_exc()
+            try:
+                del animations[animationid]
+            except:
+                pass
+                
 def start_animation(animationid, animation):
     animations[animationid] = animation
 
@@ -99,6 +100,7 @@ def animate_nothing(display, timeframe, **kw):
 def animate_property(display, window, atom, timeframe=0.0, src=None, dst=None, **kw):
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
     if timeframe == 0.0:
+        InfiniteGlass.DEBUG("begin", "ANIMATE %s.%s=%s\n" % (window.__window__(), atom, dst))
         def animationfn():
             window[atom] = dst
             display.flush()
