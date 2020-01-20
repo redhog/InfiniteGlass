@@ -3,6 +3,7 @@ import time
 import select
 import array
 import traceback
+import numpy as np
 
 animations = {}
 
@@ -97,7 +98,8 @@ def animate_nothing(display, timeframe, **kw):
     return animationfn()
 
             
-def animate_property(display, window, atom, timeframe=0.0, src=None, dst=None, **kw):
+def animate_property(display, window, atom, timeframe=0.0, src=None, dst=None, easing="Linear", **kw):
+    easing = easings[easing]
     if not isinstance(dst, (tuple, list, array.array)): dst = [dst]
     if timeframe == 0.0:
         InfiniteGlass.DEBUG("begin", "ANIMATE %s.%s=%s\n" % (window.__window__(), atom, dst))
@@ -125,7 +127,8 @@ def animate_property(display, window, atom, timeframe=0.0, src=None, dst=None, *
                 window[atom] = dst
                 InfiniteGlass.DEBUG("final", "SET FINAL %s.%s=%s\n" % (window.__window__(), atom, dst))
             else:
-                res = [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]
+                pos = easing(progress)
+                res = [pos * dstval + (1.-pos) * srcval for srcval, dstval in values]
                 if isint:
                     res = [int(item) for item in res]
                 window[atom] = res
@@ -137,7 +140,8 @@ def animate_property(display, window, atom, timeframe=0.0, src=None, dst=None, *
             yield
     return animationfn()
 
-def animate_geometry(display, window, timeframe, src=None, dst=None, **kw):
+def animate_geometry(display, window, timeframe, src=None, dst=None, easing="Linear", **kw):
+    easing = easings[easing]
     if src is None:
         src = window.get_geometry()
         src = [src.x, src.y, src.width, src.height]
@@ -157,7 +161,8 @@ def animate_geometry(display, window, timeframe, src=None, dst=None, **kw):
                 current_values = dst
                 InfiniteGlass.DEBUG("final", "SET FINAL [%s]=%s\n" % (window.__window__(), dst))
             else:
-                current_values = [int(progress * dstval + (1.-progress) * srcval) for srcval, dstval in values]
+                pos = easing(progress)
+                current_values = [int(pos * dstval + (1.-pos) * srcval) for srcval, dstval in values]
                 if tick[0] % 100 == 0:
                     InfiniteGlass.DEBUG(
                         "transition", "SET [%s]=%s\n" % (window.__window__(), [progress * dstval + (1.-progress) * srcval for srcval, dstval in values]))
@@ -168,7 +173,36 @@ def animate_geometry(display, window, timeframe, src=None, dst=None, **kw):
                 return
             yield
     return animationfn()
-    
+
+# Thanks to Peter Much, see https://github.com/PMunch/SDLGamelib/blob/master/gamelib/tween.nim#L163
+easings = {
+  "Linear": lambda t: t,
+  "InSine": lambda t: 1-sin(np.pi/2+t*np.pi/2),
+  "OutSine": lambda t: sin(t*np.pi/2),
+  "InOutSine": lambda t: (1-sin(np.pi/2+t*np.pi))/2,
+  "InQuad": lambda t: pow(t,2),
+  "OutQuad": lambda t: t*(2-t),
+  "InOutQuad": lambda t: (2*t*t if t<0.5 else -1+(4-2*t)*t),
+  "InCubic": lambda t: pow(t,3),
+  "OutCubic": lambda t: pow(t-1,3)+1,
+  "InOutCubic": lambda t: (4*pow(t,3) if t<0.5 else (t-1)*pow(2*t-2,2)+1),
+  "InQuart": lambda t: pow(t,4),
+  "OutQuart": lambda t: 1-pow(t-1,4),
+  "InOutQuart": lambda t: (8*pow(t,4) if t<0.5 else 1-8*pow(t-1,4)),
+  "InQuint": lambda t: pow(t,5),
+  "OutQuint": lambda t: 1+pow(t-1,5),
+  "InOutQuint": lambda t: (16*pow(t,5) if t<0.5 else 1+16*pow(t-1,5)),
+  "InExpo": lambda t: pow(2,10*(t/1-1)),
+  "OutExpo": lambda t: 1*(-pow(2,-10*t/1)+1),
+  "InOutExpo": lambda t: (0.5*pow(2,(10 * (t*2 - 1))) if t<0.5 else 0.5*(-pow(2, -10*(t*2-1))+2)),
+  "InCirc": lambda t: -1*(sqrt(1 - t * t) - 1),
+  "OutCirc": lambda t: 1*sqrt(1 - (t-1).pow(2)),
+  "InOutCirc": lambda t: (-0.5*(sqrt(1 - pow(t*2,2)) - 1) if t < 0.5 else 0.5*(sqrt(1 - pow(t*2-2,2)) + 1)),
+  "InBack": lambda t: t * t * (2.70158 * t - 1.70158),
+  "OutBack": lambda t: 1 - (1-t) * (1-t) * (2.70158 * (1-t) - 1.70158),
+  "InOutBack": lambda t: (0.5*(4*t*t*(3.5949095 * t*2 - 2.5949095)) if t<0.5 else 0.5 * ((t*2 - 2).pow(2) * ((4.9572369875) * (t*2-2) + 3.9572369875) + 2))
+}
+
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
         @display.mainloop.add_interval(0.1)

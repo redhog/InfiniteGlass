@@ -82,20 +82,20 @@ def main(*arg, **kw):
             display.root["IG_WORLD_LON"] = lon
             display.root["IG_WORLD_ZOOM"] = 1.
         else:
-            display.root["IG_WORLD_LAT"] = lat - 45.
-            display.root["IG_WORLD_LON"] = lon - 45.
+            display.root["IG_WORLD_LAT"] = lat - 180.
+            display.root["IG_WORLD_LON"] = lon - 360.
             
             display.root["IG_INITIAL_ANIMATE"] = {
                 "tasks": [
-                    {"window": display.root, "atom": "IG_WORLD_LAT", "timeframe": 3.0, "dst": lat},
-                    {"window": display.root, "atom": "IG_WORLD_LON", "timeframe": 3.0, "dst": lon},
+                    {"window": display.root, "atom": "IG_WORLD_LAT", "timeframe": 3.0, "dst": lat, "easing": "OutCubic"},
+                    {"window": display.root, "atom": "IG_WORLD_LON", "timeframe": 3.0, "dst": lon, "easing": "OutCubic"},
                     {"steps": [
                         {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
-                        {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 10.0},
+                        {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 40.0, "easing": "InCubic"},
                         {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]},
                         {"tasks": [
                             {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 3.0, "dst": 0.0},
-                            {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 20.0},
+                            {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 80.0},
                             {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 3.0, "dst": [0.0, 0.0, 1.0, height]}
                         ]},
                         {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
