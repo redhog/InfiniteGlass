@@ -175,6 +175,7 @@ def animate_geometry(display, window, timeframe, src=None, dst=None, easing="Lin
     return animationfn()
 
 # Thanks to Peter Much, see https://github.com/PMunch/SDLGamelib/blob/master/gamelib/tween.nim#L163
+# For pictures of how these look, check out https://easings.net/en
 easings = {
   "Linear": lambda t: t,
   "InSine": lambda t: 1-sin(np.pi/2+t*np.pi/2),
