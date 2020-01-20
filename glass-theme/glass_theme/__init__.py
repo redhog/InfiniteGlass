@@ -49,9 +49,6 @@ def main(*arg, **kw):
                 with pkg_resources.resource_stream("glass_theme", "shader_%s_%s.glsl" % (shader, part)) as f:
                     display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = f.read()
         display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
-
-        display.root["IG_WORLD_ZOOM"] = .01
-        display.root["IG_WORLD_ALPHA"] = 1.
         
         geom = display.root.get_geometry()
         height = float(geom.height) / float(geom.width)
@@ -84,23 +81,25 @@ def main(*arg, **kw):
         else:
             display.root["IG_WORLD_LAT"] = lat - 180.
             display.root["IG_WORLD_LON"] = lon - 360.
+            display.root["IG_WORLD_ZOOM"] = .1
+            display.root["IG_WORLD_ALPHA"] = 1.
             
             display.root["IG_INITIAL_ANIMATE"] = {
-                "tasks": [
-                    {"window": display.root, "atom": "IG_WORLD_LAT", "timeframe": 3.0, "dst": lat, "easing": "OutCubic"},
-                    {"window": display.root, "atom": "IG_WORLD_LON", "timeframe": 3.0, "dst": lon, "easing": "OutCubic"},
-                    {"steps": [
-                        {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
-                        {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 40.0, "easing": "InCubic"},
-                        {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]},
-                        {"tasks": [
-                            {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 3.0, "dst": 0.0},
-                            {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 80.0},
-                            {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 3.0, "dst": [0.0, 0.0, 1.0, height]}
-                        ]},
-                        {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
-                        {"window": display.root, "atom": "IG_THEME", "dst": 1.0},
-                    ]}
+                "steps": [
+                    {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "dst": [-50.0, height * -50.0, 100.0, height * 100.0]},
+                    {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]},
+                    {"tasks": [
+                        {"window": display.root, "atom": "IG_WORLD_LAT", "timeframe": 3.0, "dst": lat, "easing": "OutCubic"},
+                        {"window": display.root, "atom": "IG_WORLD_LON", "timeframe": 3.0, "dst": lon, "easing": "OutCubic"},
+                        {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 40.0, "easing": "InCubic"}
+                    ]},
+                    {"tasks": [
+                        {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 3.0, "dst": 0.0},
+                        {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 400.0},
+                        {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 3.0, "dst": [0.0, 0.0, 1.0, height]}
+                    ]},
+                    {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
+                    {"window": display.root, "atom": "IG_THEME", "dst": 1.0}
                 ]
             }
             anim = display.root["IG_ANIMATE"]
