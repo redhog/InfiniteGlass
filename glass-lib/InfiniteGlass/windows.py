@@ -3,6 +3,33 @@ import Xlib.error
 from . import coords as coordsmod 
 from . import debug
 
+def is_inside_window(display, window):
+    pointer = display.root.query_pointer()
+
+    try:
+        views = {display.root[name + "_LAYER"]: (display.root[name + "_VIEW"],
+                                                      display.root[name + "_SIZE"])
+                 for name in display.root["IG_VIEWS"]}
+    except KeyError:
+        return False
+    spacecoords = {layer: coordsmod.view_to_space(view, size, pointer.root_x, pointer.root_y)
+                   for layer, (view, size) in views.items()}
+    try:
+        if window.get_attributes().map_state != Xlib.X.IsViewable: return False
+        coords = window.get("IG_COORDS", None)
+        if coords is None: return False
+        layer = window.get("IG_LAYER", "IG_LAYER_DESKTOP")
+        if layer not in spacecoords: return False
+        pointer = spacecoords[layer]
+        if (pointer[0] >= coords[0]
+            and pointer[0] <= coords[0] + coords[2]
+            and pointer[1] <= coords[1]
+            and pointer[1] >= coords[1] - coords[3]):
+            return window
+    except Xlib.error.BadWindow as e:
+        debug.DEBUG("get_active_window", "%s: %s" % (child.__window__(), e))
+    return False
+
 def get_active_window(display):
     pointer = display.root.query_pointer()
 

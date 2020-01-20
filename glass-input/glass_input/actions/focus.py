@@ -2,10 +2,12 @@ import Xlib.X
 import InfiniteGlass
 
 def focus_follows_mouse(self, event):
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    pointer = self.display.root.query_pointer()
+    win = pointer.child
     if win == getattr(self, "focus", None): return
     if not win: return
-
+    if not InfiniteGlass.windows.is_inside_window(self.display, win): return
+    
     # FIXME: Don't use CurrentTime as that's not ICCCM compliant...
     if "WM_TAKE_FOCUS" in win.get("WM_PROTOCOLS", []):
         win.send(win, "WM_PROTOCOLS", "WM_TAKE_FOCUS", Xlib.X.CurrentTime)
