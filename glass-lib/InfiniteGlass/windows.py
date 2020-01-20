@@ -3,15 +3,7 @@ import Xlib.error
 from . import coords as coordsmod 
 from . import debug
 
-window_cache = None
-
-def update_windows():
-    global window_cache
-    window_cache = None
-
-def get_active_window(display, use_cache = True):
-    global window_cache
-    
+def get_active_window(display):
     pointer = display.root.query_pointer()
 
     try:
@@ -22,18 +14,9 @@ def get_active_window(display, use_cache = True):
         return None
     spacecoords = {layer: coordsmod.view_to_space(view, size, pointer.root_x, pointer.root_y)
                    for layer, (view, size) in views.items()}
-    
-    if not use_cache or window_cache is None:
-        window_cache = []
-        for child in display.root.query_tree().children:
-            try:
-                if child.get_attributes().map_state != Xlib.X.IsViewable: continue
-                window_cache.append(child)
-            except Xlib.error.BadWindow as e:
-                debug.DEBUG("get_active_window", "%s: %s" % (child.__window__(), e))
-    
-    for child in window_cache:
+    for child in display.root.query_tree().children:
         try:
+            if child.get_attributes().map_state != Xlib.X.IsViewable: continue
             coords = child.get("IG_COORDS", None)
             if coords is None: continue
             layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")

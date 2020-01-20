@@ -1,5 +1,4 @@
 import InfiniteGlass
-import InfiniteGlass.windows
 import Xlib.X
 import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
@@ -33,16 +32,6 @@ def main2(*arg, **kw):
         @display.root.require("IG_ANIMATE")
         def animate_window(root, win):
             display.animate_window = win
-
-        @display.root.on(mask="SubstructureNotifyMask")
-        def MapNotify(win, event):
-            InfiniteGlass.windows.update_windows()
-        @display.root.on(mask="SubstructureNotifyMask")
-        def UnmapNotify(win, event):
-            InfiniteGlass.windows.update_windows()
-        @display.root.on(mask="SubstructureNotifyMask")
-        def DestroyNotify(win, event):
-            InfiniteGlass.windows.update_windows()
             
         # Do not allow setting the input focus to None as that makes our keygrabs break...
         @display.root.on()
