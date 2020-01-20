@@ -37,4 +37,4 @@ def main2():
 
 def main():
     import cProfile
-    cProfile.runctx('main2()', globals(), locals(), "prof.prof")
+    cProfile.runctx('main2()', globals(), locals(), "glass-ghosts.prof")

@@ -11,7 +11,7 @@ import json
 import sys
 from . import mode
 
-def main(*arg, **kw):
+def main2(*arg, **kw):
     mode.load_config()
 
     with InfiniteGlass.Display() as display:
@@ -70,3 +70,9 @@ def main(*arg, **kw):
         ])
 
         InfiniteGlass.DEBUG("init", "Input handler started\n")
+
+    
+def main(*arg, **kw):
+    print("XYZZYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", os.getcwd())
+    import cProfile
+    cProfile.runctx('main2()', globals(), locals(), "glass-input.prof")
