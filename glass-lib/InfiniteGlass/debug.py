@@ -2,23 +2,30 @@ import inspect
 import os
 import sys
 
+def get_calling_function(level=1):
+    # This should be way faster than calling inspect.stack()...
+    frame = inspect.currentframe()
+    for i in range(level):
+        frame = frame.f_back
+    return "%s.%s" % (
+        frame.f_globals["__name__"],
+        frame.f_code.co_name)
+
 def DEBUG_ENABLED(entry, level=1):
-    key = ".".join(item for item in ("GLASS_DEBUG", inspect.stack()[level].frame.f_globals["__name__"], inspect.stack()[level].function, entry)
-                   if item != "<module>")
-    key = key.replace(".", "_")
-    res = os.environ.get(key)
-    if res == '1': return 1
-    if res == '0': return 0
-    while "_" in key:
-        key, dummy = key.rsplit("_", 1)
-        res = os.environ.get(key)
-        if res == '1': return 1
-        if res == '0': return 0
-    return 0
+    key = "%s.%s.%s" % ("GLASS_DEBUG", get_calling_function(level+1), entry)
+    envkey = key.replace(".", "_")
+    res = os.environ.get(envkey)
+    if res == '1': return key
+    if res == '0': return None
+    while "_" in envkey:
+        envkey, dummy = envkey.rsplit("_", 1)
+        res = os.environ.get(envkey)
+        if res == '1': return key
+        if res == '0': return None
+    return None
 
 def DEBUG(entry, s, level=1):
-    if not DEBUG_ENABLED(entry, 2): return
-    key = ".".join(item for item in ("GLASS_DEBUG", inspect.stack()[level].frame.f_globals["__name__"], inspect.stack()[level].function, entry)
-                   if item != "<module>")
+    key = DEBUG_ENABLED(entry, level+1)
+    if not key: return
     sys.stderr.write("%s: %s" % (key, s))
     sys.stderr.flush()
