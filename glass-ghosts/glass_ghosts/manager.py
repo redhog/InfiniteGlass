@@ -54,7 +54,7 @@ class GhostManager(object):
         def attempt_shutdown(timestamp, idx):
             waiting = 0
             for client_id, client in self.clients.items():
-                for fd, conn in client.connections.items():
+                for fd, conn in list(client.connections.items()):
                     conn.sleep()
                     waiting += 1
             if not waiting:
