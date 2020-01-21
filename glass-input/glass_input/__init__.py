@@ -62,6 +62,8 @@ def main2(*arg, **kw):
 
     
 def main(*arg, **kw):
-    print("XYZZYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", os.getcwd())
-    import cProfile
-    cProfile.runctx('main2()', globals(), locals(), "glass-input.prof")
+    if os.environ.get("GLASS_PROFILE_glass_input", "0") == "1":
+        import cProfile
+        cProfile.runctx('main2()', globals(), locals(), "glass-input.prof")
+    else:
+        main2()

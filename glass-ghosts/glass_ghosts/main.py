@@ -36,5 +36,8 @@ def main2():
     print("END")
 
 def main():
-    import cProfile
-    cProfile.runctx('main2()', globals(), locals(), "glass-ghosts.prof")
+    if os.environ.get("GLASS_PROFILE_glass_ghosts", "0") == "1":
+        import cProfile
+        cProfile.runctx('main2()', globals(), locals(), "glass-ghosts.prof")
+    else:
+        main2()
