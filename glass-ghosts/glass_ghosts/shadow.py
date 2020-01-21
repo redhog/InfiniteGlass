@@ -70,6 +70,17 @@ class Shadow(object):
                 InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
                 window[key] = self.properties[key]
 
+    def format_pair(self, name, value, sep=b"/"):
+        pattern = ("{%s}" % name).encode("utf-8")
+        if not isinstance(value, (array.array, list, tuple)):
+            value = [value]
+        if value and isinstance(value[0], bytes):
+            value = sep.join(item for item in value)
+        else:
+            value = sep.join(str(item).encode("utf-8")
+                              for item in value)
+        return pattern, value
+    
     def activate(self):
         InfiniteGlass.DEBUG("shadow", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
         for name, value in self.properties.items():
@@ -80,19 +91,29 @@ class Shadow(object):
 
         with pkg_resources.resource_stream("glass_ghosts", "ghost.svg") as f:
             ghost_image = f.read()
+        
         for name, value in self.properties.items():
-            key = ("{%s}" % name).encode("utf-8")
-            if not isinstance(value, (array.array, list, tuple)):
-                value = [value]
-            if value and isinstance(value[0], bytes):
-                value = b'/'.join(item for item in value)
-            else:
-                value = b'/'.join(str(item).encode("utf-8")
-                                  for item in value)
-            if key in ghost_image:
-                ghost_image = ghost_image.replace(key, value)
-                self.window["IG_CONTENT"] = ("IG_SVG", ghost_image)
-                self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
+            pattern, value = self.format_pair(name, value)
+            if pattern in ghost_image:
+                ghost_image = ghost_image.replace(pattern, value)
+
+        pattern, value = self.format_pair("key", self.key())
+        if pattern in ghost_image:
+            ghost_image = ghost_image.replace(pattern, value)
+
+        if "SM_CLIENT_ID" in self.properties:
+            if self.properties["SM_CLIENT_ID"] in self.manager.clients:
+                for name, value in self.manager.clients[self.properties["SM_CLIENT_ID"]].properties.items():
+                    pattern, value = self.format_pair(name, value[1], b" ")
+                    if pattern in ghost_image:
+                        ghost_image = ghost_image.replace(pattern, value)
+        else:
+            pattern, value = self.format_pair("SM_CLIENT_ID", "No state saved")
+            if pattern in ghost_image:
+                ghost_image = ghost_image.replace(pattern, value)
+                    
+        self.window["IG_CONTENT"] = ("IG_SVG", ghost_image)
+        self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
         self.apply(self.window, type="shadow_set")
 
         @self.window.on(mask="StructureNotifyMask")
