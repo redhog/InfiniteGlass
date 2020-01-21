@@ -1,3 +1,4 @@
+import InfiniteGlass.debug
 import Xlib.X
 import glass_ghosts.shadow
 import glass_ghosts.window
@@ -29,8 +30,10 @@ class Components(object):
             
     def sigchild(self, signum, frame):
         if signum == signal.SIGCHLD:
+            InfiniteGlass.debug.DEBUG("SIGCHLD", "Received SIGCHLD\n")
             pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
             while pid != 0:
+                InfiniteGlass.debug.DEBUG("SIGCHLD", "Reaped pid=%s, exitcode=%s, ru_child=%s\n" % (pid, exitcode, ru_child))
                 if (    pid in self.components_by_pid
                     and not exitcode == 0
                     and (   not os.WIFSIGNALED(exitcode)
@@ -42,7 +45,7 @@ class Components(object):
                 pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
             
     def start_component(self, spec):
-        print("Starting %s" % json.dumps(spec))
+        InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (spec["name"], " ".join(spec["command"])))
         if spec["name"] in self.components:
             pid = self.components[spec["name"]]["pid"]
             del self.components_by_pid[pid]
