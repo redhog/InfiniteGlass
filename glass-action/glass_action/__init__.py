@@ -70,6 +70,34 @@ def send(ctx, window, mask, event):
             send_msg(display, window, mask, event)
             sys.exit(0)
 
+
+@main.command()
+@click.option('--window', default="click")
+@click.option('--limit', default=0)
+@click.pass_context
+def inspect(ctx, window, limit):
+    with InfiniteGlass.Display() as display:
+        def inspect(win):
+            if isinstance(win, str):
+                if win == "root":
+                    win = display.root
+                else:
+                    win = display.create_resource_object("window", int(win))
+            for key, value in win.items():
+                value = str(value)
+                if limit > 0:
+                    value = value[:limit]
+                print("%s=%s" % (key, value))
+        if window == "click":
+            @get_pointer_window(display)
+            def with_win(window):
+                inspect(window)
+                sys.exit(0)
+        else:
+            inspect(window)
+            sys.exit(0)
+
+            
 @main.command()
 @click.argument("name")
 @click.argument("animation")
