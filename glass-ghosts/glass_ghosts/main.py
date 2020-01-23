@@ -6,6 +6,11 @@ import traceback
 import signal
 import os
 
+if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
+    import rpdb
+    rpdb.handle_trap()
+    rpdb.handle_trap()
+
 def main2():
     manager = None
     try:

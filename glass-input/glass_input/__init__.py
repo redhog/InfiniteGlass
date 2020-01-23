@@ -10,6 +10,11 @@ import json
 import sys
 from . import mode
 
+if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
+    import rpdb
+    rpdb.handle_trap()
+    rpdb.handle_trap()
+
 def main2(*arg, **kw):
     mode.load_config()
 

@@ -13,7 +13,8 @@ setuptools.setup(name='glass-ghosts',
       packages=setuptools.find_packages(),
       install_requires=[
           "pyyaml",
-          "python-slugify"
+          "python-slugify",
+          "rpdb"
       ],
       entry_points={
           'console_scripts': [

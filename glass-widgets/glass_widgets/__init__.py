@@ -6,6 +6,11 @@ import os.path
 import yaml
 import json
 
+if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
+    import rpdb
+    rpdb.handle_trap()
+    rpdb.handle_trap()
+
 def main(*arg, **kw):
     configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.json"))
     with open(configpath) as f:
