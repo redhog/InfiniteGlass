@@ -44,7 +44,6 @@ extern Item *root_item;
 extern Bool init_items();
 
 extern Item *item_create(Window window);
-extern Item *item_get(int id);
 extern void item_add(Item *item);
 extern void item_remove(Item *item);
 
