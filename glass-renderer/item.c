@@ -11,7 +11,6 @@
 #include <X11/Xatom.h>
 
 List *items_all = NULL;
-size_t items_all_id = 0;
 Item *root_item = NULL;
 
 Atom IG_DRAW_TYPE;
@@ -137,7 +136,7 @@ void item_draw(Rendering *rendering) {
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
     
-    glUniform1f(shader->window_id_attr, (float) rendering->item->id / (float) INT_MAX);
+    glUniform1f(shader->window_id_attr, (float) rendering->item->window / (float) INT_MAX);
     glUniform1i(shader->window_attr, rendering->item->window);
     
     GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, rendering->shader->name_str);
@@ -228,8 +227,8 @@ void item_print(Item *item) {
   if (item->prop_coords) {
     coords = (float *) item->prop_coords->data;
   }
-  printf("item(%d):%s [%ld,%ld] @ %f,%f,%f,%f\n",
-         item->id,
+  printf("item(%ld):%s [%ld,%ld] @ %f,%f,%f,%f\n",
+         item->window,
          item->is_mapped ? "" : " invisible",
          width,
          height,
@@ -252,19 +251,8 @@ Item *item_create(Window window) {
   return item;
 }
 
-Item *item_get(int id) {
-  if (items_all) {
-    for (size_t idx = 0; idx < items_all->count; idx++) {
-      Item *item = (Item *) items_all->entries[idx];
-      if (item->id == id) return item;
-    }
-  }
-  return NULL;
-}
-
 void item_add(Item *item) {
   if (!items_all) items_all = list_create();
-  item->id = ++items_all_id;  
   list_append(items_all, (void *) item);
 }
 

@@ -16,7 +16,6 @@ struct ItemStruct;
 typedef struct ItemStruct Item;
 
 struct ItemStruct {
-  int id;
   Window window;
   XWindowAttributes attr;
  

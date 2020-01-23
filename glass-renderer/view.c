@@ -120,7 +120,7 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   *winy = 0;
   *returnitem = NULL;
   if (data[2] != 0.0) {
-    *returnitem = item_get(data[2] * (float) INT_MAX);
+   *returnitem = item_get_from_window((Window) (data[2] * (float) INT_MAX), False);
     if (*returnitem && (*returnitem)->prop_size) {
       unsigned long width = (*returnitem)->prop_size->values.dwords[0];
       unsigned long height = (*returnitem)->prop_size->values.dwords[1];
@@ -130,7 +130,7 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
     }
   }
   if (*returnitem) {
-    DEBUG("pick", "  -> %d,%d,%d\n", (*returnitem)->id, *winx, *winy);
+    DEBUG("pick", "  -> %d,%d,%d\n", (*returnitem)->window, *winx, *winy);
   } else {
     DEBUG("pick", "  -> NULL\n");
   }
