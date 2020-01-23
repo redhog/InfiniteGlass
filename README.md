@@ -5,6 +5,10 @@ desktop, infinite zoom and infinite virtual window pixel resolution.
 
 [![Screenshot](docs/images/InfiniteGlass-2019-11-09-2.gif)](https://www.youtube.com/watch?v=E8f2KwgvxK4)
 
+Videos:
+* [2020 01 21 1](https://www.youtube.com/watch?v=d6oQAOMXReU)
+* [2019 11 09 2](https://www.youtube.com/watch?v=E8f2KwgvxK4)
+
 Features:
 
 * Windows are glued to an infinite desktop to some coordinates and size
@@ -27,8 +31,29 @@ Compile and run with "make"
 * [Debugging](DEBUGGING.md)
 * [References](REFERENCES.md)
 
+# Installation
+
+To install InfiniteGlass on your machine
+
+    sudo make install
+
+or, if you want to be able to edit the python files in in place without rerunning the install command:
+
+    sudo make devinstall
+   
+Note that this does not differ from a the above make install with regards to how the non-python binaries are installed.
+
+Once installed, you should be able to select InfiniteGlass among the available sessions when logging in.
+
+It is also possible to try the window manager inside a window using the Xephyr X server, without installing anything. To do so, simply run
+
+    make
+
+Whichever method you use, the first time you run the window manager, a set of default config files will be added to your ~/.config/glass directory. These files can be safely edited, but will be re-instated if deleted.
+
 # License
 
-GNU GPL v3, see the file LICENSE
+GNU GPL v3, see the file LICENSE for details
 
 The file xevent.c has a different, more permissible license, see the top of the file for details.
+The file coastline50.geojson has a different, more permissible license, see coastline50.geojson.LICENSE for details.
