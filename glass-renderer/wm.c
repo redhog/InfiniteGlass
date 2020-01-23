@@ -178,7 +178,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           } else {
             XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
             DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-            item->type->update((Item *) item);
+            item_update((Item *) item);
           }
         }
         XFree(prop_return);
@@ -226,7 +226,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         Item *item;
 
         pick(root_x, root_y, &winx, &winy, &item);
-        if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != IG_LAYER_MENU) && item_isinstance(item, &item_type_base)) {
+        if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != IG_LAYER_MENU)) {
           XWindowChanges values;
           values.x = root_x - winx;
           values.y = root_y - winy;
@@ -280,7 +280,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         long arr[2] = {width, height};
         XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 
-        item->type->update((Item *) item);
+        item_update((Item *) item);
         GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
         trigger_draw();
       } else {
@@ -330,7 +330,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
       long arr[2] = {event->xconfigure.width, event->xconfigure.height};
       XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-      item->type->update((Item *) item);
+      item_update((Item *) item);
       trigger_draw();
     }
     // FIXME: Update width/height regardless of window type...
@@ -343,7 +343,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     Item * item = item_get_from_window(event->xreparent.window, False);
     if (item) {
       if (event->xreparent.parent == root) {
-        item->type->update(item);
+        item_update(item);
       } else {
         item_remove(item);
       }
@@ -354,7 +354,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       DEBUG("event.map", "MapNotify %ld\n", event->xmap.window);
       Item *item = item_get_from_window(event->xmap.window, True);
       item->is_mapped = True;
-      item->type->update(item);
+      item_update(item);
       trigger_draw();
 
       char *window_name;
@@ -384,7 +384,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     printf("DEBUG LIST ITEMS\n");
     for (size_t idx = 0; idx < items_all->count; idx++) {
       Item *item = (Item *) items_all->entries[idx];
-      item->type->print(item);
+      item_print(item);
     }
     printf("DEBUG LIST ITEMS END\n");
   } else if (event->type == ClientMessage && event->xclient.message_type == IG_EXIT) {

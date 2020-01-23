@@ -64,11 +64,11 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
       try();
       rendering.item = item;
       rendering.texture_unit = 0;
-      rendering.shader = item->type->get_shader(item);
+      rendering.shader = item_get_shader(item);
       if (!rendering.shader) continue;
       glUseProgram(rendering.shader->program);
       shader_reset_uniforms(rendering.shader);
-      item->type->draw(&rendering);
+      item_draw(&rendering);
       XErrorEvent e;
       if (!catch(&e)) {
         if (   (   e.error_code == BadWindow

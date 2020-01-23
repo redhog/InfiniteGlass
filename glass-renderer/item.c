@@ -42,14 +42,12 @@ Bool init_items() {
 }
 
 
-void item_type_base_constructor(Item *item, void *args) {
+void item_constructor(Item *item, Window window) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return = NULL;
-
-  Window window = *(Window *) args;
   
   item->window = window;
   item->properties = NULL;
@@ -110,10 +108,10 @@ void item_type_base_constructor(Item *item, void *args) {
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
 }
-void item_type_base_destructor(Item *item) {
+void item_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
-void item_type_base_draw(Rendering *rendering) {
+void item_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
     Shader *shader = rendering->shader;
@@ -175,7 +173,8 @@ void item_type_base_draw(Rendering *rendering) {
     }
   }
 }
-void item_type_base_update(Item *item) {
+
+void item_update(Item *item) {
   if (item->window == root) return;
   if (!item->is_mapped) return;
   item->_is_mapped = item->is_mapped;
@@ -212,13 +211,13 @@ void item_type_base_update(Item *item) {
   x_pop_error_context();  
 }
 
-Shader *item_type_base_get_shader(Item *item) {
+Shader *item_get_shader(Item *item) {
   Atom shader = IG_SHADER_DEFAULT;
   if (item->prop_shader) shader = item->prop_shader->values.dwords[0];
   return shader_find(shaders, shader);
 }
 
-void item_type_base_print(Item *item) {
+void item_print(Item *item) {
   float _coords[] = {-1.,-1.,-1.,-1.};
   float *coords = _coords;
   long width = -1, height = -1;
@@ -229,8 +228,7 @@ void item_type_base_print(Item *item) {
   if (item->prop_coords) {
     coords = (float *) item->prop_coords->data;
   }
-  printf("%s(%d):%s [%ld,%ld] @ %f,%f,%f,%f\n",
-         item->type->name,
+  printf("item(%d):%s [%ld,%ld] @ %f,%f,%f,%f\n",
          item->id,
          item->is_mapped ? "" : " invisible",
          width,
@@ -243,33 +241,14 @@ void item_type_base_print(Item *item) {
   properties_print(item->properties, stderr);
 }
 
-ItemType item_type_base = {
-  NULL,
-  sizeof(Item),
-  "ItemBase",
-  &item_type_base_constructor,
-  &item_type_base_destructor,
-  &item_type_base_draw,
-  &item_type_base_update,
-  &item_type_base_get_shader,
-  &item_type_base_print
-};
-
-Bool item_isinstance(Item *item, ItemType *type) {
-  ItemType *item_type;
-  for (item_type = item->type; item_type && item_type != type; item_type = item_type->base);
-  return !!item_type;
-}
-
-Item *item_create(ItemType *type, void *args) {
-  Item *item = (Item *) malloc(type->size);
+Item *item_create(Window window) {
+  Item *item = (Item *) malloc(sizeof(Item));
 
   item->is_mapped = False;
   item->_is_mapped = False;
-  item->type = type;
-  item->type->init(item, args);
+  item_constructor(item, window);
   item_add(item);
-  item->type->update(item);
+  item_update(item);
   return item;
 }
 
@@ -291,7 +270,7 @@ void item_add(Item *item) {
 
 void item_remove(Item *item) {
   list_remove(items_all, (void *) item);
-  item->type->destroy(item);
+  item_destructor(item);
 }
 
 void item_type_window_update_space_pos_from_window(Item *item) {
@@ -360,7 +339,7 @@ Item *item_get_from_window(Window window, int create) {
   if (!create) return NULL;
   
   DEBUG("window.add", "Adding window %ld\n", window);
-  return item_create(&item_type_base, &window);
+  return item_create(window);
 }
 
 
