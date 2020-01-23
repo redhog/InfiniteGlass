@@ -19,13 +19,18 @@ class Server(pysmlib.server.Server):
         
         def accepter(listener):
             InfiniteGlass.DEBUG("session", "LISTENING TO %s @ %s\n" % (listener, listener.IceGetListenConnectionNumber()))
-            self.display.mainloop.add(listener.IceGetListenConnectionNumber(), lambda fd: self.accept_connection(listener))
+            fd = listener.IceGetListenConnectionNumber()
+            os.set_blocking(fd, False)
+            self.display.mainloop.add(fd, lambda fd: self.accept_connection(listener))
 
         for listener in self.listeners:
             accepter(listener)
 
     def accept_connection(self, listener):
-        conn = listener.IceAcceptConnection()
+        try:
+            conn = listener.IceAcceptConnection()
+        except:
+            return
         InfiniteGlass.DEBUG("session", "ACCEPTED CONNECTION %s %s\n" % (listener, conn))
         def process(fd):
             InfiniteGlass.DEBUG("session", "PROCESS %s %s\n" % (fd, conn))
