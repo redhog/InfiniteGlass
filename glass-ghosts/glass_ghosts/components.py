@@ -42,7 +42,9 @@ class Components(object):
                     name = self.components_by_pid.pop(pid)
                     spec = self.components.pop(name)["component"]
                     self.start_component(spec)
+                InfiniteGlass.debug.DEBUG("SIGCHLD", "Checking for more children in the same batch...\n")
                 pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
+            InfiniteGlass.debug.DEBUG("SIGCHLD", "Done\n")
             
     def start_component(self, spec):
         InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (spec["name"], " ".join(spec["command"])))
