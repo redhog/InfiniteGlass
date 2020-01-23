@@ -54,7 +54,7 @@ extern void item_update(Item *item);
 extern Shader *item_get_shader(Item *item);
 extern void item_print(Item *);
 
-extern void item_type_window_update_space_pos_from_window(Item *item);
+extern void item_update_space_pos_from_window(Item *item);
 extern Item *item_get_from_window(Window window, int create);
 extern void items_get_from_toplevel_windows();
 

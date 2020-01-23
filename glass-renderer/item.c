@@ -102,7 +102,7 @@ void item_constructor(Item *item, Window window) {
   item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);
   
   if (window != root) {
-    item_type_window_update_space_pos_from_window(item);
+    item_update_space_pos_from_window(item);
   }
   
   item->window_pixmap = 0;
@@ -273,7 +273,7 @@ void item_remove(Item *item) {
   item_destructor(item);
 }
 
-void item_type_window_update_space_pos_from_window(Item *item) {
+void item_update_space_pos_from_window(Item *item) {
   if (item->window == root) return;
   
   XGetWindowAttributes(display, item->window, &item->attr);
