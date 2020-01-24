@@ -21,6 +21,8 @@ typedef struct PropertyProgramCacheStruct PropertyProgramCache;
 struct PropertyStruct;
 typedef struct PropertyStruct Property;
 
+struct PropertyTypeHandlerT;
+typedef struct PropertyTypeHandlerT PropertyTypeHandler;
 
 
 struct PropertyProgramCacheStruct {
@@ -48,6 +50,7 @@ struct PropertyStruct {
   } values;
   PropertyProgramCache programs[PROGRAM_CACHE_SIZE];
   char *data;
+  PropertyTypeHandler *type_handler;
 };
 
 extern Property *property_allocate(Properties *properties, Atom name);
@@ -73,9 +76,6 @@ extern void properties_free(Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_print(Properties *properties, FILE *fp);
 extern Property *properties_find(Properties *properties, Atom name);
-
-struct PropertyTypeHandlerT;
-typedef struct PropertyTypeHandlerT PropertyTypeHandler;
 
 typedef void PropertyInit(PropertyTypeHandler *prop);
 typedef void PropertyLoad(Property *prop);

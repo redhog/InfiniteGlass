@@ -8,6 +8,7 @@ Property *property_allocate(Properties *properties, Atom name) {
   prop->window = properties->window;
   prop->name = name;
   prop->name_str = XGetAtomName(display, prop->name);
+  prop->type = None;
   prop->values.bytes = NULL;
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     prop->programs[i].program = -1;
@@ -18,6 +19,7 @@ Property *property_allocate(Properties *properties, Atom name) {
     prop->programs[i].buffer = -1;
   }
   prop->data = NULL;
+  prop->type_handler = NULL;
   return prop;
 }
 
@@ -26,6 +28,7 @@ Bool property_load(Property *prop) {
   unsigned char *prop_return;
 
   unsigned char *old = prop->values.bytes;
+  int old_type = prop->type;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
   prop->values.bytes = NULL;
@@ -34,6 +37,7 @@ Bool property_load(Property *prop) {
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (prop->type == None) {
+    if (prop->type_handler) prop->type_handler->free(prop);
     if (old) { XFree(old); return True; }
     return False;
   }
@@ -43,9 +47,9 @@ Bool property_load(Property *prop) {
 
   if (old) XFree(old);
   if (!changed) return False;
-  
-  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
-  if (type) type->load(prop);
+
+  if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
+  if (prop->type_handler) prop->type_handler->load(prop);
   if (DEBUG_ENABLED("prop.changed")) {
     DEBUG("prop.changed", "");
     property_print(prop, stderr);
@@ -55,10 +59,9 @@ Bool property_load(Property *prop) {
 }
 
 void property_free(Property *prop) {
-  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
-  if (type) type->free(prop);
+  if (prop->type_handler) prop->type_handler->free(prop);
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
-    if (type) type->free_program(prop, i);
+    if (prop->type_handler) prop->type_handler->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
     if (prop->programs[i].buffer != -1) glDeleteBuffers(1, &prop->programs[i].buffer);
   }
@@ -70,7 +73,7 @@ void property_free(Property *prop) {
 void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
-  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
+  PropertyTypeHandler *type = prop->type_handler;
   if (!type) return;
   
   if (prop_cache->program != cache->program || prop_cache->prefix != cache->prefix) {
@@ -101,7 +104,7 @@ void property_to_gl(Property *prop, Rendering *rendering) {
 }
 
 void property_print(Property *prop, FILE *fp) {
-  PropertyTypeHandler *type = property_type_get(prop->type, prop->name);
+  PropertyTypeHandler *type = prop->type_handler;
   if (type) {
     type->print(prop, fp);
   } else {
