@@ -1,9 +1,15 @@
+// Only for gmon out dlsym stuff
+#define _GNU_SOURCE 
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
 #include <sys/select.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <dlfcn.h>
 
 #include "xapi.h"
 #include "xevent.h"
@@ -28,6 +34,7 @@
 #include <SOIL/SOIL.h>
 #include <backtrace.h>
 #include <math.h>
+
 
 struct backtrace_state *trace_state;
 
@@ -407,7 +414,20 @@ void draw_timeout_handler_function(TimeoutHandler *handler, struct timeval *curr
   cycle_draw();
 }
 
+
+void exit_saving_profile_info(int sig) {
+  fprintf(stderr, "Exiting on SIGUSR1\n");
+  void (*_mcleanup)(void);
+  _mcleanup = (void (*)(void)) dlsym(RTLD_DEFAULT, "_mcleanup");
+  if (_mcleanup == NULL)
+    fprintf(stderr, "Unable to find gprof exit hook\n");
+  else _mcleanup();
+  _exit(0);
+}
+
 int main() {
+  signal(SIGUSR1, exit_saving_profile_info);
+ 
   trace_state = backtrace_create_state(NULL, 0, NULL, NULL);
 // backtrace_print (trace_state, 0, stdout);
   
