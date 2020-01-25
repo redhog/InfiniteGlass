@@ -31,11 +31,20 @@ void property_int_print(Property *prop, FILE *fp) {
   }
   fprintf(fp, "\n");
 }
-void property_int_load_program(Property *prop, Rendering *rendering) {
+void property_int_load_program_none(Property *prop, Rendering *rendering) {}
+void property_int_load_program_print(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   DEBUG("prop", "%ld[%ld].%s %s (int) [%d]\n",
         prop->window, prop_cache->program, prop_cache->name_str,
         (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
+}
+void property_int_load_program(Property *prop, Rendering *rendering) {
+  if (DEBUG_ENABLED("prop")) {
+    property_int.load_program = &property_int_load_program_print;
+    property_int.load_program(prop, rendering);
+  } else {
+    property_int.load_program = &property_int_load_program_none;
+  }
 }
 void property_int_free_program(Property *prop, size_t index) {
 }
