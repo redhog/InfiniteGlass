@@ -49,6 +49,11 @@ def main(*arg, **kw):
                 with pkg_resources.resource_stream("glass_theme", "shader_%s_%s.glsl" % (shader, part)) as f:
                     display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = f.read()
         display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
+
+
+        if False:
+            display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
+            return
         
         geom = display.root.get_geometry()
         height = float(geom.height) / float(geom.width)
