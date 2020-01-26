@@ -135,9 +135,9 @@ void item_draw(Rendering *rendering) {
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
-    
-    glUniform1f(shader->window_id_attr, (float) rendering->item->window / (float) INT_MAX);
-    glUniform1i(shader->window_attr, rendering->item->window);
+
+    DEBUG("setwin", "%ld\n", rendering->item->window);
+    glUniform1i(shader->window_id_attr, rendering->item->window);
     
     GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, rendering->shader->name_str);
     

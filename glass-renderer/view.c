@@ -105,6 +105,10 @@ void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
 void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
   GL_CHECK_ERROR("view_draw_picking1", "%s", XGetAtomName(display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+  glEnablei(GL_BLEND, 0);
+  glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+  glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
   view->picking = 1;
   view_abstract_draw(view, items, filter);
   GL_CHECK_ERROR("view_draw_picking2", "%s", XGetAtomName(display, view->name));
@@ -112,6 +116,7 @@ void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
   
 void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **returnitem) {
   float data[4];
+  Window window = None;
   memset(data, 0, sizeof(data));
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   GL_CHECK_ERROR("pick2", "%s", XGetAtomName(display, view->name));
@@ -119,8 +124,9 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   *winx = 0;
   *winy = 0;
   *returnitem = NULL;
-  if (data[2] != 0.0) {
-   *returnitem = item_get_from_window((Window) (data[2] * (float) INT_MAX), False);
+  if (data[2] >= 0.0) {
+   window = (Window) ((((int) data[2]) << 16) + (int) data[3]);
+   *returnitem = item_get_from_window(window, False);
     if (*returnitem && (*returnitem)->prop_size) {
       unsigned long width = (*returnitem)->prop_size->values.dwords[0];
       unsigned long height = (*returnitem)->prop_size->values.dwords[1];
@@ -129,11 +135,7 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
       *winy = (int) (data[1] * height);
     }
   }
-  if (*returnitem) {
-    DEBUG("pick", "  -> %d,%d,%d\n", (*returnitem)->window, *winx, *winy);
-  } else {
-    DEBUG("pick", "  -> NULL\n");
-  }
+  DEBUG("pick", "  -> %d%s,%d,%d\n", window, *returnitem ? "" : "(unknown!)", *winx, *winy);
 }
 
 void view_load_layer(View *view) {

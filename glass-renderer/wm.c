@@ -246,7 +246,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
           DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, item->window, winx, winy);
         } else {
-          DEBUG("position", "Point %d,%d -> NONE\n", event->xmotion.x_root, event->xmotion.y_root);
+          DEBUG("position", "Point %d,%d -> NONE\n", root_x, root_y);
         }
       } else {
         DEBUG("event", "Unknown XGenericEventCookie\n");

@@ -43,7 +43,6 @@ typedef struct {
 
   GLint picking_mode_attr;
   GLint window_id_attr;
-  GLint window_attr;
  
   GLint window_sampler_attr; 
 } Shader;

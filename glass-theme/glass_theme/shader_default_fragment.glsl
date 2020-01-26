@@ -10,8 +10,7 @@ in vec2 px_coord;
 
 uniform ivec2 size;
 uniform int picking_mode;
-uniform float window_id;
-uniform int window;
+uniform int window_id;
 
 uniform int atom_IG_LAYER_MENU;
 uniform int atom__NET_WM_WINDOW_TYPE_NORMAL;
@@ -47,7 +46,7 @@ void draw_border() {
 
   if (IG_LAYER == atom_IG_LAYER_MENU || (_NET_WM_WINDOW_TYPE != 0 &&_NET_WM_WINDOW_TYPE != atom__NET_WM_WINDOW_TYPE_NORMAL)) {
     fragColor = vec4(0., 0., 0., 0.);
-  } else if (root__NET_ACTIVE_WINDOW == window) {
+  } else if (root__NET_ACTIVE_WINDOW == window_id) {
     if ((dist.x == 3 && dist.y < 4) || (dist.y == 3 && dist.x < 4)) {
       fragColor = vec4(0., 0., 0., 1.);
     } else if ((dist.x == 4 && dist.y < 5) || (dist.y == 4 && dist.x < 5)) {
@@ -109,9 +108,9 @@ void main() {
 
   if (picking_mode == 1) {
     if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
-      fragColor = vec4(0.,0.,0.,0.);
+      fragColor = vec4(0.,0.,-1.,-1.);
     } else {
-      fragColor = vec4(scaled_window_coord.x, scaled_window_coord.y, window_id, 1.);
+      fragColor = vec4(scaled_window_coord.x, scaled_window_coord.y, window_id / 65536, window_id - 65536 * (window_id / 65536));
     }
   } else if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
     draw_border();
