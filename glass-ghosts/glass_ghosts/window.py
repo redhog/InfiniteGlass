@@ -12,10 +12,6 @@ class Window(object):
         self.shadow = None
         self.client = None
         self.properties = {}
-        for name in self.window.keys():
-            self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
-        InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
-        self.match()
 
         @self.window.on()
         def PropertyNotify(win, event):
@@ -26,6 +22,7 @@ class Window(object):
                 pass
             else:
                 self.match()
+            InfiniteGlass.DEBUG("setprop", "%s=%s" % (name, self.properties.get(name)))
         self.PropertyNotify = PropertyNotify
 
         @self.window.on(mask="StructureNotifyMask")
@@ -56,6 +53,12 @@ class Window(object):
             self.destroy()
         self.DestroyNotify = DestroyNotify
 
+        for name in self.window.keys():
+            self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
+        InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
+
+        self.match()
+        
     def sleep(self):
         if self.client:
             for conn in self.client.connections.values():
