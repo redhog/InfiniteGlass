@@ -13,6 +13,7 @@ class Client(object):
         self.properties = properties or {}
         self.updatedb()
         self.windows = {}
+        self.shadows = {}
         self.connections = {}
 
     def add_window(self, window):
@@ -52,7 +53,7 @@ class Client(object):
         for name, value in self._properties.items():
             if name not in self.properties:
                 cur.execute("""
-                  delete from shadows where key=? and name=?
+                  delete from clients where key=? and name=?
                 """, (self.client_id, name))
                 self.manager.changes = True
 

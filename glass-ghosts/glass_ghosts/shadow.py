@@ -56,12 +56,20 @@ class Shadow(object):
 
         if key == self.current_key:
             return
+
+        client = self.manager.clients.get(self.properties.get("SM_CLIENT_ID"))
+        
         if self.current_key is not None:
             del self.manager.shadows[self.current_key]
+            if client:
+                del client.shadows[self.current_key]
             InfiniteGlass.DEBUG("shadow", "UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
 
         self.current_key = key
         self.manager.shadows[self.current_key] = self
+
+        if client:
+            client.shadows[self.current_key] = self
 
     def apply(self, window, type="set"):
         InfiniteGlass.DEBUG("shadow", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
@@ -190,7 +198,10 @@ class Shadow(object):
         self.deactivate()
 
         self.manager.shadows.pop(self.key(), None)
-
+        client = self.manager.clients.get(self.properties.get("SM_CLIENT_ID"))
+        if client:
+            client.shadows.pop(self.key(), None)
+        
         if not self.from_config:
             cur = self.manager.dbconn.cursor()
             cur.execute("""

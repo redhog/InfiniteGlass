@@ -37,6 +37,7 @@ class GhostManager(object):
             self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
             self.dbconn.execute("create table clients (key text, name text, value text, primary key (key, name))")
 
+        # Order is important here...
         self.restore_clients()
         self.restore_config_shadows()
         self.restore_shadows()

@@ -101,12 +101,18 @@ class Window(object):
         if self.shadow: return
         key = self.key()
         if key in self.manager.shadows:
-            InfiniteGlass.DEBUG("window", "MATCHING SHADOW window=%s shadow=%s\n" % (self.id, key,))
             self.shadow = self.manager.shadows[key]
+        else:
+            if "SM_CLIENT_ID" in self.properties:
+                client = self.manager.clients[self.properties["SM_CLIENT_ID"]]
+                if len(client.shadows) == 1:
+                    self.shadow = list(client.shadows.values())[0]
+        if self.shadow:
+            InfiniteGlass.DEBUG("window", "MATCHING SHADOW window=%s shadow=%s\n" % (self.id, key,))
             self.shadow.apply(self.window)
             self.shadow.deactivate()
         else:
-            InfiniteGlass.DEBUG("window", "MATCHING window=%s key=%s against SHADOWS %s\n" % (self.id, key, self.manager.shadows.keys()))
+            InfiniteGlass.DEBUG("window", "FAILED MATCHING window=%s key=%s against SHADOWS %s\n" % (self.id, key, self.manager.shadows.keys()))
             
     def match_client(self):
         if self.client: return
