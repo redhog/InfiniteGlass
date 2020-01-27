@@ -295,11 +295,13 @@ void item_update_space_pos_from_window(Item *item) {
       coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
       coords[2] = (v->screen[2] * (float) width) / (float) v->width;
       coords[3] = (v->screen[3] * (float) height) / (float) v->height;
+      DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
     } else {
       coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
       coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
       coords[2] = ((float) (width)) / (float) overlay_attr.width;
       coords[3] = ((float) (height)) / (float) overlay_attr.width;
+      DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
     }
 
     if (item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == IG_LAYER_MENU) {

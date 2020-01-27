@@ -153,7 +153,8 @@ class Shadow(object):
                 pass
             else:
                 self.update_key()
-
+            InfiniteGlass.DEBUG("setprop", "%s=%s" % (name, self.properties.get(name)))
+            
         @self.window.on()
         def ButtonPress(win, event):
             if "SM_CLIENT_ID" not in self.properties: return
