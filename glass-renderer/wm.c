@@ -31,7 +31,6 @@
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
 #include <X11/extensions/XInput2.h>
-#include <SOIL/SOIL.h>
 #include <backtrace.h>
 #include <math.h>
 
