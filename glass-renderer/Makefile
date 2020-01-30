@@ -1,11 +1,17 @@
 CC=gcc
 PACKAGES=librsvg-2.0 pangocairo cairo xi x11 gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
 CFLAGS=-rdynamic -g -ggdb $(shell pkg-config --cflags $(PACKAGES)) -O0 -Wall $(EXTRA_CFLAGS)
-LIBS:=-lbacktrace -ldl $(shell pkg-config --libs $(PACKAGES))
+LIBS:=-ldl $(shell pkg-config --libs $(PACKAGES))
 
 ifeq ($(GLASS_DMALLOC),)
 else
   LIBS:=$(LIBS) -ldmalloc
+endif
+
+ifndef GLASS_USE_BACKTRACE
+else
+  LIBS:=$(LIBS) -lbacktrace
+  CFLAGS:=$(CFLAGS) -DUSE_BACKTRACE
 endif
 
 BUILD=../build
