@@ -154,7 +154,8 @@ void properties_free(Properties *properties) {
 
 int properties_get_program_cache_idx(Rendering *rendering) {
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
-    if (rendering->properties->programs[i].program == rendering->shader->program) {
+    if (   rendering->properties->programs[i].program == rendering->shader->program
+        && rendering->properties->programs[i].prefix == rendering->properties_prefix) {
       return i;
     }
   }
