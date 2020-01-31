@@ -34,6 +34,10 @@ Compile and run with "make"
 
 # Installation
 
+Tested on: Ubuntu-MATE 18.04 LTS Bionic Beaver.
+
+Requires OpenGL version 3.0 or higher with support for GLSL 3.30, and pretty much all modern X extensions, including their development headers.
+
 To install InfiniteGlass on your machine
 
     sudo make install
