@@ -90,3 +90,26 @@ class RendererTest(unittest.TestCase):
             self.terminal1.wait()
             self.test_done = True
             
+    def test_multiterminal_view_animation(self):
+        self.terminals = [subprocess.Popen(["xterm"]) for x in range(0, 40)]
+        self.terminals_by_pid = {t.pid:(idx, t) for idx, t in enumerate(self.terminals)}
+        
+        @self.display.root.on(mask="SubstructureNotifyMask")
+        def MapNotify(win, event):
+            pid = event.window["_NET_WM_PID"]
+            idx, t = self.terminals_by_pid[pid]
+            event.window["IG_COORDS"] = [2. + 0.1 * (idx % 10), 1.5 + 0.1 * (idx // 10), 0.09, 0.09]
+            self.display.flush()
+        
+        @self.display.mainloop.add_timeout(time.time() + 12)
+        def done(timestamp):
+            for t in self.terminals:
+                os.kill(t.pid, signal.SIGKILL)
+                t.wait()
+            self.test_done = True
+            
+        @self.display.mainloop.add_interval(0.03)
+        def step(timestamp, idx):
+            v = 2*math.pi * idx / 100
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = [math.cos(v), math.sin(v), 4.0, 0.0]
+            self.display.flush()
