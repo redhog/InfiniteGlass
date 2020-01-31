@@ -5,6 +5,7 @@ import signal
 import InfiniteGlass
 import glass_theme
 import time
+import math
 
 class RendererTest(unittest.TestCase):
     @classmethod
@@ -39,7 +40,47 @@ class RendererTest(unittest.TestCase):
 
     def test_terminal1(self):
         self.terminal1 = subprocess.Popen(["xterm"])
-
+        
         @self.display.mainloop.add_timeout(time.time() + 3)
         def done(timestamp):
             self.test_done = True
+
+
+    def test_terminal_view_animation(self):
+        self.terminal1 = subprocess.Popen(["xterm"])
+
+        @self.display.root.on(mask="SubstructureNotifyMask")
+        def MapNotify(win, event):
+            event.window["IG_COORDS"] = [2.0, 1.5, 0.5, 0.5]
+            self.display.flush()
+        
+        @self.display.mainloop.add_timeout(time.time() + 6)
+        def done(timestamp):
+            self.test_done = True
+            
+        @self.display.mainloop.add_interval(0.03)
+        def step(timestamp, idx):
+            v = 2*math.pi * idx / 100
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = [math.cos(v), math.sin(v), 4.0, 0.0]
+            self.display.flush()
+
+    def test_terminal_coords_animation(self):
+        self.terminal1 = subprocess.Popen(["xterm"])
+
+        self.display.root["IG_VIEW_DESKTOP_VIEW"] = [0., 0., 4.0, 0.0]
+
+        
+        @self.display.root.on(mask="SubstructureNotifyMask")
+        def MapNotify(win, event):
+            window = event.window
+            
+            @self.display.mainloop.add_interval(0.03)
+            def step(timestamp, idx):
+                v = 2*math.pi * idx / 100
+                window["IG_COORDS"] = [1.5 + math.cos(v), 1.5 + math.sin(v), 0.5, 0.5]
+                self.display.flush()
+        
+        @self.display.mainloop.add_timeout(time.time() + 6)
+        def done(timestamp):
+            self.test_done = True
+            
