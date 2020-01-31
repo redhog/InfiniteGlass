@@ -70,35 +70,40 @@ void property_free(Property *prop) {
   free(prop);
 }
 
+void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache *cache, PropertyProgramCache *prop_cache, PropertyTypeHandler *type) {
+  if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
+  prop_cache->program = cache->program;
+  prop_cache->prefix = cache->prefix;
+  prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
+  strcpy(prop_cache->name_str, cache->prefix);
+  strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
+  prop_cache->uniform = True;
+  prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
+  if (prop_cache->location != -1) {
+    char name[1];
+    glGetActiveUniform(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+  } else {
+    prop_cache->uniform = False;
+    prop_cache->location = glGetAttribLocation(cache->program, prop_cache->name_str);
+    if (prop_cache->location != -1) {
+      char name[1];
+      glGetActiveAttrib(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
+      glCreateBuffers(1, &prop_cache->buffer);
+    }
+  }
+
+  type->load_program(prop, rendering);
+}
+
 void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
   PropertyTypeHandler *type = prop->type_handler;
   if (!type) return;
   
-  if (prop_cache->program != cache->program || prop_cache->prefix != cache->prefix) {
-    if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
-    prop_cache->program = cache->program;
-    prop_cache->prefix = cache->prefix;
-    prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
-    strcpy(prop_cache->name_str, cache->prefix);
-    strcpy(prop_cache->name_str + strlen(cache->prefix), prop->name_str);
-    prop_cache->uniform = True;
-    prop_cache->location = glGetUniformLocation(cache->program, prop_cache->name_str);
-    if (prop_cache->location != -1) {
-      char name[1];
-      glGetActiveUniform(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
-    } else {
-      prop_cache->uniform = False;
-      prop_cache->location = glGetAttribLocation(cache->program, prop_cache->name_str);
-      if (prop_cache->location != -1) {
-        char name[1];
-        glGetActiveAttrib(cache->program, prop_cache->location, 1, NULL, &prop_cache->size, &prop_cache->type, name);
-        glCreateBuffers(1, &prop_cache->buffer);
-      }
-    }
-    
-    type->load_program(prop, rendering);
+  if (   prop_cache->program != cache->program
+      || prop_cache->prefix != cache->prefix) {
+    property_update_gl_cache(prop, rendering, cache, prop_cache, type);
   }
   type->to_gl(prop, rendering);
 }
