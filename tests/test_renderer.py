@@ -43,6 +43,8 @@ class RendererTest(unittest.TestCase):
         
         @self.display.mainloop.add_timeout(time.time() + 3)
         def done(timestamp):
+            os.kill(self.terminal1.pid, signal.SIGKILL)
+            self.terminal1.wait()
             self.test_done = True
 
 
@@ -56,6 +58,8 @@ class RendererTest(unittest.TestCase):
         
         @self.display.mainloop.add_timeout(time.time() + 6)
         def done(timestamp):
+            os.kill(self.terminal1.pid, signal.SIGKILL)
+            self.terminal1.wait()
             self.test_done = True
             
         @self.display.mainloop.add_interval(0.03)
@@ -82,5 +86,7 @@ class RendererTest(unittest.TestCase):
         
         @self.display.mainloop.add_timeout(time.time() + 6)
         def done(timestamp):
+            os.kill(self.terminal1.pid, signal.SIGKILL)
+            self.terminal1.wait()
             self.test_done = True
             
