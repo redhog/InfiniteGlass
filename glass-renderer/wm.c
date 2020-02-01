@@ -129,9 +129,22 @@ int init_picking() {
   glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, overlay_attr.width, overlay_attr.height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    fprintf(stderr, "Unable to create picking framebuffer.\n");
-    return 0;
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  switch(status) {
+    case GL_FRAMEBUFFER_COMPLETE:
+      break;
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      ERROR("init_picking", "Not all framebuffer attachment points are framebuffer attachment complete.\n");
+      return 0;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      ERROR("init_picking", "No images are attached to the framebuffer.\n");
+      return 0;
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      ERROR("init_picking", "The combination of internal formats of the attached images violates an implementation-dependent set of restrictions.\n");
+      return 0;
+    default:
+      ERROR("init_picking", "Unknown error.\n");
+      return 0;
   }
   return 1;
 }
