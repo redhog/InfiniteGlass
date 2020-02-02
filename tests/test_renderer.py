@@ -29,6 +29,7 @@ class RendererTest(unittest.TestCase):
                 time.sleep(0.5)
         glass_theme.setup_views(self.display)
         glass_theme.setup_shaders(self.display)
+        self.display.flush()
         self.test_done = False
         
     def tearDown(self):
@@ -91,7 +92,7 @@ class RendererTest(unittest.TestCase):
             self.test_done = True
             
     def test_multiterminal_view_animation(self):
-        self.terminals = [subprocess.Popen(["xterm"]) for x in range(0, 40)]
+        self.terminals = [subprocess.Popen(["xterm"]) for x in range(0, 100)]
         self.terminals_by_pid = {t.pid:(idx, t) for idx, t in enumerate(self.terminals)}
         
         @self.display.root.on(mask="SubstructureNotifyMask")
@@ -101,7 +102,7 @@ class RendererTest(unittest.TestCase):
             event.window["IG_COORDS"] = [2. + 0.1 * (idx % 10), 1.5 + 0.1 * (idx // 10), 0.09, 0.09]
             self.display.flush()
         
-        @self.display.mainloop.add_timeout(time.time() + 12)
+        @self.display.mainloop.add_timeout(time.time() + 60)
         def done(timestamp):
             for t in self.terminals:
                 os.kill(t.pid, signal.SIGKILL)
