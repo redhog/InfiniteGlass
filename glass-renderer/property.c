@@ -96,10 +96,13 @@ void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache
 }
 
 void property_to_gl(Property *prop, Rendering *rendering) {
-  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
   PropertyTypeHandler *type = prop->type_handler;
   if (!type) return;
+
+  size_t program_cache_idx = rendering->program_cache_idx;
+  
+  PropertyProgramCache *prop_cache = &prop->programs[program_cache_idx];
+  ProgramCache *cache = &rendering->properties->programs[program_cache_idx];
   
   if (   prop_cache->program != cache->program
       || prop_cache->prefix != cache->prefix) {
