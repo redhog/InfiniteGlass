@@ -157,27 +157,34 @@ void properties_free(Properties *properties) {
   free(properties);
 }
 
-int properties_get_program_cache_idx(Rendering *rendering) {
-  for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
-    if (   rendering->properties->programs[i].program == rendering->shader->program
-        && rendering->properties->programs[i].prefix == rendering->properties_prefix) {
-      return i;
+void properties_set_program_cache_idx(Rendering *rendering) {
+  size_t idx;
+  Properties *properties = rendering->properties;
+  
+  for (idx = 0; idx < PROGRAM_CACHE_SIZE; idx++) {
+    if (   properties->programs[idx].program == rendering->shader->program
+        && properties->programs[idx].prefix == rendering->properties_prefix) {
+      rendering->program_cache_idx = idx;
+      return;
     }
   }
-  rendering->properties->programs_pos = (rendering->properties->programs_pos + 1) % PROGRAM_CACHE_SIZE;
-  return rendering->properties->programs_pos;
+  idx = (properties->programs_pos + 1) % PROGRAM_CACHE_SIZE;
+  properties->programs_pos = idx;
+  rendering->program_cache_idx = idx;
+  
+  properties->programs[idx].program = rendering->shader->program;
+  properties->programs[idx].prefix = rendering->properties_prefix;
 }
 
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
   rendering->properties = properties;
   rendering->properties_prefix = prefix;
-  rendering->program_cache_idx = properties_get_program_cache_idx(rendering);
-  properties->programs[rendering->program_cache_idx].program = rendering->shader->program;
-  properties->programs[rendering->program_cache_idx].prefix = prefix;
+  properties_set_program_cache_idx(rendering);
   
   GL_CHECK_ERROR("properties_to_gl", "%ld", properties->window);
+  Property **entries = (Property **) properties->properties->entries;
   for (size_t i = 0; i < properties->properties->count; i++) {
-    Property *prop = (Property *) properties->properties->entries[i];
+    Property *prop = entries[i];
     property_to_gl(prop, rendering);
     GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
   }
