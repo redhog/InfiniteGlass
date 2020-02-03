@@ -10,7 +10,7 @@ void property_atom_free(Property *prop) {}
 void property_atom_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
-  if (prop_cache->uniform) {
+  if (prop_cache->is_uniform) {
     unsigned long *data = prop->values.dwords;
     #define D(idx) ((idx < prop->nitems) ? data[idx] : -1)
     switch (prop_cache->type) {

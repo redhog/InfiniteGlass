@@ -33,7 +33,7 @@ void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
   NetWmIconPropertyData *data = (NetWmIconPropertyData *) prop->data;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   NetWmIconPropertyProgramData *program_data = (NetWmIconPropertyProgramData *) prop_cache->data;
-  if (!prop_cache->uniform || prop_cache->location == -1 || program_data->enabled_location == -1) return;
+  if (!prop_cache->is_uniform || prop_cache->location == -1 || program_data->enabled_location == -1) return;
   
   glUniform1i(program_data->enabled_location, 1);
   glUniform1i(prop_cache->location, rendering->texture_unit);

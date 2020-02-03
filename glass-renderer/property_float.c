@@ -21,7 +21,7 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
   
-  if (prop_cache->uniform) {
+  if (prop_cache->is_uniform) {
     float *data = (float *) prop->data;
     #define D(idx) ((idx < prop->nitems) ? data[idx] : nanf("initial"))
     switch (prop_cache->type) {

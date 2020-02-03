@@ -5,6 +5,7 @@
 #include "glapi.h"
 #include "list.h"
 #include "rendering.h"
+#include "shader.h"
 #include <stdio.h>
 
 #define PROGRAM_CACHE_SIZE 2
@@ -29,7 +30,7 @@ struct PropertyProgramCacheStruct {
   GLint program; 
   char *prefix;
   char *name_str;
-  Bool uniform;
+  Bool is_uniform;
   GLint location;
   GLuint buffer;
   GLint size;
