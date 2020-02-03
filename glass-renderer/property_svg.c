@@ -5,6 +5,7 @@
 #include "glapi.h"
 #include "xapi.h"
 #include "wm.h"
+#include "bitmap.h"
 #include "debug.h"
 #include <librsvg/rsvg.h>
 
@@ -202,6 +203,7 @@ void property_svg_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<svg>\n", prop->window, prop->name_str);
 }
 void property_svg_load_program(Property *prop, Rendering *rendering) {
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx]; 
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
 
   prop_cache->data = malloc(sizeof(SvgPropertyData));
@@ -213,6 +215,9 @@ void property_svg_load_program(Property *prop, Rendering *rendering) {
 
   program_data->texture_location = glGetUniformLocation(prop_cache->program, prop_cache->name_str);
   program_data->transform_location = glGetUniformLocation(prop_cache->program, program_data->transform_str);
+  if (program_data->texture_location != -1) BITMAP_SET(cache->used_uniforms, program_data->texture_location, 1);
+  if (program_data->transform_location != -1) BITMAP_SET(cache->used_uniforms, program_data->transform_location, 1);
+
   char *status = NULL;
   if (program_data->texture_location != -1 && program_data->transform_location != -1) {
     status = "enabled";

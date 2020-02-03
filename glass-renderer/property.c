@@ -94,23 +94,11 @@ void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache
       glCreateBuffers(1, &prop_cache->buffer);
     }
   }
-
-  type->load_program(prop, rendering);
+  if (prop_cache->location != -1) BITMAP_SET(cache->used_uniforms, prop_cache->location, 1);
+  if (type->load_program) type->load_program(prop, rendering);
 }
 
-void property_register_uniforms(Property *prop, Rendering *rendering) {
-  size_t program_cache_idx = rendering->program_cache_idx;
-  
-  PropertyProgramCache *prop_cache = &prop->programs[program_cache_idx];
-  ProgramCache *cache = &rendering->properties->programs[program_cache_idx];
-
-  if (prop_cache->location != -1) {
-    BITMAP_SET(cache->used_uniforms, prop_cache->location, 1);
-  }
-//  type->register_uniforms(prop, rendering);
-}
-
-void property_to_gl(Property *prop, Rendering *rendering) {
+void property_load_program(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
   if (!type) return;
 
@@ -123,6 +111,11 @@ void property_to_gl(Property *prop, Rendering *rendering) {
       || prop_cache->prefix != cache->prefix) {
     property_update_gl_cache(prop, rendering, cache, prop_cache, type);
   }
+}
+
+void property_to_gl(Property *prop, Rendering *rendering) {
+  PropertyTypeHandler *type = prop->type_handler;
+  if (!type) return;
   type->to_gl(prop, rendering);
 }
 
@@ -181,7 +174,7 @@ void properties_free(Properties *properties) {
   free(properties);
 }
 
-void properties_register_uniforms(Rendering *rendering) {
+void properties_load_program(Rendering *rendering) {
   size_t program_cache_idx = rendering->program_cache_idx;  
   ProgramCache *cache = &rendering->properties->programs[program_cache_idx];
 
@@ -189,7 +182,7 @@ void properties_register_uniforms(Rendering *rendering) {
   
   for (size_t i = 0; i < rendering->properties->properties->count; i++) {
     Property *prop = rendering->properties->properties->entries[i];
-    property_register_uniforms(prop, rendering);
+    property_load_program(prop, rendering);
   }  
 }
 
@@ -212,7 +205,7 @@ void properties_set_program_cache_idx(Rendering *rendering) {
   properties->programs[idx].program = rendering->shader->program;
   properties->programs[idx].prefix = rendering->properties_prefix;
   memset(properties->programs[idx].used_uniforms, 0, GL_MAX_UNIFORM_LOCATIONS / 8 + 1);
-  properties_register_uniforms(rendering);
+  properties_load_program(rendering);
 }
 
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
