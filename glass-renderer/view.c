@@ -3,6 +3,7 @@
 #include "error.h"
 #include "list.h"
 #include "item.h"
+#include "wm.h"
 #include "debug.h"
 #include <limits.h>
 #include <math.h>
@@ -55,6 +56,15 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   rendering.shader = NULL;
   rendering.view = view;
   rendering.array_length = 1;
+
+  rendering.texture_unit = 0;
+  for (size_t idx = 0; idx < shaders->count; idx++) {
+    Shader *shader = (Shader *) shaders->entries[idx];
+    rendering.shader = shader;
+    glUseProgram(shader->program);
+    properties_to_gl(root_item->properties, "root_", &rendering);
+  }
+  int texture_unit = rendering.texture_unit;
   
   List *to_delete = NULL;
   if (!items) return;
@@ -63,7 +73,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
     if (!filter || filter(item)) {
       try();
       rendering.item = item;
-      rendering.texture_unit = 0;
+      rendering.texture_unit = texture_unit;
       rendering.shader = item_get_shader(item);
       if (!rendering.shader) continue;
       glUseProgram(rendering.shader->program);

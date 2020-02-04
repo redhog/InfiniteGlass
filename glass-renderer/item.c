@@ -128,8 +128,6 @@ void item_reset_uniforms(Rendering *rendering) {
   unsigned char *used_uniforms = cache->used_uniforms;
   unsigned char *root_used_uniforms = root_cache->used_uniforms;
 
-  shader_reset_uniforms(rendering->shader);
-
   for (size_t i = 0; i*8 < uniforms->count; i++) {
     unsigned char mask = used_uniforms[i] | root_used_uniforms[i];
     for (int j = 0; (j < 8) && (i*8 + j < uniforms->count); j++, mask=mask>>1) {
@@ -158,9 +156,6 @@ void item_draw(Rendering *rendering) {
       rendering->texture_unit++;
     }
 
-    
-    properties_to_gl(root_item->properties, "root_", rendering);
-    GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
