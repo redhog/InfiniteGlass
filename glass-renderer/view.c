@@ -62,6 +62,11 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
     Shader *shader = (Shader *) shaders->entries[idx];
     rendering.shader = shader;
     glUseProgram(shader->program);
+    
+    glUniform1i(shader->picking_mode_attr, view->picking);
+    glUniform4fv(shader->screen_attr, 1, view->screen);
+    glUniform2i(shader->size_attr, view->width, view->height);
+
     properties_to_gl(root_item->properties, "root_", &rendering);
   }
   int texture_unit = rendering.texture_unit;

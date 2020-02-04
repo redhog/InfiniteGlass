@@ -204,7 +204,17 @@ void properties_set_program_cache_idx(Rendering *rendering) {
   properties->programs[idx].shader = rendering->shader;
   properties->programs[idx].program = rendering->shader->program;
   properties->programs[idx].prefix = rendering->properties_prefix;
-  memset(properties->programs[idx].used_uniforms, 0, GL_MAX_UNIFORM_LOCATIONS / 8 + 1);
+
+  unsigned char *used_uniforms = properties->programs[idx].used_uniforms;
+  memset(used_uniforms, 0, GL_MAX_UNIFORM_LOCATIONS / 8 + 1);
+
+  BITMAP_SET(used_uniforms, rendering->shader->screen_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->size_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->border_width_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->picking_mode_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->window_id_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->window_sampler_attr , 1);
+  
   properties_load_program(rendering);
 }
 

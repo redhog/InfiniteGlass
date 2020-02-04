@@ -132,10 +132,6 @@ void item_reset_uniforms(Rendering *rendering) {
     unsigned char mask = used_uniforms[i] | root_used_uniforms[i];
     for (int j = 0; (j < 8) && (i*8 + j < uniforms->count); j++, mask=mask>>1) {
       if (!(mask & 1)) {
-        if (((Uniform *) uniforms->entries[i*8 + j])->location != i*8 +j) {
-          printf("XXXXXXXXXXXXXXXXXX %ld != %d\n", i*8 + j,
-                 ((Uniform *) uniforms->entries[i*8 + j])->location);
-        }
         shader_reset_uniform((Uniform *) uniforms->entries[i*8 + j]);
       }
     }
@@ -159,9 +155,6 @@ void item_draw(Rendering *rendering) {
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
-    glUniform1i(shader->picking_mode_attr, rendering->view->picking);
-    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
-    glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);
