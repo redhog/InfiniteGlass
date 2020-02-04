@@ -7,6 +7,7 @@
 #include <limits.h>
 #include "property.h"
 #include "debug.h"
+#include "list.h"
 #include "rendering.h"
 #include <X11/Xatom.h>
 
@@ -109,6 +110,38 @@ void item_constructor(Item *item, Window window) {
 }
 void item_destructor(Item *item) {
   texture_destroy(&item->window_texture);
+}
+void item_reset_uniforms(Rendering *rendering) {
+  rendering->properties = root_item->properties;
+  rendering->properties_prefix = "root_";
+  properties_set_program_cache_idx(rendering);
+  ProgramCache *root_cache = &root_item->properties->programs[rendering->program_cache_idx];
+
+  rendering->properties = rendering->item->properties;
+  rendering->properties_prefix = "";
+  properties_set_program_cache_idx(rendering);
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
+
+
+  Shader *shader = rendering->shader;
+  List *uniforms = shader->uniforms;
+  unsigned char *used_uniforms = cache->used_uniforms;
+  unsigned char *root_used_uniforms = root_cache->used_uniforms;
+
+  shader_reset_uniforms(rendering->shader);
+
+  for (size_t i = 0; i*8 < uniforms->count; i++) {
+    unsigned char mask = used_uniforms[i] | root_used_uniforms[i];
+    for (int j = 0; (j < 8) && (i*8 + j < uniforms->count); j++, mask=mask>>1) {
+      if (!(mask & 1)) {
+        if (((Uniform *) uniforms->entries[i*8 + j])->location != i*8 +j) {
+          printf("XXXXXXXXXXXXXXXXXX %ld != %d\n", i*8 + j,
+                 ((Uniform *) uniforms->entries[i*8 + j])->location);
+        }
+        shader_reset_uniform((Uniform *) uniforms->entries[i*8 + j]);
+      }
+    }
+  }
 }
 void item_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {

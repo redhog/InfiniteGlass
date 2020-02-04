@@ -48,6 +48,7 @@ extern void item_add(Item *item);
 extern void item_remove(Item *item);
 
 extern void item_draw(Rendering *rendering);
+extern void item_reset_uniforms(Rendering *rendering);
 extern void item_update(Item *item);
 extern Shader *item_get_shader(Item *item);
 extern void item_print(Item *);

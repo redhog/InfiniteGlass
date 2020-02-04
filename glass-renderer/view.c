@@ -67,7 +67,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
       rendering.shader = item_get_shader(item);
       if (!rendering.shader) continue;
       glUseProgram(rendering.shader->program);
-      shader_reset_uniforms(rendering.shader);
+      item_reset_uniforms(&rendering);
       item_draw(&rendering);
       XErrorEvent e;
       if (!catch(&e)) {

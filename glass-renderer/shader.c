@@ -8,6 +8,9 @@
 #include "debug.h"
 #include <math.h>
 
+float initial;
+float initial16[16];
+
 int checkShaderError(char *name, char *part, char *src, GLuint shader) {
   GLint res;
   GLint len;
@@ -40,6 +43,9 @@ Atom IG_SHADERS = -1;
 
 Bool init_shader() {
   IG_SHADERS = XInternAtom(display, "IG_SHADERS", False);
+  initial = nanf("initial");
+  for (int i = 0; i < 16; i++) initial16[i] = initial;
+
   return True;
 }
 
@@ -132,6 +138,8 @@ Shader *shader_loadX(Atom name) {
   glGetProgramiv(shader->program, GL_ACTIVE_UNIFORMS, &active_uniforms_nr);
   for (int i = 0; i < active_uniforms_nr; i++) {
     Uniform *uniform = malloc(sizeof(Uniform));
+    uniform->location = i;
+    
     GLsizei  length;
     glGetActiveUniform(shader->program, i, sizeof(uniform->uniform_name), &length, &uniform->size, &uniform->uniform_type, uniform->uniform_name);
 
@@ -224,33 +232,34 @@ void shader_print(Shader *shader) {
           shader->fragment_src);
 }
 
+void shader_reset_uniform(Uniform *uniform) {
+  if (uniform->type != UNIFORM_PROPERTY) return;
+
+  GL_CHECK_ERROR("reset_uniform1", "%s", uniform->uniform_name);
+  switch(uniform->uniform_type) {
+    case GL_FLOAT: glUniform1f(uniform->location, initial); break;
+    case GL_FLOAT_VEC2: glUniform2f(uniform->location, initial, initial);  break;
+    case GL_FLOAT_VEC3: glUniform3f(uniform->location, initial, initial, initial);  break;
+    case GL_FLOAT_VEC4: glUniform4f(uniform->location, initial, initial, initial, initial);  break;
+    case GL_INT: glUniform1i(uniform->location, 0); break;
+    case GL_INT_VEC2: glUniform2i(uniform->location, 0, 0); break;
+    case GL_INT_VEC3: glUniform3i(uniform->location, 0, 0, 0); break;
+    case GL_INT_VEC4: glUniform4i(uniform->location, 0, 0, 0, 0); break;
+    case GL_BOOL: glUniform1i(uniform->location, 0); break;
+    case GL_BOOL_VEC2: glUniform2i(uniform->location, 0, 0); break;
+    case GL_BOOL_VEC3: glUniform3i(uniform->location, 0, 0, 0); break;
+    case GL_BOOL_VEC4: glUniform4i(uniform->location, 0, 0, 0, 0); break;
+    case GL_FLOAT_MAT2: glUniformMatrix2fv(uniform->location, 1, False, initial16); break;
+    case GL_FLOAT_MAT3: glUniformMatrix3fv(uniform->location, 1, False, initial16); break;
+    case GL_FLOAT_MAT4: glUniformMatrix4fv(uniform->location, 1, False, initial16); break;
+    case GL_SAMPLER_2D: glUniform1i(uniform->location, 0); break;
+    case GL_SAMPLER_CUBE: glUniform1i(uniform->location, 0); break;
+  }
+  GL_CHECK_ERROR("reset_uniform2", "%s", uniform->uniform_name);
+}
+
 void shader_reset_uniforms(Shader *shader) {
-  const float f = nanf("initial");
-  const float fm[16] = {f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f};
   for (size_t i = 0; i < shader->uniforms->count; i++) {
-    Uniform *uniform = (Uniform *) shader->uniforms->entries[i];
-    if (uniform->type != UNIFORM_PROPERTY) continue;
-    
-    GL_CHECK_ERROR("reset_uniforms1", "%s", shader->name_str);
-    switch(uniform->uniform_type) {
-      case GL_FLOAT: glUniform1f(i, f); break;
-      case GL_FLOAT_VEC2: glUniform2f(i, f, f);  break;
-      case GL_FLOAT_VEC3: glUniform3f(i, f, f, f);  break;
-      case GL_FLOAT_VEC4: glUniform4f(i, f, f, f, f);  break;
-      case GL_INT: glUniform1i(i, 0); break;
-      case GL_INT_VEC2: glUniform2i(i, 0, 0); break;
-      case GL_INT_VEC3: glUniform3i(i, 0, 0, 0); break;
-      case GL_INT_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
-      case GL_BOOL: glUniform1i(i, 0); break;
-      case GL_BOOL_VEC2: glUniform2i(i, 0, 0); break;
-      case GL_BOOL_VEC3: glUniform3i(i, 0, 0, 0); break;
-      case GL_BOOL_VEC4: glUniform4i(i, 0, 0, 0, 0); break;
-      case GL_FLOAT_MAT2: glUniformMatrix2fv(i, 1, False, fm); break;
-      case GL_FLOAT_MAT3: glUniformMatrix3fv(i, 1, False, fm); break;
-      case GL_FLOAT_MAT4: glUniformMatrix4fv(i, 1, False, fm); break;
-      case GL_SAMPLER_2D: glUniform1i(i, 0); break;
-      case GL_SAMPLER_CUBE: glUniform1i(i, 0); break;
-    }
-    GL_CHECK_ERROR(uniform->uniform_name, "%s", shader->name_str);
+    shader_reset_uniform((Uniform *) shader->uniforms->entries[i]);
   }
 }
