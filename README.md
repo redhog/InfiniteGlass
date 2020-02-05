@@ -64,6 +64,12 @@ If your Linux distribution does not have the right libraries or versions of libr
 
 Whichever method for running it you use, the first time you run the window manager, a set of default config files will be added to your ~/.config/glass directory. These files can be safely edited, but will be re-instated if deleted.
 
+# Unit- & integration-tests
+
+    make all
+    pip install nose2
+    nose2 -s tests
+
 # License
 
 GNU GPL v3, see the file LICENSE for details
