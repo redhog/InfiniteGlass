@@ -114,3 +114,21 @@ class RendererTest(unittest.TestCase):
             v = 2*math.pi * idx / 100
             self.display.root["IG_VIEW_DESKTOP_VIEW"] = [math.cos(v), math.sin(v), 4.0, 0.0]
             self.display.flush()
+
+    def test_multiwindow_view_animation(self):
+        self.windows = [self.display.root.create_window(map=False, width=1024, height=1024) for x in range(0, 100)]
+        for idx, window in enumerate(self.windows):
+            window["IG_COORDS"] = [2. + 0.1 * (idx % 10), 1.5 + 0.1 * (idx // 10), 0.09, 0.09]
+            window.map()
+        
+        @self.display.mainloop.add_timeout(time.time() + 60)
+        def done(timestamp):
+            self.test_done = True
+            
+        @self.display.mainloop.add_interval(0.03)
+        def step(timestamp, idx):
+            v = 2*math.pi * idx / 100
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = [math.cos(v), math.sin(v), 4.0, 0.0]
+            self.display.flush()
+
+    
