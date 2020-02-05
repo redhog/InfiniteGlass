@@ -274,7 +274,11 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == damage_event + XDamageNotify) {
     DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
     // Subtract all the damage, repairing the window.
-    trigger_draw();
+    Item *item = item_get_from_window(((XDamageNotifyEvent *) event)->drawable, False);
+    if (item) {
+      item_update(item);
+      trigger_draw();
+    }
   } else if (event->type == shape_event + ShapeNotify) {
    //fprintf(stderr, "Received ShapeNotify\n");
    //XShapeEvent *event = (XShapeEvent*) &e;

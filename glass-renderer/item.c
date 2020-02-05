@@ -116,8 +116,6 @@ void item_draw(Rendering *rendering) {
     Shader *shader = rendering->shader;
 
     if (!rendering->view->picking) {
-      texture_from_pixmap(&item->window_texture, item->window_pixmap);
-
       glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
       glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
       glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
