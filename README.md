@@ -50,11 +50,25 @@ Note that this does not differ from a the above make install with regards to how
 
 Once installed, you should be able to select InfiniteGlass among the available sessions when logging in.
 
+# Testing
+
 It is also possible to try the window manager inside a window using the Xephyr X server, without installing anything. To do so, simply run
 
     make
 
-Whichever method you use, the first time you run the window manager, a set of default config files will be added to your ~/.config/glass directory. These files can be safely edited, but will be re-instated if deleted.
+If your Linux distribution does not have the right libraries or versions of libraries (e.g. X extensions, OpenGL version...) easily installable, you can test the same using a docker container! Just run
+
+    ./run-in-docker.sh
+
+# Configuration
+
+Whichever method for running it you use, the first time you run the window manager, a set of default config files will be added to your ~/.config/glass directory. These files can be safely edited, but will be re-instated if deleted.
+
+# Unit- & integration-tests
+
+    make all
+    pip install nose2
+    nose2 -s tests
 
 # License
 
