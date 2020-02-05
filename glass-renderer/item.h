@@ -36,6 +36,8 @@ struct ItemStruct {
  
   Pixmap window_pixmap;
   Texture window_texture;
+
+  int draw_cycles_left;
 };
 
 extern List *items_all;

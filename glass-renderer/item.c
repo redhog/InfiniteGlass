@@ -55,6 +55,7 @@ void item_constructor(Item *item, Window window) {
   item->prop_size = NULL;
   item->prop_coords = NULL;
   item->prop_draw_type = NULL;
+  item->draw_cycles_left = 0;
   
   if (window == root) {
     Atom layer = XInternAtom(display, "IG_LAYER_ROOT", False);
@@ -116,8 +117,11 @@ void item_draw(Rendering *rendering) {
     Shader *shader = rendering->shader;
 
     if (!rendering->view->picking) {
-      texture_from_pixmap(&item->window_texture, item->window_pixmap);
-
+      if (item->draw_cycles_left > 0) {
+        texture_from_pixmap(&item->window_texture, item->window_pixmap);
+        item->draw_cycles_left--;
+      }
+     
       glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
       glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
       glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
