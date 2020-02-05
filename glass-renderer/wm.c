@@ -41,6 +41,8 @@ struct backtrace_state *trace_state;
 #endif
 
 
+#define AUTOMATIC_REDRAWS 10
+
 List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
@@ -82,7 +84,7 @@ void cycle_draw() {
 }
 
 void trigger_draw() {
-  draw_cycles_left = 10;
+  draw_cycles_left = AUTOMATIC_REDRAWS;
   if (!drawn_this_cycle) {
     draw();
     drawn_this_cycle = True;
@@ -276,7 +278,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     // Subtract all the damage, repairing the window.
     Item *item = item_get_from_window(((XDamageNotifyEvent *) event)->drawable, False);
     if (item) {
-      item_update(item);
+      item->draw_cycles_left = AUTOMATIC_REDRAWS;
       trigger_draw();
     }
   } else if (event->type == shape_event + ShapeNotify) {
