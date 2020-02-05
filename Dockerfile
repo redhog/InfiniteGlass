@@ -23,7 +23,7 @@ RUN apt install -y x11-xkb-utils
 RUN apt install -y rofi
 RUN apt install -y xterm
 
-RUN echo Version 1
+RUN echo Version 2
 
 ADD . /InfiniteGlass
 
