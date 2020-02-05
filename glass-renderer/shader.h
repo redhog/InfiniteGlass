@@ -19,6 +19,8 @@ typedef struct {
 } Uniform;
 
 typedef struct {
+  size_t idx;
+ 
   Atom name;
   Atom geometry;
   Atom vertex;

@@ -177,6 +177,7 @@ List *shader_load_all(void) {
   for (int i=0; i < nitems_return; i++) {
     Shader *shader = shader_loadX(((Atom *) prop_return)[i]);
     if (shader) {
+      shader->idx = i;
       list_append(res, (void *) shader);
     }
   }
