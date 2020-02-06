@@ -106,7 +106,7 @@ class Window(object):
         if key in self.manager.shadows:
             self.shadow = self.manager.shadows[key]
         else:
-            if "SM_CLIENT_ID" in self.properties:
+            if "SM_CLIENT_ID" in self.properties and self.properties["SM_CLIENT_ID"] in self.manager.clients:
                 client = self.manager.clients[self.properties["SM_CLIENT_ID"]]
                 if len(client.shadows) == 1:
                     self.shadow = list(client.shadows.values())[0]
