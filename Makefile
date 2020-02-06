@@ -53,16 +53,24 @@ devinstall: install-binaries $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS))
 uninstall: uninstall-binaries $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS))
 
 install-binaries: $(BINARIES)
-	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
 	mkdir -p $(PREFIX)/share/glass
+	mkdir -p $(PREFIX)/bin
+	mkdir -p /usr/share/xsessions
+	mkdir -p /usr/share/applications
+	mkdir -p /etc/emacs/site-start.d
+	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
 	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
 	cp glass.desktop /usr/share/xsessions/glass.desktop
+	cp contrib/glass-chromium-browser.desktop /usr/share/applications/glass-chromium-browser.desktop
+	cp contrib/glass-emacs-xsession.el /etc/emacs/site-start.d/glass-emacs-xsession.el
 
 uninstall-binaries:
 	rm $(PREFIX)/bin/glass-renderer
 	rm -rf $(PREFIX)/share/glass
 	rm $(PREFIX)/bin/glass-startup.sh
 	rm /usr/share/xsessions/glass.desktop
+	rm /usr/share/applications/glass-chromium-browser.desktop
+	rm /etc/emacs/site-start.d/glass-emacs-xsession.el
 
 $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
 	cd $(patsubst install-%,%,$@); python3 setup.py install

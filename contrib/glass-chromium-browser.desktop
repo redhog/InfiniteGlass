@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=Chromium Session
+GenericName=Web Browser
+Comment=Create a new browser session
+Exec=glass-session-wrapper chromium-browser --user-data-dir=~/chrome-sessions/%%(sessionid)s
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=chromium-browser
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml_xml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+Actions=NewWindow;Incognito;TempProfile;

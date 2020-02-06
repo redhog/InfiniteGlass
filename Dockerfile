@@ -22,12 +22,15 @@ RUN apt install -y python3-setuptools
 RUN apt install -y x11-xkb-utils
 RUN apt install -y rofi
 RUN apt install -y xterm
+RUN apt install -y chromium-browser
+RUN apt install -y emacs
 
 RUN echo Version 2
 
 ADD . /InfiniteGlass
 
 RUN cd /InfiniteGlass; make all
+RUN cd /InfiniteGlass; make devinstall
 
 RUN useradd glass
 RUN mkdir -p /home/glass
