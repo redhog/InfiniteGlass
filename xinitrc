@@ -14,7 +14,7 @@ export PATH=$(pwd)/build:$PATH
 ulimit -c unlimited
 
 if [ -e ~/.config/glass/session.sh ]; then
-  source ~/.config/glass/session.sh
+  . ~/.config/glass/session.sh
 fi
 
 glass-config-init
