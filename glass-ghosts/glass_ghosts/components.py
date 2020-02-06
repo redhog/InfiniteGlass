@@ -5,7 +5,7 @@ import glass_ghosts.window
 import json
 import os
 import signal
-
+import traceback
 
 class Components(object):
     def __init__(self, manager, display):
@@ -29,23 +29,33 @@ class Components(object):
 
             
     def sigchild(self, signum, frame):
-        if signum == signal.SIGCHLD:
-            InfiniteGlass.debug.DEBUG("SIGCHLD", "Received SIGCHLD\n")
-            pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
-            while pid != 0:
-                InfiniteGlass.debug.DEBUG("SIGCHLD", "Reaped pid=%s, exitcode=%s, ru_child=%s\n" % (pid, exitcode, ru_child))
-                if (    pid in self.components_by_pid
-                    and not exitcode == 0
-                    and (   not os.WIFSIGNALED(exitcode)
-                         or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
-                    # This is a component, and it wasn't killed intentionally... restart it
-                    name = self.components_by_pid.pop(pid)
-                    spec = self.components.pop(name)["component"]
-                    self.start_component(spec)
-                InfiniteGlass.debug.DEBUG("SIGCHLD", "Checking for more children in the same batch...\n")
-                pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
-            InfiniteGlass.debug.DEBUG("SIGCHLD", "Done\n")
-            
+        try:
+            if signum == signal.SIGCHLD:
+                InfiniteGlass.debug.DEBUG("SIGCHLD", "Received SIGCHLD\n")
+                try:
+                    pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
+                except ChildProcessError:
+                    pid = 0
+                while pid != 0:
+                    InfiniteGlass.debug.DEBUG("SIGCHLD", "Reaped pid=%s, exitcode=%s, ru_child=%s\n" % (pid, exitcode, ru_child))
+                    if (    pid in self.components_by_pid
+                        and not exitcode == 0
+                        and (   not os.WIFSIGNALED(exitcode)
+                             or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
+                        # This is a component, and it wasn't killed intentionally... restart it
+                        name = self.components_by_pid.pop(pid)
+                        spec = self.components.pop(name)["component"]
+                        self.start_component(spec)
+                    InfiniteGlass.debug.DEBUG("SIGCHLD", "Checking for more children in the same batch...\n")
+                    try:
+                        pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
+                    except ChildProcessError:
+                        pid = 0
+                InfiniteGlass.debug.DEBUG("SIGCHLD", "Done\n")
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+                
     def start_component(self, spec):
         InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (spec["name"], " ".join(spec["command"])))
         if spec["name"] in self.components:
