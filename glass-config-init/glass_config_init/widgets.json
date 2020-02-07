@@ -24,10 +24,18 @@
             },
             "action": "zoom_home"
         },
+        "tile": {
+            "properties": {
+                "WM_NAME": "data://Tile",
+                "IG_COORDS": [0.01, "eq://0.7 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/th-list.svg"]}
+            },
+            "action": "tile_visible_to_1_1"
+        },        
         "eject": {
             "properties": {
                 "WM_NAME": "data://Exit",
-                "IG_COORDS": [0.01, "eq://0.7 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05],
+                "IG_COORDS": [0.01, "eq://0.8 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg"]}
             },
             "action": "send_exit"
@@ -35,7 +43,7 @@
         "debug": {
             "properties": {
                 "WM_NAME": "data://Debug",
-                "IG_COORDS": [0.01, "eq://0.8 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05],
+                "IG_COORDS": [0.01, "eq://0.9 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/bug.svg"]}
             },
             "action": "send_debug"
