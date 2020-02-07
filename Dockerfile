@@ -37,4 +37,4 @@ RUN mkdir -p /home/glass
 RUN chown glass:users /home/glass
 RUN chmod -R ugo+rw /InfiniteGlass
 
-CMD /InfiniteGlass/docker-runner.sh
+CMD /InfiniteGlass/scripts/docker-runner.sh

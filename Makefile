@@ -40,11 +40,14 @@ $(BUILD)/env:
 $(PYTHONAPPS): $(BUILD)/env
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); python3 setup.py develop
 
-.PHONY: all run install devinstall uninstall install-binaries uninstall-binaries
+.PHONY: all run run-in-docker install devinstall uninstall install-binaries uninstall-binaries
 all: $(BINARIES) $(PYTHONAPPS)
 
 run: all
-	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" ./xstartup.sh
+	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
+
+run-in-docker:
+	scripts/run-in-docker.sh
 
 install: install-binaries $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS))
 
@@ -59,10 +62,10 @@ install-binaries: $(BINARIES)
 	mkdir -p /usr/share/applications
 	mkdir -p /etc/emacs/site-start.d
 	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
-	cp glass-startup.sh $(PREFIX)/bin/glass-startup.sh
-	cp glass.desktop /usr/share/xsessions/glass.desktop
-	cp contrib/glass-chromium-browser.desktop /usr/share/applications/glass-chromium-browser.desktop
-	cp contrib/glass-emacs-xsession.el /etc/emacs/site-start.d/glass-emacs-xsession.el
+	cp scripts/glass-startup.sh $(PREFIX)/bin/glass-startup.sh
+	cp scripts/glass.desktop /usr/share/xsessions/glass.desktop
+	cp scripts/glass-chromium-browser.desktop /usr/share/applications/glass-chromium-browser.desktop
+	cp scripts/glass-emacs-xsession.el /etc/emacs/site-start.d/glass-emacs-xsession.el
 
 uninstall-binaries:
 	rm $(PREFIX)/bin/glass-renderer

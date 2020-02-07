@@ -58,7 +58,7 @@ It is also possible to try the window manager inside a window using the Xephyr X
 
 If your Linux distribution does not have the right libraries or versions of libraries (e.g. X extensions, OpenGL version...) easily installable, you can test the same using a docker container! Just run
 
-    ./run-in-docker.sh
+    make run-in-docker
 
 # Configuration
 
