@@ -15,6 +15,11 @@ addition to some other keys or mouse buttons.
 * Home zooms to a specific state
 * Space launches the main menu
 * Escape toggles the sidebar
+* C closes a window
+* S sleeps an application
+* T tiles all visible windows
+* F searches for a window by title
+
 
 Mouse bindings:
 
