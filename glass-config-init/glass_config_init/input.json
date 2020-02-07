@@ -13,6 +13,7 @@
         "glass_input.actions.item_resize",
         "glass_input.actions.item_zoom_to",
         "glass_input.actions.actions",
+        "glass_input.actions.tile",
         "glass_input.actions.modeswitch"
     ],
     # Input modes represent different states glass-input can be in,
@@ -56,7 +57,9 @@
             "KeyPress,XK_D": "send_debug",
             "KeyPress,XK_C": "send_close",
             "KeyPress,XK_S": "send_sleep",
-            "KeyPress,XK_T": "title_search_mode",
+            "KeyPress,XK_F": "title_search_mode",
+            "KeyPress,XK_T,ShiftMask": "tile_visible",
+            "KeyPress,XK_T,!ShiftMask": "tile_visible_to_1_1",
             
             "KeyPress,!Mod1Mask,XK_Home": "zoom_home",
             "ButtonPress,!Mod1Mask,4": "zoom_mode",

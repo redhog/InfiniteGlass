@@ -2,15 +2,18 @@ from .. import mode
 import InfiniteGlass
 import numpy as np
 import rpack
+from . import item_zoom_to
 
-def tile_visible(self, event, grain=2, margins=0.02):
-    print("TILE VISIBLE WINDOWS")
+def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False):
+    print("TILE VISIBLE WINDOWS", zoom_1_1)
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     windows = visible+overlap
 
     sizes = np.array([coords[2:] for window, coords in windows])
+    sizes += margins * view[2]
+    
     scaling = 10**(-np.round(np.log10(sizes.min())) + grain)
     sizes = np.array(scaling * sizes, dtype=int)
     positions = np.array(rpack.pack([[int(y) for y in x] for x in sizes]))
@@ -35,5 +38,14 @@ def tile_visible(self, event, grain=2, margins=0.02):
     for (window, coords), position, size in zip(windows, positions, sizes):
         print(window, [position[0], position[1], size[0], size[1]])
         window["IG_COORDS"] = [position[0], position[1], size[0], size[1]]
-    
+        if zoom_1_1:
+            window["IG_SIZE"] = item_zoom_to.item_zoom_1_1_to_sreen_calc(self, window)
+        else:
+            pxsize = window["IG_SIZE"]
+            pxsize[1] = int(pxsize[0] * size[1] / size[0])
+            window["IG_SIZE"] = pxsize
+
     self.display.flush()
+
+def tile_visible_to_1_1(self, *arg, **kw):
+    tile_visible(self, zoom_1_1=True, *arg, **kw)
