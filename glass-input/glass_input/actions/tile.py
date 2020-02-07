@@ -5,7 +5,6 @@ import rpack
 from . import item_zoom_to
 
 def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False):
-    print("TILE VISIBLE WINDOWS", zoom_1_1)
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
@@ -36,15 +35,17 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False):
     positions[:,1] -= margins * view[2] / 2
     
     for (window, coords), position, size in zip(windows, positions, sizes):
-        print(window, [position[0], position[1], size[0], size[1]])
-        window["IG_COORDS"] = [position[0], position[1], size[0], size[1]]
+        new_coords = [position[0], position[1], size[0], size[1]]
+        window["IG_COORDS_ANIMATE"] = new_coords
         if zoom_1_1:
-            window["IG_SIZE"] = item_zoom_to.item_zoom_1_1_to_sreen_calc(self, window)
+            window["IG_SIZE"] = item_zoom_to.item_zoom_1_1_to_sreen_calc(self, window, coords = new_coords)
         else:
             pxsize = window["IG_SIZE"]
             pxsize[1] = int(pxsize[0] * size[1] / size[0])
             window["IG_SIZE"] = pxsize
 
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", window, "IG_COORDS", .5)
+            
     self.display.flush()
 
 def tile_visible_to_1_1(self, *arg, **kw):

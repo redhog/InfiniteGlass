@@ -1,13 +1,13 @@
 import InfiniteGlass
 from .. import mode
 
-def item_zoom_1_1_to_sreen_calc(self, win):
-    size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-    coords = win["IG_COORDS"]
-    screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
+def item_zoom_1_1_to_sreen_calc(self, win, size = None, coords = None, view = None):
+    size = size or self.display.root["IG_VIEW_DESKTOP_SIZE"]
+    coords = coords or win["IG_COORDS"]
+    view = view or self.display.root["IG_VIEW_DESKTOP_VIEW"]
 
-    return [int(size[0] * coords[2] / screen[2]),
-            int(size[1] * coords[3] / screen[3])]
+    return [int(size[0] * coords[2] / view[2]),
+            int(size[1] * coords[3] / view[3])]
 
 def item_zoom_1_1_to_sreen(self, event):
     win = InfiniteGlass.windows.get_active_window(self.display)
