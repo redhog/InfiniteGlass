@@ -13,7 +13,9 @@ setuptools.setup(name='glass-input',
       packages=setuptools.find_packages(),
       install_requires=[
           "pyyaml",
-          "rpdb"
+          "rpdb",
+          "numpy",
+          "rectangle-packer"
       ],
       entry_points={
           'console_scripts': [
