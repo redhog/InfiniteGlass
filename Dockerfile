@@ -24,6 +24,8 @@ RUN apt install -y rofi
 RUN apt install -y xterm
 RUN apt install -y chromium-browser
 RUN apt install -y emacs
+RUN apt install -y wget
+RUN apt install -y unzip
 
 RUN echo Version 2
 
