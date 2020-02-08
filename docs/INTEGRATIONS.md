@@ -14,11 +14,9 @@ Such a wrapper .desktop menu entry is installed when you run 'make install'.
 
 Emacs have SMlib support, but by default it does not save its list of
 open files, or really anything usefull, in its session store. However
-this can be easily enabled with a few simple lines of emacs-lisp (as
-anything can :)
+this can be easily enabled with [a few simple lines of
+emacs-lisp](../scripts/glass-emacs-xsession.el) (as anything can :)
 
-    [scripts/glass-emacs-xsession.el](../scripts/glass-emacs-xsession.el)
-
-This is installed for emacs globally on your system when you run 'make
-install'. You can alternatively just copy the contents of this file to
-your ~/.emacs.
+This code is installed for emacs globally on your system when you run
+'make install'. You can alternatively just copy this code to your
+~/.emacs.
