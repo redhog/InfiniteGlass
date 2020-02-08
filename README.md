@@ -25,7 +25,7 @@ Features:
 * Infinitely zoomable SVG for buttons etc
   * A window can display an SVG image instead of content, and the SVG will render to the current screen resolution, no matter the zoom level.
 
-Compile and run with "make"
+# Documentation
 
 * Configuration
   * [Key bindings](docs/KEYMAP.md)
