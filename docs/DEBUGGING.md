@@ -1,6 +1,8 @@
 The InfiniteGlass components have extensive logging / debug print
 facilities. These are turned on and of using a fine grained
-environment variable system.
+environment variable system. These variables can be set in your shell
+when running 'make run', or in
+[~/.config/glass/session.sh](../glass-config-init/glass_config_init/session.sh).
 
 All such environment variable names begin with 'GLASS_DEBUG'.
 

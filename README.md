@@ -27,10 +27,12 @@ Features:
 
 Compile and run with "make"
 
-* [Key bindings](docs/KEYMAP.md)
+* Configuration
+  * [Key bindings](docs/KEYMAP.md)
+  * [Sessions](docs/SESSION.md)
+  * [Integrations](docs/INTEGRATIONS.md)
+  * [Debugging](docs/DEBUGGING.md)
 * [Protocols](docs/PROTOCOLS.md)
-* [Integrations](docs/INTEGRATIONS.md)
-* [Debugging](docs/DEBUGGING.md)
 * [References](docs/REFERENCES.md)
 
 # Installation
