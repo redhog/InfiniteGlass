@@ -86,9 +86,9 @@ def setup_splash_animation(display, lat, lon):
                 {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 40.0, "easing": "InCubic"}
             ]},
             {"tasks": [
-                {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 3.0, "dst": 0.0},
-                {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 3.0, "dst": 400.0},
-                {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 3.0, "dst": [0.0, 0.0, 1.0, height]}
+                {"window": display.root, "atom": "IG_WORLD_ALPHA", "timeframe": 2.0, "dst": 0.0},
+                {"window": display.root, "atom": "IG_WORLD_ZOOM", "timeframe": 2.0, "dst": 400.0},
+                {"window": display.root, "atom": "IG_VIEW_DESKTOP_VIEW", "timeframe": 2.0, "dst": [0.0, 0.0, 1.0, height]}
             ]},
             {"window": display.root, "atom": "IG_VIEWS", "dst": ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]},
             {"window": display.root, "atom": "IG_THEME", "dst": 1.0}
