@@ -1,5 +1,5 @@
 import Xlib.X
-import glass_ghosts.shadow
+import glass_ghosts.ghost
 import glass_ghosts.window
 import sys
 import traceback

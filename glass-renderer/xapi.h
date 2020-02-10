@@ -17,25 +17,7 @@
 #include <stdlib.h>
 #include "glapi.h"
 
-Atom WM_PROTOCOLS;
-Atom WM_DELETE_WINDOW;
-Atom DISPLAYSVG;
-Atom IG_VIEWS;
-Atom IG_LAYER;
-Atom IG_LAYER_DESKTOP;
-Atom IG_LAYER_OVERLAY;
-Atom IG_LAYER_MENU;
-Atom IG_SHADER;
-Atom IG_SHADER_DEFAULT;
-Atom IG_COORDS;
-Atom IG_SIZE;
-Atom IG_DEBUG;
-Atom IG_EXIT;
 Atom XA_FLOAT;
-Atom IG_NOTIFY_MOTION;
-Atom IG_ACTIVE_WINDOW;
-Atom WM_STATE;
-Atom XA_MANAGER;
 
 
 Display* display;

@@ -1,8 +1,14 @@
 #include "xapi.h"
-#include "event.h"
+#include "mainloop.h"
 #include "selection.h"
 #include "debug.h"
 
+Atom XA_MANAGER;
+
+Bool init_selection(void) {
+  XA_MANAGER = XInternAtom(display, "MANAGER", False);
+  return True;
+}
 
 int selection_get_params(Selection *selection, XEvent *event, long offset, long length,
                          Atom *actual_type_return, int *actual_format_return,
@@ -41,8 +47,8 @@ Bool event_handler_clear(EventHandler *handler, XEvent *event) {
   Selection *selection = (Selection *) handler->data;
   selection->clear(selection);
 
-  event_handler_uninstall(&selection->event_handler_convert);
-  event_handler_uninstall(&selection->event_handler_clear);
+  mainloop_uninstall_event_handler(&selection->event_handler_convert);
+  mainloop_uninstall_event_handler(&selection->event_handler_clear);
   free(selection);
    
   return True;
@@ -84,7 +90,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   event_handler->match_event.xselectionrequest.selection = selection->name;
   event_handler->handler = &event_handler_convert;
   event_handler->data = selection;
-  event_handler_install(event_handler);
+  mainloop_install_event_handler(event_handler);
 
   event_handler = &selection->event_handler_clear;
   event_handler->event_mask = NoEventMask;
@@ -96,7 +102,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   event_handler->match_event.xselectionrequest.selection = selection->name;
   event_handler->handler = &event_handler_clear;
   event_handler->data = selection;
-  event_handler_install(event_handler);
+  mainloop_install_event_handler(event_handler);
   
   // Generate timestamp
   char dummy;
@@ -109,8 +115,8 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   XSetSelectionOwner(display, selection->name, selection->owner, timestamp_event.xproperty.time);
   Window current_owner = XGetSelectionOwner(display, selection->name);
   if (current_owner != selection->owner) {
-    event_handler_uninstall(&selection->event_handler_convert);
-    event_handler_uninstall(&selection->event_handler_clear);
+    mainloop_uninstall_event_handler(&selection->event_handler_convert);
+    mainloop_uninstall_event_handler(&selection->event_handler_clear);
     free(selection);
     return NULL;
   } else {

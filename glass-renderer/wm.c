@@ -12,11 +12,10 @@
 #include <dlfcn.h>
 
 #include "xapi.h"
-#include "xevent.h"
 #include "view.h"
 #include "xevent.h"
 #include "wm.h"
-#include "event.h"
+#include "mainloop.h"
 #include "selection.h"
 #include "list.h"
 #include "debug.h"
@@ -46,6 +45,9 @@ struct backtrace_state *trace_state;
 List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
+
+Atom IG_DEBUG;
+Atom IG_EXIT;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
@@ -457,10 +459,15 @@ int main() {
 // backtrace_print (trace_state, 0, stdout);
   
   if (!xinit()) return 1;
+  if (!init_view()) return 1;
+  if (!init_selection()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
   if (!init_shader()) return 1;
   if (!init_items()) return 1;
+
+  IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
+  IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   
   manager_selection_create(XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
@@ -500,7 +507,7 @@ int main() {
   }
   draw_timeout_handler.handler = &draw_timeout_handler_function;
   draw_timeout_handler.data = NULL;
-  timeout_handler_install(&draw_timeout_handler);
+  mainloop_install_timeout_handler(&draw_timeout_handler);
   
   EventHandler main_event_handler;
   main_event_handler.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask;
@@ -508,9 +515,9 @@ int main() {
   event_mask_unset(main_event_handler.match_mask);
   main_event_handler.handler = &main_event_handler_function;
   main_event_handler.data = NULL;
-  event_handler_install(&main_event_handler);
+  mainloop_install_event_handler(&main_event_handler);
 
-  event_mainloop();
+  mainloop_run();
   
   return 0;
 }

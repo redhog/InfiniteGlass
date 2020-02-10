@@ -2,7 +2,7 @@
 #define SELECTION
 
 #include "xapi.h"
-#include "event.h"
+#include "mainloop.h"
 
 /* This module implements selection handling according to
    https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#acquiring_selection_ownership
@@ -31,6 +31,7 @@ struct SelectionStruct {
 };
 
 
+extern Bool init_selection(void);
 extern int selection_get_params(Selection *selection, XEvent *event, long offset, long length,
                                 Atom *actual_type_return, int *actual_format_return,
                                 unsigned long *nitems_return, unsigned long *bytes_after_return, unsigned char **prop_return);

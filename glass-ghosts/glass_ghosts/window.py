@@ -1,6 +1,6 @@
 import InfiniteGlass
 import Xlib.X
-import glass_ghosts.shadow
+import glass_ghosts.ghost
 import glass_ghosts.helpers
 import sys
 
@@ -9,7 +9,7 @@ class Window(object):
         self.manager = manager
         self.window = window
         self.id = self.window.__window__()
-        self.shadow = None
+        self.ghost = None
         self.client = None
         self.properties = {}
 
@@ -78,15 +78,15 @@ class Window(object):
             self.window.destroy()
             
     def key(self):
-        return glass_ghosts.helpers.shadow_key(self.properties, self.manager.config["match"])
+        return glass_ghosts.helpers.ghost_key(self.properties, self.manager.config["match"])
 
     def destroy(self):
-        if not self.shadow:
-            self.shadow = glass_ghosts.shadow.Shadow(self.manager, self.properties)
+        if not self.ghost:
+            self.ghost = glass_ghosts.ghost.Shadow(self.manager, self.properties)
         else:
-            self.shadow.properties.update(self.properties)
-            self.shadow.update_key()
-        self.shadow.activate()
+            self.ghost.properties.update(self.properties)
+            self.ghost.update_key()
+        self.ghost.activate()
         self.manager.windows.pop(self.id, None)
         self.manager.display.eventhandlers.remove(self.PropertyNotify)
         self.manager.display.eventhandlers.remove(self.CloseMessage)
@@ -97,25 +97,25 @@ class Window(object):
             self.client.remove_window(self)
 
     def match(self):
-        self.match_shadow()
+        self.match_ghost()
         self.match_client()
 
-    def match_shadow(self):
-        if self.shadow: return
+    def match_ghost(self):
+        if self.ghost: return
         key = self.key()
-        if key in self.manager.shadows:
-            self.shadow = self.manager.shadows[key]
+        if key in self.manager.ghosts:
+            self.ghost = self.manager.ghosts[key]
         else:
             if "SM_CLIENT_ID" in self.properties and self.properties["SM_CLIENT_ID"] in self.manager.clients:
                 client = self.manager.clients[self.properties["SM_CLIENT_ID"]]
-                if len(client.shadows) == 1:
-                    self.shadow = list(client.shadows.values())[0]
-        if self.shadow:
-            InfiniteGlass.DEBUG("window", "MATCHING SHADOW window=%s shadow=%s\n" % (self.id, key,))
-            self.shadow.apply(self.window)
-            self.shadow.deactivate()
+                if len(client.ghosts) == 1:
+                    self.ghost = list(client.ghosts.values())[0]
+        if self.ghost:
+            InfiniteGlass.DEBUG("window", "MATCHING SHADOW window=%s ghost=%s\n" % (self.id, key,))
+            self.ghost.apply(self.window)
+            self.ghost.deactivate()
         else:
-            InfiniteGlass.DEBUG("window", "FAILED MATCHING window=%s key=%s against SHADOWS %s\n" % (self.id, key, self.manager.shadows.keys()))
+            InfiniteGlass.DEBUG("window", "FAILED MATCHING window=%s key=%s against SHADOWS %s\n" % (self.id, key, self.manager.ghosts.keys()))
             
     def match_client(self):
         if self.client: return
@@ -130,6 +130,6 @@ class Window(object):
     def __str__(self):
         res = str(self.window.__window__())
         res += ": " + self.key()
-        if self.shadow is not None:
-            res += " (has shadow)"
+        if self.ghost is not None:
+            res += " (has ghost)"
         return res
