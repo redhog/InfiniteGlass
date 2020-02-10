@@ -17,8 +17,6 @@
 #include <stdlib.h>
 #include "glapi.h"
 
-Atom IG_DEBUG;
-Atom IG_EXIT;
 Atom XA_FLOAT;
 
 

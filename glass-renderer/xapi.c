@@ -40,8 +40,6 @@ int xinit() {
   error_init();
 
   root = DefaultRootWindow(display);
-  IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
-  IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   XA_FLOAT = XInternAtom(display, "FLOAT", False);
 
   x_try();

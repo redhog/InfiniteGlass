@@ -46,6 +46,9 @@ List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
 
+Atom IG_DEBUG;
+Atom IG_EXIT;
+
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
   return item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == current_layer;
@@ -462,6 +465,9 @@ int main() {
   if (!init_picking()) return 1;
   if (!init_shader()) return 1;
   if (!init_items()) return 1;
+
+  IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
+  IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   
   manager_selection_create(XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
