@@ -1,5 +1,5 @@
 #include "xapi.h"
-#include "event.h"
+#include "mainloop.h"
 #include "selection.h"
 #include "debug.h"
 

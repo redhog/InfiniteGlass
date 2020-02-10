@@ -12,11 +12,10 @@
 #include <dlfcn.h>
 
 #include "xapi.h"
-#include "xevent.h"
 #include "view.h"
 #include "xevent.h"
 #include "wm.h"
-#include "event.h"
+#include "mainloop.h"
 #include "selection.h"
 #include "list.h"
 #include "debug.h"

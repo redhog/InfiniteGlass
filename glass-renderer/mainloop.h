@@ -1,5 +1,5 @@
-#ifndef EVENT
-#define EVENT
+#ifndef MAINLOOP_H
+#define MAINLOOP_H
 
 #include "xapi.h"
 #include <sys/time.h>

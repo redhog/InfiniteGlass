@@ -2,7 +2,7 @@
 #define SELECTION
 
 #include "xapi.h"
-#include "event.h"
+#include "mainloop.h"
 
 /* This module implements selection handling according to
    https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#acquiring_selection_ownership
