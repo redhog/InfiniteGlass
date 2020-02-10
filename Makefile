@@ -86,3 +86,6 @@ $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS)):
 
 clean:
 	rm -rf $(BUILD)
+
+clean-python:
+	rm -rf $(shell find . -name __pycache__) $(shell find . -name .eggs) $(shell find . -name dist) $(shell find . -name build | grep /glass)
