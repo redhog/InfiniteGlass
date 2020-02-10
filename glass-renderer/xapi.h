@@ -20,7 +20,6 @@
 Atom IG_DEBUG;
 Atom IG_EXIT;
 Atom XA_FLOAT;
-Atom XA_MANAGER;
 
 
 Display* display;

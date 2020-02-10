@@ -3,6 +3,12 @@
 #include "selection.h"
 #include "debug.h"
 
+Atom XA_MANAGER;
+
+Bool init_selection(void) {
+  XA_MANAGER = XInternAtom(display, "MANAGER", False);
+  return True;
+}
 
 int selection_get_params(Selection *selection, XEvent *event, long offset, long length,
                          Atom *actual_type_return, int *actual_format_return,

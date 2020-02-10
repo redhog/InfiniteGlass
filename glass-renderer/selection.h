@@ -31,6 +31,7 @@ struct SelectionStruct {
 };
 
 
+extern Bool init_selection(void);
 extern int selection_get_params(Selection *selection, XEvent *event, long offset, long length,
                                 Atom *actual_type_return, int *actual_format_return,
                                 unsigned long *nitems_return, unsigned long *bytes_after_return, unsigned char **prop_return);

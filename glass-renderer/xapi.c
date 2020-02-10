@@ -43,7 +43,6 @@ int xinit() {
   IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   XA_FLOAT = XInternAtom(display, "FLOAT", False);
-  XA_MANAGER = XInternAtom(display, "MANAGER", False);    
 
   x_try();
   XSelectInput(display, root,
