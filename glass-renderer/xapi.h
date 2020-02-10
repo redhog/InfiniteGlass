@@ -17,8 +17,6 @@
 #include <stdlib.h>
 #include "glapi.h"
 
-Atom WM_PROTOCOLS;
-Atom WM_DELETE_WINDOW;
 Atom DISPLAYSVG;
 Atom IG_DEBUG;
 Atom IG_EXIT;

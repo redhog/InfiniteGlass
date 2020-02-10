@@ -40,8 +40,6 @@ int xinit() {
   error_init();
 
   root = DefaultRootWindow(display);
-  WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
-  WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
   DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
   IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
