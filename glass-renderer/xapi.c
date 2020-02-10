@@ -43,16 +43,6 @@ int xinit() {
   WM_PROTOCOLS = XInternAtom(display, "WM_PROTOCOLS", False);
   WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
   DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
-
-  IG_VIEWS = XInternAtom(display, "IG_VIEWS", False);
-  IG_LAYER = XInternAtom(display, "IG_LAYER", False);
-  IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
-  IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
-  IG_LAYER_MENU = XInternAtom(display, "IG_LAYER_MENU", False);
-  IG_SHADER = XInternAtom(display, "IG_SHADER", False);
-  IG_SHADER_DEFAULT = XInternAtom(display, "IG_SHADER_DEFAULT", False);
-  IG_COORDS = XInternAtom(display, "IG_COORDS", False);
-  IG_SIZE = XInternAtom(display, "IG_SIZE", False);
   IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   XA_FLOAT = XInternAtom(display, "FLOAT", False);

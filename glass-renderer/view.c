@@ -7,6 +7,13 @@
 #include <limits.h>
 #include <math.h>
 
+Atom IG_VIEWS;
+
+Bool init_view(void) {
+  IG_VIEWS = XInternAtom(display, "IG_VIEWS", False);
+  return True;
+}
+
 void mat4mul(float *mat4, float *vec4, float *outvec4) {
   for (int i = 0; i < 4; i++) {
    float res = 0.0;

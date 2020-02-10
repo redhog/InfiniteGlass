@@ -13,6 +13,14 @@
 List *items_all = NULL;
 Item *root_item = NULL;
 
+Atom IG_LAYER;
+Atom IG_LAYER_DESKTOP;
+Atom IG_LAYER_OVERLAY;
+Atom IG_LAYER_MENU;
+Atom IG_SHADER;
+Atom IG_SHADER_DEFAULT;
+Atom IG_COORDS;
+Atom IG_SIZE;
 Atom IG_DRAW_TYPE;
 Atom IG_DRAW_TYPE_POINTS;
 Atom IG_DRAW_TYPE_LINES;
@@ -26,6 +34,14 @@ Atom IG_DRAW_TYPE_TRIANGLES_ADJACENCY;
 Atom IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY;
  
 Bool init_items() {
+  IG_LAYER = XInternAtom(display, "IG_LAYER", False);
+  IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
+  IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
+  IG_LAYER_MENU = XInternAtom(display, "IG_LAYER_MENU", False);
+  IG_SHADER = XInternAtom(display, "IG_SHADER", False);
+  IG_SHADER_DEFAULT = XInternAtom(display, "IG_SHADER_DEFAULT", False);
+  IG_COORDS = XInternAtom(display, "IG_COORDS", False);
+  IG_SIZE = XInternAtom(display, "IG_SIZE", False);
   IG_DRAW_TYPE = XInternAtom(display, "IG_DRAW_TYPE", False);
   IG_DRAW_TYPE_POINTS = XInternAtom(display, "IG_DRAW_TYPE_POINTS", False);
   IG_DRAW_TYPE_LINES = XInternAtom(display, "IG_DRAW_TYPE_LINES", False);

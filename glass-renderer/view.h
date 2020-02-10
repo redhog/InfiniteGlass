@@ -5,7 +5,11 @@
 #include "list.h"
 #include "view_type.h"
 
+extern Atom IG_VIEWS;
+
 typedef Bool ItemFilter(Item *item);
+
+extern Bool init_view(void);
 
 extern void mat4mul(float *mat4, float *vec4, float *outvec4);
 extern void view_to_space(View *view, float screenx, float screeny, float *spacex, float *spacey);

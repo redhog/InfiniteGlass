@@ -456,6 +456,7 @@ int main() {
 // backtrace_print (trace_state, 0, stdout);
   
   if (!xinit()) return 1;
+  if (!init_view()) return 1;
   if (!glinit(overlay)) return 1;
   if (!init_picking()) return 1;
   if (!init_shader()) return 1;
