@@ -13,7 +13,7 @@ class Client(object):
         self.properties = properties or {}
         self.updatedb()
         self.windows = {}
-        self.shadows = {}
+        self.ghosts = {}
         self.connections = {}
 
     def add_window(self, window):

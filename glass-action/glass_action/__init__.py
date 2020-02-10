@@ -93,7 +93,7 @@ def key(ctx, window):
             with open(configpath) as f:
                 config = yaml.load(f, Loader=yaml.SafeLoader)
 
-            print(glass_ghosts.helpers.shadow_key(win, config["match"]))
+            print(glass_ghosts.helpers.ghost_key(win, config["match"]))
         if window == "click":
             @get_pointer_window(display)
             def with_win(window):
@@ -193,20 +193,20 @@ def export(ctx, key):
         
 @main.group()
 @click.pass_context
-def shadow(ctx, **kw):
+def ghost(ctx, **kw):
     pass
 
-@shadow.command()
+@ghost.command()
 @click.pass_context
 def list(ctx):
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()
-    cur.execute("select key from shadows group by key order by key")
+    cur.execute("select key from ghosts group by key order by key")
     for (key,) in cur:
         print(key)
 
-@shadow.command()
+@ghost.command()
 @click.argument("key", nargs=-1)
 @click.pass_context
 def export(ctx, key):
@@ -215,10 +215,10 @@ def export(ctx, key):
     cur = dbconn.cursor()
     res = {}
     if not key:
-        cur.execute("select key from shadows group by key order by key")
+        cur.execute("select key from ghosts group by key order by key")
         key = [row[0] for row in cur]
     for k in key:
-        cur.execute('select name, value from shadows where key = ?', (k,))
+        cur.execute('select name, value from ghosts where key = ?', (k,))
         properties = {}
         currentkey = None
         for name, value in cur:
@@ -226,40 +226,40 @@ def export(ctx, key):
         res[k] = properties
     print(json.dumps(res))
 
-@shadow.command(name="import")
+@ghost.command(name="import")
 @click.pass_context
 def imp(ctx):
-    shadows = json.load(sys.stdin)
+    ghosts = json.load(sys.stdin)
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()
-    for key, shadow in shadows.items():
-        for name, value in shadow.items():
-            cur.execute("insert into shadows (key, name, value) values (?, ?, ?)",
+    for key, ghost in ghosts.items():
+        for name, value in ghost.items():
+            cur.execute("insert into ghosts (key, name, value) values (?, ?, ?)",
                         (key, name, json.dumps(value)))
     dbconn.commit()
 
 
-@shadow.command()
+@ghost.command()
 @click.argument("key")
 @click.pass_context
 def delete(ctx, key):
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()
-    cur.execute('delete from shadows where key = ?', (key,))
+    cur.execute('delete from ghosts where key = ?', (key,))
     dbconn.commit()
 
 
 
-@shadow.command()
+@ghost.command()
 @click.argument("key")
 @click.pass_context
 def session(ctx, key):
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()
-    cur.execute('select value from shadows where key = ? and name = "SM_CLIENT_ID"', (key,))
+    cur.execute('select value from ghosts where key = ? and name = "SM_CLIENT_ID"', (key,))
     client_id = json.loads(next(cur)[0], object_hook=InfiniteGlass.fromjson(None)).decode("utf-8")
     print(client_id)
     

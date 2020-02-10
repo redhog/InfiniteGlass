@@ -5,7 +5,7 @@ import os.path
 import yaml
 import json
 import base64
-import glass_ghosts.shadow
+import glass_ghosts.ghost
 import glass_ghosts.window
 import glass_ghosts.rootwindow
 import glass_ghosts.components
@@ -24,7 +24,7 @@ class GhostManager(object):
 
         self.changes = False
         self.windows = {}
-        self.shadows = {}
+        self.ghosts = {}
         self.clients = {}
 
         self.dbdirpath = os.path.expanduser("~/.config/glass")
@@ -34,19 +34,19 @@ class GhostManager(object):
         dbexists = os.path.exists(self.dbpath)
         self.dbconn = sqlite3.connect(self.dbpath)
         if not dbexists:
-            self.dbconn.execute("create table shadows (key text, name text, value text, primary key (key, name))")
+            self.dbconn.execute("create table ghosts (key text, name text, value text, primary key (key, name))")
             self.dbconn.execute("create table clients (key text, name text, value text, primary key (key, name))")
 
         # Order is important here...
         self.restore_clients()
-        self.restore_config_shadows()
-        self.restore_shadows()
+        self.restore_config_ghosts()
+        self.restore_ghosts()
 
         self.session = glass_ghosts.session.Server(self, display)
         self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
         self.components = glass_ghosts.components.Components(self, display)
 
-        display.mainloop.add_interval(0.5)(self.save_shadows)
+        display.mainloop.add_interval(0.5)(self.save_ghosts)
                 
         InfiniteGlass.DEBUG("init", "Ghosts handler started\n")
 
@@ -63,35 +63,35 @@ class GhostManager(object):
                 self.dbconn.commit()
                 sys.exit(0)
         
-    def save_shadows(self, current_time, idx):
+    def save_ghosts(self, current_time, idx):
         if self.changes:
             InfiniteGlass.DEBUG("conmmit", "Committing...\n")
             self.dbconn.commit()
             self.changes = False
 
-    def restore_config_shadows(self):
-        self.restoring_shadows = True
-        shadows = json.loads(json.dumps(self.config.get("shadows", {})), object_hook=InfiniteGlass.fromjson(self.display))
-        for key, properties in shadows.items():
-            glass_ghosts.shadow.Shadow(self, properties, from_config=True).activate()
-        self.restoring_shadows = False
+    def restore_config_ghosts(self):
+        self.restoring_ghosts = True
+        ghosts = json.loads(json.dumps(self.config.get("ghosts", {})), object_hook=InfiniteGlass.fromjson(self.display))
+        for key, properties in ghosts.items():
+            glass_ghosts.ghost.Shadow(self, properties, from_config=True).activate()
+        self.restoring_ghosts = False
         
-    def restore_shadows(self):
-        self.restoring_shadows = True
+    def restore_ghosts(self):
+        self.restoring_ghosts = True
         cur = self.dbconn.cursor()
-        cur.execute("select * from shadows order by key")
+        cur.execute("select * from ghosts order by key")
         properties = {}
         currentkey = None
         for key, name, value in cur:
             if key != currentkey:
                 if currentkey:
-                    glass_ghosts.shadow.Shadow(self, properties).activate()
+                    glass_ghosts.ghost.Shadow(self, properties).activate()
                 properties = {}
                 currentkey = key
             properties[name] = json.loads(value, object_hook=InfiniteGlass.fromjson(self.display))
         if currentkey:
-            glass_ghosts.shadow.Shadow(self, properties).activate()
-        self.restoring_shadows = False
+            glass_ghosts.ghost.Shadow(self, properties).activate()
+        self.restoring_ghosts = False
 
     def restore_clients(self):
         self.restoring_clients = True

@@ -16,40 +16,40 @@ class Shadow(object):
         self.window = None
         self.current_key = None
         self.update_key()
-        InfiniteGlass.DEBUG("shadow", "SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("ghost", "SHADOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
     def key(self):
-        return glass_ghosts.helpers.shadow_key(self.properties, self.manager.config["match"])
+        return glass_ghosts.helpers.ghost_key(self.properties, self.manager.config["match"])
 
     def update_key(self):
         key = self.key()
 
-        if key != self.current_key and key in self.manager.shadows:
-            InfiniteGlass.DEBUG("shadow", "DUPLICATE SHADOW %s\n" % (self,))
+        if key != self.current_key and key in self.manager.ghosts:
+            InfiniteGlass.DEBUG("ghost", "DUPLICATE SHADOW %s\n" % (self,))
             self.destroy()
 
-        if not self.manager.restoring_shadows and not self.from_config:
+        if not self.manager.restoring_ghosts and not self.from_config:
 
             cur = self.manager.dbconn.cursor()
             for name, value in self.properties.items():
                 if self._properties.get(name, NoValue) != value:
                     cur.execute("""
-                      insert or replace into shadows (key, name, value) VALUES (?, ?, ?)
+                      insert or replace into ghosts (key, name, value) VALUES (?, ?, ?)
                     """, (key, name, json.dumps(value, default=InfiniteGlass.tojson(self.manager.display))))
                     self.manager.changes = True
             for name, value in self._properties.items():
                 if name not in self.properties:
                     cur.execute("""
-                      delete from shadows where key=? and name=?
+                      delete from ghosts where key=? and name=?
                     """, (key, name))
                     self.manager.changes = True
             if key != self.current_key and self.current_key is not None:
                 try:
                     cur.execute("""
-                      update shadows set key=? where key=?
+                      update ghosts set key=? where key=?
                         """, (key, self.current_key))
                 except Exception as e:
-                    InfiniteGlass.DEBUG("shadow.database", "Error updating key in db: %s\nkey=%s =>  key=%s\n" % (
+                    InfiniteGlass.DEBUG("ghost.database", "Error updating key in db: %s\nkey=%s =>  key=%s\n" % (
                         e, self.current_key, key))
                     self.destroy()
                 self.manager.changes = True
@@ -60,22 +60,22 @@ class Shadow(object):
         client = self.manager.clients.get(self.properties.get("SM_CLIENT_ID"))
         
         if self.current_key is not None:
-            del self.manager.shadows[self.current_key]
+            del self.manager.ghosts[self.current_key]
             if client:
-                del client.shadows[self.current_key]
-            InfiniteGlass.DEBUG("shadow", "UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
+                del client.ghosts[self.current_key]
+            InfiniteGlass.DEBUG("ghost", "UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
 
         self.current_key = key
-        self.manager.shadows[self.current_key] = self
+        self.manager.ghosts[self.current_key] = self
 
         if client:
-            client.shadows[self.current_key] = self
+            client.ghosts[self.current_key] = self
 
     def apply(self, window, type="set"):
-        InfiniteGlass.DEBUG("shadow", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("ghost", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
         for key in self.manager.config[type]:
             if key in self.properties:
-                InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
+                InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
                 window[key] = self.properties[key]
 
     def format_pair(self, name, value, sep=b"/"):
@@ -90,9 +90,9 @@ class Shadow(object):
         return pattern, value
     
     def activate(self):
-        InfiniteGlass.DEBUG("shadow", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("ghost", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
         for name, value in self.properties.items():
-            InfiniteGlass.DEBUG("shadow.properties", "%s=%s\n" % (name, str(value)[:100])); sys.stderr.flush()
+            InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (name, str(value)[:100])); sys.stderr.flush()
         
         self.window = self.manager.display.root.create_window(map=False, **self.properties.get("__attributes__", {}))
         self.window["IG_GHOST"] = "IG_GHOST"
@@ -122,11 +122,11 @@ class Shadow(object):
                     
         self.window["IG_CONTENT"] = ("IG_SVG", ghost_image)
         self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
-        self.apply(self.window, type="shadow_set")
+        self.apply(self.window, type="ghost_set")
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            InfiniteGlass.DEBUG("shadow", "SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("ghost", "SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
             self.destroy()
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
@@ -139,16 +139,16 @@ class Shadow(object):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
                 self.window.destroy()
             else:
-                InfiniteGlass.DEBUG("shadow", "%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
+                InfiniteGlass.DEBUG("ghost", "%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
         self.WMDelete = ClientMessage
 
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
-            if name not in self.manager.config["shadow_update"]: return
+            if name not in self.manager.config["ghost_update"]: return
             try:
                 self.properties.update(glass_ghosts.helpers.expand_property(win, name))
-                InfiniteGlass.DEBUG("shadow.property", "%s=%s\n" % (name, self.properties[name])); sys.stderr.flush()
+                InfiniteGlass.DEBUG("ghost.property", "%s=%s\n" % (name, self.properties[name])); sys.stderr.flush()
             except:
                 pass
             else:
@@ -184,7 +184,7 @@ class Shadow(object):
         self.manager.display.flush()
 
     def deactivate(self):
-        InfiniteGlass.DEBUG("shadow", "SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("ghost", "SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
             self.window.destroy()
             self.manager.display.eventhandlers.remove(self.ButtonPress)
@@ -198,15 +198,15 @@ class Shadow(object):
     def destroy(self):
         self.deactivate()
 
-        self.manager.shadows.pop(self.key(), None)
+        self.manager.ghosts.pop(self.key(), None)
         client = self.manager.clients.get(self.properties.get("SM_CLIENT_ID"))
         if client:
-            client.shadows.pop(self.key(), None)
+            client.ghosts.pop(self.key(), None)
         
         if not self.from_config:
             cur = self.manager.dbconn.cursor()
             cur.execute("""
-                delete from shadows where key = ?
+                delete from ghosts where key = ?
             """, (self.key(),))
             self.manager.dbconn.commit()
 

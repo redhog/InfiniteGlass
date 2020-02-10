@@ -14,7 +14,7 @@ def tuplify(value):
         return tuple(value)
     return value
 
-def shadow_key(properties, use):
+def ghost_key(properties, use):
     def stringify(value):
         if value is None:
             return ""
