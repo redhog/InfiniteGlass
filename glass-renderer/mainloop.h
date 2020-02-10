@@ -34,9 +34,9 @@ struct TimeoutHandlerStruct {
 extern void timeout_handler_install(TimeoutHandler *handler);
 extern void timeout_handler_uninstall(TimeoutHandler *handler);
 
-extern Bool event_handle(XEvent *event);
-extern void event_mainloop();
-extern void event_exit_mainloop();
+extern Bool mainloop_event_handle(XEvent *event);
+extern void mainloop_run();
+extern void mainloop_exit();
 
 
 #endif

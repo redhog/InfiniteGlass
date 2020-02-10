@@ -3,7 +3,7 @@
 #include "debug.h"
 #include <string.h>
 
-List *event_handlers = NULL;
+List *mainloop_event_handlers = NULL;
 List *timeout_handlers = NULL;
 
 Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
@@ -20,8 +20,8 @@ Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
 }
 
 void event_handler_install(EventHandler *handler) {
-  if (!event_handlers) event_handlers = list_create();
-  list_append(event_handlers, (void *) handler);
+  if (!mainloop_event_handlers) mainloop_event_handlers = list_create();
+  list_append(mainloop_event_handlers, (void *) handler);
   // Fetch existing mask and OR!!!
   if (handler->match_mask.xany.window) {
     XSelectInput(display, handler->match_event.xany.window, handler->event_mask);
@@ -29,7 +29,7 @@ void event_handler_install(EventHandler *handler) {
 }
 
 void event_handler_uninstall(EventHandler *handler) {
-  list_remove(event_handlers, (void *) handler);
+  list_remove(mainloop_event_handlers, (void *) handler);
 }
 
 
@@ -44,10 +44,10 @@ void timeout_handler_uninstall(TimeoutHandler *handler) {
 
 
 
-Bool event_handle(XEvent *event) {
-  if (!event_handlers) return False;
-  for (int idx = 0; idx < event_handlers->count; idx++) {
-    EventHandler *handler = (EventHandler *) event_handlers->entries[idx];
+Bool mainloop_event_handle(XEvent *event) {
+  if (!mainloop_event_handlers) return False;
+  for (int idx = 0; idx < mainloop_event_handlers->count; idx++) {
+    EventHandler *handler = (EventHandler *) mainloop_event_handlers->entries[idx];
     if (   event_match(event, &handler->match_event, &handler->match_mask)
         && handler->handler(handler, event)) {
       return True;
@@ -82,7 +82,7 @@ void timeout_handle() {
 
 Bool exit_mainloop_flag = False;
 
-void event_mainloop() {
+void mainloop_run() {
   int display_fd = ConnectionNumber(display);
   fd_set in_fds;
   struct timeval timeout;
@@ -98,12 +98,12 @@ void event_mainloop() {
     timeout_handle();
     while (XPending(display)) {
       XNextEvent(display, &e);
-      event_handle(&e);
+      mainloop_event_handle(&e);
       XSync(display, False);
     }
   }
 }
 
-void event_exit_mainloop() {
+void mainloop_exit() {
   exit_mainloop_flag = True;
 }

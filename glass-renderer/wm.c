@@ -509,7 +509,7 @@ int main() {
   main_event_handler.data = NULL;
   event_handler_install(&main_event_handler);
 
-  event_mainloop();
+  mainloop_run();
   
   return 0;
 }
