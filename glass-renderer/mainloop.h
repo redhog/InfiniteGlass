@@ -18,8 +18,8 @@ struct EventHandlerStruct {
   void *data;
 };
 
-extern void event_handler_install(EventHandler *handler);
-extern void event_handler_uninstall(EventHandler *handler);
+extern void mainloop_install_event_handler(EventHandler *handler);
+extern void mainloop_uninstall_event_handler(EventHandler *handler);
 
 typedef struct TimeoutHandlerStruct TimeoutHandler;
 typedef void TimeoutHandlerFunction(TimeoutHandler *handler, struct timeval *current_time);
@@ -31,8 +31,8 @@ struct TimeoutHandlerStruct {
   void *data;
 };
 
-extern void timeout_handler_install(TimeoutHandler *handler);
-extern void timeout_handler_uninstall(TimeoutHandler *handler);
+extern void mainloop_install_timeout_handler(TimeoutHandler *handler);
+extern void mainloop_uninstall_timeout_handler(TimeoutHandler *handler);
 
 extern Bool mainloop_event_handle(XEvent *event);
 extern void mainloop_run();

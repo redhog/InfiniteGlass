@@ -41,8 +41,8 @@ Bool event_handler_clear(EventHandler *handler, XEvent *event) {
   Selection *selection = (Selection *) handler->data;
   selection->clear(selection);
 
-  event_handler_uninstall(&selection->event_handler_convert);
-  event_handler_uninstall(&selection->event_handler_clear);
+  mainloop_uninstall_event_handler(&selection->event_handler_convert);
+  mainloop_uninstall_event_handler(&selection->event_handler_clear);
   free(selection);
    
   return True;
@@ -84,7 +84,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   event_handler->match_event.xselectionrequest.selection = selection->name;
   event_handler->handler = &event_handler_convert;
   event_handler->data = selection;
-  event_handler_install(event_handler);
+  mainloop_install_event_handler(event_handler);
 
   event_handler = &selection->event_handler_clear;
   event_handler->event_mask = NoEventMask;
@@ -96,7 +96,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   event_handler->match_event.xselectionrequest.selection = selection->name;
   event_handler->handler = &event_handler_clear;
   event_handler->data = selection;
-  event_handler_install(event_handler);
+  mainloop_install_event_handler(event_handler);
   
   // Generate timestamp
   char dummy;
@@ -109,8 +109,8 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   XSetSelectionOwner(display, selection->name, selection->owner, timestamp_event.xproperty.time);
   Window current_owner = XGetSelectionOwner(display, selection->name);
   if (current_owner != selection->owner) {
-    event_handler_uninstall(&selection->event_handler_convert);
-    event_handler_uninstall(&selection->event_handler_clear);
+    mainloop_uninstall_event_handler(&selection->event_handler_convert);
+    mainloop_uninstall_event_handler(&selection->event_handler_clear);
     free(selection);
     return NULL;
   } else {

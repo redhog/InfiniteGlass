@@ -19,7 +19,7 @@ Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
   return True;
 }
 
-void event_handler_install(EventHandler *handler) {
+void mainloop_install_event_handler(EventHandler *handler) {
   if (!mainloop_event_handlers) mainloop_event_handlers = list_create();
   list_append(mainloop_event_handlers, (void *) handler);
   // Fetch existing mask and OR!!!
@@ -28,17 +28,17 @@ void event_handler_install(EventHandler *handler) {
   }
 }
 
-void event_handler_uninstall(EventHandler *handler) {
+void mainloop_uninstall_event_handler(EventHandler *handler) {
   list_remove(mainloop_event_handlers, (void *) handler);
 }
 
 
-void timeout_handler_install(TimeoutHandler *handler) {
+void mainloop_install_timeout_handler(TimeoutHandler *handler) {
   if (!timeout_handlers) timeout_handlers = list_create();
   list_append(timeout_handlers, (void *) handler);
 }
 
-void timeout_handler_uninstall(TimeoutHandler *handler) {
+void mainloop_uninstall_timeout_handler(TimeoutHandler *handler) {
   list_remove(timeout_handlers, (void *) handler);
 }
 

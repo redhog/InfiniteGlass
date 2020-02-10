@@ -499,7 +499,7 @@ int main() {
   }
   draw_timeout_handler.handler = &draw_timeout_handler_function;
   draw_timeout_handler.data = NULL;
-  timeout_handler_install(&draw_timeout_handler);
+  mainloop_install_timeout_handler(&draw_timeout_handler);
   
   EventHandler main_event_handler;
   main_event_handler.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask;
@@ -507,7 +507,7 @@ int main() {
   event_mask_unset(main_event_handler.match_mask);
   main_event_handler.handler = &main_event_handler_function;
   main_event_handler.data = NULL;
-  event_handler_install(&main_event_handler);
+  mainloop_install_event_handler(&main_event_handler);
 
   mainloop_run();
   
