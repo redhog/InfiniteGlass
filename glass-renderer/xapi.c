@@ -40,13 +40,9 @@ int xinit() {
   error_init();
 
   root = DefaultRootWindow(display);
-  DISPLAYSVG = XInternAtom(display, "DISPLAYSVG", False);
   IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   XA_FLOAT = XInternAtom(display, "FLOAT", False);
-  IG_NOTIFY_MOTION = XInternAtom(display, "IG_NOTIFY_MOTION", False);
-  IG_ACTIVE_WINDOW = XInternAtom(display, "IG_ACTIVE_WINDOW", False);
-  WM_STATE = XInternAtom(display, "WM_STATE", False);
   XA_MANAGER = XInternAtom(display, "MANAGER", False);    
 
   x_try();

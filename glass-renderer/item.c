@@ -13,6 +13,7 @@
 List *items_all = NULL;
 Item *root_item = NULL;
 
+Atom WM_STATE;
 Atom IG_LAYER;
 Atom IG_LAYER_DESKTOP;
 Atom IG_LAYER_OVERLAY;
@@ -34,6 +35,7 @@ Atom IG_DRAW_TYPE_TRIANGLES_ADJACENCY;
 Atom IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY;
  
 Bool init_items() {
+  WM_STATE = XInternAtom(display, "WM_STATE", False);
   IG_LAYER = XInternAtom(display, "IG_LAYER", False);
   IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
   IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);

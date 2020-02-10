@@ -10,6 +10,7 @@
 #include "property.h"
 #include "rendering.h"
 
+extern Atom WM_STATE;
 extern Atom IG_LAYER;
 extern Atom IG_LAYER_DESKTOP;
 extern Atom IG_LAYER_OVERLAY;
