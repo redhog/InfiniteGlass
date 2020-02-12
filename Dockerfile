@@ -26,6 +26,7 @@ RUN apt install -y chromium-browser
 RUN apt install -y emacs
 RUN apt install -y wget
 RUN apt install -y unzip
+RUN apt install -y sudo
 
 RUN echo Version 2
 
@@ -38,5 +39,7 @@ RUN useradd glass
 RUN mkdir -p /home/glass
 RUN chown glass:users /home/glass
 RUN chmod -R ugo+rw /InfiniteGlass
+RUN sed -e "s+\(sudo:.*\)+\1glass+g" /etc/group -i
+RUN sed -e "s+ALL$+NOPASSWD: ALL+g" /etc/sudoers -i
 
 CMD /InfiniteGlass/scripts/docker-runner.sh
