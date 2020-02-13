@@ -4,6 +4,19 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#ifdef USE_BACKTRACE
+  #include <backtrace.h>
+  struct backtrace_state *debug_backtrace_state = NULL;
+
+  void debug_backtrace_print(int skip, FILE *fd) {
+    if (!debug_backtrace_state) debug_backtrace_state = backtrace_create_state(NULL, 1, NULL, NULL);
+    backtrace_print (debug_backtrace_state, skip + 1, fd);
+  }
+#else
+(
+  void debug_backtrace_print(int skip, FILE *fd) {}
+#endif
+
 FILE *eventlog = NULL;
 
 int debug_enabled(int dfl, const char *prefix, const char *file, const char *func, const char *entry) {
