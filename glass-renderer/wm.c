@@ -32,12 +32,6 @@
 #include <X11/extensions/XInput2.h>
 #include <math.h>
 
-#ifdef USE_BACKTRACE
-#include <backtrace.h>
-struct backtrace_state *trace_state;
-#else
-#define backtrace_print(a,...) {}
-#endif
 
 
 #define AUTOMATIC_REDRAWS 10
@@ -451,12 +445,6 @@ void exit_saving_profile_info(int sig) {
 
 int main() {
   signal(SIGUSR1, exit_saving_profile_info);
-
-#ifdef USE_BACKTRACE
-  trace_state = backtrace_create_state(NULL, 0, NULL, NULL);
-#endif
-
-// backtrace_print (trace_state, 0, stdout);
   
   if (!xinit()) return 1;
   if (!init_view()) return 1;
