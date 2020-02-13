@@ -43,6 +43,8 @@ int glinit(Window window) {
   }
   glXMakeCurrent(display, window, context);
 
+  if (GL_CHECK_ERROR("init", "Unable to initialize OpenGL context")) return 0;
+  
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     fprintf(stderr, "GLEW: Unable to initialize: %s\n", glewGetErrorString(err));
@@ -58,17 +60,23 @@ int glinit(Window window) {
   unsigned int VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
-  
-  glViewport(0, 0, overlay_attr.width, overlay_attr.height);  
+
+  if (GL_CHECK_ERROR("init", "Unable to set up OpenGL vertex arrays")) return 0;
+
+  glViewport(0, 0, overlay_attr.width, overlay_attr.height);
+  if (GL_CHECK_ERROR("init", "Unable to set up OpenGL viewport: %ld, %ld\n", overlay_attr.width, overlay_attr.height)) return 0;
   glFrustum(-1.,
  	1.,
  	-1.,
  	1.,
  	1.,
  	2.);
+  if (GL_CHECK_ERROR("init", "Unable to set up OpenGL projection\n")) return 0;
+  
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
   glDepthFunc(GL_GEQUAL);
+  if (GL_CHECK_ERROR("init", "Unable to set up OpenGL depth handling\n")) return 0;
   
   DEBUG("init.opengl", "OpenGL: %s:%s(%s)\nGLSL: %s\n", vendor, renderer, version, glsl_ver);
   return 1;
