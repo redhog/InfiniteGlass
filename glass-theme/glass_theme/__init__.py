@@ -69,6 +69,8 @@ def setup_splash(display):
     return w1, w2
 
 def setup_splash_animation(display, lat, lon):
+    splash_windows = setup_splash(display)
+
     geom = display.root.get_geometry()
     height = float(geom.height) / float(geom.width)
 
@@ -97,7 +99,15 @@ def setup_splash_animation(display, lat, lon):
     anim = display.root["IG_ANIMATE"]
     anim.send(anim, "IG_ANIMATE", display.root, "IG_INITIAL", 0.0, event_mask=Xlib.X.PropertyChangeMask)
 
+    @display.root.on()
+    def PropertyNotify(win, event):
+        if display.get_atom_name(event.atom) == "IG_THEME":
+            for w in splash_windows:
+                w.destroy()
+            sys.exit(0)
+    
 def setup_splash_test(display, lat, lon):
+    splash_windows = setup_splash(display)
     display.root["IG_VIEWS"] = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
     display.root["IG_WORLD_LAT"] = lat
     display.root["IG_WORLD_LON"] = lon
@@ -113,8 +123,6 @@ def main(*arg, **kw):
             display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
             return
 
-        splash_windows = setup_splash(display)
-
         lat = 70.
         lon = 18.
         
@@ -123,12 +131,6 @@ def main(*arg, **kw):
         else:
             setup_splash_animation(display, lat, lon)
             
-        @display.root.on()
-        def PropertyNotify(win, event):
-            if display.get_atom_name(event.atom) == "IG_THEME":
-                for w in splash_windows:
-                    w.destroy()
-                sys.exit(0)
                 
         display.flush()
         
