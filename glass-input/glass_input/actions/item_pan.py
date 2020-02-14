@@ -2,6 +2,7 @@ from .. import mode
 import InfiniteGlass
 
 def item_pan(self, event, x=None, y=None):
+    "Move the current window a fixed amount in x and/or y"
     if x is None and y is None:
         self.x += event["XK_Right"] - event["XK_Left"]
         self.y += event["XK_Down"] - event["XK_Up"]
@@ -19,6 +20,7 @@ def item_pan(self, event, x=None, y=None):
     self.window["IG_COORDS"] = coords
 
 def item_pan_mouse(self, event):
+    "Move the current window as the mouse moves"    
     space_orig = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, self.first_event.root_x, self.first_event.root_y)
     space = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, event.root_x, event.root_y)
 

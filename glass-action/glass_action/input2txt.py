@@ -1,11 +1,26 @@
 import yaml
 import os.path
+import importlib
+import types
 
 config = None
+functions = {}
 
 NUMBERS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 COMPATIBLE_EVENTS = (("KeyPress", "KeyRelease"), ("ButtonPress", "ButtonRelease", "MotionNotify"))
 EVENT_TYPES = [event for group in COMPATIBLE_EVENTS for event in group]
+
+def set_config(cfg):
+    global config
+    config = cfg    
+    for module_name in config["imports"]:
+        module = importlib.import_module(module_name)
+        importlib.reload(module)
+        functions.update({
+            name: getattr(module, name)
+            for name in dir(module)
+            if isinstance(getattr(module, name), types.FunctionType)
+        })
 
 def flatten_value(value, path=()):
     if isinstance(value, list):
@@ -135,23 +150,31 @@ def invert(d):
                 res[value].add(name)
     return res
 
+def format_bindings(bindings, indent="    "):
+    for binding in bindings:
+        binding = ", ".join("+".join(a for a in b) for b in format_binding(binding))
+        print("%s%s" % (indent, binding,))
+
 def format_input_config():
     global config
     
     configpath = os.path.expanduser(os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.json"))
     with open(configpath) as f:
-        config = yaml.load(f, Loader=yaml.SafeLoader)
+        set_config(yaml.load(f, Loader=yaml.SafeLoader))
 
     res = invert(dict(simplify_bindings(flatten(config["modes"]["base_mode"]))))
-
-    def format_bindings(bindings, indent="    "):
-        for binding in bindings:
-            binding = ", ".join("+".join(a for a in b) for b in format_binding(binding))
-            print("%s%s" % (indent, binding,))
 
     actions = sorted(res.keys())
     for name in actions:
         value = res[name]
+        if name in functions:
+            fn = functions[name]
+            doc = fn.__doc__
+            if doc: name = "%s: %s" % (name, doc)
+        elif name in config["modes"]:
+            mode = config["modes"][name]
+            if "shell" in mode:
+                name = "%s: %s" % (name, mode["shell"])
         print(name)
         if isinstance(value, dict):
             for params, v in value.items():

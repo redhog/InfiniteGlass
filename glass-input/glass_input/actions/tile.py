@@ -5,6 +5,8 @@ import rpack
 from . import item_zoom_to
 
 def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False):
+    "Tile/pack all visible windows as tightly as possible"
+
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
@@ -49,4 +51,5 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False):
     self.display.flush()
 
 def tile_visible_to_1_1(self, *arg, **kw):
+    "Tile/pack all visible windows as tightly as possible and change their pixel resolution to match their size on the screen"
     tile_visible(self, zoom_1_1=True, *arg, **kw)

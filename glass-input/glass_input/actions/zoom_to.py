@@ -4,6 +4,7 @@ from .. import mode
 from . import zoom
 
 def zoom_to_window(self, event):
+    "Zoom the screen so that the current window is full-screen"
     print("ZOOM IN TO WINDOW")
     win = InfiniteGlass.windows.get_active_window()
     old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
@@ -14,6 +15,7 @@ def zoom_to_window(self, event):
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
 def zoom_to_fewer_windows(self, event, margin=0.01):
+    "Zoom in the screen so that one fewer window is visible"
     print("ZOOM IN TO FEWER WINDOWS")
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     vx = view[0] + view[2] / 2.
@@ -58,6 +60,7 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
     InfiniteGlass.DEBUG("view", "Windows are all overlapping... Not sure what to do...\n")
 
 def zoom_to_more_windows(self, event):
+    "Zoom out the screen so that one more window is visible"
     print("ZOOM OUT TO MORE WINDOWS")
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     vx = view[0] + view[2] / 2.
@@ -96,6 +99,7 @@ def zoom_to_more_windows(self, event):
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
 def zoom_home(self, event):
+    "Zoom the screen to its initial position"
     InfiniteGlass.DEBUG("zoom", "ZOOM HOME\n")
     old = self.display.root["IG_VIEW_DESKTOP_VIEW"]
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = [0., 0., 1., old[3] / old[2]]

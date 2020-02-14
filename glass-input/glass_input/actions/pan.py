@@ -5,6 +5,7 @@ from . import item_zoom_to
 import sys
 
 def pan(self, event, x=None, y=None):
+    "Pan the screen a fixed amount in x and/or y"
     if x is None and y is None:
         self.x += event["XK_Left"] - event["XK_Right"]
         self.y += event["XK_Up"] - event["XK_Down"]
@@ -21,6 +22,7 @@ def pan(self, event, x=None, y=None):
     self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
 def pan_mouse(self, event):
+    "Pan the screen as the mouse moves"
     space_orig = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, self.first_event.root_x, self.first_event.root_y)
     space = InfiniteGlass.coords.view_to_space(self.orig_view, self.orig_size, event.root_x, event.root_y)
 
@@ -31,12 +33,16 @@ def pan_mouse(self, event):
     self.display.root["IG_VIEW_DESKTOP_VIEW"] = view
 
 def zoom_to_window_to_the_right(self, event):
+    "Pan/zoom so that one more window is visible to the right"
     zoom_to_window_to_the(self, event, 0)
 def zoom_to_window_above(self, event):
+    "Pan/zoom so that one more window is visible above"
     zoom_to_window_to_the(self, event, numpy.pi * 0.5)
 def zoom_to_window_to_the_left(self, event):
+    "Pan/zoom so that one more window is visible to the left"
     zoom_to_window_to_the(self, event, numpy.pi * 1.)
 def zoom_to_window_below(self, event):
+    "Pan/zoom so that one more window is visible below"
     zoom_to_window_to_the(self, event, numpy.pi * 1.5)
 
 def zoom_to_window_to_the(self, event, direction):

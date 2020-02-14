@@ -2,6 +2,7 @@ import Xlib.X
 import InfiniteGlass
 
 def focus_follows_mouse(self, event):
+    "Bind this to GenericEventCode to make your keyboard focus follow the mouse"
     pointer = self.display.root.query_pointer()
     win = pointer.child
     if win == getattr(self, "focus", None): return
