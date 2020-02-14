@@ -2,6 +2,12 @@
 
 IMAGE=redhogorg/glass:0.0.2
 
+if [ "$1" == "clean" ]; then
+  docker rm glass
+  docker rmi -f "$IMAGE"
+  exit 0
+fi
+
 if [ "$(docker images -q $IMAGE)" == "" ]; then
   docker build -t $IMAGE .
 fi

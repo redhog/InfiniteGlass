@@ -84,8 +84,13 @@ $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS)):
 $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS)):
 	pip3 uninstall $(patsubst uninstall-%,%,$@)
 
-clean:
+clean: clean-build clean-python clean-docker
+
+clean-build:
 	rm -rf $(BUILD)
 
 clean-python:
 	rm -rf $(shell find . -name __pycache__) $(shell find . -name .eggs) $(shell find . -name dist) $(shell find . -name build | grep /glass)
+
+clean-docker:
+	scripts/run-in-docker.sh clean
