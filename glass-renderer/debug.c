@@ -13,7 +13,6 @@
     backtrace_print (debug_backtrace_state, skip + 1, fd);
   }
 #else
-(
   void debug_backtrace_print(int skip, FILE *fd) {}
 #endif
 
