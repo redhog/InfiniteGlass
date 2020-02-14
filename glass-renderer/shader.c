@@ -62,6 +62,7 @@ Shader *shader_loadX(Atom name) {
   Shader *shader = malloc(sizeof(Shader));  
   shader->name = name;
   shader->name_str = XGetAtomName(display, name);
+  GL_CHECK_ERROR("start", "%s", shader->name_str);
   
   shader->geometry = atom_append(display, shader->name, "_GEOMETRY");
   shader->vertex = atom_append(display, shader->name, "_VERTEX");
@@ -99,6 +100,7 @@ Shader *shader_loadX(Atom name) {
     free(shader);
     return NULL;
   }
+  GL_CHECK_ERROR("compile", "%s", shader->name_str);
 
   shader->program = glCreateProgram();
 
@@ -116,8 +118,8 @@ Shader *shader_loadX(Atom name) {
   }
 
   glUseProgram(shader->program);
+  GL_CHECK_ERROR("link", "%s", shader->name_str);
   
-  GL_CHECK_ERROR("standard_properties1", "%s", shader->name_str);
   shader->screen_attr = glGetUniformLocation(shader->program, "screen");
   shader->size_attr = glGetUniformLocation(shader->program, "size");
   shader->border_width_attr = glGetUniformLocation(shader->program, "border_width");

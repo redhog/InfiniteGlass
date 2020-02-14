@@ -2,6 +2,7 @@
 #include "item.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include "mainloop.h"
 #include "error.h"
 #include "debug.h"
 #include <X11/extensions/XInput2.h>
@@ -124,6 +125,8 @@ int xinit() {
   
   XSync(display, False);
 
+  mainloop_install_display(display);
+  
   DEBUG("init", "root=%ld, overlay=%ld\n", root, overlay);
 
   return 1;

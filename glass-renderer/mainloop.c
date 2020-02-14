@@ -2,9 +2,42 @@
 #include "list.h"
 #include "debug.h"
 #include <string.h>
+#include <poll.h>
 
-List *mainloop_event_handlers = NULL;
+List *mainloop_fd_handlers = NULL;
+struct pollfd *mainloop_fds = NULL;
 List *timeout_handlers = NULL;
+List *mainloop_displays = NULL;
+
+
+void mainloop_update_fds() {
+  mainloop_fds = realloc(mainloop_fds, sizeof(struct pollfd) * mainloop_fd_handlers->count);
+  for (size_t idx = 0; idx < mainloop_fd_handlers->count; idx++) {
+    FdEventHandler *handler = (FdEventHandler *) mainloop_fd_handlers->entries[idx];
+    mainloop_fds[idx].fd = handler->fd;
+    mainloop_fds[idx].events = handler->events;
+  }
+}
+
+void mainloop_install_fd_event_handler(FdEventHandler *handler) {
+  if (!mainloop_fd_handlers) mainloop_fd_handlers = list_create();
+  list_append(mainloop_fd_handlers, (void *) handler);
+  mainloop_update_fds();
+}
+void mainloop_uninstall_fd_event_handler(FdEventHandler *handler) {
+  list_remove(mainloop_fd_handlers, (void *) handler);
+  mainloop_update_fds();
+}
+
+
+void mainloop_install_timeout_handler(TimeoutHandler *handler) {
+  if (!timeout_handlers) timeout_handlers = list_create();
+  list_append(timeout_handlers, (void *) handler);
+}
+
+void mainloop_uninstall_timeout_handler(TimeoutHandler *handler) {
+  list_remove(timeout_handlers, (void *) handler);
+}
 
 Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
  char *e = (char *) event;
@@ -19,41 +52,56 @@ Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
   return True;
 }
 
-void mainloop_install_event_handler(EventHandler *handler) {
-  if (!mainloop_event_handlers) mainloop_event_handlers = list_create();
-  list_append(mainloop_event_handlers, (void *) handler);
-  // Fetch existing mask and OR!!!
-  if (handler->match_mask.xany.window) {
-    XSelectInput(display, handler->match_event.xany.window, handler->event_mask);
-  }
-}
-
-void mainloop_uninstall_event_handler(EventHandler *handler) {
-  list_remove(mainloop_event_handlers, (void *) handler);
-}
-
-
-void mainloop_install_timeout_handler(TimeoutHandler *handler) {
-  if (!timeout_handlers) timeout_handlers = list_create();
-  list_append(timeout_handlers, (void *) handler);
-}
-
-void mainloop_uninstall_timeout_handler(TimeoutHandler *handler) {
-  list_remove(timeout_handlers, (void *) handler);
-}
-
-
-
-Bool mainloop_event_handle(XEvent *event) {
-  if (!mainloop_event_handlers) return False;
-  for (int idx = 0; idx < mainloop_event_handlers->count; idx++) {
-    EventHandler *handler = (EventHandler *) mainloop_event_handlers->entries[idx];
-    if (   event_match(event, &handler->match_event, &handler->match_mask)
-        && handler->handler(handler, event)) {
-      return True;
+void mainloop_display_xevent_handler(DisplayHandler *handler, XEvent *event) {
+  for (int idx = 0; idx < handler->event_handlers->count; idx++) {
+    XEventHandler *xevent_handler = (XEventHandler *) handler->event_handlers->entries[idx];
+    if (   event_match(event, &xevent_handler->match_event, &xevent_handler->match_mask)
+        && xevent_handler->handler(xevent_handler, event)) {
+      return;
     }
   }
-  return False;
+}
+
+void mainloop_display_handler(FdEventHandler *handler, short revents) {
+  XEvent xevent;
+  DisplayHandler *display_handler = (DisplayHandler *) handler->data;
+  Display *display = display_handler->display;
+  while (XPending(display)) {
+    XNextEvent(display, &xevent);
+    mainloop_display_xevent_handler(display_handler, &xevent);
+    XSync(display, False);
+  }
+}
+
+DisplayHandler *mainloop_install_display(Display *display) {
+  DisplayHandler *handler = (DisplayHandler *) malloc(sizeof(DisplayHandler));
+  handler->display = display;
+  handler->event_handlers = list_create();
+  handler->fd_handler.fd = ConnectionNumber(display);
+  handler->fd_handler.events = POLLIN;
+  handler->fd_handler.handler = &mainloop_display_handler;
+  handler->fd_handler.data = (void *) handler;
+  
+  if (!mainloop_displays) mainloop_displays = list_create();
+  list_append(mainloop_displays, (void *) handler);
+  return handler;
+}
+void mainloop_uninstall_display(DisplayHandler *handler) {
+  list_remove(mainloop_displays, (void *) handler);
+  list_destroy(handler->event_handlers);
+  free(handler);
+}
+
+void mainloop_install_xevent_handler(XEventHandler *handler) {
+  list_append(handler->display->event_handlers, (void *) handler);
+  // Fetch existing mask and OR!!!
+  if (handler->match_mask.xany.window) {
+    XSelectInput(handler->display->display, handler->match_event.xany.window, handler->event_mask);
+  }
+}
+
+void mainloop_uninstall_xevent_handler(XEventHandler *handler) {
+  list_remove(handler->display->event_handlers, (void *) handler);
 }
 
 void timeout_handle() {
@@ -83,23 +131,17 @@ void timeout_handle() {
 Bool exit_mainloop_flag = False;
 
 void mainloop_run() {
-  int display_fd = ConnectionNumber(display);
-  fd_set in_fds;
-  struct timeval timeout;
-  XEvent e;
-    
+  int res;
   while (!exit_mainloop_flag) {
-    FD_ZERO(&in_fds);
-    FD_SET(display_fd, &in_fds);
-    timeout.tv_usec = 30000;
-    timeout.tv_sec = 0;
-
-    select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
+    res = poll(mainloop_fds, mainloop_fd_handlers->count, 30);
     timeout_handle();
-    while (XPending(display)) {
-      XNextEvent(display, &e);
-      mainloop_event_handle(&e);
-      XSync(display, False);
+    if (res > 0) {
+      for (size_t idx = 0; idx < mainloop_fd_handlers->count; idx++) {
+        if (mainloop_fds[idx].revents) {
+          FdEventHandler *handler = (FdEventHandler *) mainloop_fd_handlers->entries[idx];
+          handler->handler(handler, mainloop_fds[idx].revents);
+        }
+      }     
     }
   }
 }

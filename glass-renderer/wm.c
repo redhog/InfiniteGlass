@@ -153,7 +153,7 @@ Bool selection_sn_handler(Selection *selection, XEvent *event) {
 void selection_sn_clear(Selection *selection) {
 }
 
-Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
+Bool main_event_handler_function(XEventHandler *handler, XEvent *event) {
   XGenericEventCookie *cookie = &event->xcookie;
 
   unsigned long start_time = get_timestamp();
@@ -454,10 +454,13 @@ int main() {
   if (!init_shader()) return 1;
   if (!init_items()) return 1;
 
+  DisplayHandler *display_handler = mainloop_install_display(display);
+  
   IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
   
-  manager_selection_create(XInternAtom(display, "WM_S0", False),
+  manager_selection_create(display_handler,
+                           XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
                            &selection_sn_clear,
                            NULL, True, 0, 0);
@@ -465,10 +468,11 @@ int main() {
   DEBUG("start", "Initialized X and GL.\n");
 
   views = view_load_all();
+
   shaders = shader_load_all();
 
   DEBUG("XXXXXXXXXXX1", "views=%ld shaders=%ld\n", views, shaders);
-  
+
   property_type_register(&property_atom);
   property_type_register(&property_window);
   property_type_register(&property_int);
@@ -497,13 +501,14 @@ int main() {
   draw_timeout_handler.data = NULL;
   mainloop_install_timeout_handler(&draw_timeout_handler);
   
-  EventHandler main_event_handler;
+  XEventHandler main_event_handler;
+  main_event_handler.display = display_handler;
   main_event_handler.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask;
   event_mask_unset(main_event_handler.match_event);
   event_mask_unset(main_event_handler.match_mask);
   main_event_handler.handler = &main_event_handler_function;
   main_event_handler.data = NULL;
-  mainloop_install_event_handler(&main_event_handler);
+  mainloop_install_xevent_handler(&main_event_handler);
 
   mainloop_run();
   
