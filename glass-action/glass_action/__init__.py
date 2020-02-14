@@ -10,6 +10,7 @@ import click
 import sys
 import sqlite3
 import yaml
+import glass_action.input2txt
 
 @click.group()
 @click.pass_context
@@ -303,3 +304,9 @@ def restart(ctx, name):
         key = "IG_COMPONENT_%s" % name
         display.root[key] = display.root[key]
         display.flush()
+
+@main.command()
+@click.pass_context
+def keybindings(ctx):
+    glass_action.input2txt.format_input_config()
+    
