@@ -12,6 +12,7 @@ xauth nlist :0 | sed -e 's/^..../ffff/' > /tmp/.docker.xauth
 if [ ! "$(docker ps -a -q -f name=glass)" ]; then
   docker run \
          --name glass \
+         -m 2gb \
          -ti \
          -v ~/.config/glass:/home/glass/.config/glass \
          -v /tmp/.X11-unix:/tmp/.X11-unix \
