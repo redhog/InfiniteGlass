@@ -65,6 +65,7 @@ int glinit(Window window) {
 
   glViewport(0, 0, overlay_attr.width, overlay_attr.height);
   if (GL_CHECK_ERROR("init", "Unable to set up OpenGL viewport: %ld, %ld\n", overlay_attr.width, overlay_attr.height)) return 0;
+/* FIXME: This code throws an error. Why?
   glFrustum(-1.,
  	1.,
  	-1.,
@@ -72,6 +73,7 @@ int glinit(Window window) {
  	1.,
  	2.);
   if (GL_CHECK_ERROR("init", "Unable to set up OpenGL projection\n")) return 0;
+*/
   
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
