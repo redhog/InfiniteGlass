@@ -4,6 +4,7 @@ import json
 import numpy
 import Xlib.X
 import sys
+import re
 
 def linestrings2texture(f):
     coastline = json.load(f)
@@ -20,14 +21,26 @@ def linestrings2texture(f):
 
     return res
 
+def load_shader(name):
+    if name.startswith("resource://"):
+        pkg, name = name.split("://")[1].split("/", 1)
+        with pkg_resources.resource_stream(pkg, name) as f:
+            src = f.read()
+    else:
+        with open(name) as f:
+            src = f.read()
+    includes = re.findall(rb'^#include  *"(.*)"', src, re.MULTILINE)
+    for name in includes:
+        src = re.sub(rb'#include  *"%s"' % (name,), load_shader(name.decode("utf-8")), src, re.MULTILINE)
+    return src
+            
 def setup_shaders(display, shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")):
     display.root["IG_SHADER"] = "IG_SHADER_ROOT"
     for SHADER in shaders:
         shader = SHADER.lower()
         for PART in ("GEOMETRY", "VERTEX", "FRAGMENT"):
             part = PART.lower()
-            with pkg_resources.resource_stream("glass_theme", "shader_%s_%s.glsl" % (shader, part)) as f:
-                display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = f.read()
+            display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = load_shader("resource://glass_theme/shader_%s_%s.glsl" % (shader, part))
     display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
 def setup_views(display, views=["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]):
