@@ -1,11 +1,11 @@
 #version 330 core
 precision highp float;
 
-#include "resource://glass_theme/shader_fragment_svg.glsl"
-#include "resource://glass_theme/shader_fragment_content.glsl"
-#include "resource://glass_theme/shader_fragment_icon.glsl"
-#include "resource://glass_theme/shader_fragment_border.glsl"
-#include "resource://glass_theme/shader_fragment_picking.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_svg.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_content.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_icon.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_border.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_picking.glsl"
 
 #define ICON_CUTOFF_1 .4
 #define ICON_CUTOFF_2 .3

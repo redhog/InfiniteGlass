@@ -34,13 +34,13 @@ def load_shader(name):
         src = re.sub(rb'#include  *"%s"' % (name,), load_shader(name.decode("utf-8")), src, re.MULTILINE)
     return src
             
-def setup_shaders(display, shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")):
+def setup_shaders(display, shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND"), path="resource://glass_theme/shaders"):
     display.root["IG_SHADER"] = "IG_SHADER_ROOT"
     for SHADER in shaders:
         shader = SHADER.lower()
         for PART in ("GEOMETRY", "VERTEX", "FRAGMENT"):
             part = PART.lower()
-            display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = load_shader("resource://glass_theme/shader_%s_%s.glsl" % (shader, part))
+            display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = load_shader("%s/%s/%s.glsl" % (path, shader, part))
     display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
 def setup_views(display, views=["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]):

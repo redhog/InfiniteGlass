@@ -3,7 +3,7 @@
 layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 
-#include "resource://glass_theme/shader_geometry_coords.glsl"
+#include "resource://glass_theme/shaders/lib/geometry_coords.glsl"
 
 uniform sampler2D window_sampler;
 uniform vec4 IG_COORDS;
