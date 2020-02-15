@@ -11,6 +11,8 @@ class ThemeBase(object):
         self.display = display
         for name, value in kw.items():
             setattr(self, name, value)
+        self.setup_views()
+        self.setup_shaders()
 
     shader_path = None
     shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")

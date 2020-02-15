@@ -10,20 +10,15 @@ import glass_theme.base
 class Theme(glass_theme.base.ThemeBase):
     def __init__(self, *args, **kw):
         glass_theme.base.ThemeBase.__init__(self, *args, **kw)
-        
-        self.setup_views()
-        self.setup_shaders()
 
-        if False:
+        if self.mode == "no_splash":
             self.display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
-            return
-        
-        if False:
+        elif self.mode == "splash_test":
             self.setup_splash_test()
         else:
             self.setup_splash_animation()
 
-        self.display.flush()
+    mode = "splash"
 
     views = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
     shader_path = "resource://glass_theme/shaders"

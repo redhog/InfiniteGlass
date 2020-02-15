@@ -21,5 +21,6 @@ def main(*arg, **kw):
         cls = getattr(module, cls_name)
         
         cls(display, **config.get("args", {}))
-
+        display.flush()
+        
         InfiniteGlass.DEBUG("init", "Theme started: %s\n" % config["name"])
