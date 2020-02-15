@@ -1,0 +1,6 @@
+{
+    "name": "glass_theme.default.Theme",
+    "args": {
+        "latlon": [70., 18.]
+    }
+}
