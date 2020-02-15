@@ -11,7 +11,12 @@ class ThemeBase(object):
         self.display = display
         for name, value in kw.items():
             setattr(self, name, value)
-        
+
+    shader_path = None
+    shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
+    shader_parts = ("GEOMETRY", "VERTEX", "FRAGMENT")
+    views = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
+            
     def load_shader(self, name):
         if name.startswith("resource://"):
             pkg, name = name.split("://")[1].split("/", 1)
@@ -25,16 +30,16 @@ class ThemeBase(object):
             src = re.sub(rb'#include  *"%s"' % (name,), self.load_shader(name.decode("utf-8")), src, re.MULTILINE)
         return src
 
-    def setup_shaders(self, path, shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND"), parts = ("GEOMETRY", "VERTEX", "FRAGMENT")):
+    def setup_shaders(self):
         self.display.root["IG_SHADER"] = "IG_SHADER_ROOT"
-        for SHADER in shaders:
+        for SHADER in self.shaders:
             shader = SHADER.lower()
-            for PART in parts:
+            for PART in self.shader_parts:
                 part = PART.lower()
-                self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader("%s/%s/%s.glsl" % (path, shader, part))
-        self.display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
+                self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader("%s/%s/%s.glsl" % (self.shader_path, shader, part))
+        self.display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in self.shaders]
 
-    def setup_views(self, views=["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]):
+    def setup_views(self):
         self.display.root["IG_VIEW_SPLASH_LAYER"] = "IG_LAYER_SPLASH"
         self.display.root["IG_VIEW_SPLASH_VIEW"] = [0.0, 0.0, 1.0, 0.0]
         self.display.root["IG_VIEW_SPLASH_BACKGROUND_LAYER"] = "IG_LAYER_SPLASH_BACKGROUND"
@@ -50,4 +55,4 @@ class ThemeBase(object):
         self.display.root["IG_VIEW_ROOT_LAYER"] = "IG_LAYER_ROOT"
         self.display.root["IG_VIEW_ROOT_VIEW"] = [0.0, 0.0, 1.0, 0.0]
 
-        self.display.root["IG_VIEWS"] = views
+        self.display.root["IG_VIEWS"] = self.views

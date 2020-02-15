@@ -11,24 +11,22 @@ class Theme(glass_theme.base.ThemeBase):
     def __init__(self, *args, **kw):
         glass_theme.base.ThemeBase.__init__(self, *args, **kw)
         
-        self.setup_views(self.views)
-        self.setup_shaders(self.shaders)
+        self.setup_views()
+        self.setup_shaders()
 
         if False:
             self.display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
             return
-
-        lat, lon = self.latlon
         
         if False:
-            self.setup_splash_test(lat, lon)
+            self.setup_splash_test()
         else:
-            self.setup_splash_animation(lat, lon)
+            self.setup_splash_animation()
 
         self.display.flush()
 
     views = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
-    shaders = "resource://glass_theme/shaders"
+    shader_path = "resource://glass_theme/shaders"
     latlon = (70., 18.)
     
     def linestrings2texture(self, f):
@@ -66,7 +64,9 @@ class Theme(glass_theme.base.ThemeBase):
 
         return w1, w2
 
-    def setup_splash_animation(self, lat, lon):
+    def setup_splash_animation(self):
+        lat, lon = self.latlon
+        
         splash_windows = self.setup_splash()
 
         geom = self.display.root.get_geometry()
@@ -104,7 +104,8 @@ class Theme(glass_theme.base.ThemeBase):
                     w.destroy()
                 sys.exit(0)
 
-    def setup_splash_test(self, lat, lon):
+    def setup_splash_test(self):
+        lat, lon = self.latlon
         splash_windows = self.setup_splash()
         self.display.root["IG_VIEWS"] = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
         self.display.root["IG_WORLD_LAT"] = lat

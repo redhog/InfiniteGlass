@@ -31,6 +31,7 @@ Features:
   * [Key bindings](docs/KEYMAP.md)
   * [Sessions](docs/SESSION.md)
   * [Integrations](docs/INTEGRATIONS.md)
+  * [Themes](docs/THEMES.md)
   * [Debugging](docs/DEBUGGING.md)
 * [Protocols](docs/PROTOCOLS.md)
 * [References](docs/REFERENCES.md)
