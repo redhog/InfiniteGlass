@@ -3,8 +3,10 @@ and window properties. These are set up by the current theme. The
 theme is selected and configured in
 [~/.config/glass/theme.json](../glass-config-init/glass_config_init/theme.json),
 and is implemented as a single python class that subclasses
-glass_theme.base.ThemeBase. The arguments in theme.json can override
-any member variable defined in the theme class.
+[glass_theme.base.ThemeBase](../glass-theme/glass_theme/base.py). The
+arguments in theme.json can override any member variable defined in
+the theme class. For an example theme, see
+[glass_theme.default.Theme](../glass-theme/glass_theme/default.py).
 
 # Shaders
 
