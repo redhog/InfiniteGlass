@@ -99,6 +99,8 @@ def zoom_1_1_1(self, event):
 
 def adjust_view(self, view, win=None):
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
+    if not visible: return view
+    
     if win is None: win = visible[0]
     
     zoomed_view = item_zoom_1_1_to_window_calc(self, win=win, screen=view)
