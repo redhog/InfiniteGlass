@@ -1,5 +1,12 @@
 # About
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/redhog/InfiniteGlass?logo=github&style=plastic)](https://github.com/redhog/InfiniteGlass/releases/latest)
+![GitHub All Releases](https://img.shields.io/github/downloads/redhog/InfiniteGlass/total?style=plastic)
+[![GitHub license](https://img.shields.io/github/license/redhog/InfiniteGlass?style=plastic)](https://github.com/redhog/InfiniteGlass/blob/master/LICENSE)
+![GitHub issues](https://img.shields.io/github/issues/redhog/InfiniteGlass?style=plastic)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/redhog/InfiniteGlass?style=plastic)
+![GitHub stars](https://img.shields.io/github/stars/redhog/InfiniteGlass?style=plastic)
+
 This is a minimalistic compositing window manager for X with infinite
 desktop, infinite zoom and infinite virtual window pixel resolution.
 
