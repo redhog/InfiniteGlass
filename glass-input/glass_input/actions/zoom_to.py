@@ -2,6 +2,7 @@ import InfiniteGlass
 import math
 from .. import mode
 from . import zoom
+from . import item_zoom_to
 
 def zoom_to_window(self, event):
     "Zoom the screen so that the current window is full-screen"
@@ -50,6 +51,9 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
     for i in range(1, len(windows)):
         new_view = get_view(i)
         if (new_view[2] * (1 + margin) < view[2]) or (new_view[3] * (1 + margin) < view[3]):
+            adjusted_view = item_zoom_to.adjust_view(self, new_view, windows[-i-1][2])
+            if adjusted_view[2] < new_view[2] and adjusted_view[3] < new_view[3]:
+                new_view = adjusted_view
             print("Removed %s windows to reduce width by %s and height by %s" % (i, view[2] - new_view[2], view[3] - new_view[3]))
             InfiniteGlass.DEBUG("view", "View %s\n" % (new_view,))
             # self.display.root["IG_VIEW_DESKTOP_VIEW"] = new_view
@@ -79,8 +83,8 @@ def zoom_to_more_windows(self, event):
         return zoom.zoom_out(self, event)
 
     windows.sort(key=lambda a: a[0])
-    d, window, w = windows[0]
-    InfiniteGlass.DEBUG("window", "Next window %s/%s[%s] @ %s\n" % (w.get("WM_NAME", None), w.get("WM_CLASS", None), w.__window__(), window))
+    d, window, next_window = windows[0]
+    InfiniteGlass.DEBUG("window", "Next window %s/%s[%s] @ %s\n" % (next_window.get("WM_NAME", None), next_window.get("WM_CLASS", None), next_window.__window__(), window))
 
     ratio = view[2] / view[3]
 
@@ -94,6 +98,8 @@ def zoom_to_more_windows(self, event):
         view[3] = view[2] / ratio
     else:
         view[2] = ratio * view[3]
+
+    view = item_zoom_to.adjust_view(self, view, next_window)
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)

@@ -106,20 +106,7 @@ def zoom_to_window_to_the(self, event, direction):
         view[0] = newx - view[2] / 2.
         view[1] = newy - view[3] / 2.            
 
-
-        zoomed_view = item_zoom_to.item_zoom_1_1_to_window_calc(self, event, win=next_window, screen=view)
-
-        visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
-        zoomed_visible, zoomed_overlap, zoomed_invisible = InfiniteGlass.windows.get_windows(self.display, zoomed_view)
-
-        missing = set(w.__window__() for w, c in visible) - set(w.__window__() for w, c in zoomed_visible)
-        
-        if not missing:
-            view = zoomed_view
-
-        bbox = utils.bbox([c for w, c in visible])
-        view[0] = bbox[0] - ((view[2] - bbox[2]) / 2)
-        view[1] = bbox[1]-bbox[3] - ((view[3] - bbox[3]) / 2)
+        view = item_zoom_to.adjust_view(self, view, win=next_window)
         
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view

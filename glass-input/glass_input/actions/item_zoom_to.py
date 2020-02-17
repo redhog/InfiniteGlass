@@ -1,5 +1,6 @@
 import InfiniteGlass
 from .. import mode
+from .. import utils
 
 def item_zoom_1_1_to_sreen_calc(self, win, size = None, coords = None, view = None):
     size = size or self.display.root["IG_VIEW_DESKTOP_SIZE"]
@@ -95,3 +96,27 @@ def zoom_1_1_1(self, event):
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
     self.display.flush()
     self.display.sync()
+
+def adjust_view(self, view, win=None):
+    visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
+    if win is None: win = visible[0]
+    
+    zoomed_view = item_zoom_1_1_to_window_calc(self, win=win, screen=view)
+    bbox = utils.bbox([c for w, c in visible])
+    if zoomed_view[2] >= bbox[2] and zoomed_view[3] >= bbox[3]:
+        view = zoomed_view
+        
+    # Move the view as long as that makes more windows visible without removing any windows
+    while True:
+        view[0] = bbox[0] - ((view[2] - bbox[2]) / 2)
+        view[1] = bbox[1]-bbox[3] - ((view[3] - bbox[3]) / 2)
+        
+        new_visible, new_overlap, new_invisible = InfiniteGlass.windows.get_windows(self.display, view)
+        visible_set = set(w.__window__() for w, c in visible)
+        new_visible_set = set(w.__window__() for w, c in new_visible)
+        
+        if len(visible_set - new_visible_set) != 0 or len(new_visible_set - visible_set) == 0:
+            return view
+
+        visible = new_visible
+        bbox = utils.bbox([c for w, c in visible])
