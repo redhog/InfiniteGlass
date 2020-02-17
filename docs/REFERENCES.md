@@ -25,4 +25,4 @@
 
 * [Rofi main menu](https://github.com/davatorium/rofi)
   * [Various rofi menus](https://gitlab.com/vahnrr/rofi-menus)
-  
+* [rectangle-packer](https://github.com/Penlect/rectangle-packer)
