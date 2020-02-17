@@ -1,6 +1,7 @@
 import InfiniteGlass
 import numpy
 from . import mode
+from . import utils
 import Xlib.X
 
 class TitleSearchMode(mode.Mode):        
@@ -14,21 +15,12 @@ class TitleSearchMode(mode.Mode):
         print("Matching windows:", ",".join(w["name"] for w in match))
         if not match:
             return None
-        xs = [x for win in match for x in (win["coords"][0], win["coords"][0] + win["coords"][2])]
-        ys = [y for win in match for y in (win["coords"][1], win["coords"][1] - win["coords"][3])]
-        return [min(*xs), max(*ys), max(*xs) - min(*xs), max(*ys) - min(*ys)]
+        return utils.bbox([win["coords"] for win in match])
 
     def bbox_view(self, query=""):
         res = self.bbox(query)
         if not res: return res
-        h = res[2] / self.aspect_ratio
-        w = res[3] * self.aspect_ratio
-        if h > res[3]:
-            res[3] = h
-        else:
-            res[2] = w
-        res[1] -= res[3]
-        return res
+        return utils.bbox_view(res, self.orig_view)
         
     def enter(self):
         mode.Mode.enter(self)

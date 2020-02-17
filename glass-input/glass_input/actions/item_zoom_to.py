@@ -44,24 +44,28 @@ def item_zoom_out_or_1_1(self, event):
     else:
         win["IG_SIZE"] = [int(item * 1.1) for item in win["IG_SIZE"]]
 
-def item_zoom_1_1_to_window(self, event=None, win=None):
-    "Zooms the screen so that the pixel resolution of the current window matches the space it occupies on the screen"
+def item_zoom_1_1_to_window_calc(self, event=None, win=None, winsize=None, coords=None, size=None, screen=None):
     if win is None:
         win = InfiniteGlass.windows.get_active_window(self.display)
         if not win or win == self.display.root:
             return
 
-    winsize = win["IG_SIZE"]
-    size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
-    coords = win["IG_COORDS"]
-    screen = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
+    if not winsize: winsize = win["IG_SIZE"]
+    if not size: size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
+    if not coords: coords = win["IG_COORDS"]
+    if not screen: screen = self.display.root["IG_VIEW_DESKTOP_VIEW"]
 
+    screen = list(screen)
     screen[2] = size[0] * coords[2] / winsize[0]
     screen[3] = size[1] * coords[3] / winsize[1]
     screen[0] = coords[0] - (screen[2] - coords[2]) / 2.
     screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
 
-    self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = screen
+    return screen
+        
+def item_zoom_1_1_to_window(self, event=None, win=None):
+    "Zooms the screen so that the pixel resolution of the current window matches the space it occupies on the screen"
+    self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = item_zoom_1_1_to_window_calc(self, event, win)
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
 def zoom_1_1_1(self, event):

@@ -1,6 +1,7 @@
 import InfiniteGlass
 import numpy
 from .. import mode
+from .. import utils
 from . import item_zoom_to
 import sys
 
@@ -79,7 +80,7 @@ def zoom_to_window_to_the(self, event, direction):
 
     else:
         windows.sort(key=lambda a: a[0])
-        dist, center, coords, w = windows[0]
+        dist, center, coords, next_window = windows[0]
         InfiniteGlass.DEBUG(
             "visible",
             "Visible: %s\n" % (
@@ -89,7 +90,8 @@ def zoom_to_window_to_the(self, event, direction):
                                         v.__window__(),
                                         c)
                     for v, c in visible),))
-        InfiniteGlass.DEBUG("next", "Next window %s/%s[%s] @ %s\n" % (w.get("WM_NAME", None), w.get("WM_CLASS", None), w.__window__(), coords))
+        InfiniteGlass.DEBUG("next", "Next window %s/%s[%s] @ %s\n" % (
+            next_window.get("WM_NAME", None), next_window.get("WM_CLASS", None), next_window.__window__(), coords))
         wx, wy = center
 
         if wx > vx:
@@ -104,10 +106,20 @@ def zoom_to_window_to_the(self, event, direction):
         view[0] = newx - view[2] / 2.
         view[1] = newy - view[3] / 2.            
 
-    visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
-    if len(visible) == 1 or (not visible and len(overlap) == 1):
-       item_zoom_to.item_zoom_1_1_to_window(self, win=(visible + overlap)[0][0])
-       return
+
+        zoomed_view = item_zoom_to.item_zoom_1_1_to_window_calc(self, event, win=next_window, screen=view)
+
+        visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
+        zoomed_visible, zoomed_overlap, zoomed_invisible = InfiniteGlass.windows.get_windows(self.display, zoomed_view)
+
+        missing = set(w.__window__() for w, c in visible) - set(w.__window__() for w, c in zoomed_visible)
+        
+        if not missing:
+            view = zoomed_view
+
+        bbox = utils.bbox([c for w, c in visible])
+        view[0] = bbox[0] - ((view[2] - bbox[2]) / 2)
+        view[1] = bbox[1]-bbox[3] - ((view[3] - bbox[3]) / 2)
         
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
