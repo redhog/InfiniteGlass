@@ -34,6 +34,9 @@
         # reverted to once all keys are released by the user after an
         # action.
         "base_mode": {"class": "glass_input.base.BaseMode", "keymap": {
+            # Comment out the next line to have
+            # WIN+ALT+CTRL+RightClick to focus, and navigate focus
+            # with the keyboard with WIN+ALT+CTRL+ArrowKey
             "GenericEventCode": "focus_follows_mouse",
             "ButtonPress,Mod4Mask": "grabbed_mode",
             "KeyPress,Mod4Mask": "grabbed_mode",
@@ -46,6 +49,12 @@
         "grabbed_mode": {"class": "glass_input.grabbed.GrabbedMode", "keymap": {
             "KeyRelease": "pop",
             "ButtonRelease": "pop",
+
+            "ButtonPress,Mod1Mask,Mod4Mask,3": "focus_mode",
+            "KeyPress,Mod1Mask,Mod4Mask,XK_Up": "focus_mode",
+            "KeyPress,Mod1Mask,Mod4Mask,XK_Down": "focus_mode",
+            "KeyPress,Mod1Mask,Mod4Mask,XK_Left": "focus_mode",
+            "KeyPress,Mod1Mask,Mod4Mask,XK_Right": "focus_mode",
 
             "KeyPress,XK_R": "reload",
 
@@ -94,6 +103,16 @@
             "KeyPress,XK_Escape": "pop",
             "KeyPress,XK_Return": "pop",
             "KeyPress,!XK_Escape,!XK_Return": "write"
+        }},
+        "focus_mode": {"class": "glass_input.mode.Mode", "keymap": {
+            "KeyRelease,!AutoRepeat": "pop",
+            "ButtonRelease": "pop",
+
+            "ButtonPress,Mod1Mask,Mod4Mask": "focus_follows_mouse",
+            "KeyPress,XK_Left,Mod1Mask,Mod4Mask": "focus_to_window_to_the_left",
+            "KeyPress,XK_Right,Mod1Mask,Mod4Mask": "focus_to_window_to_the_right",
+            "KeyPress,XK_Up,Mod1Mask,Mod4Mask": "focus_to_window_above",
+            "KeyPress,XK_Down,Mod1Mask,Mod4Mask": "focus_to_window_below",
         }},
         "zoom_mode": {"class": "glass_input.mode.Mode", "keymap": {
             "KeyRelease,!AutoRepeat": "pop",
