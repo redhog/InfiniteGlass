@@ -46,6 +46,36 @@ def zoom_to_window_below(self, event):
     "Pan/zoom so that one more window is visible below"
     zoom_to_window_to_the(self, event, numpy.pi * 1.5)
 
+def zoom_to_window_calc(self, view, window, view_center=None, coords=None, center=None):
+    view = list(view)
+    
+    if coords is None:
+         coords = window["IG_COORDS"]
+    if view_center is None:
+        vx = view[0] + view[2] / 2.
+        vy = view[1] + view[3] / 2.
+    else:
+        vx, vy = view_center
+    if center is None:
+        wx = coords[0] + coords[2] / 2.
+        wy = coords[1] - coords[3] / 2.
+    else:
+        wx, wy = center
+
+    if wx > vx:
+        newx = wx + (coords[2] - view[2]) / 2
+    else:
+        newx = wx - (coords[2] - view[2]) / 2
+    if wy > vy:
+        newy = wy + (coords[3] - view[3]) / 2
+    else:
+        newy = wy - (coords[3] - view[3]) / 2
+
+    view[0] = newx - view[2] / 2.
+    view[1] = newy - view[3] / 2.            
+
+    return item_zoom_to.adjust_view(self, view, win=window)
+    
 def zoom_to_window_to_the(self, event, direction):
     print("ZOOM OUT TO WINDOW TO %s" % (direction))
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
@@ -92,21 +122,8 @@ def zoom_to_window_to_the(self, event, direction):
                     for v, c in visible),))
         InfiniteGlass.DEBUG("next", "Next window %s/%s[%s] @ %s\n" % (
             next_window.get("WM_NAME", None), next_window.get("WM_CLASS", None), next_window.__window__(), coords))
-        wx, wy = center
-
-        if wx > vx:
-            newx = wx + (coords[2] - view[2]) / 2
-        else:
-            newx = wx - (coords[2] - view[2]) / 2
-        if wy > vy:
-            newy = wy + (coords[3] - view[3]) / 2
-        else:
-            newy = wy - (coords[3] - view[3]) / 2
-
-        view[0] = newx - view[2] / 2.
-        view[1] = newy - view[3] / 2.            
-
-        view = item_zoom_to.adjust_view(self, view, win=next_window)
+        
+        view = zoom_to_window_calc(self, view, next_window, view_center=(vx, vy), coords=coords, center=center)
         
     InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
