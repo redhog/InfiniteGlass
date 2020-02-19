@@ -5,12 +5,15 @@ layout(triangle_strip, max_vertices=4) out;
 
 #include "resource://glass_theme/shaders/lib/geometry_coords.glsl"
 
+#define EDGE_HINT_WIDTH 4
+
 uniform sampler2D window_sampler;
 uniform vec4 IG_COORDS;
 
 out vec2 px_window_bottom_left;
 out vec2 px_window_top_right;
 out vec2 px_coord;
+out float is_edge_hint;
 
 void main() {
   int margin_left = 6;
@@ -46,6 +49,30 @@ void main() {
 
   px_bottom_left = px_bottom_left - vec2(margin_left, margin_bottom);
   px_top_right = px_top_right + vec2(margin_right, margin_top);
+
+  // Edge hinting for windows outside the desktop...
+  is_edge_hint = 0;
+  if (px_bottom_left.x >= size.x) {
+    px_bottom_left.x = size.x - EDGE_HINT_WIDTH;
+    
+    px_top_right.x = size.x;
+    is_edge_hint = 1;
+  }
+  if (px_top_right.x < 0) {
+    px_bottom_left.x = 0;
+    px_top_right.x = EDGE_HINT_WIDTH;
+    is_edge_hint = 1;
+  }
+  if (px_bottom_left.y >= size.y) {
+    px_bottom_left.y = size.y - EDGE_HINT_WIDTH;
+    px_top_right.y = size.y;
+    is_edge_hint = 1;
+  }
+  if (px_top_right.y < 0) {
+    px_bottom_left.y = 0;
+    px_top_right.y = EDGE_HINT_WIDTH;
+    is_edge_hint = 1;
+  }
 
   px_top_left = ivec2(px_bottom_left.x, px_top_right.y);
   px_bottom_right = ivec2(px_top_right.x, px_bottom_left.y);

@@ -13,10 +13,12 @@ precision highp float;
 in vec2 px_window_bottom_left;
 in vec2 px_window_top_right;
 in vec2 px_coord;
+in float is_edge_hint;
 
 uniform ivec2 size;
 uniform int picking_mode;
 uniform int window_id;
+uniform int atom_IG_LAYER_DESKTOP;
 
 out vec4 fragColor;
 
@@ -29,18 +31,26 @@ void main() {
   vec2 geometry_size = window_size / texture_size;
   float geometry_scale = sqrt(pow(geometry_size.x, 2) + pow(geometry_size.y, 2));
 
-  if (picking_mode == 1) {
-    fragColor = get_picking(window_id, scaled_window_coord);
-  } else if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
-    fragColor = get_border(window_id, window_coord, window_size);
-  } else if (!isnan(IG_CONTENT_transform[0])) {
-    fragColor = get_svg_content(scaled_window_coord);
-  } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_scale > ICON_CUTOFF_1) {
-    fragColor = get_pixmap(scaled_window_coord);
-  } else if (geometry_scale > ICON_CUTOFF_2) {
-    float scale = (geometry_scale - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
-    fragColor = scale * get_pixmap(scaled_window_coord) + (1 - scale) * get_icon(scaled_window_coord);
+  if (is_edge_hint != 0.0) {
+    if (picking_mode == 1 || IG_LAYER != atom_IG_LAYER_DESKTOP) {
+      fragColor = vec4(0., 0., 0., 0.);
+    } else {
+      fragColor = vec4(0., 0., 0., 0.3);
+    }
   } else {
-    fragColor = get_icon(scaled_window_coord);
+    if (picking_mode == 1) {
+      fragColor = get_picking(window_id, scaled_window_coord);
+    } else if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
+      fragColor = get_border(window_id, window_coord, window_size);
+    } else if (!isnan(IG_CONTENT_transform[0])) {
+      fragColor = get_svg_content(scaled_window_coord);
+    } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_scale > ICON_CUTOFF_1) {
+      fragColor = get_pixmap(scaled_window_coord);
+    } else if (geometry_scale > ICON_CUTOFF_2) {
+      float scale = (geometry_scale - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
+      fragColor = scale * get_pixmap(scaled_window_coord) + (1 - scale) * get_icon(scaled_window_coord);
+    } else {
+      fragColor = get_icon(scaled_window_coord);
+    }
   }
 }
