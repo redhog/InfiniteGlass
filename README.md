@@ -38,6 +38,7 @@ Features:
 * Configuration
   * [Key bindings](docs/KEYMAP.md)
   * [Sessions](docs/SESSION.md)
+  * [Command line](docs/COMMANDLINE.md)
   * [Integrations](docs/INTEGRATIONS.md)
   * [Themes](docs/THEMES.md)
   * [Debugging](docs/DEBUGGING.md)
