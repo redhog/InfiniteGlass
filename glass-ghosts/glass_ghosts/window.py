@@ -5,7 +5,9 @@ import glass_ghosts.helpers
 import sys
 
 class Window(object):
-    def __init__(self, manager, window):
+    def __new__(cls, manager, window):
+        self = object.__new__(cls)
+        
         self.manager = manager
         self.window = window
         self.id = self.window.__window__()
@@ -14,7 +16,13 @@ class Window(object):
         self.properties = {}
 
         self.override_redirect = self.window.get_attributes().override_redirect
-        
+
+        for name in self.window.keys():
+            self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
+
+        if self.is_ignored():
+            return None
+            
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
@@ -55,16 +63,15 @@ class Window(object):
             self.destroy()
         self.DestroyNotify = DestroyNotify
 
-        for name in self.window.keys():
-            self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
         InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
         self.match()
 
+        return self
+        
     def is_ignored(self):
         if self.override_redirect:
             return True
-        
         props = self.properties.keys()
         for ignore in self.manager.config["ignore"]:
             if isinstance(ignore, (tuple, list)):
@@ -72,13 +79,9 @@ class Window(object):
                 if name in props:
                     propvals = self.properties[name]
                     if value == propvals or value in propvals:
-                        print("Ignoring %s because of %s = %s" % (self.window.get("WM_NAME", str(self.window)), name, propvals))
                         return True
             elif ignore in props:
-                print("Ignoring %s because of %s" % (self.window.get("WM_NAME", str(self.window)), ignore))
                 return True
-            else:
-                print("Not matching", ignore)
         return False
         
     def sleep(self):
