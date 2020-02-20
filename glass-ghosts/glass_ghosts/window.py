@@ -13,6 +13,8 @@ class Window(object):
         self.client = None
         self.properties = {}
 
+        self.override_redirect = self.window.get_attributes().override_redirect
+        
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
@@ -58,6 +60,26 @@ class Window(object):
         InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
         self.match()
+
+    def is_ignored(self):
+        if self.override_redirect:
+            return True
+        
+        props = self.properties.keys()
+        for ignore in self.manager.config["ignore"]:
+            if isinstance(ignore, (tuple, list)):
+                name, value = ignore
+                if name in props:
+                    propvals = self.properties[name]
+                    if value == propvals or value in propvals:
+                        print("Ignoring %s because of %s = %s" % (self.window.get("WM_NAME", str(self.window)), name, propvals))
+                        return True
+            elif ignore in props:
+                print("Ignoring %s because of %s" % (self.window.get("WM_NAME", str(self.window)), ignore))
+                return True
+            else:
+                print("Not matching", ignore)
+        return False
         
     def sleep(self):
         if self.client:
@@ -81,12 +103,16 @@ class Window(object):
         return glass_ghosts.helpers.ghost_key(self.properties, self.manager.config["match"])
 
     def destroy(self):
-        if not self.ghost:
-            self.ghost = glass_ghosts.ghost.Shadow(self.manager, self.properties)
+        if not self.is_ignored():
+            if not self.ghost:
+                self.ghost = glass_ghosts.ghost.Shadow(self.manager, self.properties)
+            else:
+                self.ghost.properties.update(self.properties)
+                self.ghost.update_key()
+            self.ghost.activate()
         else:
-            self.ghost.properties.update(self.properties)
-            self.ghost.update_key()
-        self.ghost.activate()
+            if self.ghost:
+                self.ghost.destroy()
         self.manager.windows.pop(self.id, None)
         self.manager.display.eventhandlers.remove(self.PropertyNotify)
         self.manager.display.eventhandlers.remove(self.CloseMessage)
