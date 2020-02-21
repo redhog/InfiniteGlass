@@ -16,11 +16,11 @@ import sys
 class GhostManager(object):
     def __init__(self, display):
 
+        self.display = display
+
         configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.json"))
         with open(configpath) as f:
-            self.config = yaml.load(f, Loader=yaml.SafeLoader)
-       
-        self.display = display
+            self.config = json.loads(json.dumps(yaml.load(f, Loader=yaml.SafeLoader)), object_hook=InfiniteGlass.fromjson(self.display))
 
         self.changes = False
         self.windows = {}
@@ -71,7 +71,7 @@ class GhostManager(object):
 
     def restore_config_ghosts(self):
         self.restoring_ghosts = True
-        ghosts = json.loads(json.dumps(self.config.get("ghosts", {})), object_hook=InfiniteGlass.fromjson(self.display))
+        ghosts = self.config.get("ghosts", {})
         for key, properties in ghosts.items():
             glass_ghosts.ghost.Shadow(self, properties, from_config=True).activate()
         self.restoring_ghosts = False
