@@ -89,3 +89,4 @@ GNU GPL v3, see the file LICENSE for details
 
 The file xevent.c has a different, more permissible license, see the top of the file for details.
 The file coastline50.geojson has a different, more permissible license, see coastline50.geojson.LICENSE for details.
+The file binary_tree_bin_packer.py has a different, more permissible license, see binary_tree_bin_packer.py.LICENSE for details.
