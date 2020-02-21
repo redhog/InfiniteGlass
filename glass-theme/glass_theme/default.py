@@ -23,7 +23,8 @@ class Theme(glass_theme.base.ThemeBase):
     views = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
     shader_path = "resource://glass_theme/shaders"
     latlon = (70., 18.)
-    
+    start_latlon = None
+
     def linestrings2texture(self, f):
         coastline = json.load(f)
 
@@ -61,14 +62,20 @@ class Theme(glass_theme.base.ThemeBase):
 
     def setup_splash_animation(self):
         lat, lon = self.latlon
-        
+
+        if self.start_latlon is not None:
+            start_lat, start_lon = self.start_latlon
+        else:
+            start_lat = lat - 180.
+            start_lon = lon - 360.
+            
         splash_windows = self.setup_splash()
 
         geom = self.display.root.get_geometry()
         height = float(geom.height) / float(geom.width)
 
-        self.display.root["IG_WORLD_LAT"] = lat - 180.
-        self.display.root["IG_WORLD_LON"] = lon - 360.
+        self.display.root["IG_WORLD_LAT"] = start_lat
+        self.display.root["IG_WORLD_LON"] = start_lon
         self.display.root["IG_WORLD_ZOOM"] = .1
 
         self.display.root["IG_INITIAL_ANIMATE"] = {
