@@ -22,7 +22,9 @@ class Window(object):
 
         if self.is_ignored():
             return None
-            
+
+        print("New window %s" % self.window.get("WM_NAME", self.window))
+        
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
@@ -58,10 +60,10 @@ class Window(object):
         self.CloseMessage = ClientMessage
 
         @self.window.on(mask="StructureNotifyMask")
-        def DestroyNotify(win, event):
-            InfiniteGlass.DEBUG("window", "WINDOW DESTROY %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
+        def UnmapNotify(win, event):
+            InfiniteGlass.DEBUG("window", "WINDOW UNMAP %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
             self.destroy()
-        self.DestroyNotify = DestroyNotify
+        self.UnmapNotify = UnmapNotify
 
         InfiniteGlass.DEBUG("window", "WINDOW CREATE %s\n" % (self,)); sys.stderr.flush()
 
@@ -106,6 +108,11 @@ class Window(object):
         return glass_ghosts.helpers.ghost_key(self.properties, self.manager.config["match"])
 
     def destroy(self):
+        InfiniteGlass.DEBUG("destroy", "Window destroyed %s" % self.window.get("WM_NAME", self.window))
+        InfiniteGlass.DEBUG("destroy", "  key=%s" % self.key())
+        InfiniteGlass.DEBUG("destroy", "  %s" % ("IGNORED" if self.is_ignored() else "NOT IGNORED"))
+        InfiniteGlass.DEBUG("destroy", "  %s" % ("has ghost" if self.ghost else "no ghost"))
+        
         if not self.is_ignored():
             if not self.ghost:
                 self.ghost = glass_ghosts.ghost.Shadow(self.manager, self.properties)
@@ -120,7 +127,7 @@ class Window(object):
         self.manager.display.eventhandlers.remove(self.PropertyNotify)
         self.manager.display.eventhandlers.remove(self.CloseMessage)
         self.manager.display.eventhandlers.remove(self.SleepMessage)
-        self.manager.display.eventhandlers.remove(self.DestroyNotify)
+        self.manager.display.eventhandlers.remove(self.UnmapNotify)
         self.manager.display.eventhandlers.remove(self.ConfigureNotify)
         if self.client:
             self.client.remove_window(self)
