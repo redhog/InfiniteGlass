@@ -58,7 +58,9 @@ def item_zoom_1_1_to_window_calc(self, event=None, win=None, winsize=None, coord
 
     screen = list(screen)
     screen[2] = size[0] * coords[2] / winsize[0]
-    screen[3] = size[1] * coords[3] / winsize[1]
+    # We don't do screen[3] = size[1] * coords[3] / winsize[1]
+    # as that would let bad aspect ratios on windows blead to the view
+    screen[3] = (screen[2] * size[1]) / size[0]
     screen[0] = coords[0] - (screen[2] - coords[2]) / 2.
     screen[1] = coords[1] - (screen[3] + coords[3]) / 2.
 
