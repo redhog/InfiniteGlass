@@ -1,15 +1,15 @@
 {
     # Do not make ghosts for windows with any of these properties or
     # property values (in the case of name-value pairs)
-    "ignore": ["WM_TRANSIENT_FOR",
-               "IG_GHOST",
+    "ignore": ["IG_GHOST",
+               # "WM_TRANSIENT_FOR",
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DOCK"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_TOOLBAR"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"],
                ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"],
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DIALOG"]],
+               ["WM_WINDOW_ROLE", {"__jsonclass__": ["string", "GtkFileChooserDialog"]}]],
     # Use these properties to match a window to an existing ghost
     "match": ["WM_CLASS", "WM_NAME"],
     # Set these stored properties on a window that has been matched to a ghost
@@ -40,7 +40,8 @@
                    "_NET_WM_ICON"
                   ],
     # Update these stored properties from properties set on a ghost
-    "ghost_update": ["IG_COORDS"],
+    "ghost_update": ["IG_COORDS",
+                     "IG_SIZE"],
 
     "components": {
         "glass-input": {"command": ["glass-input"]},
