@@ -1,6 +1,6 @@
 # Based on https://github.com/jakesgordon/bin-packing/blob/master/js/packer.growing.js
 # Copyright (c) 2011, 2012, 2013, 2014, 2015, 2016 Jake Gordon and contributors
-# Python port (c) 2020 Egil Moeller <redhog@redhog.org>
+# MIT-License
 
 # This is a binary tree based bin packing algorithm that is more complex than
 # the simple Packer (packer.js). Instead of starting off with a fixed width and

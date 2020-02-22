@@ -14,7 +14,7 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False):
     
     packer = binary_tree_bin_packer.GrowingPacker()
     blocks = [{"w": coords[2] + margins * view[2], "h": coords[3] + margins * view[2], "window": window} for window, coords in windows]
-    packer.fit(blocks, view[2] / view[3])
+    packer.fit(blocks, view[2] / view[3], "diagonal")
     
     positions = np.array([(block["fit"]["x"], block["fit"]["y"], block["w"], block["h"]) for block in blocks])
     maxpos = (positions[:,:2] + positions[:,2:]).max(axis=0)
