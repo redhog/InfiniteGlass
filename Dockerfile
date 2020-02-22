@@ -29,6 +29,9 @@ RUN apt install -y unzip
 RUN apt install -y sudo
 RUN apt install -y dbus-x11
 RUN apt install -y pluma
+RUN apt install -y locales
+RUN apt install -y locales-all
+RUN locale-gen en_US.UTF-8
 
 RUN echo Version 2
 
