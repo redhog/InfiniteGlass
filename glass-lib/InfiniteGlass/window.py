@@ -24,6 +24,14 @@ def window_setitem(self, key, value):
         raise Exception("Unable to set %s.%s = %s: %s" % (self, key, repr(value)[:100], e))
 Xlib.xobject.drawable.Window.__setitem__ = window_setitem
 
+def window_delitem(self, key):
+    try:
+        keyatom = self.display.get_atom(key)
+        self.delete_property(keyatom)
+    except Exception as e:
+        raise Exception("Unable to delete %s.%s: %s" % (self, key, e))
+Xlib.xobject.drawable.Window.__delitem__ = window_delitem
+
 def window_keys(self):
     return [self.display.real_display.get_atom_name(atom) for atom in self.list_properties()]
 Xlib.xobject.drawable.Window.keys = window_keys

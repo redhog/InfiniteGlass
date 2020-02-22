@@ -11,6 +11,9 @@ class Theme(glass_theme.base.ThemeBase):
     def __init__(self, *args, **kw):
         glass_theme.base.ThemeBase.__init__(self, *args, **kw)
 
+        if "IG_THEME" in self.display.root:
+            del self.display.root["IG_THEME"]
+        
         if self.mode == "no_splash":
             self.display.root["IG_VIEWS"] = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
         elif self.mode == "splash_test":
