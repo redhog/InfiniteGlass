@@ -38,14 +38,15 @@ class Components(object):
                     pid = 0
                 while pid != 0:
                     InfiniteGlass.debug.DEBUG("SIGCHLD", "Reaped pid=%s, exitcode=%s, ru_child=%s\n" % (pid, exitcode, ru_child))
-                    if (    pid in self.components_by_pid
-                        and not exitcode == 0
-                        and (   not os.WIFSIGNALED(exitcode)
-                             or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
-                        # This is a component, and it wasn't killed intentionally... restart it
+                    if pid in self.components_by_pid:
                         name = self.components_by_pid.pop(pid)
-                        spec = self.components.pop(name)["component"]
-                        self.start_component(spec)
+                        if (    not exitcode == 0
+                            and (   not os.WIFSIGNALED(exitcode)
+                                 or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
+                            # This is a component, and it wasn't killed intentionally... restart it
+                            if name in self.components:
+                                spec = self.components[name]["component"]
+                                self.start_component(spec)
                     InfiniteGlass.debug.DEBUG("SIGCHLD", "Checking for more children in the same batch...\n")
                     try:
                         pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)
@@ -60,8 +61,12 @@ class Components(object):
         InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (spec["name"], " ".join(spec["command"])))
         if spec["name"] in self.components:
             pid = self.components[spec["name"]]["pid"]
-            del self.components_by_pid[pid]
-            os.kill(pid, signal.SIGINT)
+            name = self.components_by_pid.pop(pid, None)
+            if name is not None:
+                try:
+                    os.kill(pid, signal.SIGINT)
+                except ProcessLookupError:
+                    InfiniteGlass.debug.DEBUG("component", "Old process had died unnoticed.\n")
         pid = os.fork()
         if pid == 0:
             os.execlp(spec["command"][0], *spec["command"])
