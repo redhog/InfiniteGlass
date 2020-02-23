@@ -32,6 +32,12 @@ RUN apt install -y pluma
 RUN apt install -y locales
 RUN apt install -y locales-all
 RUN locale-gen en_US.UTF-8
+RUN apt install -y git
+RUN apt install -y curl
+RUN apt install -y zsh
+
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 RUN echo Version 2
 
