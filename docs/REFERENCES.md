@@ -25,4 +25,8 @@
 
 * [Rofi main menu](https://github.com/davatorium/rofi)
   * [Various rofi menus](https://gitlab.com/vahnrr/rofi-menus)
-* [rectangle-packer](https://github.com/Penlect/rectangle-packer)
+* Tiling
+  * [bin-packing](https://codeincomplete.com/posts/bin-packing/)
+  * [rectangle-packer](https://github.com/Penlect/rectangle-packer)
+  * [rectpack](https://github.com/secnot/rectpack/tree/master/rectpack)
+  * [greedypacker](https://github.com/ssbothwell/greedypacker)
