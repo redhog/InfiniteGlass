@@ -16,14 +16,17 @@ struct PropertiesStruct;
 typedef struct PropertiesStruct Properties;
 
 typedef struct {
- Item *item;
- View *view;
- Shader *shader;
- Properties *properties;
- char *properties_prefix;
- size_t program_cache_idx;
- GLuint texture_unit;
- size_t array_length;
+  unsigned char *initialized_shaders;
+  GLuint *global_texture_units;
+ 
+  Item *item;
+  View *view;
+  Shader *shader;
+  Properties *properties;
+  char *properties_prefix;
+  size_t program_cache_idx;
+  GLuint texture_unit;
+  size_t array_length;
 } Rendering;
 
 #endif

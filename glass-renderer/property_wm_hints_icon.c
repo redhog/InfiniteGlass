@@ -1,6 +1,7 @@
 #include "property_wm_hints_icon.h"
 #include "rendering.h"
 #include "texture.h"
+#include "bitmap.h"
 #include "debug.h"
 
 typedef struct {
@@ -83,6 +84,7 @@ void property_wm_hints_icon_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<WM_HINTS icon>\n", prop->window, prop->name_str);
 }
 void property_wm_hints_load_program(Property *prop, Rendering *rendering) {
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx]; 
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   
   prop_cache->data = malloc(sizeof(WmHintsPropertyProgramData));
@@ -108,6 +110,11 @@ void property_wm_hints_load_program(Property *prop, Rendering *rendering) {
   program_data->icon_mask_location = glGetUniformLocation(prop_cache->program, program_data->icon_mask_str);
   program_data->icon_enabled_location = glGetUniformLocation(prop_cache->program, program_data->icon_enabled_str);
   program_data->icon_mask_enabled_location = glGetUniformLocation(prop_cache->program, program_data->icon_mask_enabled_str);
+  if (program_data->icon_location != -1) BITMAP_SET(cache->used_uniforms, program_data->icon_location, 1);
+  if (program_data->icon_mask_location != -1) BITMAP_SET(cache->used_uniforms, program_data->icon_mask_location, 1);
+  if (program_data->icon_enabled_location != -1) BITMAP_SET(cache->used_uniforms, program_data->icon_enabled_location, 1);
+  if (program_data->icon_mask_enabled_location != -1) BITMAP_SET(cache->used_uniforms, program_data->icon_mask_enabled_location, 1);
+
   char *icon_status = "";
   char *icon_mask_status = "";
   char *icon_enabled_status = "";

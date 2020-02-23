@@ -7,6 +7,7 @@
 #include <limits.h>
 #include "property.h"
 #include "debug.h"
+#include "list.h"
 #include "rendering.h"
 #include <X11/Xatom.h>
 
@@ -129,6 +130,32 @@ void item_constructor(Item *item, Window window) {
 void item_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
+void item_reset_uniforms(Rendering *rendering) {
+  rendering->properties = root_item->properties;
+  rendering->properties_prefix = "root_";
+  properties_set_program_cache_idx(rendering);
+  ProgramCache *root_cache = &root_item->properties->programs[rendering->program_cache_idx];
+
+  rendering->properties = rendering->item->properties;
+  rendering->properties_prefix = "";
+  properties_set_program_cache_idx(rendering);
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx];
+
+
+  Shader *shader = rendering->shader;
+  List *uniforms = shader->uniforms;
+  unsigned char *used_uniforms = cache->used_uniforms;
+  unsigned char *root_used_uniforms = root_cache->used_uniforms;
+
+  for (size_t i = 0; i*8 < uniforms->count; i++) {
+    unsigned char mask = used_uniforms[i] | root_used_uniforms[i];
+    for (int j = 0; (j < 8) && (i*8 + j < uniforms->count); j++, mask=mask>>1) {
+      if (!(mask & 1)) {
+        shader_reset_uniform((Uniform *) uniforms->entries[i*8 + j]);
+      }
+    }
+  }
+}
 void item_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = (Item *) rendering->item;
@@ -147,15 +174,9 @@ void item_draw(Rendering *rendering) {
       rendering->texture_unit++;
     }
 
-    
-    properties_to_gl(root_item->properties, "root_", rendering);
-    GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
-    glUniform1i(shader->picking_mode_attr, rendering->view->picking);
-    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
-    glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);

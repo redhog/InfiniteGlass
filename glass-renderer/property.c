@@ -1,6 +1,7 @@
 #include "property.h"
 #include "shader.h"
 #include "rendering.h"
+#include "bitmap.h"
 #include "debug.h"
 
 Property *property_allocate(Properties *properties, Atom name) {
@@ -11,6 +12,7 @@ Property *property_allocate(Properties *properties, Atom name) {
   prop->type = None;
   prop->values.bytes = NULL;
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
+    prop->programs[i].shader = NULL;
     prop->programs[i].program = -1;
     prop->programs[i].prefix = NULL;
     prop->programs[i].data = NULL;
@@ -72,6 +74,7 @@ void property_free(Property *prop) {
 
 void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache *cache, PropertyProgramCache *prop_cache, PropertyTypeHandler *type) {
   if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
+  prop_cache->shader = cache->shader;
   prop_cache->program = cache->program;
   prop_cache->prefix = cache->prefix;
   prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
@@ -91,11 +94,11 @@ void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache
       glCreateBuffers(1, &prop_cache->buffer);
     }
   }
-
-  type->load_program(prop, rendering);
+  if (prop_cache->location != -1) BITMAP_SET(cache->used_uniforms, prop_cache->location, 1);
+  if (type->load_program) type->load_program(prop, rendering);
 }
 
-void property_to_gl(Property *prop, Rendering *rendering) {
+void property_load_program(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
   if (!type) return;
 
@@ -108,6 +111,11 @@ void property_to_gl(Property *prop, Rendering *rendering) {
       || prop_cache->prefix != cache->prefix) {
     property_update_gl_cache(prop, rendering, cache, prop_cache, type);
   }
+}
+
+void property_to_gl(Property *prop, Rendering *rendering) {
+  PropertyTypeHandler *type = prop->type_handler;
+  if (!type) return;
   type->to_gl(prop, rendering);
 }
 
@@ -127,6 +135,12 @@ Properties *properties_load(Window window) {
   properties->window = window;
   properties->programs_pos = 0; 
   properties->properties = list_create();
+  for (size_t idx = 0; idx < PROGRAM_CACHE_SIZE; idx++) {
+    properties->programs[idx].shader = NULL;
+    properties->programs[idx].program = None;
+    properties->programs[idx].prefix = NULL;
+    memset(properties->programs[idx].used_uniforms, 0, GL_MAX_UNIFORM_LOCATIONS / 8 + 1);
+  }
   int nr_props;
   Atom *prop_names = XListProperties(display, window, &nr_props);
   for (int i = 0; i < nr_props; i++) {
@@ -160,12 +174,24 @@ void properties_free(Properties *properties) {
   free(properties);
 }
 
+void properties_load_program(Rendering *rendering) {
+  size_t program_cache_idx = rendering->program_cache_idx;  
+  ProgramCache *cache = &rendering->properties->programs[program_cache_idx];
+
+  if (!cache->shader || !cache->used_uniforms) return;
+  
+  for (size_t i = 0; i < rendering->properties->properties->count; i++) {
+    Property *prop = rendering->properties->properties->entries[i];
+    property_load_program(prop, rendering);
+  }  
+}
+
 void properties_set_program_cache_idx(Rendering *rendering) {
   size_t idx;
   Properties *properties = rendering->properties;
   
   for (idx = 0; idx < PROGRAM_CACHE_SIZE; idx++) {
-    if (   properties->programs[idx].program == rendering->shader->program
+    if (   properties->programs[idx].shader == rendering->shader
         && properties->programs[idx].prefix == rendering->properties_prefix) {
       rendering->program_cache_idx = idx;
       return;
@@ -175,8 +201,21 @@ void properties_set_program_cache_idx(Rendering *rendering) {
   properties->programs_pos = idx;
   rendering->program_cache_idx = idx;
   
+  properties->programs[idx].shader = rendering->shader;
   properties->programs[idx].program = rendering->shader->program;
   properties->programs[idx].prefix = rendering->properties_prefix;
+
+  unsigned char *used_uniforms = properties->programs[idx].used_uniforms;
+  memset(used_uniforms, 0, GL_MAX_UNIFORM_LOCATIONS / 8 + 1);
+
+  BITMAP_SET(used_uniforms, rendering->shader->screen_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->size_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->border_width_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->picking_mode_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->window_id_attr, 1);
+  BITMAP_SET(used_uniforms, rendering->shader->window_sampler_attr , 1);
+  
+  properties_load_program(rendering);
 }
 
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {

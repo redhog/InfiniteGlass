@@ -3,6 +3,8 @@
 #include "error.h"
 #include "list.h"
 #include "item.h"
+#include "wm.h"
+#include "bitmap.h"
 #include "debug.h"
 #include <limits.h>
 #include <math.h>
@@ -58,24 +60,47 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 }
 
 void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
-  Rendering rendering;
-  rendering.shader = NULL;
-  rendering.view = view;
-  rendering.array_length = 1;
-  
-  List *to_delete = NULL;
   if (!items) return;
+
+  unsigned char initialized_shaders[shaders->count / 8 + 1];
+  memset(initialized_shaders, 0, shaders->count / 8 + 1);
+  GLuint global_texture_units[shaders->count];
+
+  Rendering rendering;
+  rendering.initialized_shaders = initialized_shaders;
+  rendering.global_texture_units = global_texture_units;
+  
+  rendering.view = view;
+
+  List *to_delete = NULL;
+  
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (!filter || filter(item)) {
       try();
-      rendering.item = item;
-      rendering.texture_unit = 0;
-      rendering.shader = item_get_shader(item);
-      if (!rendering.shader) continue;
+      Shader *shader = item_get_shader(item);
+      if (!shader) continue;
+      rendering.shader = shader;
       glUseProgram(rendering.shader->program);
-      shader_reset_uniforms(rendering.shader);
+
+      rendering.item = item;
+      
+      if (!BITMAP(initialized_shaders, shader->idx)) {
+        rendering.texture_unit = 0;
+        glUniform1i(shader->picking_mode_attr, view->picking);
+        glUniform4fv(shader->screen_attr, 1, view->screen);
+        glUniform2i(shader->size_attr, view->width, view->height);
+        properties_to_gl(root_item->properties, "root_", &rendering);
+        global_texture_units[shader->idx] = rendering.texture_unit;
+        BITMAP_SET(initialized_shaders, shader->idx, 1);
+      }
+      
+      rendering.texture_unit = global_texture_units[shader->idx];
+      rendering.array_length = 1;
+      
+      item_reset_uniforms(&rendering);
       item_draw(&rendering);
+      
       XErrorEvent e;
       if (!catch(&e)) {
         if (   (   e.error_code == BadWindow

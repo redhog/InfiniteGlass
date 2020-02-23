@@ -27,6 +27,7 @@ typedef struct PropertyTypeHandlerT PropertyTypeHandler;
 
 
 struct PropertyProgramCacheStruct {
+  Shader *shader;
   GLint program; 
   char *prefix;
   char *name_str;
@@ -61,8 +62,10 @@ extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_print(Property *prop, FILE *fp);
 
 struct ProgramCacheStruct {
-  GLint program;
+  Shader *shader;
+  GLint program; 
   char *prefix;
+  unsigned char used_uniforms[GL_MAX_UNIFORM_LOCATIONS / 8 + 1];
 };
 struct PropertiesStruct {
   Window window;
@@ -74,6 +77,7 @@ struct PropertiesStruct {
 extern Properties *properties_load(Window window);
 extern Bool properties_update(Properties *properties, Atom name);
 extern void properties_free(Properties *properties);
+extern void properties_set_program_cache_idx(Rendering *rendering);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_print(Properties *properties, FILE *fp);
 extern Property *properties_find(Properties *properties, Atom name);

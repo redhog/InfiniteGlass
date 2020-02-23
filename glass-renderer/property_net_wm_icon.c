@@ -1,6 +1,7 @@
 #include "property_net_wm_icon.h"
 #include "rendering.h"
 #include "texture.h"
+#include "bitmap.h"
 #include "debug.h"
 
 typedef struct {
@@ -46,6 +47,7 @@ void property_net_wm_icon_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<_NET_WM_ICON icon>\n", prop->window, prop->name_str);
 }
 void property_net_wm_load_program(Property *prop, Rendering *rendering) {
+  ProgramCache *cache = &rendering->properties->programs[rendering->program_cache_idx]; 
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   prop_cache->data = malloc(sizeof(NetWmIconPropertyProgramData));
   NetWmIconPropertyProgramData *program_data = (NetWmIconPropertyProgramData *) prop_cache->data;
@@ -55,6 +57,8 @@ void property_net_wm_load_program(Property *prop, Rendering *rendering) {
   strcpy(program_data->enabled_str + strlen(prop_cache->name_str), "_enabled");
 
   program_data->enabled_location = glGetUniformLocation(prop_cache->program, program_data->enabled_str);
+  if (program_data->enabled_location != -1) BITMAP_SET(cache->used_uniforms, program_data->enabled_location, 1);
+  
   char *icon_status = "";
   char *icon_enabled_status = "";
   char *all_status = "";
