@@ -21,8 +21,6 @@ if [ ! "$(docker ps -a -q -f name=glass)" ]; then
          -m 2gb \
          -ti \
          --ipc=host \
-         --cap-drop=ALL \
-         --security-opt=no-new-privileges \
          -v ~/.config/glass:/home/glass/.config/glass \
          -v /tmp/.X11-unix:/tmp/.X11-unix \
          -v /tmp/.docker.xauth:/tmp/.docker.xauth \

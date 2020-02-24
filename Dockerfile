@@ -35,6 +35,9 @@ RUN locale-gen en_US.UTF-8
 RUN apt install -y git
 RUN apt install -y curl
 RUN apt install -y zsh
+RUN apt install -y sakura
+RUN apt install -y vim
+RUN apt install -y figlet
 
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
@@ -54,5 +57,18 @@ RUN chown -R glass:users /home/glass
 RUN chmod -R ugo+rw /InfiniteGlass
 RUN sed -e "s+\(sudo:.*\)+\1glass+g" /etc/group -i
 RUN sed -e "s+ALL$+NOPASSWD: ALL+g" /etc/sudoers -i
+RUN usermod --shell /usr/bin/zsh glass
+
+USER glass
+
+RUN cd /home/glass; \
+    set -uex; \
+    wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh; \
+    sh ./install.sh; \
+    rm ./install.sh
+RUN sed -i 's/robbyrussell/dieter/g' /home/glass/.zshrc
+RUN echo "\nfiglet -f slant InfiniteGlass" >> /home/glass/.zshrc
+
+USER root
 
 CMD /InfiniteGlass/scripts/docker-runner.sh
