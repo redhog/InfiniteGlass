@@ -17,6 +17,7 @@ typedef struct PropertiesStruct Properties;
 
 typedef struct {
  Item *item;
+ Item *parent_item;
  View *view;
  Shader *shader;
  Properties *properties;

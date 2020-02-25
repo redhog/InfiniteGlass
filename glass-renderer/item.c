@@ -129,9 +129,18 @@ void item_constructor(Item *item, Window window) {
 void item_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
+void item_draw_subs(Rendering *rendering) {
+  Item *parent_item = rendering->parent_item;
+  Item *item = rendering->item;
+  rendering->parent_item = item;
+  properties_draw(root_item->properties, rendering); 
+  properties_draw(item->properties, rendering); 
+  rendering->parent_item = parent_item;
+  rendering->item = item;
+}
 void item_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
-    Item *item = (Item *) rendering->item;
+    Item *item = rendering->item;
     Shader *shader = rendering->shader;
 
     if (!rendering->view->picking) {
@@ -192,6 +201,7 @@ void item_draw(Rendering *rendering) {
       XDamageSubtract(display, item->damage, None, None);
       x_catch(&error);
     }
+    item_draw_subs(rendering);
   }
 }
 

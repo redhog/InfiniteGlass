@@ -3,9 +3,13 @@ import subprocess
 import os
 import signal
 import InfiniteGlass
-import glass_theme
+import glass_theme.default
 import time
 import math
+
+class Theme(glass_theme.default.Theme):
+    mode = "no_splash"
+
 
 class RendererTest(unittest.TestCase):
     @classmethod
@@ -27,8 +31,7 @@ class RendererTest(unittest.TestCase):
                 break
             except:
                 time.sleep(0.5)
-        glass_theme.setup_views(self.display)
-        glass_theme.setup_shaders(self.display)
+        self.theme = Theme(self.display)
         self.display.flush()
         self.test_done = False
         
@@ -131,4 +134,17 @@ class RendererTest(unittest.TestCase):
             self.display.root["IG_VIEW_DESKTOP_VIEW"] = [math.cos(v), math.sin(v), 4.0, 0.0]
             self.display.flush()
 
-    
+    def test_subwindow(self):
+        self.subwindow = self.display.root.create_window(map=False, width=1024, height=1024)
+        self.subwindow["IG_LAYER"] = "IG_NONE"
+        self.subwindow["IG_COORDS"] = [0.1, 0.55, 0.1, 0.1]
+        self.subwindow.map()
+        
+        self.window = self.display.root.create_window(map=False, width=1024, height=1024)
+        self.window["IG_COORDS"] = [0.25, 0.5, 0.5, 0.4]
+        self.window["IG_SUB1"] = ("IG_ITEM", self.subwindow)
+        self.window.map()
+        
+        @self.display.mainloop.add_timeout(time.time() + 60)
+        def done(timestamp):
+            self.test_done = True

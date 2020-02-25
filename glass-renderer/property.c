@@ -111,6 +111,12 @@ void property_to_gl(Property *prop, Rendering *rendering) {
   type->to_gl(prop, rendering);
 }
 
+void property_draw(Property *prop, Rendering *rendering) {
+  PropertyTypeHandler *type = prop->type_handler;
+  if (!type || !type->draw) return;
+  type->draw(prop, rendering);
+}
+
 void property_print(Property *prop, FILE *fp) {
   PropertyTypeHandler *type = prop->type_handler;
   if (type) {
@@ -189,6 +195,18 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = entries[i];
     property_to_gl(prop, rendering);
+    GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
+  }
+}
+
+void properties_draw(Properties *properties, Rendering *rendering) {
+  rendering->properties = properties;
+  
+  GL_CHECK_ERROR("properties_draw", "%ld", properties->window);
+  Property **entries = (Property **) properties->properties->entries;
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = entries[i];
+    property_draw(prop, rendering);
     GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
   }
 }

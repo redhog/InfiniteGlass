@@ -29,6 +29,7 @@
 #include "property_svg.h"
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
+#include "property_item.h"
 #include <X11/extensions/XInput2.h>
 #include <math.h>
 
@@ -476,6 +477,7 @@ int main() {
   property_type_register(&property_svg);
   property_type_register(&property_wm_hints_icon);
   property_type_register(&property_net_wm_icon);
+  property_type_register(&property_item);
 
   items_get_from_toplevel_windows();
  
