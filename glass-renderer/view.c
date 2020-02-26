@@ -73,6 +73,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
     Item *item = (Item *) items->entries[idx];
     if (!filter || filter(item)) {
       try();
+      rendering.parent_item = NULL;
       rendering.item = item;
       rendering.texture_unit = 0;
       rendering.shader = item_get_shader(item);
