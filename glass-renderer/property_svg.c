@@ -49,15 +49,15 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
 
   float *coords = (float *) rendering->item->prop_coords->data;
   
-  itempixelwidth = coords[2] * view->width / view->screen[2];
-  itempixelheight = coords[3] * view->height / view->screen[3];
+  itempixelwidth = coords[2] * view->width / rendering->screen[2];
+  itempixelheight = coords[3] * view->height / rendering->screen[3];
   
   // x and y are ]0,1[, from top left to bottom right of window.
-  x1 = (view->screen[0] - coords[0]) / coords[2];
-  y1 = (coords[1] - (view->screen[1] + view->screen[3])) / coords[3];
+  x1 = (rendering->screen[0] - coords[0]) / coords[2];
+  y1 = (coords[1] - (rendering->screen[1] + rendering->screen[3])) / coords[3];
 
-  x2 = (view->screen[0] + view->screen[2] - coords[0]) / coords[2];
-  y2 = (coords[1] - view->screen[1]) / coords[3];
+  x2 = (rendering->screen[0] + rendering->screen[2] - coords[0]) / coords[2];
+  y2 = (coords[1] - rendering->screen[1]) / coords[3];
   
   if (x1 < 0.) x1 = 0.;
   if (x1 > 1.) x1 = 1.;
@@ -69,8 +69,8 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   if (y2 > 1.) y2 = 1.;
   
   // When screen to window is 1:1 this holds:
-  // item->coords[2] = item->width * view->screen[2] / view->width;
-  // item->coords[3] = item->height * view->screen[3] / view->height;
+  // item->coords[2] = item->width * rendering->screen[2] / view->width;
+  // item->coords[3] = item->height * rendering->screen[3] / view->height;
   
   px1 = (int) (x1 * (float) itempixelwidth);
   px2 = (int) (x2 * (float) itempixelwidth);

@@ -132,17 +132,40 @@ void item_destructor(Item *item) {
 void item_draw_subs(Rendering *rendering) {
   Item *parent_item = rendering->parent_item;
   Item *item = rendering->item;
+
+  if (!item->prop_coords) return;
+  
+  float screen[4];
+  screen[0] = rendering->screen[0];
+  screen[1] = rendering->screen[1];
+  screen[2] = rendering->screen[2];
+  screen[3] = rendering->screen[3];
+  
   rendering->parent_item = item;
+  float *coords = ((float *) item->prop_coords->data);
+
+  
+  rendering->screen[0] = (screen[0] - coords[0]) / coords[2];
+  rendering->screen[2] = screen[2] / coords[2];
+  rendering->screen[1] = (screen[1] - (coords[1] - coords[3])) / coords[3];
+  rendering->screen[3] = screen[3] / coords[3];
+  
   properties_draw(root_item->properties, rendering); 
   properties_draw(item->properties, rendering); 
+
   rendering->parent_item = parent_item;
   rendering->item = item;
+
+  rendering->screen[0] = screen[0];
+  rendering->screen[1] = screen[1];
+  rendering->screen[2] = screen[2];
+  rendering->screen[3] = screen[3];
 }
 void item_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
     Item *item = rendering->item;
     Shader *shader = rendering->shader;
-
+    
     if (!rendering->view->picking) {
       if (item->draw_cycles_left > 0) {
         texture_from_pixmap(&item->window_texture, item->window_pixmap);
@@ -155,15 +178,23 @@ void item_draw(Rendering *rendering) {
       glBindSampler(rendering->texture_unit, 0);
       rendering->texture_unit++;
     }
-
     
     properties_to_gl(root_item->properties, "root_", rendering);
     GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
+  printf("NNNNNNNNNNNN %f,%f[%f,%f]\n", rendering->screen[0], rendering->screen[1], rendering->screen[2], rendering->screen[3]);
+  if (item->prop_coords) {
+     float *coords = ((float *) item->prop_coords->data);
+
+  printf("OOOOOOOOOOOO %f,%f[%f,%f]\n", coords[0], coords[1], coords[2], coords[3]);
+
+
+ };
+
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
-    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
+    glUniform4fv(shader->screen_attr, 1, rendering->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
 

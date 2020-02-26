@@ -18,19 +18,20 @@ void property_item_print(Property *prop, FILE *fp) {
   fprintf(fp, "\n");
 }
 void property_item_load_program(Property *prop, Rendering *rendering) {
-  DEBUG("prop", "%ld[%ld].%s %s (item) [%d]\n",
+  DEBUG("prop", "%ld[%ld].%s (item) [enabled]\n",
         prop->window, rendering->shader->program, prop->name_str);
 }
 void property_item_free_program(Property *prop, size_t index) {
 }
 void property_item_draw(Property *prop, Rendering *rendering) {
   rendering->item = item_get_from_window((Window) prop->values.dwords[0], True);
-  printf("Property item draw: %ld\n", prop->values.dwords[0]);
+  fprintf(stderr, "Property item draw: %ld\n", prop->values.dwords[0]);
   if (rendering->item) {
     item_print(rendering->item);
  } else {
-   printf("No item\n");
+   fprintf(stderr, "No item\n");
  }
+  fflush(stderr);
   
   item_draw(rendering);
 }

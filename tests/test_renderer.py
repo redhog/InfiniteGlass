@@ -137,11 +137,13 @@ class RendererTest(unittest.TestCase):
     def test_subwindow(self):
         self.subwindow = self.display.root.create_window(map=False, width=1024, height=1024)
         self.subwindow["IG_LAYER"] = "IG_NONE"
-        self.subwindow["IG_COORDS"] = [0.1, 0.55, 0.1, 0.1]
+        self.subwindow["IG_CONTENT"] = ("IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-dollar.svg")
+        self.subwindow["IG_COORDS"] = [0.0, 1.0, 1.0, 1.0]
         self.subwindow.map()
         
         self.window = self.display.root.create_window(map=False, width=1024, height=1024)
         self.window["IG_COORDS"] = [0.25, 0.5, 0.5, 0.4]
+        self.window["IG_CONTENT"] = ("IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-minus.svg")
         self.window["IG_SUB1"] = ("IG_ITEM", self.subwindow)
         self.window.map()
         
