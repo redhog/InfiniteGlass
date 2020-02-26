@@ -184,15 +184,6 @@ void item_draw(Rendering *rendering) {
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
-  printf("NNNNNNNNNNNN %f,%f[%f,%f]\n", rendering->screen[0], rendering->screen[1], rendering->screen[2], rendering->screen[3]);
-  if (item->prop_coords) {
-     float *coords = ((float *) item->prop_coords->data);
-
-  printf("OOOOOOOOOOOO %f,%f[%f,%f]\n", coords[0], coords[1], coords[2], coords[3]);
-
-
- };
-
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
