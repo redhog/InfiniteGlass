@@ -149,8 +149,8 @@ void item_draw_subs(Rendering *rendering) {
   rendering->screen[2] = screen[2] / coords[2];
   rendering->screen[1] = (screen[1] - (coords[1] - coords[3])) / coords[3];
   rendering->screen[3] = screen[3] / coords[3];
-  
-  properties_draw(root_item->properties, rendering); 
+
+  if (item != root_item) properties_draw(root_item->properties, rendering);
   properties_draw(item->properties, rendering); 
 
   rendering->parent_item = parent_item;

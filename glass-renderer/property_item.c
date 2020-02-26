@@ -25,6 +25,8 @@ void property_item_free_program(Property *prop, size_t index) {
 }
 void property_item_draw(Property *prop, Rendering *rendering) {
   rendering->item = item_get_from_window((Window) prop->values.dwords[0], True);
+  if (rendering->item == rendering->parent_item) return;
+  
   fprintf(stderr, "Property item draw: %ld\n", prop->values.dwords[0]);
   if (rendering->item) {
     item_print(rendering->item);

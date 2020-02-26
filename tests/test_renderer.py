@@ -144,8 +144,10 @@ class RendererTest(unittest.TestCase):
         self.window = self.display.root.create_window(map=False, width=1024, height=1024)
         self.window["IG_COORDS"] = [0.25, 0.5, 0.5, 0.4]
         self.window["IG_CONTENT"] = ("IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-minus.svg")
-        self.window["IG_SUB1"] = ("IG_ITEM", self.subwindow)
         self.window.map()
+
+        self.display.root["IG_SUB1"] = ("IG_ITEM", self.subwindow)
+        self.display.flush()
         
         @self.display.mainloop.add_timeout(time.time() + 60)
         def done(timestamp):
