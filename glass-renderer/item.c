@@ -148,9 +148,16 @@ void item_draw_subs(Rendering *rendering) {
   rendering->item = item;
 }
 void item_draw(Rendering *rendering) {
+  rendering->texture_unit = 0;
+  rendering->shader = item_get_shader(rendering->item);
+  if (!rendering->shader) return;
+  glUseProgram(rendering->shader->program);
+  shader_reset_uniforms(rendering->shader);
+
   if (rendering->item->is_mapped) {
     Item *item = rendering->item;
     Shader *shader = rendering->shader;
+
     
     if (!rendering->view->picking) {
       if (item->draw_cycles_left > 0) {
