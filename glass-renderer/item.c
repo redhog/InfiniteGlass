@@ -232,6 +232,18 @@ void item_update(Item *item) {
   x_pop_error_context();  
 }
 
+Bool item_properties_update(Item *item, Atom name) {
+  Bool res = properties_update(item->properties, name);
+  if (res) {
+    if (name == IG_LAYER && !item->prop_layer) item->prop_layer = properties_find(item->properties, IG_LAYER);
+    if (name == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
+    if (name == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
+    if (name == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);        
+    if (name == IG_DRAW_TYPE && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);        
+  }
+  return res;
+}
+
 Shader *item_get_shader(Item *item) {
   Atom shader = IG_SHADER_DEFAULT;
   if (item->prop_shader) shader = item->prop_shader->values.dwords[0];
