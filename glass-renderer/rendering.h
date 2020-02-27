@@ -19,7 +19,6 @@ typedef struct {
  Item *item;
  Item *parent_item;
  View *view;
- float screen[4]; // Is different from view->screen when rendering sub-items
  Shader *shader;
  Properties *properties;
  char *properties_prefix;

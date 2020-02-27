@@ -21,6 +21,7 @@ Atom IG_LAYER_MENU;
 Atom IG_SHADER;
 Atom IG_SHADER_DEFAULT;
 Atom IG_COORDS;
+Atom IG_COORD_TYPES;
 Atom IG_SIZE;
 Atom IG_DRAW_TYPE;
 Atom IG_DRAW_TYPE_POINTS;
@@ -43,6 +44,7 @@ Bool init_items() {
   IG_SHADER = XInternAtom(display, "IG_SHADER", False);
   IG_SHADER_DEFAULT = XInternAtom(display, "IG_SHADER_DEFAULT", False);
   IG_COORDS = XInternAtom(display, "IG_COORDS", False);
+  IG_COORD_TYPES = XInternAtom(display, "IG_COORD_TYPES", False);
   IG_SIZE = XInternAtom(display, "IG_SIZE", False);
   IG_DRAW_TYPE = XInternAtom(display, "IG_DRAW_TYPE", False);
   IG_DRAW_TYPE_POINTS = XInternAtom(display, "IG_DRAW_TYPE_POINTS", False);
@@ -72,6 +74,7 @@ void item_constructor(Item *item, Window window) {
   item->prop_shader = NULL;
   item->prop_size = NULL;
   item->prop_coords = NULL;
+  item->prop_coord_types = NULL;
   item->prop_draw_type = NULL;
   item->draw_cycles_left = 0;
   
@@ -117,6 +120,7 @@ void item_constructor(Item *item, Window window) {
   item->prop_shader = properties_find(item->properties, IG_SHADER);
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
+  item->prop_coord_types = properties_find(item->properties, IG_COORD_TYPES);
   item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);
   
   if (window != root) {
@@ -134,32 +138,14 @@ void item_draw_subs(Rendering *rendering) {
   Item *item = rendering->item;
 
   if (!item->prop_coords) return;
-  
-  float screen[4];
-  screen[0] = rendering->screen[0];
-  screen[1] = rendering->screen[1];
-  screen[2] = rendering->screen[2];
-  screen[3] = rendering->screen[3];
-  
+    
   rendering->parent_item = item;
-  float *coords = ((float *) item->prop_coords->data);
-
   
-  rendering->screen[0] = (screen[0] - coords[0]) / coords[2];
-  rendering->screen[2] = screen[2] / coords[2];
-  rendering->screen[1] = (screen[1] - (coords[1] - coords[3])) / coords[3];
-  rendering->screen[3] = screen[3] / coords[3];
-
   if (item != root_item) properties_draw(root_item->properties, rendering);
   properties_draw(item->properties, rendering); 
 
   rendering->parent_item = parent_item;
   rendering->item = item;
-
-  rendering->screen[0] = screen[0];
-  rendering->screen[1] = screen[1];
-  rendering->screen[2] = screen[2];
-  rendering->screen[3] = screen[3];
 }
 void item_draw(Rendering *rendering) {
   if (rendering->item->is_mapped) {
@@ -189,7 +175,7 @@ void item_draw(Rendering *rendering) {
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
-    glUniform4fv(shader->screen_attr, 1, rendering->screen);
+    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
 
@@ -274,7 +260,8 @@ Bool item_properties_update(Item *item, Atom name) {
     if (name == IG_LAYER && !item->prop_layer) item->prop_layer = properties_find(item->properties, IG_LAYER);
     if (name == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
     if (name == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
-    if (name == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);        
+    if (name == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);
+    if (name == IG_COORD_TYPES && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, IG_COORD_TYPES);
     if (name == IG_DRAW_TYPE && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);        
   }
   return res;

@@ -26,6 +26,7 @@
 #include "property_window.h"
 #include "property_int.h"
 #include "property_float.h"
+#include "property_coords.h"
 #include "property_svg.h"
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
@@ -467,6 +468,7 @@ int main() {
   property_type_register(&property_window);
   property_type_register(&property_int);
   property_type_register(&property_float);
+  property_type_register(&property_coords);
   property_type_register(&property_svg);
   property_type_register(&property_wm_hints_icon);
   property_type_register(&property_net_wm_icon);

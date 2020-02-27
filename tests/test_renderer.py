@@ -138,7 +138,10 @@ class RendererTest(unittest.TestCase):
         self.subwindow = self.display.root.create_window(map=False, width=1024, height=1024)
         self.subwindow["IG_LAYER"] = "IG_NONE"
         self.subwindow["IG_CONTENT"] = ("IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-dollar.svg")
-        self.subwindow["IG_COORDS"] = [0.0, 1.0, 1.0, 1.0]
+        self.subwindow["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
+        self.subwindow["IG_COORDS"] = [1.0, -1.0, 0.0, 0.0,
+                                       0.01, 0.03, 0.03, 0.03]
+        self.subwindow["IG_COORD_TYPES"] = ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
         self.subwindow.map()
         
         self.window = self.display.root.create_window(map=False, width=1024, height=1024)

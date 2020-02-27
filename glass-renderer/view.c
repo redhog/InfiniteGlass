@@ -61,10 +61,6 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   Rendering rendering;
   rendering.shader = NULL;
   rendering.view = view;
-  rendering.screen[0] = view->screen[0];
-  rendering.screen[1] = view->screen[1];
-  rendering.screen[2] = view->screen[2];
-  rendering.screen[3] = view->screen[3];
   rendering.array_length = 1;
   
   List *to_delete = NULL;

@@ -39,6 +39,7 @@ struct ItemStruct {
   Property *prop_shader;
   Property *prop_size;
   Property *prop_coords;
+  Property *prop_coord_types;
   Property *prop_draw_type;
 
   Damage damage;
