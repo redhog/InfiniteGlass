@@ -165,15 +165,8 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     Bool changed = True;
     Item *item = (Item *) item_get_from_window(event->xproperty.window, False);
 
-    if (item) {
-      if (!properties_update(item->properties, event->xproperty.atom)) {
-        changed = False;
-      }
-      if (event->xproperty.atom == IG_LAYER && !item->prop_layer) item->prop_layer = properties_find(item->properties, IG_LAYER);
-      if (event->xproperty.atom == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
-      if (event->xproperty.atom == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
-      if (event->xproperty.atom == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);
-      if (event->xproperty.atom == IG_DRAW_TYPE && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, IG_DRAW_TYPE);        
+    if (item && !item_properties_update(item, event->xproperty.atom)) {
+      changed = False;
     }
     
     if (changed) {
