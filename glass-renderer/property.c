@@ -111,6 +111,12 @@ void property_to_gl(Property *prop, Rendering *rendering) {
   type->to_gl(prop, rendering);
 }
 
+void property_calculate(Property *prop, Rendering *rendering) {
+  PropertyTypeHandler *type = prop->type_handler;
+  if (!type) return;
+  if (type->calculate) type->calculate(prop, rendering);
+}
+
 void property_draw(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
   if (!type || !type->draw) return;
@@ -192,6 +198,10 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   
   GL_CHECK_ERROR("properties_to_gl", "%ld", properties->window);
   Property **entries = (Property **) properties->properties->entries;
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = entries[i];
+    property_calculate(prop, rendering);   
+  }
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = entries[i];
     property_to_gl(prop, rendering);

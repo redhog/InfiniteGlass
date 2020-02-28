@@ -36,6 +36,7 @@ struct ItemStruct {
 
   Properties *properties;
   Property *prop_layer;
+  Property *prop_item_layer;
   Property *prop_shader;
   Property *prop_size;
   Property *prop_coords;

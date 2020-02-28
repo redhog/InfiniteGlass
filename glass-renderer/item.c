@@ -15,6 +15,7 @@ Item *root_item = NULL;
 
 Atom WM_STATE;
 Atom IG_LAYER;
+Atom IG_ITEM_LAYER;
 Atom IG_LAYER_DESKTOP;
 Atom IG_LAYER_OVERLAY;
 Atom IG_LAYER_MENU;
@@ -38,6 +39,7 @@ Atom IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY;
 Bool init_items() {
   WM_STATE = XInternAtom(display, "WM_STATE", False);
   IG_LAYER = XInternAtom(display, "IG_LAYER", False);
+  IG_ITEM_LAYER = XInternAtom(display, "IG_ITEM_LAYER", False);
   IG_LAYER_DESKTOP = XInternAtom(display, "IG_LAYER_DESKTOP", False);
   IG_LAYER_OVERLAY = XInternAtom(display, "IG_LAYER_OVERLAY", False);
   IG_LAYER_MENU = XInternAtom(display, "IG_LAYER_MENU", False);
@@ -71,6 +73,7 @@ void item_constructor(Item *item, Window window) {
   item->window = window;
   item->properties = NULL;
   item->prop_layer = NULL;
+  item->prop_item_layer = NULL;
   item->prop_shader = NULL;
   item->prop_size = NULL;
   item->prop_coords = NULL;
@@ -117,6 +120,7 @@ void item_constructor(Item *item, Window window) {
   
   item->properties = properties_load(window);
   item->prop_layer = properties_find(item->properties, IG_LAYER);
+  item->prop_item_layer = properties_find(item->properties, IG_ITEM_LAYER);
   item->prop_shader = properties_find(item->properties, IG_SHADER);
   item->prop_size = properties_find(item->properties, IG_SIZE);
   item->prop_coords = properties_find(item->properties, IG_COORDS);
@@ -265,6 +269,7 @@ Bool item_properties_update(Item *item, Atom name) {
   Bool res = properties_update(item->properties, name);
   if (res) {
     if (name == IG_LAYER && !item->prop_layer) item->prop_layer = properties_find(item->properties, IG_LAYER);
+    if (name == IG_ITEM_LAYER && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, IG_ITEM_LAYER);
     if (name == IG_SHADER && !item->prop_shader) item->prop_shader = properties_find(item->properties, IG_SHADER);
     if (name == IG_SIZE && !item->prop_size) item->prop_size = properties_find(item->properties, IG_SIZE);
     if (name == IG_COORDS && !item->prop_coords) item->prop_coords = properties_find(item->properties, IG_COORDS);

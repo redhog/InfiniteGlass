@@ -86,6 +86,7 @@ typedef void PropertyFree(Property *prop);
 typedef void PropertyLoadProgram(Property *prop, Rendering *rendering);
 typedef void PropertyFreeProgram(Property *prop, size_t index);
 typedef void PropertyToGl(Property *prop, Rendering *rendering);
+typedef void PropertyCalculate(Property *prop, Rendering *rendering);
 typedef void PropertyDraw(Property *prop, Rendering *rendering);
 typedef void PropertyPrint(Property *prop, FILE *fp);
 
@@ -98,6 +99,7 @@ struct PropertyTypeHandlerT {
   PropertyLoadProgram *load_program;
   PropertyFreeProgram *free_program;
   PropertyDraw *draw;
+  PropertyCalculate *calculate;
  
   Atom type;
   Atom name;

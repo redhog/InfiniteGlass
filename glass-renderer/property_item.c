@@ -26,6 +26,10 @@ void property_item_free_program(Property *prop, size_t index) {
 void property_item_draw(Property *prop, Rendering *rendering) {
   rendering->item = item_get_from_window((Window) prop->values.dwords[0], True);
   if (rendering->item == rendering->parent_item) return;
+  if (rendering->item->prop_item_layer == NULL) return;
+  if (rendering->parent_item->prop_layer == NULL) return;
+  if (rendering->item->prop_item_layer->values.dwords[0] != rendering->parent_item->prop_layer->values.dwords[0]) return;
+  
   item_draw(rendering);
 }
 

@@ -131,7 +131,6 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
 }
 
 void property_coords_to_gl(Property *prop, Rendering *rendering) {
-  property_coords_calculate(prop, rendering);
   if (rendering->view->picking) return;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   PropertyCoords *data = (PropertyCoords *) prop->data;
@@ -155,4 +154,4 @@ void property_coords_load_program(Property *prop, Rendering *rendering) {
 }
 void property_coords_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_coords = {&property_coords_init, &property_coords_load, &property_coords_free, &property_coords_to_gl, &property_coords_print, &property_coords_load_program, &property_coords_free_program};
+PropertyTypeHandler property_coords = {&property_coords_init, &property_coords_load, &property_coords_free, &property_coords_to_gl, &property_coords_print, &property_coords_load_program, &property_coords_free_program, NULL, &property_coords_calculate};
