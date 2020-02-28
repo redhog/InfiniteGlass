@@ -18,7 +18,7 @@ def main(*arg, **kw):
             
     with InfiniteGlass.Display() as display:
         for widget_type, widgets in config.items():
-            for name, widget in config["widgets"].items():
+            for name, widget in widgets.items():
                 w = display.root.create_window()
 
                 properties = {
