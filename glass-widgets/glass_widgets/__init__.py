@@ -23,12 +23,14 @@ def main(*arg, **kw):
 
                 properties = {
                     "WM_CLASS": "data://glass-widget",
+                    "WM_NAME": "data://" + name,
                     "_NET_WM_WINDOW_TYPE": "_NET_WM_WINDOW_TYPE_DESKTOP"
                 }
                 if widget_type == "widgets":
                     properties["IG_LAYER"] = "IG_LAYER_OVERLAY"
                 elif widget_type == "window-decorations":
                     properties["IG_LAYER"] = "IG_LAYER_NONE"
+                    properties["IG_ITEM_LAYER"] = "IG_LAYER_DESKTOP"
                     #properties["IG_SHADER"] = "IG_SHADER_WINDOW_DECORATION"
                     display.root["IG_WINDOW_DECORATION_" + name.upper()] = ("IG_ITEM", w)
                 properties.update(widget["properties"])
