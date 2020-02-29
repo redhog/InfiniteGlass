@@ -104,7 +104,8 @@ void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
   GL_CHECK_ERROR("draw1", "%s", XGetAtomName(display, view->name));
-  view->picking = 0;
+  char *res = getenv("GLASS_PICKING_TEST");
+  view->picking = res && res[0] == '1';
   view_abstract_draw(view, items, filter);
   GL_CHECK_ERROR("draw2", "%s", XGetAtomName(display, view->name));
 }
