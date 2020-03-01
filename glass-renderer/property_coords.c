@@ -131,7 +131,6 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
 }
 
 void property_coords_to_gl(Property *prop, Rendering *rendering) {
-  if (rendering->view->picking) return;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   PropertyCoords *data = (PropertyCoords *) prop->data;
   glUniform4f(prop_cache->location, data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
