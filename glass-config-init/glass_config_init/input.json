@@ -187,7 +187,6 @@
         },
         "item_resize_mode": {
             "class": "glass_input.mode.Mode",
-            "load": {"ifnowin": {"mode": "resize_mode"}},
             "keymap": {
                 "KeyRelease": "pop",
                 "ButtonRelease": "pop",
