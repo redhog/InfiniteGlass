@@ -40,9 +40,6 @@ List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
 
-Atom IG_DEBUG;
-Atom IG_EXIT;
-
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
   return item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == current_layer;
@@ -169,13 +166,13 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     }
     
     if (changed) {
-      if (event->xproperty.window != root && item && event->xproperty.atom == IG_SIZE) {
+      if (event->xproperty.window != root && item && event->xproperty.atom == ATOM("IG_SIZE")) {
         Atom type_return;
         int format_return;
         unsigned long nitems_return;
         unsigned long bytes_after_return;
         unsigned char *prop_return;
-        XGetWindowProperty(display, event->xproperty.window, IG_SIZE, 0, sizeof(long)*2, 0, AnyPropertyType,
+        XGetWindowProperty(display, event->xproperty.window, ATOM("IG_SIZE"), 0, sizeof(long)*2, 0, AnyPropertyType,
                            &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
         if (type_return != None) {
           XWindowChanges values;
@@ -188,7 +185,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
             XGetWindowAttributes(display, event->xproperty.window, &attr);
             arr[0] = attr.width;
             arr[1] = attr.height;
-            XChangeProperty(display, event->xproperty.window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+            XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
           } else {
             XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
             DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
@@ -196,10 +193,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           }
         }
         XFree(prop_return);
-      } else if (event->xproperty.window == root && event->xproperty.atom == IG_VIEWS) {
+      } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_VIEWS")) {
         view_free_all(views);
         views = view_load_all();
-      } else if (event->xproperty.window == root && event->xproperty.atom == IG_SHADERS) {
+      } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_SHADERS")) {
         shader_free_all(shaders);
         shaders = shader_load_all();       
       } else if (event->xproperty.window == root) {
@@ -240,7 +237,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         Item *item;
 
         pick(root_x, root_y, &winx, &winy, &item);
-        if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != IG_LAYER_MENU)) {
+        if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
           XWindowChanges values;
           values.x = root_x - winx;
           values.y = root_y - winy;
@@ -293,10 +290,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         for (int i = 0; i < 4; i++) {
           coords_arr[i] = *(long *) &coords[i];
         }
-        XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+        XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
 
         long arr[2] = {width, height};
-        XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+        XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 
         item_update((Item *) item);
         GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
@@ -308,7 +305,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == ConfigureNotify) {
     DEBUG("event.configure", "Received ConfigureNotify for %ld\n", event->xconfigure.window);
     Item *item = item_get_from_window(event->xconfigure.window, False);
-    if (item && item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == IG_LAYER_MENU) {
+    if (item && item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
       float coords[4];
       View *v = NULL;
       if (views) {
@@ -344,10 +341,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       for (int i = 0; i < 4; i++) {
         coords_arr[i] = *(long *) &coords[i];
       }
-      XChangeProperty(display, item->window, IG_COORDS, XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+      XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
 
       long arr[2] = {event->xconfigure.width, event->xconfigure.height};
-      XChangeProperty(display, item->window, IG_SIZE, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+      XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
       item_update((Item *) item);
       trigger_draw();
     }
@@ -389,7 +386,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     }
   } else if (event->type == MapRequest) {
     XMapWindow(display, event->xmaprequest.window);
-  } else if (event->type == ClientMessage && event->xclient.message_type == IG_DEBUG) {
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG")) {
     printf("DEBUG LIST VIEWS\n");
     if (views) {
       for (size_t idx = 0; idx < views->count; idx++) {
@@ -405,7 +402,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       item_print(item);
     }
     printf("DEBUG LIST ITEMS END\n");
-  } else if (event->type == ClientMessage && event->xclient.message_type == IG_EXIT) {
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {
     DEBUG("exit", "Exiting by request");
     exit(1);
   } else {
@@ -447,9 +444,6 @@ int main() {
   if (!init_shader()) return 1;
   if (!init_items()) return 1;
 
-  IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
-  IG_EXIT = XInternAtom(display, "IG_EXIT", False);
-  
   manager_selection_create(XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
                            &selection_sn_clear,

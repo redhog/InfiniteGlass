@@ -48,5 +48,14 @@ extern void overlay_set_input(Bool enabled);
 
 extern Atom atom_append(Display *display, Atom base, char *suffix);
 
+// Atoms live as long as display lives, so we can cache them at any call point.
+// This way we don't have to make global variables for them and
+// initialize them somewhere central.
+#define ATOM(name) ({ \
+  static Atom res = None; \
+  if (res == None) res = XInternAtom(display, name, False); \
+  res; \
+})
+
 
 #endif

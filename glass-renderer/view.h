@@ -5,8 +5,6 @@
 #include "list.h"
 #include "view_type.h"
 
-extern Atom IG_VIEWS;
-
 typedef Bool ItemFilter(Item *item);
 
 extern Bool init_view(void);

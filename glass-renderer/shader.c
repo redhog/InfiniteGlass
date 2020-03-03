@@ -36,10 +36,7 @@ int checkProgramError(char *name, GLuint program) {
   return 0;
 }
 
-Atom IG_SHADERS = -1;
-
 Bool init_shader() {
-  IG_SHADERS = XInternAtom(display, "IG_SHADERS", False);
   return True;
 }
 
@@ -157,7 +154,7 @@ List *shader_load_all(void) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, XInternAtom(display, "IG_SHADERS", False), 0, 100000, 0, AnyPropertyType,
+  XGetWindowProperty(display, root, ATOM("IG_SHADERS"), 0, 100000, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
     XFree(prop_return);
