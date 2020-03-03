@@ -244,7 +244,6 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         Item *parent_item;
 
         pick(root_x, root_y, &winx, &winy, &item, &parent_item);
-        fprintf(stderr, "XXXXXXXXXXXX %ld,%ld\n", item, parent_item); fflush(stderr);
         if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != IG_LAYER_MENU)) {
           XWindowChanges values;
           values.x = root_x - winx;

@@ -153,7 +153,6 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   } else {
     DEBUG("pick", "  -> %d%s,%d,%d\n", window, *item ? "" : "(unknown!)", *winx, *winy);
   }
-        fprintf(stderr, "AAAAAAAAAAAAAA %ld,%ld\n", *item, *parent_item); fflush(stderr);
 }
 
 void view_load_layer(View *view) {
