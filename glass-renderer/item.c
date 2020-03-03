@@ -148,7 +148,7 @@ void item_draw_subs(Rendering *rendering) {
   rendering->parent_item = item;
 
   rendering->widget_id = 0; // widget_id = 0 is already used for "this is no widget"
-  properties_draw(item->properties, rendering); 
+  properties_draw(item->properties, rendering);
   if (item != root_item) properties_draw(root_item->properties, rendering);
 
   rendering->parent_item = parent_item;
@@ -196,7 +196,7 @@ void item_draw(Rendering *rendering) {
     DEBUG("setwin", "%ld\n", rendering->item->window);
     if (rendering->parent_item) {
       glUniform1i(shader->window_id_attr, rendering->parent_item->window);
-      glUniform1i(shader->widget_id_attr, rendering->widget_id + 1);
+      glUniform1i(shader->widget_id_attr, rendering->widget_id);
     } else {
       glUniform1i(shader->window_id_attr, rendering->item->window);
       glUniform1i(shader->widget_id_attr, 0);
