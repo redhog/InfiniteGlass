@@ -5,30 +5,10 @@
 #include "debug.h"
 #include <math.h>
 
-Atom IG_COORD_DESKTOP = None;
-Atom IG_COORD_PARENT_BASE = None;
-Atom IG_COORD_PARENT = None;
-Atom IG_COORD_PARENT_X = None;
-Atom IG_COORD_PARENT_Y = None;
-Atom IG_COORD_SCREEN_BASE = None;
-Atom IG_COORD_SCREEN = None;
-Atom IG_COORD_SCREEN_X = None;
-Atom IG_COORD_SCREEN_Y = None;
-
 #define FL(value) *((float *) &value)
 void property_coords_init(PropertyTypeHandler *prop) {
   prop->type = XA_FLOAT;
-  prop->name = IG_COORDS;
-
-  if (IG_COORD_DESKTOP == None) IG_COORD_DESKTOP = XInternAtom(display, "IG_COORD_DESKTOP", False);
-  if (IG_COORD_PARENT_BASE == None) IG_COORD_PARENT_BASE = XInternAtom(display, "IG_COORD_PARENT_BASE", False);
-  if (IG_COORD_PARENT == None) IG_COORD_PARENT = XInternAtom(display, "IG_COORD_PARENT", False);
-  if (IG_COORD_PARENT_X == None) IG_COORD_PARENT = XInternAtom(display, "IG_COORD_PARENT_X", False);
-  if (IG_COORD_PARENT_Y == None) IG_COORD_PARENT = XInternAtom(display, "IG_COORD_PARENT_Y", False);
-  if (IG_COORD_SCREEN_BASE == None) IG_COORD_SCREEN_BASE = XInternAtom(display, "IG_COORD_SCREEN_BASE", False);
-  if (IG_COORD_SCREEN == None) IG_COORD_SCREEN = XInternAtom(display, "IG_COORD_SCREEN", False);
-  if (IG_COORD_SCREEN_X == None) IG_COORD_SCREEN_X = XInternAtom(display, "IG_COORD_SCREEN_X", False);
-  if (IG_COORD_SCREEN_Y == None) IG_COORD_SCREEN_Y = XInternAtom(display, "IG_COORD_SCREEN_Y", False);
+  prop->name = ATOM("IG_COORDS");
 }
 
 void property_coords_load(Property *prop) {
@@ -78,50 +58,50 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
   }
 
   for (int i = 0; i < prop->nitems; i += 4) {
-    Atom type = IG_COORD_DESKTOP;
+    Atom type = ATOM("IG_COORD_DESKTOP");
     if (i / 4 < types_nitems) type = types[i / 4];
 
-    if (type == IG_COORD_DESKTOP) {
+    if (type == ATOM("IG_COORD_DESKTOP")) {
       data->ccoords[0] += data->coords[i+0];
       data->ccoords[1] += data->coords[i+1];
       data->ccoords[2] += data->coords[i+2];
       data->ccoords[3] += data->coords[i+3];
-    } else if (type == IG_COORD_PARENT_BASE && parent_data) {
+    } else if (type == ATOM("IG_COORD_PARENT_BASE") && parent_data) {
       data->ccoords[0] += parent_data->ccoords[0] + data->coords[i+0] * parent_data->ccoords[2];
       data->ccoords[1] += parent_data->ccoords[1] + data->coords[i+1] * parent_data->ccoords[3];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == IG_COORD_PARENT && parent_data) {
+    } else if (type == ATOM("IG_COORD_PARENT") && parent_data) {
       data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
       data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == IG_COORD_PARENT_X && parent_data) {
+    } else if (type == ATOM("IG_COORD_PARENT_X") && parent_data) {
       data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
       data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[2];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[2];
-    } else if (type == IG_COORD_PARENT_Y && parent_data) {
+    } else if (type == ATOM("IG_COORD_PARENT_Y") && parent_data) {
       data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[3];
       data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[3];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == IG_COORD_SCREEN_BASE) {
+    } else if (type == ATOM("IG_COORD_SCREEN_BASE")) {
       data->ccoords[0] += rendering->view->screen[0] + data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += rendering->view->screen[1] + data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[2];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
-    } else if (type == IG_COORD_SCREEN) {
+    } else if (type == ATOM("IG_COORD_SCREEN")) {
       data->ccoords[0] += data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[2];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
-    } else if (type == IG_COORD_SCREEN_X) {
+    } else if (type == ATOM("IG_COORD_SCREEN_X")) {
       data->ccoords[0] += data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[2];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[2];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[2];
-    } else if (type == IG_COORD_SCREEN_Y) {
+    } else if (type == ATOM("IG_COORD_SCREEN_Y")) {
       data->ccoords[0] += data->coords[i+0] * rendering->view->screen[3];
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[3];
