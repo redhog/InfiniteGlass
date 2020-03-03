@@ -214,8 +214,10 @@ void properties_draw(Properties *properties, Rendering *rendering) {
   
   GL_CHECK_ERROR("properties_draw", "%ld", properties->window);
   Property **entries = (Property **) properties->properties->entries;
+  int widget_id = rendering->widget_id + 1; // +1 because rendering->widget_id is the id of the last previously used widget_id
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = entries[i];
+    rendering->widget_id = widget_id + i;
     property_draw(prop, rendering);
     GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
   }

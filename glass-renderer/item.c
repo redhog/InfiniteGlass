@@ -6,6 +6,7 @@
 #include "wm.h"
 #include <limits.h>
 #include "property.h"
+#include "property_item.h"
 #include "debug.h"
 #include "rendering.h"
 #include <X11/Xatom.h>
@@ -80,6 +81,7 @@ void item_constructor(Item *item, Window window) {
   item->prop_coord_types = NULL;
   item->prop_draw_type = NULL;
   item->draw_cycles_left = 0;
+  item->parent_item = NULL;
   
   if (window == root) {
     Atom layer = XInternAtom(display, "IG_LAYER_ROOT", False);
@@ -144,9 +146,10 @@ void item_draw_subs(Rendering *rendering) {
   if (!item->prop_coords) return;
     
   rendering->parent_item = item;
-  
-  if (item != root_item) properties_draw(root_item->properties, rendering);
+
+  rendering->widget_id = 0; // widget_id = 0 is already used for "this is no widget"
   properties_draw(item->properties, rendering); 
+  if (item != root_item) properties_draw(root_item->properties, rendering);
 
   rendering->parent_item = parent_item;
   rendering->item = item;
@@ -191,7 +194,13 @@ void item_draw(Rendering *rendering) {
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);
-    glUniform1i(shader->window_id_attr, rendering->item->window);
+    if (rendering->parent_item) {
+      glUniform1i(shader->window_id_attr, rendering->parent_item->window);
+      glUniform1i(shader->widget_id_attr, rendering->widget_id + 1);
+    } else {
+      glUniform1i(shader->window_id_attr, rendering->item->window);
+      glUniform1i(shader->widget_id_attr, 0);
+    }
     
     GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, rendering->shader->name_str);
     
@@ -401,6 +410,22 @@ Item *item_get_from_window(Window window, int create) {
   return item_create(window);
 }
 
+Item *item_get_from_widget(Item *parent, int widget) {
+  if (widget == 0) return parent;
+  widget--;
+  if (widget < parent->properties->properties->count) {
+    Property *prop = (Property *) parent->properties->properties->entries[widget];
+    if (prop->type_handler != &property_item) return NULL;
+    return item_get_from_window((Window) prop->values.dwords[0], False);
+  }
+  widget -= parent->properties->properties->count;
+  if ((parent != root_item) && (widget < root_item->properties->properties->count)) {
+    Property *prop = (Property *) root_item->properties->properties->entries[widget];
+    if (prop->type_handler != &property_item) return NULL;
+    return item_get_from_window((Window) prop->values.dwords[0], False);
+  }
+  return NULL;
+}
 
 void items_get_from_toplevel_windows() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);

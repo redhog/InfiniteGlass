@@ -18,7 +18,7 @@ extern void view_from_space(View *view, float spacex, float spacey, float *scree
 extern void view_abstract_draw(View *view, List *items, ItemFilter *filter);
 extern void view_draw(GLint fb, View *view, List *items, ItemFilter *filter);
 extern void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter);
-extern void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **returnitem);
+extern void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **item, Item **parent_item);
 
 extern void view_load_layer(View *view);
 extern void view_load_screen(View *view);

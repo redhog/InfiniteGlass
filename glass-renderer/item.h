@@ -49,6 +49,8 @@ struct ItemStruct {
   Texture window_texture;
 
   int draw_cycles_left;
+ 
+  Item *parent_item; // Only used as caching for picking. DO NOT USE outside of that, value might change at any time.
 };
 
 extern List *items_all;
@@ -68,6 +70,7 @@ extern void item_print(Item *);
 
 extern void item_update_space_pos_from_window(Item *item);
 extern Item *item_get_from_window(Window window, int create);
+extern Item *item_get_from_widget(Item *parent, int widget);
 extern void items_get_from_toplevel_windows();
 
 #endif

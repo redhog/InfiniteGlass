@@ -44,6 +44,7 @@ GLuint picking_fb;
 
 Atom IG_DEBUG;
 Atom IG_EXIT;
+Atom IG_PARENT_WINDOW;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
@@ -89,7 +90,7 @@ void trigger_draw() {
   }
 }
 
-void pick(int x, int y, int *winx, int *winy, Item **item) {
+void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   if (!views) {
     *winy = *winx = 0;
     *item = NULL;
@@ -108,7 +109,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
     view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
   }
   glFlush();
-  view_pick(picking_fb, view, x, y, winx, winy, item);
+  view_pick(picking_fb, view, x, y, winx, winy, item, parent_item);
 }
 
 int init_picking() {
@@ -240,8 +241,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
         int winx, winy;
         Item *item;
+        Item *parent_item;
 
-        pick(root_x, root_y, &winx, &winy, &item);
+        pick(root_x, root_y, &winx, &winy, &item, &parent_item);
+        fprintf(stderr, "XXXXXXXXXXXX %ld,%ld\n", item, parent_item); fflush(stderr);
         if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != IG_LAYER_MENU)) {
           XWindowChanges values;
           values.x = root_x - winx;
@@ -253,7 +256,12 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
             item->y = values.y;
           }
 
-          DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, item->window, winx, winy);
+          if (parent_item && (parent_item != item->parent_item)) {
+            XChangeProperty(display, item->window, IG_PARENT_WINDOW, XA_WINDOW, 32, PropModeReplace, (void *) &parent_item->window, 1);
+            item->parent_item = parent_item;
+          }
+          
+          DEBUG("position", "Point %d,%d -> %lu/%lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, parent_item ? parent_item->window : 0, item->window, winx, winy);
         } else {
           DEBUG("position", "Point %d,%d -> NONE\n", root_x, root_y);
         }
@@ -451,7 +459,8 @@ int main() {
 
   IG_DEBUG = XInternAtom(display, "IG_DEBUG", False);
   IG_EXIT = XInternAtom(display, "IG_EXIT", False);
-  
+  IG_PARENT_WINDOW = XInternAtom(display, "IG_PARENT_WINDOW", False);
+   
   manager_selection_create(XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
                            &selection_sn_clear,

@@ -12,6 +12,6 @@ extern List *views;
 extern List *shaders;
 
 extern void draw();
-extern void pick(int x, int y, int *winx, int *winy, Item **item);
+extern void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item);
 
 #endif

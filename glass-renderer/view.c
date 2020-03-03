@@ -118,28 +118,42 @@ void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
   GL_CHECK_ERROR("view_draw_picking2", "%s", XGetAtomName(display, view->name));
 }
   
-void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **returnitem) {
+void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   float data[4];
   Window window = None;
+  int widget = 0;
   memset(data, 0, sizeof(data));
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
   GL_CHECK_ERROR("pick2", "%s", XGetAtomName(display, view->name));
   DEBUG("pick", "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   *winx = 0;
   *winy = 0;
-  *returnitem = NULL;
+  *item = NULL;
+  *parent_item = 0;
   if (data[2] >= 0.0) {
-   window = (Window) ((((int) data[2]) << 16) + (int) data[3]);
-   *returnitem = item_get_from_window(window, False);
-    if (*returnitem && (*returnitem)->prop_size) {
-      unsigned long width = (*returnitem)->prop_size->values.dwords[0];
-      unsigned long height = (*returnitem)->prop_size->values.dwords[1];
+    // See glass-theme/glass_theme/shaders/lib/fragment_picking.glsl
+    // for the encoding of this
+    window = (Window) (((0b111111 & (int) data[2]) << 23) + (int) data[3]);
+    widget = (((int) data[2]) >> 6);
+    *item = item_get_from_window(window, False);
+    if (widget) {
+      *parent_item = *item;
+      *item = item_get_from_widget(*item, widget);
+    }
+    if (*item && (*item)->prop_size) {
+      unsigned long width = (*item)->prop_size->values.dwords[0];
+      unsigned long height = (*item)->prop_size->values.dwords[1];
       
       *winx = (int) (data[0] * width);
       *winy = (int) (data[1] * height);
     }
   }
-  DEBUG("pick", "  -> %d%s,%d,%d\n", window, *returnitem ? "" : "(unknown!)", *winx, *winy);
+  if (widget) {
+    DEBUG("pick", "  -> %d%s/%d%s,%d,%d\n", window, *parent_item ? "" : "(unknown!)", widget, *item ? "" : "(unknown!)", *winx, *winy);
+  } else {
+    DEBUG("pick", "  -> %d%s,%d,%d\n", window, *item ? "" : "(unknown!)", *winx, *winy);
+  }
+        fprintf(stderr, "AAAAAAAAAAAAAA %ld,%ld\n", *item, *parent_item); fflush(stderr);
 }
 
 void view_load_layer(View *view) {
