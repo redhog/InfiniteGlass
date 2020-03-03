@@ -7,10 +7,7 @@
 #include <limits.h>
 #include <math.h>
 
-Atom IG_VIEWS;
-
 Bool init_view(void) {
-  IG_VIEWS = XInternAtom(display, "IG_VIEWS", False);
   return True;
 }
 
@@ -238,7 +235,7 @@ List *view_load_all(void) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, IG_VIEWS, 0, 100000, 0, AnyPropertyType,
+  XGetWindowProperty(display, root, ATOM("IG_VIEWS"), 0, 100000, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
     XFree(prop_return);

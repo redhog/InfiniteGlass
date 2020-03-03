@@ -10,17 +10,6 @@
 #include "property.h"
 #include "rendering.h"
 
-extern Atom WM_STATE;
-extern Atom IG_LAYER;
-extern Atom IG_LAYER_DESKTOP;
-extern Atom IG_LAYER_OVERLAY;
-extern Atom IG_LAYER_MENU;
-extern Atom IG_SHADER;
-extern Atom IG_SHADER_DEFAULT;
-extern Atom IG_COORDS;
-extern Atom IG_SIZE;
-extern Atom IG_DRAW_TYPE;
-
 struct ItemStruct;
 typedef struct ItemStruct Item;
 

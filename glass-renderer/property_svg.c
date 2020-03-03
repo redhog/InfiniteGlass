@@ -130,7 +130,7 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
 }
 
 
-void property_svg_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "IG_SVG", False); prop->name = AnyPropertyType; }
+void property_svg_init(PropertyTypeHandler *prop) { prop->type = ATOM("IG_SVG"); prop->name = AnyPropertyType; }
 void property_svg_load(Property *prop) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   if (!data) {
