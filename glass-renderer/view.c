@@ -7,6 +7,8 @@
 #include <limits.h>
 #include <math.h>
 
+Bool debug_picking = False;
+
 Bool init_view(void) {
   return True;
 }
@@ -97,8 +99,7 @@ void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
   GL_CHECK_ERROR("draw1", "%s", XGetAtomName(display, view->name));
-  char *res = getenv("GLASS_PICKING_TEST");
-  view->picking = res && res[0] == '1';
+  view->picking = debug_picking;
   view_abstract_draw(view, items, filter);
   GL_CHECK_ERROR("draw2", "%s", XGetAtomName(display, view->name));
 }

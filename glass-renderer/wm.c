@@ -413,6 +413,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {
     DEBUG("exit", "Exiting by request");
     exit(1);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_PICKING")) {
+    debug_picking = !debug_picking;
+    trigger_draw();
   } else {
     return False;
   }

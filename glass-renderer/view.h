@@ -7,6 +7,8 @@
 
 typedef Bool ItemFilter(Item *item);
 
+extern Bool debug_picking;
+
 extern Bool init_view(void);
 
 extern void mat4mul(float *mat4, float *vec4, float *outvec4);
