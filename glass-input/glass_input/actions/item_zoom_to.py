@@ -12,7 +12,7 @@ def item_zoom_1_1_to_sreen_calc(self, win, size = None, coords = None, view = No
 
 def item_zoom_1_1_to_sreen(self, event):
     "Set the pixel resolution of the current window so that it matches the space it occupies on the screen"
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    win = self.get_event_window(event)
     if not win or win == self.display.root:
         return None
 
@@ -21,7 +21,7 @@ def item_zoom_1_1_to_sreen(self, event):
 
 def item_zoom_in_or_1_1(self, event):
     "Like item_zoom_1_1_to_sreen, but then keeps zooming in if repeated"
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    win = self.get_event_window(event)
     if not win or win == self.display.root:
         return None
 
@@ -34,7 +34,7 @@ def item_zoom_in_or_1_1(self, event):
 
 def item_zoom_out_or_1_1(self, event):
     "Like item_zoom_1_1_to_sreen, but then keeps zooming out if repeated"
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    win = self.get_event_window(event)
     if not win or win == self.display.root:
         return None
 
@@ -47,7 +47,7 @@ def item_zoom_out_or_1_1(self, event):
 
 def item_zoom_1_1_to_window_calc(self, event=None, win=None, winsize=None, coords=None, size=None, screen=None):
     if win is None:
-        win = InfiniteGlass.windows.get_active_window(self.display)
+        win = self.get_event_window(event)
         if not win or win == self.display.root:
             return
 
@@ -73,7 +73,7 @@ def item_zoom_1_1_to_window(self, event=None, win=None):
 
 def zoom_1_1_1(self, event):
     "Zoom to make the current window full-screen, and change its resolution to the same as the screen"
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    win = self.get_event_window(event)
     if not win or win == self.display.root:
         return
     InfiniteGlass.DEBUG("zoom", "zoom_screen_to_window_and_window_to_screen\n")

@@ -1,3 +1,5 @@
+import InfiniteGlass.windows
+
 def bbox(window_coords=None):
     xs = [x for coords in window_coords for x in (coords[0], coords[0] + coords[2])]
     ys = [y for coords in window_coords for y in (coords[1], coords[1] - coords[3])]

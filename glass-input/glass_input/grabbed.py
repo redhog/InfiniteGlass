@@ -19,4 +19,4 @@ class GrabbedMode(mode.Mode):
 
     def debugpos(self, event):
         pass
-        # self.get_active_window()
+        # self.get_event_window(event)

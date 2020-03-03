@@ -45,9 +45,16 @@ def main(*arg, **kw):
 
                 @w.on()
                 def ButtonPress(win, event):
-                    win["IG_INPUT_ACTION"] = json.dumps(win.widget["action"]).encode("utf-8")
+                    parent = win.get("IG_PARENT_WINDOW", None)
+                    def n(w):
+                        return w and w.get("WM_NAME", str(w.__window__())) or "none"
+                    print("%s/%s.%s()" % (n(parent), n(win), win.widget["action"]))
+
+                    target = parent or win
+                    
+                    target["IG_INPUT_ACTION"] = json.dumps(win.widget["action"]).encode("utf-8")
                     display.root.send(display.root,
-                                      "IG_INPUT_ACTION", win, "IG_INPUT_ACTION",
+                                      "IG_INPUT_ACTION", target, "IG_INPUT_ACTION",
                                       event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
                     display.flush()
                 
