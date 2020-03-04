@@ -168,6 +168,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     }
     
     if (changed) {
+      // FIXME: Test that item != NULL here...
       if (event->xproperty.window != root && item && event->xproperty.atom == ATOM("IG_SIZE")) {
         Atom type_return;
         int format_return;
@@ -180,18 +181,22 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           XWindowChanges values;
           values.width = ((long *) prop_return)[0];
           values.height = ((long *) prop_return)[1];
-          // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
-          if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
-            long arr[2];
-            XWindowAttributes attr;
-            XGetWindowAttributes(display, event->xproperty.window, &attr);
-            arr[0] = attr.width;
-            arr[1] = attr.height;
-            XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-          } else {
-            XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-            DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-            item_update((Item *) item);
+          XWindowAttributes attr;
+          XGetWindowAttributes(display, event->xproperty.window, &attr);
+          
+          if (attr.width != values.width || attr.height != values.height) {
+            // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
+            if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
+              long arr[2];
+              arr[0] = attr.width;
+              arr[1] = attr.height;
+              DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", event->xproperty.window, attr.width, attr.height);
+              XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+            } else {
+              DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", event->xproperty.window, values.width, values.height);
+              XConfigureWindow(display, event->xproperty.window, CWWidth | CWHeight, &values);
+              item_update((Item *) item);
+            }
           }
         }
         XFree(prop_return);
