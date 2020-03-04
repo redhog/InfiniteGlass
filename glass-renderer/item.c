@@ -305,6 +305,7 @@ void item_update_space_pos_from_window(Item *item) {
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
   long arr[2] = {width, height};
+  DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
   XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   
   Atom type_return;
@@ -328,6 +329,7 @@ void item_update_space_pos_from_window(Item *item) {
       coords[2] = (v->screen[2] * (float) width) / (float) v->width;
       coords[3] = (v->screen[3] * (float) height) / (float) v->height;
       DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
+      DEBUG("position", "XXX %f*%d/%d=%f, %f*%d/%d=%f\n", v->screen[2], width, v->width, coords[2], v->screen[3], height, v->height, coords[3]);
     } else {
       coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
       coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
@@ -341,12 +343,13 @@ void item_update_space_pos_from_window(Item *item) {
             item->window,
             item->attr.x, item->attr.y, item->attr.width, item->attr.height,
             coords[0],coords[1],coords[2],coords[3]);
-   }
+    }
         
     long arr[4];
     for (int i = 0; i < 4; i++) {
       arr[i] = *(long *) &coords[i];
     }
+    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, arr[0], arr[1], arr[2], arr[3]);
     XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
 }

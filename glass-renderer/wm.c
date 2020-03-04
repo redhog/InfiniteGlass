@@ -294,6 +294,18 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         coords[2] *= (float) event->xconfigurerequest.width / (float) width;
         coords[3] *= (float) event->xconfigurerequest.height / (float) height;
 
+        DEBUG("configure", "%ld.ConfigureRequest(%d,%d @ %f,%f[%f,%f], %d,%d): %f, %f\n",
+              event->xconfigurerequest.window,
+              width,
+              height,
+              ((float *) item->prop_coords->data)[0],
+              ((float *) item->prop_coords->data)[1],
+              ((float *) item->prop_coords->data)[2],
+              ((float *) item->prop_coords->data)[3],
+              event->xconfigurerequest.width,
+              event->xconfigurerequest.height,
+              (float) event->xconfigurerequest.width / (float) width,
+              (float) event->xconfigurerequest.height / (float) height);
         long coords_arr[4];
         for (int i = 0; i < 4; i++) {
           coords_arr[i] = *(long *) &coords[i];
@@ -311,7 +323,12 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       }
     }
   } else if (event->type == ConfigureNotify) {
-    DEBUG("event.configure", "Received ConfigureNotify for %ld\n", event->xconfigure.window);
+    DEBUG("event.configure", "%ld.ConfigureNotify(%d,%d[%d,%d])\n",
+          event->xconfigure.window,
+          event->xconfigure.x,
+          event->xconfigure.y,
+          event->xconfigure.width,
+          event->xconfigure.height);
     Item *item = item_get_from_window(event->xconfigure.window, False);
     if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
       float coords[4];

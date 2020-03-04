@@ -50,8 +50,8 @@ Bool property_load(Property *prop) {
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
   if (prop->type_handler) prop->type_handler->load(prop);
-  if (DEBUG_ENABLED("prop.changed")) {
-    DEBUG("prop.changed", "");
+  if (DEBUG_ENABLED(prop->name_str)) {
+    DEBUG(prop->name_str, "");
     property_print(prop, stderr);
   }
   
