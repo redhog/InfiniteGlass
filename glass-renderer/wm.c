@@ -44,7 +44,7 @@ GLuint picking_fb;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
-  return item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == current_layer;
+  return item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == current_layer;
 }
 
 void draw() {
@@ -240,7 +240,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         Item *parent_item;
 
         pick(root_x, root_y, &winx, &winy, &item, &parent_item);
-        if (item && (!item->prop_layer || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
+        if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
           XWindowChanges values;
           values.x = root_x - winx;
           values.y = root_y - winy;
@@ -313,7 +313,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == ConfigureNotify) {
     DEBUG("event.configure", "Received ConfigureNotify for %ld\n", event->xconfigure.window);
     Item *item = item_get_from_window(event->xconfigure.window, False);
-    if (item && item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
+    if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
       float coords[4];
       View *v = NULL;
       if (views) {

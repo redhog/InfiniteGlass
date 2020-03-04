@@ -318,7 +318,7 @@ void item_update_space_pos_from_window(Item *item) {
     XFree(prop_return);
   } else {
     View *v = NULL;
-    if (views && item->prop_layer) {
+    if (views && item->prop_layer && item->prop_layer->values.dwords) {
       v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
     }
     float coords[4];
@@ -336,7 +336,7 @@ void item_update_space_pos_from_window(Item *item) {
       DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
     }
 
-    if (item->prop_layer && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
+    if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
       DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
             item->window,
             item->attr.x, item->attr.y, item->attr.width, item->attr.height,
