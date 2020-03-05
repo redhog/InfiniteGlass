@@ -26,9 +26,11 @@
 #include "property_window.h"
 #include "property_int.h"
 #include "property_float.h"
+#include "property_coords.h"
 #include "property_svg.h"
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
+#include "property_item.h"
 #include <X11/extensions/XInput2.h>
 #include <math.h>
 
@@ -84,7 +86,7 @@ void trigger_draw() {
   }
 }
 
-void pick(int x, int y, int *winx, int *winy, Item **item) {
+void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   if (!views) {
     *winy = *winx = 0;
     *item = NULL;
@@ -103,7 +105,7 @@ void pick(int x, int y, int *winx, int *winy, Item **item) {
     view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
   }
   glFlush();
-  view_pick(picking_fb, view, x, y, winx, winy, item);
+  view_pick(picking_fb, view, x, y, winx, winy, item, parent_item);
 }
 
 int init_picking() {
@@ -166,6 +168,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     }
     
     if (changed) {
+      // FIXME: Test that item != NULL here...
       if (event->xproperty.window != root && item && event->xproperty.atom == ATOM("IG_SIZE")) {
         Atom type_return;
         int format_return;
@@ -178,18 +181,22 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           XWindowChanges values;
           values.width = ((long *) prop_return)[0];
           values.height = ((long *) prop_return)[1];
-          // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
-          if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
-            long arr[2];
-            XWindowAttributes attr;
-            XGetWindowAttributes(display, event->xproperty.window, &attr);
-            arr[0] = attr.width;
-            arr[1] = attr.height;
-            XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-          } else {
-            XConfigureWindow(display, item->window, CWWidth | CWHeight, &values);
-            DEBUG("event.size", "SIZE CHANGED TO %i,%i\n", values.width, values.height);
-            item_update((Item *) item);
+          XWindowAttributes attr;
+          XGetWindowAttributes(display, event->xproperty.window, &attr);
+          
+          if (attr.width != values.width || attr.height != values.height) {
+            // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
+            if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
+              long arr[2];
+              arr[0] = attr.width;
+              arr[1] = attr.height;
+              DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", event->xproperty.window, attr.width, attr.height);
+              XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+            } else {
+              DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", event->xproperty.window, values.width, values.height);
+              XConfigureWindow(display, event->xproperty.window, CWWidth | CWHeight, &values);
+              item_update((Item *) item);
+            }
           }
         }
         XFree(prop_return);
@@ -235,8 +242,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
         int winx, winy;
         Item *item;
+        Item *parent_item;
 
-        pick(root_x, root_y, &winx, &winy, &item);
+        pick(root_x, root_y, &winx, &winy, &item, &parent_item);
         if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
           XWindowChanges values;
           values.x = root_x - winx;
@@ -248,7 +256,12 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
             item->y = values.y;
           }
 
-          DEBUG("position", "Point %d,%d -> %lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, item->window, winx, winy);
+          if (parent_item && (parent_item != item->parent_item)) {
+            XChangeProperty(display, item->window, ATOM("IG_PARENT_WINDOW"), XA_WINDOW, 32, PropModeReplace, (void *) &parent_item->window, 1);
+            item->parent_item = parent_item;
+          }
+          
+          DEBUG("position", "Point %d,%d -> %lu/%lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, parent_item ? parent_item->window : 0, item->window, winx, winy);
         } else {
           DEBUG("position", "Point %d,%d -> NONE\n", root_x, root_y);
         }
@@ -281,11 +294,25 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       if (item->prop_size) {
         unsigned long width = item->prop_size->values.dwords[0];
         unsigned long height = item->prop_size->values.dwords[1];
-        float *coords = (float *) item->prop_coords->data;
-
+        float *orig_coords = ((PropertyCoords *) item->prop_coords->data)->coords;
+        float coords[4] = {orig_coords[0], orig_coords[1], orig_coords[2], orig_coords[3]};
+        
         coords[2] *= (float) event->xconfigurerequest.width / (float) width;
         coords[3] *= (float) event->xconfigurerequest.height / (float) height;
 
+        DEBUG("configure", "%ld.ConfigureRequest(%d,%d @ %f,%f[%f,%f], %d,%d): %f,%f => %f,%f[%f,%f]\n",
+              event->xconfigurerequest.window,
+              width,
+              height,
+              orig_coords[0],
+              orig_coords[1],
+              orig_coords[2],
+              orig_coords[3],
+              event->xconfigurerequest.width,
+              event->xconfigurerequest.height,
+              (float) event->xconfigurerequest.width / (float) width,
+              (float) event->xconfigurerequest.height / (float) height,
+              coords[0],coords[1],coords[2],coords[3]);
         long coords_arr[4];
         for (int i = 0; i < 4; i++) {
           coords_arr[i] = *(long *) &coords[i];
@@ -303,7 +330,12 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       }
     }
   } else if (event->type == ConfigureNotify) {
-    DEBUG("event.configure", "Received ConfigureNotify for %ld\n", event->xconfigure.window);
+    DEBUG("event.configure", "%ld.ConfigureNotify(%d,%d[%d,%d])\n",
+          event->xconfigure.window,
+          event->xconfigure.x,
+          event->xconfigure.y,
+          event->xconfigure.width,
+          event->xconfigure.height);
     Item *item = item_get_from_window(event->xconfigure.window, False);
     if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
       float coords[4];
@@ -405,6 +437,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {
     DEBUG("exit", "Exiting by request");
     exit(1);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_PICKING")) {
+    debug_picking = !debug_picking;
+    trigger_draw();
   } else {
     return False;
   }
@@ -460,9 +495,11 @@ int main() {
   property_type_register(&property_window);
   property_type_register(&property_int);
   property_type_register(&property_float);
+  property_type_register(&property_coords);
   property_type_register(&property_svg);
   property_type_register(&property_wm_hints_icon);
   property_type_register(&property_net_wm_icon);
+  property_type_register(&property_item);
 
   items_get_from_toplevel_windows();
  

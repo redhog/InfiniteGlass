@@ -32,7 +32,8 @@ def send_debug(self, event):
 
 def send_close(self, event):
     "Close the active window"
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    win = self.get_event_window(event)
+    print("XXXXXXXXXXXXXXXXX CLOSE", win, win.get("WM_NAME", None))
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
         win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
@@ -40,7 +41,8 @@ def send_close(self, event):
 
 def send_sleep(self, event):
     "Make the active application store its state and exit"
-    win = InfiniteGlass.windows.get_active_window(self.display)
+    win = self.get_event_window(event)
+    print("XXXXXXXXXXXXXXXXX SLEEP", win, win.get("WM_NAME", None))
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)

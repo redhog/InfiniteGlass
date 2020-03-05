@@ -7,7 +7,7 @@ from . import item_zoom_to
 def zoom_to_window(self, event):
     "Zoom the screen so that the current window is full-screen"
     print("ZOOM IN TO WINDOW")
-    win = InfiniteGlass.windows.get_active_window()
+    win = self.get_event_window(event)
     old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
     view = list(win["IG_COORDS"])
     view[3] = view[2] * old_view[3] / old_view[2]

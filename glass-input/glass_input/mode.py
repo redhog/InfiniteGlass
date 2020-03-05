@@ -76,12 +76,13 @@ def modulo(a, b):
 class Mode(object):
     def __init__(self, **kw):
         self.first_event = None
+        self.last_event = None
         self.state = {}
         for key, value in kw.items():
             setattr(self, key, value)
 
     def enter(self):
-        self.window = InfiniteGlass.windows.get_event_window(self.display, self.first_event)
+        self.window = self.get_event_window(self.first_event)
         self.x = 0
         self.y = 0
         if self.window:
@@ -97,6 +98,12 @@ class Mode(object):
             self.action("load", self.load, None)
         return True
 
+    def get_event_window(self, event=None):
+        event = event or self.last_event
+        if event == "ClientMessage":
+            return event.window
+        return InfiniteGlass.windows.get_event_window(self.display, event)
+    
     def exit(self):
         pass
 
@@ -135,6 +142,7 @@ class Mode(object):
         return filters
 
     def handle(self, event, keymap=None):
+        self.last_event = event
         if keymap is None:
             keymap = self.keymap
         for eventfilter, action in keymap.items():

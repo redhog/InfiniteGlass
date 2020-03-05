@@ -1,4 +1,5 @@
 #include "property_svg.h"
+#include "property_coords.h"
 #include "texture.h"
 #include "rendering.h"
 #include <cairo.h>
@@ -47,7 +48,7 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
     return;
   }
 
-  float *coords = (float *) rendering->item->prop_coords->data;
+  float *coords = ((PropertyCoords *) rendering->item->prop_coords->data)->ccoords;
   
   itempixelwidth = coords[2] * view->width / view->screen[2];
   itempixelheight = coords[3] * view->height / view->screen[3];

@@ -58,6 +58,7 @@ extern Property *property_allocate(Properties *properties, Atom name);
 extern Bool property_load(Property *prop);
 extern void property_free(Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
+extern void property_draw(Property *prop, Rendering *rendering);
 extern void property_print(Property *prop, FILE *fp);
 
 struct ProgramCacheStruct {
@@ -75,6 +76,7 @@ extern Properties *properties_load(Window window);
 extern Bool properties_update(Properties *properties, Atom name);
 extern void properties_free(Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
+extern void properties_draw(Properties *properties, Rendering *rendering);
 extern void properties_print(Properties *properties, FILE *fp);
 extern Property *properties_find(Properties *properties, Atom name);
 
@@ -84,6 +86,8 @@ typedef void PropertyFree(Property *prop);
 typedef void PropertyLoadProgram(Property *prop, Rendering *rendering);
 typedef void PropertyFreeProgram(Property *prop, size_t index);
 typedef void PropertyToGl(Property *prop, Rendering *rendering);
+typedef void PropertyCalculate(Property *prop, Rendering *rendering);
+typedef void PropertyDraw(Property *prop, Rendering *rendering);
 typedef void PropertyPrint(Property *prop, FILE *fp);
 
 struct PropertyTypeHandlerT {
@@ -94,6 +98,8 @@ struct PropertyTypeHandlerT {
   PropertyPrint *print;
   PropertyLoadProgram *load_program;
   PropertyFreeProgram *free_program;
+  PropertyDraw *draw;
+  PropertyCalculate *calculate;
  
   Atom type;
   Atom name;

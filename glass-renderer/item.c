@@ -6,6 +6,7 @@
 #include "wm.h"
 #include <limits.h>
 #include "property.h"
+#include "property_item.h"
 #include "debug.h"
 #include "rendering.h"
 #include <X11/Xatom.h>
@@ -28,11 +29,14 @@ void item_constructor(Item *item, Window window) {
   item->window = window;
   item->properties = NULL;
   item->prop_layer = NULL;
+  item->prop_item_layer = NULL;
   item->prop_shader = NULL;
   item->prop_size = NULL;
   item->prop_coords = NULL;
+  item->prop_coord_types = NULL;
   item->prop_draw_type = NULL;
   item->draw_cycles_left = 0;
+  item->parent_item = NULL;
   
   if (window == root) {
     Atom layer = ATOM("IG_LAYER_ROOT");
@@ -73,9 +77,11 @@ void item_constructor(Item *item, Window window) {
   
   item->properties = properties_load(window);
   item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
+  item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
   item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
   item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
   item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
+  item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
   item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
   
   if (window != root) {
@@ -88,11 +94,33 @@ void item_constructor(Item *item, Window window) {
 void item_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
+void item_draw_subs(Rendering *rendering) {
+  Item *parent_item = rendering->parent_item;
+  Item *item = rendering->item;
+
+  if (!item->prop_coords) return;
+    
+  rendering->parent_item = item;
+
+  rendering->widget_id = 0; // widget_id = 0 is already used for "this is no widget"
+  properties_draw(item->properties, rendering);
+  if (item != root_item) properties_draw(root_item->properties, rendering);
+
+  rendering->parent_item = parent_item;
+  rendering->item = item;
+}
 void item_draw(Rendering *rendering) {
+  rendering->texture_unit = 0;
+  rendering->shader = item_get_shader(rendering->item);
+  if (!rendering->shader) return;
+  glUseProgram(rendering->shader->program);
+  shader_reset_uniforms(rendering->shader);
+
   if (rendering->item->is_mapped) {
-    Item *item = (Item *) rendering->item;
+    Item *item = rendering->item;
     Shader *shader = rendering->shader;
 
+    
     if (!rendering->view->picking) {
       if (item->draw_cycles_left > 0) {
         texture_from_pixmap(&item->window_texture, item->window_pixmap);
@@ -105,10 +133,13 @@ void item_draw(Rendering *rendering) {
       glBindSampler(rendering->texture_unit, 0);
       rendering->texture_unit++;
     }
-
     
     properties_to_gl(root_item->properties, "root_", rendering);
     GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
+    if (rendering->parent_item) {
+      properties_to_gl(rendering->parent_item->properties, "parent_", rendering);
+      GL_CHECK_ERROR("item_draw_parent_properties", "%ld.%s", item->window, rendering->shader->name_str);
+    }
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
@@ -118,7 +149,13 @@ void item_draw(Rendering *rendering) {
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);
-    glUniform1i(shader->window_id_attr, rendering->item->window);
+    if (rendering->parent_item) {
+      glUniform1i(shader->window_id_attr, rendering->parent_item->window);
+      glUniform1i(shader->widget_id_attr, rendering->widget_id);
+    } else {
+      glUniform1i(shader->window_id_attr, rendering->item->window);
+      glUniform1i(shader->widget_id_attr, 0);
+    }
     
     GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, rendering->shader->name_str);
     
@@ -151,6 +188,7 @@ void item_draw(Rendering *rendering) {
       XDamageSubtract(display, item->damage, None, None);
       x_catch(&error);
     }
+    item_draw_subs(rendering);
   }
 }
 
@@ -195,10 +233,12 @@ Bool item_properties_update(Item *item, Atom name) {
   Bool res = properties_update(item->properties, name);
   if (res) {
     if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
+    if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
     if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
     if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
-    if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));        
-    if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));        
+    if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
+    if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
+    if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
   }
   return res;
 }
@@ -265,6 +305,7 @@ void item_update_space_pos_from_window(Item *item) {
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
   long arr[2] = {width, height};
+  DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
   XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   
   Atom type_return;
@@ -288,6 +329,7 @@ void item_update_space_pos_from_window(Item *item) {
       coords[2] = (v->screen[2] * (float) width) / (float) v->width;
       coords[3] = (v->screen[3] * (float) height) / (float) v->height;
       DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
+      DEBUG("position", "XXX %f*%d/%d=%f, %f*%d/%d=%f\n", v->screen[2], width, v->width, coords[2], v->screen[3], height, v->height, coords[3]);
     } else {
       coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
       coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
@@ -301,13 +343,14 @@ void item_update_space_pos_from_window(Item *item) {
             item->window,
             item->attr.x, item->attr.y, item->attr.width, item->attr.height,
             coords[0],coords[1],coords[2],coords[3]);
-   }
-        
-    long arr[4];
-    for (int i = 0; i < 4; i++) {
-      arr[i] = *(long *) &coords[i];
     }
-    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
+
+    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
+    long coords_arr[4];
+    for (int i = 0; i < 4; i++) {
+      coords_arr[i] = *(long *) &coords[i];
+    }
+    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
   }
 }
 
@@ -324,6 +367,22 @@ Item *item_get_from_window(Window window, int create) {
   return item_create(window);
 }
 
+Item *item_get_from_widget(Item *parent, int widget) {
+  if (widget == 0) return parent;
+  widget--;
+  if (widget < parent->properties->properties->count) {
+    Property *prop = (Property *) parent->properties->properties->entries[widget];
+    if (prop->type_handler != &property_item) return NULL;
+    return item_get_from_window((Window) prop->values.dwords[0], False);
+  }
+  widget -= parent->properties->properties->count;
+  if ((parent != root_item) && (widget < root_item->properties->properties->count)) {
+    Property *prop = (Property *) root_item->properties->properties->entries[widget];
+    if (prop->type_handler != &property_item) return NULL;
+    return item_get_from_window((Window) prop->values.dwords[0], False);
+  }
+  return NULL;
+}
 
 void items_get_from_toplevel_windows() {
   XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);

@@ -16,8 +16,6 @@ in vec2 px_coord;
 in float is_edge_hint;
 
 uniform ivec2 size;
-uniform int picking_mode;
-uniform int window_id;
 uniform int atom_IG_LAYER_DESKTOP;
 
 out vec4 fragColor;

@@ -50,8 +50,8 @@ Bool property_load(Property *prop) {
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
   if (prop->type_handler) prop->type_handler->load(prop);
-  if (DEBUG_ENABLED("prop.changed")) {
-    DEBUG("prop.changed", "");
+  if (DEBUG_ENABLED(prop->name_str)) {
+    DEBUG(prop->name_str, "");
     property_print(prop, stderr);
   }
   
@@ -109,6 +109,18 @@ void property_to_gl(Property *prop, Rendering *rendering) {
     property_update_gl_cache(prop, rendering, cache, prop_cache, type);
   }
   type->to_gl(prop, rendering);
+}
+
+void property_calculate(Property *prop, Rendering *rendering) {
+  PropertyTypeHandler *type = prop->type_handler;
+  if (!type) return;
+  if (type->calculate) type->calculate(prop, rendering);
+}
+
+void property_draw(Property *prop, Rendering *rendering) {
+  PropertyTypeHandler *type = prop->type_handler;
+  if (!type || !type->draw) return;
+  type->draw(prop, rendering);
 }
 
 void property_print(Property *prop, FILE *fp) {
@@ -188,7 +200,25 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   Property **entries = (Property **) properties->properties->entries;
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = entries[i];
+    property_calculate(prop, rendering);   
+  }
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = entries[i];
     property_to_gl(prop, rendering);
+    GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
+  }
+}
+
+void properties_draw(Properties *properties, Rendering *rendering) {
+  rendering->properties = properties;
+  
+  GL_CHECK_ERROR("properties_draw", "%ld", properties->window);
+  Property **entries = (Property **) properties->properties->entries;
+  int widget_id = rendering->widget_id + 1; // +1 because rendering->widget_id is the id of the last previously used widget_id
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = entries[i];
+    rendering->widget_id = widget_id + i;
+    property_draw(prop, rendering);
     GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
   }
 }

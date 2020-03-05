@@ -49,7 +49,9 @@ def main2(*arg, **kw):
             win, atom = event.parse("WINDOW", "ATOM")
             action = json.loads(win[atom])
             InfiniteGlass.DEBUG("message", "RECEIVED INPUT ACTION %s" % (action,)); sys.stderr.flush()
-            display.input_stack[-1].action(None, action, None)
+            event.window = win
+            display.input_stack[-1].last_event = event
+            display.input_stack[-1].action(None, action, event)
             
         @display.eventhandlers.append
         def handle(event):
