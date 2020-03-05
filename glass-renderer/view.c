@@ -134,7 +134,7 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
     window = (Window) (((0b111111 & (int) data[2]) << 23) + (int) data[3]);
     widget = (((int) data[2]) >> 6);
     *item = item_get_from_window(window, False);
-    if (widget) {
+    if (item && widget) {
       *parent_item = *item;
       *item = item_get_from_widget(*item, widget);
     }

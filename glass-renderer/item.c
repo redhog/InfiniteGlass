@@ -368,7 +368,7 @@ Item *item_get_from_window(Window window, int create) {
 }
 
 Item *item_get_from_widget(Item *parent, int widget) {
-  if (widget == 0) return parent;
+  if (!parent || !widget) return parent;
   widget--;
   if (widget < parent->properties->properties->count) {
     Property *prop = (Property *) parent->properties->properties->entries[widget];
