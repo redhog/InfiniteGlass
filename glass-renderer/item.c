@@ -344,13 +344,13 @@ void item_update_space_pos_from_window(Item *item) {
             item->attr.x, item->attr.y, item->attr.width, item->attr.height,
             coords[0],coords[1],coords[2],coords[3]);
     }
-        
-    long arr[4];
+
+    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
+    long coords_arr[4];
     for (int i = 0; i < 4; i++) {
-      arr[i] = *(long *) &coords[i];
+      coords_arr[i] = *(long *) &coords[i];
     }
-    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, arr[0], arr[1], arr[2], arr[3]);
-    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
+    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
   }
 }
 

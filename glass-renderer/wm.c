@@ -294,23 +294,25 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       if (item->prop_size) {
         unsigned long width = item->prop_size->values.dwords[0];
         unsigned long height = item->prop_size->values.dwords[1];
-        float *coords = (float *) item->prop_coords->data;
-
+        float *orig_coords = ((PropertyCoords *) item->prop_coords->data)->coords;
+        float coords[4] = {orig_coords[0], orig_coords[1], orig_coords[2], orig_coords[3]};
+        
         coords[2] *= (float) event->xconfigurerequest.width / (float) width;
         coords[3] *= (float) event->xconfigurerequest.height / (float) height;
 
-        DEBUG("configure", "%ld.ConfigureRequest(%d,%d @ %f,%f[%f,%f], %d,%d): %f, %f\n",
+        DEBUG("configure", "%ld.ConfigureRequest(%d,%d @ %f,%f[%f,%f], %d,%d): %f,%f => %f,%f[%f,%f]\n",
               event->xconfigurerequest.window,
               width,
               height,
-              ((float *) item->prop_coords->data)[0],
-              ((float *) item->prop_coords->data)[1],
-              ((float *) item->prop_coords->data)[2],
-              ((float *) item->prop_coords->data)[3],
+              orig_coords[0],
+              orig_coords[1],
+              orig_coords[2],
+              orig_coords[3],
               event->xconfigurerequest.width,
               event->xconfigurerequest.height,
               (float) event->xconfigurerequest.width / (float) width,
-              (float) event->xconfigurerequest.height / (float) height);
+              (float) event->xconfigurerequest.height / (float) height,
+              coords[0],coords[1],coords[2],coords[3]);
         long coords_arr[4];
         for (int i = 0; i < 4; i++) {
           coords_arr[i] = *(long *) &coords[i];
