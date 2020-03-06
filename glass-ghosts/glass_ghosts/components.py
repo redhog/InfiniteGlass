@@ -69,7 +69,10 @@ class Components(object):
                     InfiniteGlass.debug.DEBUG("component", "Old process had died unnoticed.\n")
         pid = os.fork()
         if pid == 0:
-            os.execlp(spec["command"][0], *spec["command"])
+            try:
+                os.execlp(spec["command"][0], *spec["command"])
+            except Exception as e:
+                raise Exception("%s (%s): %s" % (spec["name"], " ".join(spec["command"]), e))
         else:
             self.components[spec["name"]] = {"pid": pid, "component": spec}
             self.components_by_pid[pid] = spec["name"]
