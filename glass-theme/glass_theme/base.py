@@ -15,7 +15,7 @@ class ThemeBase(object):
         self.setup_shaders()
 
     shader_path = None
-    shaders = ("DEFAULT", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
+    shaders = ("DEFAULT", "DECORATION", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
     shader_parts = ("GEOMETRY", "VERTEX", "FRAGMENT")
     views = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
             
