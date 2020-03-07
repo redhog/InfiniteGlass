@@ -12,18 +12,23 @@ in vec2 px_coord;
 uniform ivec2 size;
 uniform int atom_IG_LAYER_DESKTOP;
 
+uniform int atom_IG_DECORATION_GHOSTS_ENABLE;
+uniform int atom_IG_DECORATION_GHOSTS_DISABLE;
 uniform int atom_IG_DECORATION_SAVE;
 uniform int atom_IG_DECORATION_RESTORE;
 uniform int IG_DECORATION;
 
 uniform int atom_IG_GHOST;
 uniform int parent_IG_GHOST;
+uniform int parent_IG_GHOSTS_DISABLED;
 
 out vec4 fragColor;
 
 void main() {
   if (   ((IG_DECORATION == atom_IG_DECORATION_SAVE) && (parent_IG_GHOST == atom_IG_GHOST))
-      || ((IG_DECORATION == atom_IG_DECORATION_RESTORE) && (parent_IG_GHOST != atom_IG_GHOST))) {
+      || ((IG_DECORATION == atom_IG_DECORATION_RESTORE) && (parent_IG_GHOST != atom_IG_GHOST))
+      || ((IG_DECORATION == atom_IG_DECORATION_GHOSTS_ENABLE) && (parent_IG_GHOSTS_DISABLED == 1))
+      || ((IG_DECORATION == atom_IG_DECORATION_GHOSTS_DISABLE) && (parent_IG_GHOSTS_DISABLED != 1))) {
     fragColor = vec4(0., 0., 0., 0.);
   } else {
     vec2 window_coord = px_coord - px_window_bottom_left;

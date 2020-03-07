@@ -46,6 +46,7 @@
     "window-decorations": {
         "Save": {
             "properties": {
+                "IG_DECORATION": "IG_DECORATION_SAVE",
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
                               0.01, 0.03, 0.03, 0.03],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
@@ -53,12 +54,33 @@
             },
             "action": "send_sleep"
         },
-        "Pin": {
+        "Restore": {
             "properties": {
+                "IG_DECORATION": "IG_DECORATION_RESTORE",
+                "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
+                              0.01, 0.03, 0.03, 0.03],
+                "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/play-circle.svg"]}
+            },
+            "action": ""
+        },
+        "Enable ghosts": {
+            "properties": {
+                "IG_DECORATION": "IG_DECORATION_GHOSTS_ENABLE",
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
                               0.01, 0.065, 0.03, 0.03],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
-                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/thumbtack.svg"]}
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/save.svg"]}
+            },
+            "action": ""
+        },
+        "Disable ghosts": {
+            "properties": {
+                "IG_DECORATION": "IG_DECORATION_GHOSTS_DISABLE",
+                "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
+                              0.01, 0.065, 0.03, 0.03],
+                "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/save.svg"]}
             },
             "action": ""
         },
