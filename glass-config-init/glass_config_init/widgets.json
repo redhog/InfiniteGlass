@@ -44,43 +44,25 @@
         }
     },
     "window-decorations": {
-        "Save": {
+        "Save/restore": {
             "properties": {
                 "IG_DECORATION": "IG_DECORATION_SAVE",
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
                               0.01, 0.03, 0.03, 0.03],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
-                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/pause-circle.svg"]}
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/pause-circle.svg"]},
+                "IG_CONTENT_ALT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/play-circle.svg"]}
             },
-            "action": "send_sleep"
+            "action": "toggle_sleep"
         },
-        "Restore": {
-            "properties": {
-                "IG_DECORATION": "IG_DECORATION_RESTORE",
-                "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
-                              0.01, 0.03, 0.03, 0.03],
-                "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
-                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/play-circle.svg"]}
-            },
-            "action": ""
-        },
-        "Enable ghosts": {
+        "Enable/disable ghosts": {
             "properties": {
                 "IG_DECORATION": "IG_DECORATION_GHOSTS_ENABLE",
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
                               0.01, 0.065, 0.03, 0.03],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
-                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/save.svg"]}
-            },
-            "action": "toggle_ghosts_enabled"
-        },
-        "Disable ghosts": {
-            "properties": {
-                "IG_DECORATION": "IG_DECORATION_GHOSTS_DISABLE",
-                "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
-                              0.01, 0.065, 0.03, 0.03],
-                "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
-                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/save.svg"]}
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/save.svg"]},
+                "IG_CONTENT_ALT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/save.svg"]}
             },
             "action": "toggle_ghosts_enabled"
         },

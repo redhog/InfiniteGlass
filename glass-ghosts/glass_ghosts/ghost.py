@@ -73,10 +73,13 @@ class Shadow(object):
 
     def apply(self, window, type="set"):
         InfiniteGlass.DEBUG("ghost", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
-        for key in self.manager.config[type]:
-            if key in self.properties:
-                InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
-                window[key] = self.properties[key]
+        if self.properties.get("IG_GHOSTS_DISABLED", 0):
+            window["IG_GHOSTS_DISABLED"] = 1
+        else:
+            for key in self.manager.config[type]:
+                if key in self.properties:
+                    InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
+                    window[key] = self.properties[key]
 
     def format_pair(self, name, value, sep=b"/"):
         pattern = ("{%s}" % name).encode("utf-8")
@@ -91,6 +94,9 @@ class Shadow(object):
     
     def activate(self):
         InfiniteGlass.DEBUG("ghost", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        if self.properties.get("IG_GHOSTS_DISABLED", 0):
+            return
+            
         for name, value in self.properties.items():
             InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (name, str(value)[:100])); sys.stderr.flush()
         
