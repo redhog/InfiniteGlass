@@ -150,6 +150,7 @@ void item_draw(Rendering *rendering) {
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
+    glUniform2i(shader->pointer_attr, mouse.root_x, rendering->view->height - mouse.root_y);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);
     if (rendering->parent_item) {
