@@ -74,6 +74,15 @@
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/times-circle.svg"]}
             },
             "action": "send_close"
+        },
+        "Maximize": {
+            "properties": {
+                "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
+                              0.01, 0.135, 0.03, 0.03],
+                "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/tv.svg"]}
+            },
+            "action": "zoom_1_1_1"
         }        
     }
 }
