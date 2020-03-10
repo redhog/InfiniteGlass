@@ -72,7 +72,7 @@
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/save.svg"]}
             },
-            "action": ""
+            "action": "toggle_ghosts_enabled"
         },
         "Disable ghosts": {
             "properties": {
@@ -82,7 +82,7 @@
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/save.svg"]}
             },
-            "action": ""
+            "action": "toggle_ghosts_enabled"
         },
         "Close": {
             "properties": {

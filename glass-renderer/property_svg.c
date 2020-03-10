@@ -198,6 +198,8 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   rendering->texture_unit++;
   
   GL_CHECK_ERROR("property_svg_to_gl2", "%ld", prop->window);
+
+  //fprintf(stderr, "XXXXXXXX %ld.%s, texture_unit=%d, texture_id=%d, surface=%ld\n", prop->window, prop->name_str, rendering->texture_unit, data->texture.texture_id, data->surface);
 }
 void property_svg_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<svg>\n", prop->window, prop->name_str);
