@@ -52,9 +52,9 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
 
   int types_nitems = 0;
   Atom *types = NULL;
-  if (rendering->item->prop_coord_types) {
-    types_nitems = rendering->item->prop_coord_types->nitems;
-    types = (Atom *) rendering->item->prop_coord_types->values.dwords;
+  if (rendering->source_item->prop_coord_types) {
+    types_nitems = rendering->source_item->prop_coord_types->nitems;
+    types = (Atom *) rendering->source_item->prop_coord_types->values.dwords;
   }
 
   for (int i = 0; i < prop->nitems; i += 4) {

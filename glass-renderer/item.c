@@ -133,13 +133,16 @@ void item_draw(Rendering *rendering) {
       glBindSampler(rendering->texture_unit, 0);
       rendering->texture_unit++;
     }
-    
+
+    rendering->source_item = root_item;
     properties_to_gl(root_item->properties, "root_", rendering);
     GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
     if (rendering->parent_item) {
+      rendering->source_item = rendering->parent_item;
       properties_to_gl(rendering->parent_item->properties, "parent_", rendering);
       GL_CHECK_ERROR("item_draw_parent_properties", "%ld.%s", item->window, rendering->shader->name_str);
     }
+    rendering->source_item = rendering->item;
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
