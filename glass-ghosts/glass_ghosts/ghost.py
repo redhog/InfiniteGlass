@@ -126,8 +126,9 @@ class Shadow(object):
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            InfiniteGlass.DEBUG("ghost", "SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("ghost", "GHOST DELETE %s\n" % (self,)); sys.stderr.flush()
             self.destroy()
+        self.DestroyNotify = DestroyNotify
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
@@ -154,20 +155,25 @@ class Shadow(object):
             else:
                 self.update_key()
             InfiniteGlass.DEBUG("setprop", "%s=%s" % (name, self.properties.get(name)))
+        self.PropertyNotify = PropertyNotify
             
         @self.window.on()
         def ButtonPress(win, event):
             if "SM_CLIENT_ID" not in self.properties: return
             self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+        self.ButtonPress = ButtonPress
+
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_RESTART")
+        def ClientMessage(win, event):
+            InfiniteGlass.DEBUG("ghost", "GHOST RESTART %s\n" % (self,)); sys.stderr.flush()
+            if "SM_CLIENT_ID" not in self.properties: return
+            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+        self.RestartMessage = ClientMessage
 
         @self.window.on()
         def Expose(win, event):
             self.redraw()
-
-        self.Expose = Expose
-        self.DestroyNotify = DestroyNotify
-        self.PropertyNotify = PropertyNotify
-        self.ButtonPress = ButtonPress
+        self.Expose = Expose        
 
         self.window.map()
         self.redraw()
@@ -187,6 +193,7 @@ class Shadow(object):
         InfiniteGlass.DEBUG("ghost", "SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
             self.window.destroy()
+            self.manager.display.eventhandlers.remove(self.RestartMessage)
             self.manager.display.eventhandlers.remove(self.ButtonPress)
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
