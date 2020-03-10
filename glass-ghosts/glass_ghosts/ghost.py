@@ -131,13 +131,13 @@ class Shadow(object):
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
-            self.window.destroy()
+            win.destroy()
         self.CloseMessage = ClientMessage
 
         @self.window.on(mask="NoEventMask", client_type="WM_PROTOCOLS")
         def ClientMessage(win, event):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
-                self.window.destroy()
+                win.destroy()
             else:
                 InfiniteGlass.DEBUG("ghost", "%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
         self.WMDelete = ClientMessage
