@@ -48,7 +48,7 @@
             "properties": {
                 "IG_DECORATION": "IG_DECORATION_SAVE",
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
-                              0.01, 0.03, 0.03, 0.03],
+                              0.01, 0.02, 0.02, 0.02],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/pause-circle.svg"]},
                 "IG_CONTENT_ALT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/play-circle.svg"]}
@@ -59,7 +59,7 @@
             "properties": {
                 "IG_DECORATION": "IG_DECORATION_GHOSTS_ENABLE",
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
-                              0.01, 0.065, 0.03, 0.03],
+                              0.01, 0.045, 0.02, 0.02],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/save.svg"]},
                 "IG_CONTENT_ALT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/save.svg"]}
@@ -69,7 +69,7 @@
         "Close": {
             "properties": {
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
-                              0.01, 0.100, 0.03, 0.03],
+                              0.01, 0.070, 0.02, 0.02],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/times-circle.svg"]}
             },
@@ -78,11 +78,20 @@
         "Maximize": {
             "properties": {
                 "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
-                              0.01, 0.135, 0.03, 0.03],
+                              0.01, 0.095, 0.02, 0.02],
                 "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
                 "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/tv.svg"]}
             },
             "action": "zoom_1_1_1"
+        },
+        "More": {
+            "properties": {
+                "IG_COORDS": [1.0, -1.0, 0.0, 0.0,
+                              0.01, 0.12, 0.02, 0.02],
+                "IG_COORD_TYPES": ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"],
+                "IG_CONTENT": {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/bars.svg"]}
+            },
+            "action": ""
         }        
     }
 }
