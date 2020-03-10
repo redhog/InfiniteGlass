@@ -73,6 +73,7 @@ void property_free(Property *prop) {
 void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache *cache, PropertyProgramCache *prop_cache, PropertyTypeHandler *type) {
   if (prop_cache->program != -1) type->free_program(prop, rendering->program_cache_idx);
   prop_cache->program = cache->program;
+  prop_cache->shader = cache->shader;
   prop_cache->prefix = cache->prefix;
   prop_cache->name_str = realloc(prop_cache->name_str, strlen(cache->prefix) + strlen(prop->name_str) + 1);
   strcpy(prop_cache->name_str, cache->prefix);
@@ -188,6 +189,7 @@ void properties_set_program_cache_idx(Rendering *rendering) {
   rendering->program_cache_idx = idx;
   
   properties->programs[idx].program = rendering->shader->program;
+  properties->programs[idx].shader = rendering->shader;
   properties->programs[idx].prefix = rendering->properties_prefix;
 }
 

@@ -106,14 +106,25 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[3];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
+    } else {
+      ERROR("coord_type", "Unsupported coord type %d\n", type);
     }
   }
+  DEBUG("prop_calc", "%ld[%s@%ld].%s (coords) <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
+        prop->window, prop_cache->shader->name_str, prop_cache->program, prop_cache->name_str,
+        data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3], prop->nitems, types_nitems,
+        data->coords[0], data->coords[1], data->coords[2], data->coords[3]
+
+        );
 }
 
 void property_coords_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   PropertyCoords *data = (PropertyCoords *) prop->data;
   glUniform4f(prop_cache->location, data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
+  DEBUG("prop", "%ld[%s@%ld].%s (coords) = %f,%f,%f,%f\n",
+        prop->window, prop_cache->shader->name_str, prop_cache->program, prop_cache->name_str,
+        data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
 }
 
 void property_coords_print(Property *prop, FILE *fp) {
@@ -127,8 +138,8 @@ void property_coords_print(Property *prop, FILE *fp) {
 }
 void property_coords_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  DEBUG("prop", "%ld[%ld].%s %s (coords) [%d]\n",
-        prop->window, prop_cache->program, prop_cache->name_str,
+  DEBUG("prop", "%ld[%s@%ld].%s %s (coords) [%d]\n",
+        prop->window, prop_cache->shader->name_str, prop_cache->program, prop_cache->name_str,
         (prop_cache->location != -1) ? "enabled" : "disabled", prop->nitems);
 }
 void property_coords_free_program(Property *prop, size_t index) {
