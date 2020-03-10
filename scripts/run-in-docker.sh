@@ -18,13 +18,15 @@ xauth nlist :0 | sed -e 's/^..../ffff/' > /tmp/.docker.xauth
 if [ ! "$(docker ps -a -q -f name=glass)" ]; then
   docker run \
          --name glass \
-         -m 2gb \
+         --memory 2gb \
          -ti \
+         --net=host \
          --ipc=host \
-         --cap-drop=ALL \
-         --security-opt=no-new-privileges \
+         --user id -u root \
+         --cap-add=ALL \
          -v ~/.config/glass:/home/glass/.config/glass \
-         -v /tmp/.X11-unix:/tmp/.X11-unix \
+         -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+         -v /tmp/.ICE-unix:/tmp/.ICE-unix:rw \
          -v /tmp/.docker.xauth:/tmp/.docker.xauth \
          -e XAUTHORITY=/tmp/.docker.xauth \
          -e DISPLAY=:0 \
