@@ -8,6 +8,15 @@
 
 FILE *eventlog;
 
+
+typedef struct {
+  Window root, win;
+  int    root_x, root_y;
+  int    win_x, win_y;
+  unsigned int mask;
+} Pointer;
+
+extern Pointer mouse;
 extern List *views;
 extern List *shaders;
 

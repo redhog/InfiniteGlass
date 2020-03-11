@@ -1,7 +1,20 @@
 import Xlib.X
 import InfiniteGlass
 from .. import mode
-    
+
+def toggle_ghosts_enabled(self, event):
+    win = self.get_event_window(event)
+    print("XXXXXXXXXXXXXXXXXXX", win)
+    if win and win != self.display.root:
+        old = win.get("IG_GHOSTS_DISABLED", 0)
+        if old == 1:
+            value = 0
+        else:
+            value = 1
+        print("toggle_ghosts_enabled", "%s.IG_GHOSTS_DISABLED=%s\n" % (win, value))
+        win["IG_GHOSTS_DISABLED"] = value
+        self.display.flush()
+
 def toggle_overlay(self, event, show=None):
     "Slide your toolbars and widgets in/out of view"
     size = self.display.root["IG_VIEW_OVERLAY_SIZE"]
@@ -48,6 +61,18 @@ def send_sleep(self, event):
         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
         self.display.flush()
 
+def toggle_sleep(self, event):
+    win = self.get_event_window(event)
+    if win and win != self.display.root:
+        if win.get("IG_GHOST", None):
+            InfiniteGlass.DEBUG("restart", "SENDING RESTART %s\n" % win)
+            win.send(win, "IG_RESTART", event_mask=Xlib.X.StructureNotifyMask)
+            self.display.flush()
+        else:
+            InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
+            win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
+            self.display.flush()    
+    
 def reload(self, event):
     "Reload your keybindings from the config file"
     mode.load_config()

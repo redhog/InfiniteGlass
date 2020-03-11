@@ -181,6 +181,8 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   if (!prop_cache->is_uniform || program_data->texture_location == -1 || program_data->transform_location == -1) return;
   if (!data->rsvg) return;
   
+  glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
+
   property_svg_update_drawing(prop, rendering);
   
   GL_CHECK_ERROR("property_svg_to_gl1", "%ld", prop->window);
@@ -192,7 +194,6 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   glUniform4fv(program_data->transform_location, 1, transform);
 
   glUniform1i(program_data->texture_location, rendering->texture_unit);
-  glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
   glBindTexture(GL_TEXTURE_2D, data->texture.texture_id);
   glBindSampler(rendering->texture_unit, 0);
   rendering->texture_unit++;

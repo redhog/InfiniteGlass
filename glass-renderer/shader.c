@@ -170,6 +170,7 @@ Shader *shader_loadX(Atom name) {
   shader->window_id_attr = glGetUniformLocation(shader->program, "window_id");
   shader->widget_id_attr = glGetUniformLocation(shader->program, "widget_id");
   shader->window_sampler_attr = glGetUniformLocation(shader->program, "window_sampler");
+  shader->pointer_attr = glGetUniformLocation(shader->program, "pointer");
   GL_CHECK_ERROR("standard_properties2", "%s", shader->name_str);
 
   shader->uniforms = list_create();

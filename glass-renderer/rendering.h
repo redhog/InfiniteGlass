@@ -16,9 +16,10 @@ struct PropertiesStruct;
 typedef struct PropertiesStruct Properties;
 
 typedef struct {
- Item *item;
- Item *parent_item;
- int widget_id;
+ Item *item; // The current item being rendered
+ Item *parent_item; // The parent item that we're rendering this item for
+ Item *source_item; // The item that owns the properties being converted to uniforms. Can be e.g same as item or parent_item or root_item...
+ int widget_id; // The property index on the parent item that caused this item to be rendered
  View *view;
  Shader *shader;
  Properties *properties;

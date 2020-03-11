@@ -45,7 +45,9 @@ typedef struct {
   GLint window_id_attr;
   GLint widget_id_attr;
  
-  GLint window_sampler_attr; 
+  GLint window_sampler_attr;
+
+  GLint pointer_attr;
 } Shader;
 
 extern Bool init_shader();

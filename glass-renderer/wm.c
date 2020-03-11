@@ -38,6 +38,7 @@
 
 #define AUTOMATIC_REDRAWS 10
 
+Pointer mouse = {0, 0, 0, 0, 0, 0};
 List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
@@ -233,22 +234,18 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     if (XGetEventData(display, cookie)) {
       if (cookie->evtype == XI_RawMotion) {
         // XIRawEvent *re = (XIRawEvent *) cookie->data;
-        Window       root_ret, child_ret;
-        int          root_x, root_y;
-        int          win_x, win_y;
-        unsigned int mask;
         XQueryPointer(display, root,
-                      &root_ret, &child_ret, &root_x, &root_y, &win_x, &win_y, &mask);
+                      &mouse.root, &mouse.win, &mouse.root_x, &mouse.root_y, &mouse.win_x, &mouse.win_y, &mouse.mask);
 
         int winx, winy;
         Item *item;
         Item *parent_item;
 
-        pick(root_x, root_y, &winx, &winy, &item, &parent_item);
+        pick(mouse.root_x, mouse.root_y, &winx, &winy, &item, &parent_item);
         if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
           XWindowChanges values;
-          values.x = root_x - winx;
-          values.y = root_y - winy;
+          values.x = mouse.root_x - winx;
+          values.y = mouse.root_y - winy;
           values.stack_mode = Above;
           if (values.x != item->x || values.y != item->y) {
             XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
@@ -263,8 +260,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           
           DEBUG("position", "Point %d,%d -> %lu/%lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, parent_item ? parent_item->window : 0, item->window, winx, winy);
         } else {
-          DEBUG("position", "Point %d,%d -> NONE\n", root_x, root_y);
+          DEBUG("position", "Point %d,%d -> NONE\n", mouse.root_x, mouse.root_y);
         }
+        trigger_draw();
       } else {
         DEBUG("event", "Unknown XGenericEventCookie\n");
       }

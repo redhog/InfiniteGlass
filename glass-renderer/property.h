@@ -27,7 +27,8 @@ typedef struct PropertyTypeHandlerT PropertyTypeHandler;
 
 
 struct PropertyProgramCacheStruct {
-  GLint program; 
+  GLint program;
+  Shader *shader;
   char *prefix;
   char *name_str;
   Bool is_uniform;
@@ -63,6 +64,7 @@ extern void property_print(Property *prop, FILE *fp);
 
 struct ProgramCacheStruct {
   GLint program;
+  Shader *shader;
   char *prefix;
 };
 struct PropertiesStruct {

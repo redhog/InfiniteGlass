@@ -73,10 +73,13 @@ class Shadow(object):
 
     def apply(self, window, type="set"):
         InfiniteGlass.DEBUG("ghost", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
-        for key in self.manager.config[type]:
-            if key in self.properties:
-                InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
-                window[key] = self.properties[key]
+        if self.properties.get("IG_GHOSTS_DISABLED", 0):
+            window["IG_GHOSTS_DISABLED"] = 1
+        else:
+            for key in self.manager.config[type]:
+                if key in self.properties:
+                    InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
+                    window[key] = self.properties[key]
 
     def format_pair(self, name, value, sep=b"/"):
         pattern = ("{%s}" % name).encode("utf-8")
@@ -91,6 +94,9 @@ class Shadow(object):
     
     def activate(self):
         InfiniteGlass.DEBUG("ghost", "SHADOW ACTIVATE %s\n" % (self,)); sys.stderr.flush()
+        if self.properties.get("IG_GHOSTS_DISABLED", 0):
+            return
+            
         for name, value in self.properties.items():
             InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (name, str(value)[:100])); sys.stderr.flush()
         
@@ -126,18 +132,19 @@ class Shadow(object):
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            InfiniteGlass.DEBUG("ghost", "SHADOW DELETE %s\n" % (self,)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("ghost", "GHOST DELETE %s\n" % (self,)); sys.stderr.flush()
             self.destroy()
+        self.DestroyNotify = DestroyNotify
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
-            self.window.destroy()
+            win.destroy()
         self.CloseMessage = ClientMessage
 
         @self.window.on(mask="NoEventMask", client_type="WM_PROTOCOLS")
         def ClientMessage(win, event):
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
-                self.window.destroy()
+                win.destroy()
             else:
                 InfiniteGlass.DEBUG("ghost", "%s: Unknown WM_PROTOCOLS message: %s\n" % (self, event)); sys.stderr.flush()
         self.WMDelete = ClientMessage
@@ -154,20 +161,25 @@ class Shadow(object):
             else:
                 self.update_key()
             InfiniteGlass.DEBUG("setprop", "%s=%s" % (name, self.properties.get(name)))
+        self.PropertyNotify = PropertyNotify
             
         @self.window.on()
         def ButtonPress(win, event):
             if "SM_CLIENT_ID" not in self.properties: return
             self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+        self.ButtonPress = ButtonPress
+
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_RESTART")
+        def ClientMessage(win, event):
+            InfiniteGlass.DEBUG("ghost", "GHOST RESTART %s\n" % (self,)); sys.stderr.flush()
+            if "SM_CLIENT_ID" not in self.properties: return
+            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+        self.RestartMessage = ClientMessage
 
         @self.window.on()
         def Expose(win, event):
             self.redraw()
-
-        self.Expose = Expose
-        self.DestroyNotify = DestroyNotify
-        self.PropertyNotify = PropertyNotify
-        self.ButtonPress = ButtonPress
+        self.Expose = Expose        
 
         self.window.map()
         self.redraw()
@@ -187,6 +199,7 @@ class Shadow(object):
         InfiniteGlass.DEBUG("ghost", "SHADOW DEACTIVATE %s\n" % (self,)); sys.stderr.flush()
         if self.window is not None:
             self.window.destroy()
+            self.manager.display.eventhandlers.remove(self.RestartMessage)
             self.manager.display.eventhandlers.remove(self.ButtonPress)
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)

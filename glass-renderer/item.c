@@ -133,13 +133,16 @@ void item_draw(Rendering *rendering) {
       glBindSampler(rendering->texture_unit, 0);
       rendering->texture_unit++;
     }
-    
+
+    rendering->source_item = root_item;
     properties_to_gl(root_item->properties, "root_", rendering);
     GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
     if (rendering->parent_item) {
+      rendering->source_item = rendering->parent_item;
       properties_to_gl(rendering->parent_item->properties, "parent_", rendering);
       GL_CHECK_ERROR("item_draw_parent_properties", "%ld.%s", item->window, rendering->shader->name_str);
     }
+    rendering->source_item = rendering->item;
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
@@ -147,6 +150,7 @@ void item_draw(Rendering *rendering) {
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
+    glUniform2i(shader->pointer_attr, mouse.root_x, rendering->view->height - mouse.root_y);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);
     if (rendering->parent_item) {
