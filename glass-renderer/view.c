@@ -160,12 +160,12 @@ void view_load_layer(View *view) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom), 0, AnyPropertyType,
+  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom) * 1000, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
-   view->layer = *(Atom *) prop_return;
+    view->layers = (Atom *) prop_return;
+    view->nr_layers = nitems_return;
   }
-  XFree(prop_return);
 }
 void view_load_screen(View *view) {
   Atom type_return;
@@ -218,6 +218,8 @@ void view_load_size(View *view) {
 
 View *view_load(Atom name) {
   View *view = malloc(sizeof(View));
+  view->layers = NULL;
+  view->nr_layers = 0;
   view->name = name;
   view->attr_layer = atom_append(display, name, "_LAYER");
   view->attr_view = atom_append(display, name, "_VIEW");
@@ -255,8 +257,8 @@ List *view_load_all(void) {
      View *v = (View *) res->entries[idx];
      
      DEBUG("layers",
-           "VIEW: layer=%s screen=%f,%f,%f,%f\n",
-           XGetAtomName(display, v->layer),
+           "VIEW: view=%s screen=%f,%f,%f,%f\n",
+           XGetAtomName(display, v->name),
            v->screen[0],
            v->screen[1],
            v->screen[2],
@@ -268,6 +270,7 @@ List *view_load_all(void) {
 }
 
 void view_free(View *view) {
+  if (view->layers) XFree(view->layers);
   free(view);
 }
 
@@ -296,18 +299,22 @@ void view_update(View *view) {
 View *view_find(List *views, Atom name) {
   if (!views) return NULL;
   for (size_t idx = 0; idx < views->count; idx++) {
-    View *v = (View *) views->entries[idx];   
-    if (v->layer == name) {
-      return v;
+    View *v = (View *) views->entries[idx];
+    for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
+      if (v->layers[layer_idx] == name) {
+        return v;
+      }
     }
   }
   return NULL;
 }
 
 void view_print(View *v) {
-  printf("%s: layer=%s screen=%f,%f,%f,%f size=%d,%d\n",
-         XGetAtomName(display, v->name),
-         XGetAtomName(display, v->layer),
+  printf("%s: layers=", XGetAtomName(display, v->name));
+  for (size_t idx = 0; idx < v->nr_layers; idx++) {
+    printf("%s%s", idx == 0 ? "" : ",", XGetAtomName(display, v->layers[idx]));
+  }  
+  printf(" screen=%f,%f,%f,%f size=%d,%d\n",
          v->screen[0],
          v->screen[1],
          v->screen[2],

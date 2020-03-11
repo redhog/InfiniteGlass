@@ -5,7 +5,8 @@
 
 typedef struct {
   Atom name;
-  Atom layer;
+  Atom *layers;
+  size_t nr_layers;
 
   Atom attr_layer;
   Atom attr_view;

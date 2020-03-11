@@ -57,8 +57,10 @@ void draw() {
   if (views) {
     for (size_t idx = 0; idx < views->count; idx++) {
       View *v = (View *) views->entries[idx];
-      current_layer = v->layer;
-      view_draw(0, v, items_all, &filter_by_layer);
+      for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
+        current_layer = v->layers[layer_idx];
+        view_draw(0, v, items_all, &filter_by_layer);
+      }
     }
   }
   glFlush();
@@ -102,8 +104,10 @@ void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   glClear(GL_COLOR_BUFFER_BIT);
   for (size_t idx = 0; idx < views->count; idx++) {
     View *v = (View *) views->entries[idx];
-    current_layer = v->layer;
-    view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
+    for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
+      current_layer = v->layers[layer_idx];
+      view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
+    }
   }
   glFlush();
   view_pick(picking_fb, view, x, y, winx, winy, item, parent_item);
