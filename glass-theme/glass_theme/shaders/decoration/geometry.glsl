@@ -24,7 +24,7 @@ void main() {
   vec2 px_top_left;
   vec2 px_bottom_right;
 
-  float left = IG_COORDS[0] + 0.00000000001 * parent_IG_COORDS[0];
+  float left = IG_COORDS[0];
   float top = IG_COORDS[1];
   float right = left + IG_COORDS[2];
   float bottom = top - IG_COORDS[3];

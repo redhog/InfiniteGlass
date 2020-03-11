@@ -5,8 +5,6 @@ layout(triangle_strip, max_vertices=4) out;
 
 #include "resource://glass_theme/shaders/lib/geometry_coords.glsl"
 
-#define EDGE_HINT_WIDTH 4
-
 uniform sampler2D window_sampler;
 uniform vec4 IG_COORDS;
 
@@ -16,11 +14,6 @@ out vec2 px_coord;
 out float is_edge_hint;
 
 void main() {
-  int margin_left = 6;
-  int margin_right = 6;
-  int margin_top = 6;
-  int margin_bottom = 6;
-
   vec2 px_bottom_left;
   vec2 px_top_right;
   vec2 px_top_left;

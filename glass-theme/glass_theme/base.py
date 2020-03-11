@@ -20,6 +20,20 @@ class ThemeBase(object):
     views = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
             
     def load_shader(self, name):
+        defines = ''.join(
+            "#define %s %s\n" %(name[len("define_"):], getattr(self, name))
+            for name in dir(self)
+            if name.startswith("define_")).encode("utf-8")
+        preamble = ""
+        src = self._load_shader(name)
+        if b"#version" in src:
+            vi = src.index(b"#version")
+            pi = vi + src[vi:].index(b"\n") + 1
+            preamble = src[:pi]
+            src = src[pi:]
+        return preamble + defines + src
+        
+    def _load_shader(self, name):
         if name.startswith("resource://"):
             pkg, name = name.split("://")[1].split("/", 1)
             with pkg_resources.resource_stream(pkg, name) as f:
@@ -29,7 +43,7 @@ class ThemeBase(object):
                 src = f.read()
         includes = re.findall(rb'^#include  *"(.*)"', src, re.MULTILINE)
         for name in includes:
-            src = re.sub(rb'#include  *"%s"' % (name,), self.load_shader(name.decode("utf-8")), src, re.MULTILINE)
+            src = re.sub(rb'#include  *"%s"' % (name,), self._load_shader(name.decode("utf-8")), src, re.MULTILINE)
         return src
 
     def setup_shaders(self):

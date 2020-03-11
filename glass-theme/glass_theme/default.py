@@ -28,6 +28,30 @@ class Theme(glass_theme.base.ThemeBase):
     latlon = (70., 18.)
     start_latlon = None
 
+    define_EDGE_HINT_WIDTH = 4
+    define_EDGE_HINT_COLOR = "vec4(0., 0., 0., 0.3)"
+    
+    define_margin_left = 6
+    define_margin_right = 6
+    define_margin_top = 6
+    define_margin_bottom = 6
+
+    define_ICON_CUTOFF_1 = .4
+    define_ICON_CUTOFF_2 = .3
+
+    define_DECORATION_CUTOFF = 0.25
+
+    define_DECORATION_MOUSEDIST_2 = 150.0
+    define_DECORATION_MOUSEDIST_1 = 100.0
+
+    define_BORDER_COLOR_4 = "vec4(0., 0., 0., 1.)"
+    define_BORDER_COLOR_1 = "vec4(0., 0., 0., 0.)"
+
+    define_BORDER_ACTIVE_COLOR_1 = "vec4(0., 0., 0., 0.)"
+    define_BORDER_ACTIVE_COLOR_2 = "vec4(1., 1., 1., 1.)"
+    define_BORDER_ACTIVE_COLOR_3 = "vec4(0., 0., 0., 1.)"
+    define_BORDER_ACTIVE_COLOR_4 = "vec4(0., 0., 0., 1.)"
+    
     def linestrings2texture(self, f):
         coastline = json.load(f)
 
