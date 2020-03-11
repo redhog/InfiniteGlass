@@ -8,6 +8,49 @@
 #include "debug.h"
 #include <math.h>
 
+int shaderErrorLine(char *error) {
+  char *c = index(error, ':');
+  if (!c) return -1;
+  c++;
+  if (!*c) return -1;
+  return atoi(c);
+}
+int shaderErrorCol(char *error) {
+  char *c = index(error, '(');
+  if (!c) return -1;
+  c++;
+  if (!*c) return -1;
+  return atoi(c);
+}
+const char *indexn(const char *s, int c, int n) {
+  for (; s && (n > 0); n--, s++)
+    s = index(s, c);
+  return s;
+}
+char *shaderErrorAnnotate(char *error, char *src) {
+  int line = shaderErrorLine(error);
+  int col = shaderErrorCol(error);
+  
+  char *res;
+  
+  if (line == -1 || col == -1) {
+    return NULL;
+  } else {
+    res = malloc(strlen(src) + 1 + col + 1);
+    const char *nextline = indexn(src, '\n', line);
+    if (!nextline) { free(res); return NULL; };
+    size_t nextlineidx = (nextline - src) + 1; // +1 to skip the newline
+    
+    strncpy(res, src, nextlineidx);
+    if (col > 1) memset(res + nextlineidx, '-', col - 1);
+    res[nextlineidx + col - 1] = '^';
+    res[nextlineidx + col] = '\n';
+    strcpy(res + nextlineidx + col + 1, src + nextlineidx);
+    
+    return res;
+  }
+}
+
 int checkShaderError(char *name, char *part, char *src, GLuint shader) {
   GLint res;
   GLint len;
@@ -17,7 +60,12 @@ int checkShaderError(char *name, char *part, char *src, GLuint shader) {
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
   log = malloc(len + 1);
   glGetShaderInfoLog(shader, len, &len, log);
-  ERROR("shader", "%s.%s shader compilation failed: %s [%d]\n\n%s\n\n", name, part, log, len, src);
+
+  char *annotated = shaderErrorAnnotate(log, src);
+
+  ERROR("shader", "%s.%s shader compilation failed: %s [%d]\n\n%s\n\n", name, part, log, len, annotated ? annotated : src);
+  if (annotated) free(annotated);
+  
   GL_CHECK_ERROR("shader", "%s.%s", name, part);
   return 0;
 }
