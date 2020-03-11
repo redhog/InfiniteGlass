@@ -7,9 +7,6 @@ precision highp float;
 #include "resource://glass_theme/shaders/lib/fragment_border.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_picking.glsl"
 
-#define ICON_CUTOFF_1 .4
-#define ICON_CUTOFF_2 .3
-
 in vec2 px_window_bottom_left;
 in vec2 px_window_top_right;
 in vec2 px_coord;
@@ -33,7 +30,7 @@ void main() {
     if (picking_mode == 1 || IG_LAYER != atom_IG_LAYER_DESKTOP) {
       fragColor = vec4(0., 0., 0., 0.);
     } else {
-      fragColor = vec4(0., 0., 0., 0.3);
+      fragColor = EDGE_HINT_COLOR;
     }
   } else {
     if (picking_mode == 1) {

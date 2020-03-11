@@ -42,7 +42,7 @@ void main() {
 
   float mouse_dist = sqrt(pow(center.x - pointer.x, 2) + pow(center.y - pointer.y, 2));
 
-  if (geometry_scale < 0.25 || mouse_dist > 150.0) {
+  if (geometry_scale < DECORATION_CUTOFF || mouse_dist > DECORATION_MOUSEDIST_2) {
     fragColor = vec4(0., 0., 0., 0.);
   } else if (picking_mode == 1) {
     fragColor = get_picking(window_id, scaled_window_coord);
@@ -53,8 +53,8 @@ void main() {
     } else {
       fragColor = get_svg_content(scaled_window_coord);
     }
-    if (mouse_dist > 100.0) {
-      fragColor.a *= 1. - (mouse_dist - 100.) / 50.;
+    if (mouse_dist > DECORATION_MOUSEDIST_1) {
+      fragColor.a *= 1. - (mouse_dist - DECORATION_MOUSEDIST_1) / (DECORATION_MOUSEDIST_2 - DECORATION_MOUSEDIST_1);
     }
   }
 }

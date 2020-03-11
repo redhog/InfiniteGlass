@@ -18,19 +18,19 @@ vec4 get_border(int window_id, vec2 window_coord, vec2 window_size) {
     return vec4(0., 0., 0., 0.);
   } else if (root__NET_ACTIVE_WINDOW == window_id) {
     if ((dist.x == 3 && dist.y < 4) || (dist.y == 3 && dist.x < 4)) {
-      return vec4(0., 0., 0., 1.);
+      return BORDER_ACTIVE_COLOR_3;
     } else if ((dist.x == 4 && dist.y < 5) || (dist.y == 4 && dist.x < 5)) {
-      return vec4(1., 1., 1., 1.);
+      return BORDER_ACTIVE_COLOR_2;
     } else if (dist.x > 4 || dist.y > 4) {
-      return vec4(0., 0., 0., 1.);
+      return BORDER_ACTIVE_COLOR_4;
     } else {
-      return vec4(0., 0., 0., 0.);
+      return BORDER_ACTIVE_COLOR_1;
     }
   } else {
     if (dist.x >= 5 || dist.y >= 5) {
-      return vec4(0., 0., 0., 1.);
+      return BORDER_COLOR_4;
     } else {
-      return vec4(0., 0., 0., 0.);
+      return BORDER_COLOR_1;
     }
   }
 }
