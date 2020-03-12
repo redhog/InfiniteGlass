@@ -3,17 +3,24 @@ import Xlib.error
 from . import coords as coordsmod 
 from . import debug
 
+def get_view_layers(display):
+    def tuplify(value):
+        if isinstance(value, (list, tuple)):
+            return value
+        return (value,)
+    return [(layer, display.root[name + "_VIEW"], display.root[name + "_SIZE"])
+            for name in display.root["IG_VIEWS"]
+            for layer in tuplify(display.root[name + "_LAYER"])]
+
 def is_inside_window(display, window):
     pointer = display.root.query_pointer()
 
     try:
-        views = {display.root[name + "_LAYER"]: (display.root[name + "_VIEW"],
-                                                      display.root[name + "_SIZE"])
-                 for name in display.root["IG_VIEWS"]}
+        views = get_view_layers(display)
     except KeyError:
         return False
     spacecoords = {layer: coordsmod.view_to_space(view, size, pointer.root_x, pointer.root_y)
-                   for layer, (view, size) in views.items()}
+                   for layer, view, size in views}
     try:
         if window.get_attributes().map_state != Xlib.X.IsViewable: return False
         coords = window.get("IG_COORDS", None)
@@ -31,31 +38,29 @@ def is_inside_window(display, window):
     return False
 
 def get_active_window(display):
-    pointer = display.root.query_pointer()
-
     try:
-        views = {display.root[name + "_LAYER"]: (display.root[name + "_VIEW"],
-                                                      display.root[name + "_SIZE"])
-                 for name in display.root["IG_VIEWS"]}
+        views = get_view_layers(display)
     except KeyError:
         return None
-    spacecoords = {layer: coordsmod.view_to_space(view, size, pointer.root_x, pointer.root_y)
-                   for layer, (view, size) in views.items()}
-    for child in display.root.query_tree().children:
-        try:
-            if child.get_attributes().map_state != Xlib.X.IsViewable: continue
-            coords = child.get("IG_COORDS", None)
-            if coords is None: continue
-            layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
-            if layer not in spacecoords: continue
-            pointer = spacecoords[layer]
-            if (pointer[0] >= coords[0]
-                and pointer[0] <= coords[0] + coords[2]
-                and pointer[1] <= coords[1]
-                and pointer[1] >= coords[1] - coords[3]):
-                return child
-        except Xlib.error.BadWindow as e:
-            debug.DEBUG("get_active_window", "%s: %s" % (child.__window__(), e))
+
+    pointer = display.root.query_pointer()
+    windows = [(win, win.get("IG_LAYER", "IG_LAYER_DESKTOP"), win["IG_COORDS"])
+                for win in display.root.query_tree().children
+                if "IG_COORDS" in win and win.get_attributes().map_state == Xlib.X.IsViewable]
+    
+    for layer, view, size in reversed(views):
+        space_pointer = coordsmod.view_to_space(view, size, pointer.root_x, pointer.root_y)
+        for win, win_layer, coords in windows:
+            try:
+                if (layer == win_layer
+                    and space_pointer[0] >= coords[0]
+                    and space_pointer[0] <= coords[0] + coords[2]
+                    and space_pointer[1] <= coords[1]
+                    and space_pointer[1] >= coords[1] - coords[3]):
+                    return win
+            except Xlib.error.BadWindow as e:
+                debug.DEBUG("get_active_window", "%s: %s" % (win.__window__(), e))
+
     return None
 
 def get_event_window(display, event):
