@@ -153,7 +153,7 @@ class Island(object):
                 self.manager.display.eventhandlers.remove(self.Expose)
                 self.window = None
         except Exception as e:
-            print(e)
+            print("Error closing window", e)
 
         self.manager.islands.pop(self.key, None)
         
@@ -224,12 +224,12 @@ class IslandManager(object):
         for key, name, value in cur:
             if key != currentkey:
                 if currentkey:
-                    Island(self, properties, key=key)
+                    Island(self, properties, key=currentkey)
                 properties = {}
                 currentkey = key
             properties[name] = json.loads(value, object_hook=InfiniteGlass.fromjson(self.display))
         if currentkey:
-            Island(self, properties)
+            Island(self, properties, key=currentkey)
         self.restoring_islands = False
 
 def main():
