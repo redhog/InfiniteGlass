@@ -33,12 +33,14 @@ def parse_string_value(display, item, **context):
         else:
             with open(item, "rb") as f:
                 return (f.read(),)                
-    
-    if item[0] in '0123456789-':
-        if "." in value:
-            return (float(item),)
-        else:
-            return (int(item),)
+    try:
+        if item[0] in '0123456789-':
+            if "." in item:
+                return (float(item),)
+            else:
+                return (int(item),)
+    except:
+        pass
 
     return (item,)
 
