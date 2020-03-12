@@ -1,0 +1,2 @@
+recursive-include glass_islands *.json
+recursive-include glass_islands *.svg

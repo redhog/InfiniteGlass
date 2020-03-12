@@ -69,7 +69,8 @@
             "KeyPress,XK_F": "title_search_mode",
             "KeyPress,XK_T,ShiftMask": "tile_visible",
             "KeyPress,XK_T,!ShiftMask": "tile_visible_to_1_1",
-            
+            "KeyPress,XK_I": "send_island_create",
+
             "KeyPress,!Mod1Mask,XK_Home": "zoom_home",
             "ButtonPress,!Mod1Mask,4": "zoom_mode",
             "ButtonPress,!Mod1Mask,5": "zoom_mode",

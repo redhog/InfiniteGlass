@@ -65,7 +65,7 @@ class ThemeBase(object):
         self.display.root["IG_VIEW_MENU_VIEW"] = [0.0, 0.0, 1.0, 0.0]
         self.display.root["IG_VIEW_OVERLAY_LAYER"] = "IG_LAYER_OVERLAY"
         self.display.root["IG_VIEW_OVERLAY_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-        self.display.root["IG_VIEW_DESKTOP_LAYER"] = "IG_LAYER_DESKTOP"
+        self.display.root["IG_VIEW_DESKTOP_LAYER"] = ["IG_LAYER_ISLAND", "IG_LAYER_DESKTOP"]
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = [0.0, 0.0, 1.0, 0.0]
 
         self.display.root["IG_VIEW_ROOT_LAYER"] = "IG_LAYER_ROOT"
