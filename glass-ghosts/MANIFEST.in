@@ -1,2 +1,2 @@
-recursive-include glass_input *.json
-recursive-include glass_input *.svg
+recursive-include glass_ghosts *.json
+recursive-include glass_ghosts *.svg
