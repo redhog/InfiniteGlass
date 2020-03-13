@@ -22,6 +22,7 @@ class Island(object):
         self.key = key or str(uuid.uuid4())
         self.window = None
         self.manager.islands[self.key] = self
+        self.load_image()
         self.activate()
         InfiniteGlass.DEBUG("island", "ISLAND CREATE %s\n" % (self,)); sys.stderr.flush()
         
@@ -40,8 +41,6 @@ class Island(object):
             except:
                 pass
                 
-        self.load_image()
-
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
             InfiniteGlass.DEBUG("island", "ISLAND DELETE %s\n" % (self,)); sys.stderr.flush()
@@ -101,6 +100,7 @@ class Island(object):
         return pattern, value
 
     def load_image(self):
+        if "IG_CONTENT" in self.properties: return
         with pkg_resources.resource_stream("glass_islands", "island.svg") as f:
             island_image = f.read()
         for name, value in self.properties.items():
@@ -110,7 +110,7 @@ class Island(object):
         pattern, value = self.format_pair("key", self)
         if pattern in island_image:
             island_image = island_image.replace(pattern, value)
-        self.window["IG_CONTENT"] = ("IG_SVG", island_image)
+        self.properties["IG_CONTENT"] = ("IG_SVG", island_image)
         
     def save_changes(self):
         if not self.manager.restoring_islands:
@@ -140,7 +140,7 @@ class Island(object):
         self.manager.display.flush()
 
     def destroy(self):
-        InfiniteGlass.DEBUG("island", "ISLAND DESTROY %s\n" % (self,)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("destroy", "ISLAND DESTROY %s\n" % (self,)); sys.stderr.flush()
         try:
 
             if self.window is not None:
@@ -153,7 +153,7 @@ class Island(object):
                 self.manager.display.eventhandlers.remove(self.Expose)
                 self.window = None
         except Exception as e:
-            print("Error closing window", e)
+            InfiniteGlass.DEBUG("destroy", "Error closing window: %s" % e)
 
         self.manager.islands.pop(self.key, None)
         
@@ -162,7 +162,6 @@ class Island(object):
             delete from islands where key = ?
         """, (self.key,))
         self.manager.dbconn.commit()
-        print("XXXXXXXXXXXXXXXXXXXXXXXXX")
 
     def __str__(self):
         res = self.key
