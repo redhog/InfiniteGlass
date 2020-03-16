@@ -14,29 +14,32 @@ def island_windows(display, island):
 def island_toggle_sleep(self, event):
     island = self.get_event_window(event)
     if island and island != self.display.root:
-        old = island.get("IG_ISLAND_RUNNING", 0)
+        old = island.get("IG_ISLAND_PAUSED", 0)
         if old == 1:
-            value = 0
+            is_paused = 0
         else:
-            value = 1
-        InfiniteGlass.DEBUG("island_toggle_sleep", "%s.IG_ISLAND_RUNNING=%s\n" % (island, value))
-        island["IG_ISLAND_RUNNING"] = value
+            is_paused = 1
+        InfiniteGlass.DEBUG("island_toggle_sleep", "%s.IG_ISLAND_PAUSED=%s\n" % (island, is_paused))
+        island["IG_ISLAND_PAUSED"] = is_paused
 
         windows = [win for win, coords in island_windows(self.display, island)]
 
         clients_done = set()
-        if value:
-            for win in windows:
-                if "IG_GHOST" in win and "SM_CLIENT_ID" in win and win["SM_CLIENT_ID"] not in clients_done:
-                    win.send(win, "IG_RESTART", event_mask=Xlib.X.StructureNotifyMask)
-                    clients_done.add(win["SM_CLIENT_ID"])
-        else:
+        if is_paused:
             for win in windows:
                 if "IG_GHOST" not in win:
                     if "SM_CLIENT_ID" not in win or win["SM_CLIENT_ID"] not in clients_done:
                         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
                         if "SM_CLIENT_ID" in win:
                             clients_done.add(win["SM_CLIENT_ID"])
+        else:
+            print("Restoring...")
+            for win in windows:
+                print("Restoring %s: %s, %s" % (win.get("WM_NAME"), "IG_GHOST" in win, "SM_CLIENT_ID" in win))
+                if "IG_GHOST" in win and "SM_CLIENT_ID" in win and win["SM_CLIENT_ID"] not in clients_done:
+                    print("XXXXXXXX")
+                    win.send(win, "IG_RESTART", event_mask=Xlib.X.StructureNotifyMask)
+                    clients_done.add(win["SM_CLIENT_ID"])
         self.display.flush()
 
 def island_delete(self, event):
