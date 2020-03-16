@@ -20,9 +20,11 @@ class Window(object):
         for name in self.window.keys():
             self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
 
+        self.under_deletion = False
+            
         if self.is_ignored():
             return None
-
+        
         print("New window %s" % self.window.get("WM_NAME", self.window))
         
         @self.window.on()
@@ -59,6 +61,13 @@ class Window(object):
             self.close()
         self.CloseMessage = ClientMessage
 
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_DELETE")
+        def ClientMessage(win, event):
+            InfiniteGlass.DEBUG("message", "RECEIVED DELETE %s %s %s" % (win, event, self.client)); sys.stderr.flush()
+            self.under_deletion = True
+            self.close()
+        self.DeleteMessage = ClientMessage
+
         @self.window.on(mask="StructureNotifyMask")
         def UnmapNotify(win, event):
             InfiniteGlass.DEBUG("window", "WINDOW UNMAP %s %s\n" % (self, event.window.__window__())); sys.stderr.flush()
@@ -73,6 +82,8 @@ class Window(object):
         
     def is_ignored(self):
         if self.override_redirect:
+            return True
+        if self.under_deletion:
             return True
         props = self.properties.keys()
         for ignore in self.manager.config["ignore"]:
@@ -103,7 +114,7 @@ class Window(object):
             self.window.send(self.window, "WM_PROTOCOLS", "WM_DELETE_WINDOW", Xlib.X.CurrentTime)
         else:
             self.window.destroy()
-            
+
     def key(self):
         return glass_ghosts.helpers.ghost_key(self.properties, self.manager.config["match"])
 
@@ -125,6 +136,7 @@ class Window(object):
                 self.ghost.destroy()
         self.manager.windows.pop(self.id, None)
         self.manager.display.eventhandlers.remove(self.PropertyNotify)
+        self.manager.display.eventhandlers.remove(self.DeleteMessage)
         self.manager.display.eventhandlers.remove(self.CloseMessage)
         self.manager.display.eventhandlers.remove(self.SleepMessage)
         self.manager.display.eventhandlers.remove(self.UnmapNotify)

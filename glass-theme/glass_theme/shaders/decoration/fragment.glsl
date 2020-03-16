@@ -23,6 +23,7 @@ uniform int IG_DECORATION;
 uniform int atom_IG_GHOST;
 uniform int parent_IG_GHOST;
 uniform int parent_IG_GHOSTS_DISABLED;
+uniform int parent_IG_ISLAND_RUNNING;
 
 out vec4 fragColor;
 
@@ -47,8 +48,8 @@ void main() {
   } else if (picking_mode == 1) {
     fragColor = get_picking(window_id, scaled_window_coord);
   } else {
-    if (   ((IG_DECORATION == atom_IG_DECORATION_SAVE) && (parent_IG_GHOST == atom_IG_GHOST))
-               || ((IG_DECORATION == atom_IG_DECORATION_GHOSTS_ENABLE) && (parent_IG_GHOSTS_DISABLED != 1))) {
+    if (   ((IG_DECORATION == atom_IG_DECORATION_SAVE) && (parent_IG_GHOST == atom_IG_GHOST || parent_IG_ISLAND_RUNNING != 1))
+        || ((IG_DECORATION == atom_IG_DECORATION_GHOSTS_ENABLE) && (parent_IG_GHOSTS_DISABLED != 1))) {
       fragColor = get_svg_content_any(scaled_window_coord, IG_CONTENT_ALT, IG_CONTENT_ALT_transform);
     } else {
       fragColor = get_svg_content(scaled_window_coord);

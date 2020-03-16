@@ -33,6 +33,11 @@ def main(*arg, **kw):
                     properties["IG_ITEM_LAYER"] = "IG_LAYER_DESKTOP"
                     properties["IG_SHADER"] = "IG_SHADER_DECORATION"
                     display.root["IG_WINDOW_DECORATION_" + name.upper()] = ("IG_ITEM", w)
+                elif widget_type == "island-decorations":
+                    properties["IG_LAYER"] = "IG_LAYER_NONE"
+                    properties["IG_ITEM_LAYER"] = "IG_LAYER_ISLAND"
+                    properties["IG_SHADER"] = "IG_SHADER_DECORATION"
+                    display.root["IG_ISLAND_DECORATION_" + name.upper()] = ("IG_ITEM", w)
                 properties.update(widget["properties"])
                 properties = json.loads(
                     json.dumps(properties),

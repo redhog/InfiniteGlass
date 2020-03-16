@@ -14,7 +14,8 @@
         "glass_input.actions.item_zoom_to",
         "glass_input.actions.actions",
         "glass_input.actions.tile",
-        "glass_input.actions.modeswitch"
+        "glass_input.actions.modeswitch",
+        "glass_input.actions.islands"
     ],
     # Input modes represent different states glass-input can be in,
     # and defines what actions are bound to which keys in that mode,
