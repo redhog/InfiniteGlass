@@ -12,7 +12,8 @@ setuptools.setup(name='glass-action',
       url='https://github.com/redhog/InfiniteGlass',
       packages=setuptools.find_packages(),
       install_requires=[
-          "click"
+          "click",
+          "PyGObject"
       ],
       entry_points={
           'console_scripts': [
