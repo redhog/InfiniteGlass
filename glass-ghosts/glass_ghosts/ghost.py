@@ -132,17 +132,25 @@ class Shadow(object):
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
-            InfiniteGlass.DEBUG("ghost", "GHOST DELETE %s\n" % (self,)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("ghost", "GHOST DESTROY %s\n" % (self,)); sys.stderr.flush()
             self.destroy()
         self.DestroyNotify = DestroyNotify
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
+            InfiniteGlass.DEBUG("ghost", "GHOST CLOSE %s\n" % (self,)); sys.stderr.flush()
             win.destroy()
         self.CloseMessage = ClientMessage
 
+        @self.window.on(mask="StructureNotifyMask", client_type="IG_DELETE")
+        def ClientMessage(win, event):
+            InfiniteGlass.DEBUG("ghost", "GHOST DELETE %s\n" % (self,)); sys.stderr.flush()
+            win.destroy()
+        self.DeleteMessage = ClientMessage
+
         @self.window.on(mask="NoEventMask", client_type="WM_PROTOCOLS")
         def ClientMessage(win, event):
+            InfiniteGlass.DEBUG("ghost", "GHOST WM_DELETE_WINDOW %s\n" % (self,)); sys.stderr.flush()
             if event.parse("ATOM")[0] == "WM_DELETE_WINDOW":
                 win.destroy()
             else:
@@ -204,6 +212,7 @@ class Shadow(object):
             self.manager.display.eventhandlers.remove(self.DestroyNotify)
             self.manager.display.eventhandlers.remove(self.PropertyNotify)
             self.manager.display.eventhandlers.remove(self.WMDelete)
+            self.manager.display.eventhandlers.remove(self.DeleteMessage)
             self.manager.display.eventhandlers.remove(self.CloseMessage)
             self.manager.display.eventhandlers.remove(self.Expose)
             self.window = None

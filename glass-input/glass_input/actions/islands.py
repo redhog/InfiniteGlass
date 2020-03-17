@@ -33,11 +33,8 @@ def island_toggle_sleep(self, event):
                         if "SM_CLIENT_ID" in win:
                             clients_done.add(win["SM_CLIENT_ID"])
         else:
-            print("Restoring...")
             for win in windows:
-                print("Restoring %s: %s, %s" % (win.get("WM_NAME"), "IG_GHOST" in win, "SM_CLIENT_ID" in win))
                 if "IG_GHOST" in win and "SM_CLIENT_ID" in win and win["SM_CLIENT_ID"] not in clients_done:
-                    print("XXXXXXXX")
                     win.send(win, "IG_RESTART", event_mask=Xlib.X.StructureNotifyMask)
                     clients_done.add(win["SM_CLIENT_ID"])
         self.display.flush()
@@ -46,10 +43,10 @@ def island_delete(self, event):
     island = self.get_event_window(event)
     if island and island != self.display.root:
         for win, coords in island_windows(self.display, island):
-            win.send(win, "IG_DELETE")
-        island.send(island, "IG_CLOSE")
+            win.send(win, "IG_DELETE", event_mask=Xlib.X.StructureNotifyMask)
+        island.send(island, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
 
 def island_ungroup(self, event):
     island = self.get_event_window(event)
     if island and island != self.display.root:
-        island.send(island, "IG_CLOSE")
+        island.send(island, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)

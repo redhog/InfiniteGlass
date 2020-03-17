@@ -25,8 +25,6 @@ class Window(object):
         if self.is_ignored():
             return None
         
-        print("New window %s" % self.window.get("WM_NAME", self.window))
-        
         @self.window.on()
         def PropertyNotify(win, event):
             name = self.manager.display.get_atom_name(event.atom)
