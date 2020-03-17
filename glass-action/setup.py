@@ -16,7 +16,7 @@ setuptools.setup(name='glass-action',
       ],
       entry_points={
           'console_scripts': [
-              'glass-action = glass_action:main',
+              'glass-action = glass_action.main:main',
           ],
       }
   )
