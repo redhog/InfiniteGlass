@@ -13,13 +13,15 @@ class NoValue: pass
 class Island(object):
     def __init__(self, manager, properties=None, key=None):
         self.manager = manager
+        self.key = key or str(uuid.uuid4())
         if not properties: properties = {}
         if "IG_COORDS" not in properties:
             coords = self.manager.display.root["IG_VIEW_DESKTOP_VIEW"]
             properties["IG_COORDS"] = [coords[0], coords[1]+coords[3], coords[2], coords[3]]
+        if "WM_NAME" not in properties:
+            properties["WM_NAME"] = ("Island %s" % self.key).encode("UTF-8")
         self._properties = {}
         self.properties = properties
-        self.key = key or str(uuid.uuid4())
         self.window = None
         self.manager.islands[self.key] = self
         self.load_image()
