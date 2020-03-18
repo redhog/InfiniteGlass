@@ -84,7 +84,7 @@ def zoom_to_more_windows(self, event):
 
     windows.sort(key=lambda a: a[0])
     d, window, next_window = windows[0]
-    InfiniteGlass.DEBUG("window", "Next window %s/%s[%s] @ %s\n" % (next_window.get("WM_NAME", None), next_window.get("WM_CLASS", None), next_window.__window__(), window))
+    InfiniteGlass.DEBUG("window", "Next window %s @ %s\n" % (next_window, window))
 
     ratio = view[2] / view[3]
 
@@ -98,9 +98,10 @@ def zoom_to_more_windows(self, event):
         view[3] = view[2] / ratio
     else:
         view[2] = ratio * view[3]
+    InfiniteGlass.DEBUG("view", "View after aspect ratio corr %s\n" % (view,))
 
     view = item_zoom_to.adjust_view(self, view, next_window)
-    InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
+    InfiniteGlass.DEBUG("view", "View after adjustment %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
