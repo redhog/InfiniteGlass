@@ -8,6 +8,23 @@ from . import valueencoding
 from . import framing
 import sys
 
+def window_str(self):
+    res = str(self.__window__())
+    try:
+        if "WM_NAME" in self:
+            name = self["WM_NAME"]
+            if isinstance(name, list): name = name[0]
+            if isinstance(name, bytes): name = name.decode("UTF-8")
+            res += ": " + name
+    except Exception as e:
+        res += " (%s)" % (e,)
+    return res
+Xlib.xobject.drawable.Window.__str__ = window_str
+
+def window_repr(self):
+    return "<window %s>" % window_str(self)
+Xlib.xobject.drawable.Window.__repr__ = window_repr
+
 def window_setitem(self, key, value):
     try:
         keyatom = self.display.get_atom(key)
