@@ -26,6 +26,7 @@ def island(ctx, **kw):
 @click.pass_context
 def set_background(ctx, window, background):
     with InfiniteGlass.Display() as display:
+        @glass_action.window_tools.str_to_win(display, window)
         def set_background(window):
             if background:
                 background_path = background[0] 
@@ -44,14 +45,8 @@ def set_background(ctx, window, background):
                 background_path = dlg.get_filename()                
                 dlg.destroy()
                 if response != gtk.ResponseType.OK:
+                    sys.exit(0)
                     return
             window["IG_CONTENT"] = ("IG_SVG", "file://" + background_path)
             display.flush()
-        if window == "click":
-            @glass_action.window_tools.get_pointer_window(display)
-            def with_win(window):
-                set_background(window)
-                sys.exit(0)
-        else:
-            set_background(window)
             sys.exit(0)

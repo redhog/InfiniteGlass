@@ -1,25 +1,21 @@
 import Xlib.X
 
-def send_msg(display, win, mask, event):
-    if isinstance(win, str):
-        if win == "root":
-            win = display.root
+def str_to_win(display, window):
+    def str_to_win(fn):
+        def handle_window(win):
+            if win == "root":
+                win = display.root
+            elif isinstance(win, (str, int)):
+                win = display.create_resource_object("window", int(win))
+            fn(win)
+        if window == "click":
+            @get_pointer_window(display)
+            def with_win(win):
+                handle_window(win)
         else:
-            win = display.create_resource_object("window", int(win))
-    def conv(item):
-        try:
-            if "." in item:
-                return float(item)
-            else:
-                return int(item)
-        except:
-            return item
-    event = [conv(item) for item in event]
-    print("SEND win=%s, mask=%s %s" % (win, mask, ", ".join(repr(item) for item in event)))
-    win.send(win, *event, event_mask=getattr(Xlib.X, mask))
-    display.flush()
-
-
+            handle_window(window)        
+    return str_to_win
+            
 def get_pointer_window(display):
     def get_pointer_window(cb):
         font = display.open_font('cursor')
@@ -38,3 +34,22 @@ def get_pointer_window(display):
             window = window.find_client_window()
             cb(window)
     return get_pointer_window
+
+def send_msg(cb):
+    def send_msg(display, win, mask, event):
+        @str_to_win(display, win)
+        def send_msg(win):
+            def conv(item):
+                try:
+                    if "." in item:
+                        return float(item)
+                    else:
+                        return int(item)
+                except:
+                    return item
+            event = [conv(item) for item in event]
+            print("SEND win=%s, mask=%s %s" % (win, mask, ", ".join(repr(item) for item in event)))
+            win.send(win, *event, event_mask=getattr(Xlib.X, mask))
+            display.flush()
+            cb()
+    return send_msg

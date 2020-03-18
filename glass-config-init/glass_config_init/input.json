@@ -206,6 +206,7 @@
                 "Button1Mask,MotionNotify": "item_resize_mouse"
             }
         },
+        "island_change_background": {"shell": "glass-action island set-background --window=%(last_event_window)s &"},
         "rofi_mode": {"shell": "rofi -show drun -theme ~/.config/glass/rofi-theme.config -show-icons &"}
     }
 }
