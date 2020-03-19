@@ -171,7 +171,7 @@
             "class": "glass_input.mode.Mode",
             "load": {"ifnowin": {"mode": "pan_mode"}},
             "keymap": {
-                "KeyRelease": "pop",
+                "KeyRelease,XK_Alt_L": "pop",
                 "ButtonRelease": "pop",
                 
                 "KeyPress,XK_Left,!AutoRepeat": {"item_pan":{"x": -1, "y": 0}},
