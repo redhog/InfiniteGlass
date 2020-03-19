@@ -25,10 +25,11 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
     windows = []
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     for child, coords in visible:
-        x = coords[0] + coords[2] / 2.
-        y = coords[1] - coords[3] / 2.
-
-        d = math.sqrt((x - vx)**2 + (y - vy)**2)
+        d = max(
+            math.sqrt((coords[0] - vx)**2 + (coords[1] - vy)**2),
+            math.sqrt((coords[0] + coords[2] - vx)**2 + (coords[1] - vy)**2),
+            math.sqrt((coords[0] - vx)**2 + (coords[1] - coords[3] - vy)**2),
+            math.sqrt((coords[0] + coords[2] - vx)**2 + (coords[1] - coords[3] - vy)**2),)
         windows.append((d, coords, child))
 
     if len(windows) <= 1:
