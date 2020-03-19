@@ -22,7 +22,7 @@ vec3 calc(in vec2 p) {
 
 	float x = 0.5;
 	float h = 0.0;
-	for(int i = 0; i < 200; i++) {
+	for(int i = 0; i < FRACTAL_PRECISION; i++) {
 		x = w1*p.x*x*(1.0-x); h += log2(abs(w1*p.x*(1.0-2.0*x)));
 		x = w2*p.x*x*(1.0-x); h += log2(abs(w2*p.x*(1.0-2.0*x)));
 		x = w3*p.y*x*(1.0-x); h += log2(abs(w3*p.y*(1.0-2.0*x)));
@@ -44,11 +44,13 @@ vec3 calc(in vec2 p) {
 }
 
 void main() {
+        vec3 col;
+        if (BACKGROUND_TYPE == 1) {
 #if 1
-	vec3 col = calc(3.0 + 1.0 * px_coord /
+	col = calc(3.0 + 1.0 * px_coord /
 							iResolution.xy);
 #else
-	vec3 col = calc( 3.0 + 1.0*(gl_FragCoord.xy+vec2(0.0,0.0)) /
+	col = calc( 3.0 + 1.0*(gl_FragCoord.xy+vec2(0.0,0.0)) /
 							iResolution.xy ) +
 	           calc( 3.0 + 1.0*(gl_FragCoord.xy+vec2(0.0,0.5)) /
 							iResolution.xy ) +
@@ -58,6 +60,8 @@ void main() {
 							iResolution.xy );
 	col /= 4.0;
 #endif
-
+        } else {
+                col = vec3(1., 1., 1.);
+        }
 	gl_FragColor = vec4(col, 1.0);
 }
