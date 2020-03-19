@@ -51,6 +51,17 @@ class Theme(glass_theme.base.ThemeBase):
     define_BORDER_ACTIVE_COLOR_2 = "vec4(1., 1., 1., 1.)"
     define_BORDER_ACTIVE_COLOR_3 = "vec4(0., 0., 0., 1.)"
     define_BORDER_ACTIVE_COLOR_4 = "vec4(0., 0., 0., 1.)"
+
+    # See glass-theme/glass_theme/shaders/root/fragment.glsl for list of possible values
+    define_BACKGROUND_TYPE = 1
+    # 200 gives a much better picture, but is super slow in software...
+    define_FRACTAL_PRECISION = 10
+    define_BACKGROUND_COLOR_TRANSFORM = ("transpose(mat4(" +
+                                         "-0.5, 0.0, 0.0, 1.0," +
+                                         "-0.5, 0.0, 0.0, 1.0," +
+                                         "-0.5, 0.0, 0.0, 1.0," +
+                                         "0.0, 0.0, 0.0, 1.0" +
+                                         "))")
     
     def linestrings2texture(self, f):
         coastline = json.load(f)
