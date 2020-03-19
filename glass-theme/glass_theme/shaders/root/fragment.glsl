@@ -1,7 +1,13 @@
 #version 330 core
 precision highp float;
 
+/* Copyright (c) 2020 alexkh
+   This code is available as a stand-alone fractal demo
+   at https://github.com/alexkh/gllyap
+*/
+
 uniform ivec2 size;
+uniform vec4 root_IG_VIEW_DESKTOP_VIEW;
 
 in vec2 px_coord;
 
@@ -46,9 +52,12 @@ vec3 calc(in vec2 p) {
 
 void main() {
   vec3 col;
+  vec2 coord = px_coord;
+  coord.y = iResolution.y - coord.y;
+  
   if (BACKGROUND_TYPE == 1) {
     #if 1
-      col = calc(3.0 + 1.0 * px_coord / iResolution.xy);
+      col = calc(3.0 + (1.0 * coord / iResolution.xy) * root_IG_VIEW_DESKTOP_VIEW.zw + root_IG_VIEW_DESKTOP_VIEW.xy);
     #else
       col = calc(3.0 + 1.0*(gl_FragCoord.xy+vec2(0.0,0.0)) / iResolution.xy) +
             calc(3.0 + 1.0*(gl_FragCoord.xy+vec2(0.0,0.5)) / iResolution.xy) +
