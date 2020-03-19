@@ -56,6 +56,12 @@ class Theme(glass_theme.base.ThemeBase):
     define_BACKGROUND_TYPE = 1
     # 200 gives a much better picture, but is super slow in software...
     define_FRACTAL_PRECISION = 10
+    define_BACKGROUND_COLOR_TRANSFORM = ("transpose(mat4(" +
+                                         "-0.5, 0.0, 0.0, 1.0," +
+                                         "-0.5, 0.0, 0.0, 1.0," +
+                                         "-0.5, 0.0, 0.0, 1.0," +
+                                         "0.0, 0.0, 0.0, 1.0" +
+                                         "))")
     
     def linestrings2texture(self, f):
         coastline = json.load(f)
