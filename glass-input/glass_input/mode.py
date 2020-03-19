@@ -73,6 +73,16 @@ def handle_event(display, event):
 def modulo(a, b):
     return a % b == 0
 
+class Formatter(object):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __getitem__(self, name):
+        res = self.obj[name]
+        if isinstance(res, Xlib.display.drawable.Window):
+            return res.__window__()
+        return res
+
 class Mode(object):
     def __init__(self, **kw):
         self.first_event = None
@@ -143,6 +153,7 @@ class Mode(object):
 
     def handle(self, event, keymap=None):
         self.last_event = event
+        
         if keymap is None:
             keymap = self.keymap
         for eventfilter, action in keymap.items():
@@ -169,7 +180,7 @@ class Mode(object):
             elif "keymap" in action:
                 self.handle(event, keymap=action["keymap"])
             elif "shell" in action:
-                os.system(action["shell"])
+                os.system(action["shell"] % Formatter(self))
             elif "timer" in action:
                 name = action['timer']
                 self.state[name] = datetime.datetime.now()
@@ -195,3 +206,14 @@ class Mode(object):
 
     def pop(self, event):
         pop(self.display)
+
+    def __getitem__(self, name):
+        if name in self.state:
+            return self.state[name]
+        if hasattr(self, name):
+            return getattr(self, name)
+        raise KeyError
+
+    @property
+    def last_event_window(self):
+        return self.get_event_window(self.last_event)

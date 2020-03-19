@@ -2,22 +2,24 @@
 
 import setuptools
 
-setuptools.setup(name='glass-action',
+setuptools.setup(name='glass-islands',
       version='0.1',
-      description='Send window actions from the command line InfiniteGlass',
-      long_description='Send window actions from the command line InfiniteGlass',
+      description='Desktop islands for InfiniteGlass',
+      long_description='Desktop islands for InfiniteGlass',
       long_description_content_type="text/markdown",
       author='Egil Moeller',
       author_email='redhog@redhog.org',
       url='https://github.com/redhog/InfiniteGlass',
       packages=setuptools.find_packages(),
       install_requires=[
-          "click",
-          "PyGObject"
+          "pyyaml",
+          "python-slugify"
       ],
       entry_points={
           'console_scripts': [
-              'glass-action = glass_action.main:main',
+              'glass-islands = glass_islands.main:main',
           ],
-      }
+      },
+      package_data={'glass_islands': ['*.svg', '*.json']},
+      include_package_data=True
   )

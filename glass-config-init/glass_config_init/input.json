@@ -14,7 +14,8 @@
         "glass_input.actions.item_zoom_to",
         "glass_input.actions.actions",
         "glass_input.actions.tile",
-        "glass_input.actions.modeswitch"
+        "glass_input.actions.modeswitch",
+        "glass_input.actions.islands"
     ],
     # Input modes represent different states glass-input can be in,
     # and defines what actions are bound to which keys in that mode,
@@ -69,7 +70,8 @@
             "KeyPress,XK_F": "title_search_mode",
             "KeyPress,XK_T,ShiftMask": "tile_visible",
             "KeyPress,XK_T,!ShiftMask": "tile_visible_to_1_1",
-            
+            "KeyPress,XK_I": "send_island_create",
+
             "KeyPress,!Mod1Mask,XK_Home": "zoom_home",
             "ButtonPress,!Mod1Mask,4": "zoom_mode",
             "ButtonPress,!Mod1Mask,5": "zoom_mode",
@@ -169,7 +171,7 @@
             "class": "glass_input.mode.Mode",
             "load": {"ifnowin": {"mode": "pan_mode"}},
             "keymap": {
-                "KeyRelease": "pop",
+                "KeyRelease,XK_Alt_L": "pop",
                 "ButtonRelease": "pop",
                 
                 "KeyPress,XK_Left,!AutoRepeat": {"item_pan":{"x": -1, "y": 0}},
@@ -204,6 +206,7 @@
                 "Button1Mask,MotionNotify": "item_resize_mouse"
             }
         },
+        "island_change_background": {"shell": "glass-action island set-background --window=%(last_event_window)s &"},
         "rofi_mode": {"shell": "rofi -show drun -theme ~/.config/glass/rofi-theme.config -show-icons &"}
     }
 }

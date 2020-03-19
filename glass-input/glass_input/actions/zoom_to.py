@@ -25,10 +25,11 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
     windows = []
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     for child, coords in visible:
-        x = coords[0] + coords[2] / 2.
-        y = coords[1] - coords[3] / 2.
-
-        d = math.sqrt((x - vx)**2 + (y - vy)**2)
+        d = max(
+            math.sqrt((coords[0] - vx)**2 + (coords[1] - vy)**2),
+            math.sqrt((coords[0] + coords[2] - vx)**2 + (coords[1] - vy)**2),
+            math.sqrt((coords[0] - vx)**2 + (coords[1] - coords[3] - vy)**2),
+            math.sqrt((coords[0] + coords[2] - vx)**2 + (coords[1] - coords[3] - vy)**2),)
         windows.append((d, coords, child))
 
     if len(windows) <= 1:
@@ -73,10 +74,11 @@ def zoom_to_more_windows(self, event):
     windows = []
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     for child, coords in invisible + overlap:
-        x = coords[0] + coords[2] / 2.
-        y = coords[1] - coords[3] / 2.
-
-        d = math.sqrt((x - vx)**2 + (y - vy)**2)
+        d = min(
+            math.sqrt((coords[0] - vx)**2 + (coords[1] - vy)**2),
+            math.sqrt((coords[0] + coords[2] - vx)**2 + (coords[1] - vy)**2),
+            math.sqrt((coords[0] - vx)**2 + (coords[1] - coords[3] - vy)**2),
+            math.sqrt((coords[0] + coords[2] - vx)**2 + (coords[1] - coords[3] - vy)**2),)
         windows.append((d, coords, child))
 
     if not windows:
@@ -84,7 +86,7 @@ def zoom_to_more_windows(self, event):
 
     windows.sort(key=lambda a: a[0])
     d, window, next_window = windows[0]
-    InfiniteGlass.DEBUG("window", "Next window %s/%s[%s] @ %s\n" % (next_window.get("WM_NAME", None), next_window.get("WM_CLASS", None), next_window.__window__(), window))
+    InfiniteGlass.DEBUG("window", "Next window %s @ %s\n" % (next_window, window))
 
     ratio = view[2] / view[3]
 
@@ -98,9 +100,10 @@ def zoom_to_more_windows(self, event):
         view[3] = view[2] / ratio
     else:
         view[2] = ratio * view[3]
+    InfiniteGlass.DEBUG("view", "View after aspect ratio corr %s\n" % (view,))
 
     view = item_zoom_to.adjust_view(self, view, next_window)
-    InfiniteGlass.DEBUG("view", "View %s\n" % (view,))
+    InfiniteGlass.DEBUG("view", "View after adjustment %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 

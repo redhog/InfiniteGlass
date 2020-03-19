@@ -48,7 +48,7 @@ def parse_value(display, value, **context):
     context["root"] = display.root
     fmt = 32
     
-    if isinstance(value, tuple):
+    if isinstance(value, tuple) or (isinstance(value, list) and len(value) == 2 and type(value[0]) != type(value[1])):
         itemtype, items, fmt = parse_value(display, value[1])
         return display.get_atom(value[0]), items, fmt
     
@@ -142,17 +142,19 @@ def unpack_value(display, value_type, value):
 def unpack_values(display, value_type, values):
     if value_type == "ATOM":
         values = [display.real_display.get_atom_name(item) for item in values]
-    if value_type == "FLOAT":
+    elif value_type == "FLOAT":
         values = list(struct.unpack("<" + "f" * len(values), values.tobytes()))
-    if value_type == "WINDOW":
+    elif value_type == "WINDOW":
         values = [display.real_display.create_resource_object("window", item) for item in values]
-    if value_type == "STRING":
+    elif value_type == "STRING":
         values = values.split(b"\0")
-    if value_type == "JSON":
+    elif value_type == "JSON":
         values = values.split(b"\0")
         values = [json.loads(item.decode("utf-8"), object_hook=fromjson(display.real_display)) for item in values]
     if len(values) == 1:
         values = values[0]
+    if value_type not in ("ATOM", "FLOAT", "INTEGER", "CARDINAL", "WINDOW", "STRING", "JSON"):
+        values = (value_type, values)
     return values
 
 def tojson(display):

@@ -76,3 +76,8 @@ def toggle_sleep(self, event):
 def reload(self, event):
     "Reload your keybindings from the config file"
     mode.load_config()
+
+def send_island_create(self, event):
+    InfiniteGlass.DEBUG("island", "SENDING CREATE ISLAND\n")
+    self.display.root.send(self.display.root, "IG_ISLAND_CREATE", event_mask=Xlib.X.StructureNotifyMask)
+    self.display.flush()
