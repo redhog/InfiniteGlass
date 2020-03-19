@@ -50,11 +50,11 @@
             "KeyRelease": "pop",
             "ButtonRelease": "pop",
 
-            "ButtonPress,Mod1Mask,Mod4Mask,3": "focus_mode",
-            "KeyPress,Mod1Mask,Mod4Mask,XK_Up": "focus_mode",
-            "KeyPress,Mod1Mask,Mod4Mask,XK_Down": "focus_mode",
-            "KeyPress,Mod1Mask,Mod4Mask,XK_Left": "focus_mode",
-            "KeyPress,Mod1Mask,Mod4Mask,XK_Right": "focus_mode",
+            # "ButtonPress,Mod1Mask,Mod4Mask,3": "focus_mode",
+            # "KeyPress,Mod1Mask,Mod4Mask,XK_Up": "focus_mode",
+            # "KeyPress,Mod1Mask,Mod4Mask,XK_Down": "focus_mode",
+            # "KeyPress,Mod1Mask,Mod4Mask,XK_Left": "focus_mode",
+            # "KeyPress,Mod1Mask,Mod4Mask,XK_Right": "focus_mode",
 
             "KeyPress,XK_R": "reload",
 
