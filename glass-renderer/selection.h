@@ -36,7 +36,7 @@ extern int selection_get_params(Selection *selection, XEvent *event, long offset
                                 Atom *actual_type_return, int *actual_format_return,
                                 unsigned long *nitems_return, unsigned long *bytes_after_return, unsigned char **prop_return);
 extern void selection_answer(Selection *selection, XEvent *event, Atom type, int format, int mode, unsigned char *data, int nelements);
-extern Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data);
-Selection *manager_selection_create(Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data, Bool force, long arg1, long arg2);
+extern Selection *selection_create(Mainloop *mainloop, Window owner, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data);
+Selection *manager_selection_create(Mainloop *mainloop, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data, Bool force, long arg1, long arg2);
 
 #endif

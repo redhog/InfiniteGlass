@@ -42,6 +42,7 @@ Pointer mouse = {0, 0, 0, 0, 0, 0};
 List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
+Mainloop *mainloop;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
@@ -481,7 +482,10 @@ int main() {
   if (!init_shader()) return 1;
   if (!init_items()) return 1;
 
-  manager_selection_create(XInternAtom(display, "WM_S0", False),
+  mainloop = mainloop_create(display);
+
+  manager_selection_create(mainloop,
+                           XInternAtom(display, "WM_S0", False),
                            &selection_sn_handler,
                            &selection_sn_clear,
                            NULL, True, 0, 0);
@@ -512,8 +516,9 @@ int main() {
   GL_CHECK_ERROR("start2", "");
 
   DEBUG("start", "Renderer started.\n");
-
+  
   TimeoutHandler draw_timeout_handler;
+  draw_timeout_handler.mainloop = mainloop;
   draw_timeout_handler.interval.tv_sec = 0;
   draw_timeout_handler.interval.tv_usec = 30000;
   if (gettimeofday(&draw_timeout_handler.next, NULL) != 0) {
@@ -524,6 +529,7 @@ int main() {
   mainloop_install_timeout_handler(&draw_timeout_handler);
   
   EventHandler main_event_handler;
+  main_event_handler.mainloop = mainloop;
   main_event_handler.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask;
   event_mask_unset(main_event_handler.match_event);
   event_mask_unset(main_event_handler.match_mask);
@@ -531,7 +537,7 @@ int main() {
   main_event_handler.data = NULL;
   mainloop_install_event_handler(&main_event_handler);
 
-  mainloop_run();
+  mainloop_run(mainloop);
   
   return 0;
 }

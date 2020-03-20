@@ -63,7 +63,7 @@ void selection_destroy(Selection *selection) {
   }
 }
 
-Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data) {
+Selection *selection_create(Mainloop *mainloop, Window owner, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data) {
   Selection *selection = malloc(sizeof(Selection));
 
   selection->owner = owner;
@@ -81,6 +81,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   EventHandler *event_handler;
 
   event_handler = &selection->event_handler_convert;
+  event_handler->mainloop = mainloop;
   event_handler->event_mask = NoEventMask;
   event_mask_unset(event_handler->match_event);
   event_mask_unset(event_handler->match_mask);
@@ -93,6 +94,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   mainloop_install_event_handler(event_handler);
 
   event_handler = &selection->event_handler_clear;
+  event_handler->mainloop = mainloop;
   event_handler->event_mask = NoEventMask;
   event_mask_unset(event_handler->match_event);
   event_mask_unset(event_handler->match_mask);
@@ -125,7 +127,7 @@ Selection *selection_create(Window owner, Atom name, SelectionHandler *handler, 
   }
 }
 
-Selection *manager_selection_create(Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data, Bool force, long arg1, long arg2) {
+Selection *manager_selection_create(Mainloop *mainloop, Atom name, SelectionHandler *handler, SelectionClearHandler *clear, void *data, Bool force, long arg1, long arg2) {
   Window existing = XGetSelectionOwner(display, name);
   
   if (existing != None) {
@@ -135,7 +137,7 @@ Selection *manager_selection_create(Atom name, SelectionHandler *handler, Select
     XSelectInput(display, existing, StructureNotifyMask);
   }
   
-  Selection *selection = selection_create(None, name, handler, clear, data);
+  Selection *selection = selection_create(mainloop, None, name, handler, clear, data);
   
   if (existing != None) {
     XEvent destroy_event;
