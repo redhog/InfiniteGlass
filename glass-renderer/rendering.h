@@ -5,6 +5,7 @@
 #include "shader.h"
 #include "list.h"
 #include "glapi.h"
+#include "xapi.h"
 
 struct PropertyStruct;
 typedef struct PropertyStruct Property;
@@ -16,6 +17,7 @@ struct PropertiesStruct;
 typedef struct PropertiesStruct Properties;
 
 typedef struct {
+ XConnection *conn;
  Item *item; // The current item being rendered
  Item *parent_item; // The parent item that we're rendering this item for
  Item *source_item; // The item that owns the properties being converted to uniforms. Can be e.g same as item or parent_item or root_item...

@@ -22,10 +22,10 @@ int gl_check_error(char *msg) {
   return 1;
 }
 
-int glinit(Window window) { 
+int glinit(XConnection *conn, Window window) { 
   int elements;
   int attrib_list[] = {GLX_X_RENDERABLE, True, 0};
-  configs = glXChooseFBConfig(display, 0, attrib_list, &elements);
+  configs = glXChooseFBConfig(conn->display, 0, attrib_list, &elements);
 
   int context_attribs[] = {GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
                            GLX_CONTEXT_MINOR_VERSION_ARB, 0,
@@ -35,13 +35,13 @@ int glinit(Window window) {
   glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
     (glXCreateContextAttribsARBProc) glXGetProcAddressARB((const GLubyte *) "glXCreateContextAttribsARB");
   
-  GLXContext context = glXCreateContextAttribsARB(display, configs[0], 0, True, context_attribs);
-  XSync(display, False);
+  GLXContext context = glXCreateContextAttribsARB(conn->display, configs[0], 0, True, context_attribs);
+  XSync(conn->display, False);
   if (!context) {
     fprintf(stderr, "GLX: Unable to initialize.\n");
     return 0;
   }
-  glXMakeCurrent(display, window, context);
+  glXMakeCurrent(conn->display, window, context);
 
   if (GL_CHECK_ERROR("init", "Unable to initialize OpenGL context")) return 0;
   
@@ -63,8 +63,8 @@ int glinit(Window window) {
 
   if (GL_CHECK_ERROR("init", "Unable to set up OpenGL vertex arrays")) return 0;
 
-  glViewport(0, 0, overlay_attr.width, overlay_attr.height);
-  if (GL_CHECK_ERROR("init", "Unable to set up OpenGL viewport: %ld, %ld\n", overlay_attr.width, overlay_attr.height)) return 0;
+  glViewport(0, 0, conn->overlay_attr.width, conn->overlay_attr.height);
+  if (GL_CHECK_ERROR("init", "Unable to set up OpenGL viewport: %ld, %ld\n", conn->overlay_attr.width, conn->overlay_attr.height)) return 0;
 /* FIXME: This code throws an error. Why?
   glFrustum(-1.,
  	1.,

@@ -43,6 +43,7 @@ struct PropertyStruct {
   Atom name;
   char *name_str;
   Atom type;
+  char *type_str;
   int format;
   unsigned long nitems;
   union {
@@ -55,12 +56,12 @@ struct PropertyStruct {
   PropertyTypeHandler *type_handler;
 };
 
-extern Property *property_allocate(Properties *properties, Atom name);
-extern Bool property_load(Property *prop);
-extern void property_free(Property *prop);
+extern Property *property_allocate(XConnection *conn, Properties *properties, Atom name);
+extern Bool property_load(XConnection *conn, Property *prop);
+extern void property_free(XConnection *conn, Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_draw(Property *prop, Rendering *rendering);
-extern void property_print(Property *prop, FILE *fp);
+extern void property_print(XConnection *conn, Property *prop, FILE *fp);
 
 struct ProgramCacheStruct {
   GLint program;
@@ -74,23 +75,23 @@ struct PropertiesStruct {
   size_t programs_pos;
 };
 
-extern Properties *properties_load(Window window);
-extern Bool properties_update(Properties *properties, Atom name);
-extern void properties_free(Properties *properties);
+extern Properties *properties_load(XConnection *conn, Window window);
+extern Bool properties_update(XConnection *conn, Properties *properties, Atom name);
+extern void properties_free(XConnection *conn, Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_draw(Properties *properties, Rendering *rendering);
-extern void properties_print(Properties *properties, FILE *fp);
+extern void properties_print(XConnection *conn, Properties *properties, FILE *fp);
 extern Property *properties_find(Properties *properties, Atom name);
 
-typedef void PropertyInit(PropertyTypeHandler *prop);
-typedef void PropertyLoad(Property *prop);
-typedef void PropertyFree(Property *prop);
+typedef void PropertyInit(XConnection *conn, PropertyTypeHandler *prop);
+typedef void PropertyLoad(XConnection *conn, Property *prop);
+typedef void PropertyFree(XConnection *conn, Property *prop);
 typedef void PropertyLoadProgram(Property *prop, Rendering *rendering);
 typedef void PropertyFreeProgram(Property *prop, size_t index);
 typedef void PropertyToGl(Property *prop, Rendering *rendering);
 typedef void PropertyCalculate(Property *prop, Rendering *rendering);
 typedef void PropertyDraw(Property *prop, Rendering *rendering);
-typedef void PropertyPrint(Property *prop, FILE *fp);
+typedef void PropertyPrint(XConnection *conn, Property *prop, FILE *fp);
 
 struct PropertyTypeHandlerT {
   PropertyInit *init;
@@ -107,7 +108,7 @@ struct PropertyTypeHandlerT {
   Atom name;
 };
 
-extern void property_type_register(PropertyTypeHandler *handler);
+extern void property_type_register(XConnection *conn, PropertyTypeHandler *handler);
 extern PropertyTypeHandler *property_type_get(Atom type, Atom name);
 
 

@@ -6,12 +6,12 @@
 #include <math.h>
 
 #define FL(value) *((float *) &value)
-void property_coords_init(PropertyTypeHandler *prop) {
+void property_coords_init(XConnection *conn, PropertyTypeHandler *prop) {
   prop->type = XA_FLOAT;
-  prop->name = ATOM("IG_COORDS");
+  prop->name = ATOM(conn, "IG_COORDS");
 }
 
-void property_coords_load(Property *prop) {
+void property_coords_load(XConnection *conn, Property *prop) {
   PropertyCoords *data = (PropertyCoords *) prop->data;
   if (!data) {
     prop->data = malloc(sizeof(PropertyCoords));
@@ -24,7 +24,7 @@ void property_coords_load(Property *prop) {
   }
 }
 
-void property_coords_free(Property *prop) {
+void property_coords_free(XConnection *conn, Property *prop) {
   if (prop->data) {
     PropertyCoords *data = (PropertyCoords *) prop->data;
     if (data->coords) free(data->coords);
@@ -58,50 +58,50 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
   }
 
   for (int i = 0; i < prop->nitems; i += 4) {
-    Atom type = ATOM("IG_COORD_DESKTOP");
+    Atom type = ATOM(rendering->conn, "IG_COORD_DESKTOP");
     if (i / 4 < types_nitems) type = types[i / 4];
 
-    if (type == ATOM("IG_COORD_DESKTOP")) {
+    if (type == ATOM(rendering->conn, "IG_COORD_DESKTOP")) {
       data->ccoords[0] += data->coords[i+0];
       data->ccoords[1] += data->coords[i+1];
       data->ccoords[2] += data->coords[i+2];
       data->ccoords[3] += data->coords[i+3];
-    } else if (type == ATOM("IG_COORD_PARENT_BASE") && parent_data) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_PARENT_BASE") && parent_data) {
       data->ccoords[0] += parent_data->ccoords[0] + data->coords[i+0] * parent_data->ccoords[2];
       data->ccoords[1] += parent_data->ccoords[1] + data->coords[i+1] * parent_data->ccoords[3];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == ATOM("IG_COORD_PARENT") && parent_data) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_PARENT") && parent_data) {
       data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
       data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == ATOM("IG_COORD_PARENT_X") && parent_data) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_PARENT_X") && parent_data) {
       data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
       data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[2];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[2];
-    } else if (type == ATOM("IG_COORD_PARENT_Y") && parent_data) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_PARENT_Y") && parent_data) {
       data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[3];
       data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
       data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[3];
       data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == ATOM("IG_COORD_SCREEN_BASE")) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_SCREEN_BASE")) {
       data->ccoords[0] += rendering->view->screen[0] + data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += rendering->view->screen[1] + data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[2];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
-    } else if (type == ATOM("IG_COORD_SCREEN")) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_SCREEN")) {
       data->ccoords[0] += data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[2];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
-    } else if (type == ATOM("IG_COORD_SCREEN_X")) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_SCREEN_X")) {
       data->ccoords[0] += data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[2];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[2];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[2];
-    } else if (type == ATOM("IG_COORD_SCREEN_Y")) {
+    } else if (type == ATOM(rendering->conn, "IG_COORD_SCREEN_Y")) {
       data->ccoords[0] += data->coords[i+0] * rendering->view->screen[3];
       data->ccoords[1] += data->coords[i+1] * rendering->view->screen[3];
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[3];
@@ -127,7 +127,7 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
         data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
 }
 
-void property_coords_print(Property *prop, FILE *fp) {
+void property_coords_print(XConnection *conn, Property *prop, FILE *fp) {
   float *values = (float *) prop->data;
   fprintf(fp, "%ld.%s=<coords>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {

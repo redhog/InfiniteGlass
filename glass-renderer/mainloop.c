@@ -21,7 +21,7 @@ void mainloop_install_event_handler(EventHandler *handler) {
   list_append(handler->mainloop->mainloop_event_handlers, (void *) handler);
   // Fetch existing mask and OR!!!
   if (handler->match_mask.xany.window) {
-    XSelectInput(handler->mainloop->display, handler->match_event.xany.window, handler->event_mask);
+    XSelectInput(handler->mainloop->conn->display, handler->match_event.xany.window, handler->event_mask);
   }
 }
 
@@ -78,7 +78,7 @@ void timeout_handle(Mainloop *mainloop) {
 }
 
 void mainloop_run(Mainloop *mainloop) {
-  int display_fd = ConnectionNumber(mainloop->display);
+  int display_fd = ConnectionNumber(mainloop->conn->display);
   fd_set in_fds;
   struct timeval timeout;
   XEvent e;
@@ -91,10 +91,10 @@ void mainloop_run(Mainloop *mainloop) {
 
     select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
     timeout_handle(mainloop);
-    while (XPending(mainloop->display)) {
-      XNextEvent(mainloop->display, &e);
+    while (XPending(mainloop->conn->display)) {
+      XNextEvent(mainloop->conn->display, &e);
       mainloop_event_handle(mainloop, &e);
-      XSync(mainloop->display, False);
+      XSync(mainloop->conn->display, False);
     }
   }
 }
@@ -103,12 +103,12 @@ void mainloop_exit(Mainloop *mainloop) {
   mainloop->exit_mainloop_flag = True;
 }
 
-Mainloop *mainloop_create(Display *display) {
+Mainloop *mainloop_create(XConnection *conn) {
   Mainloop *mainloop = malloc(sizeof(Mainloop));
   mainloop->mainloop_event_handlers = NULL;
   mainloop->timeout_handlers = NULL;
   mainloop->exit_mainloop_flag = False;
-  mainloop->display = display;
+  mainloop->conn = conn;
   return mainloop;
 }
 

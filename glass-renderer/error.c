@@ -4,11 +4,9 @@
 
 #define MAX_ERROR_TEXT_LENGTH 1024
 
-List *error_handlers = NULL;
-
-void throw(XErrorEvent *error) {
-  for (int i = error_handlers->count - 1; i > 0; i--) {
-    ErrorHandler *handler = (ErrorHandler *) error_handlers->entries[i];
+void throw(XConnection *conn, XErrorEvent *error) {
+  for (int i = conn->error_handlers->count - 1; i > 0; i--) {
+    ErrorHandler *handler = (ErrorHandler *) conn->error_handlers->entries[i];
     if (handler->handler && handler->handler(handler, error)) {
       break;
     }
@@ -16,25 +14,28 @@ void throw(XErrorEvent *error) {
 }
 
 int x_error_handler(Display* display, XErrorEvent* e) {
-  throw(e);
+  XConnection *conn = NULL;
+ 
+  XFindContext(display, DefaultRootWindow(display), x_conn_context, (XPointer *) &conn);
+  throw(conn, e);
   return 0;
 }
 
 
 void error_handler_push(ErrorHandler *handler) {
-  list_append(error_handlers, (void *) handler);
+  list_append(handler->conn->error_handlers, (void *) handler);
 }
 
-ErrorHandler *error_handler_pop() {
-  return (ErrorHandler *) list_pop(error_handlers);
+ErrorHandler *error_handler_pop(XConnection *conn) {
+  return (ErrorHandler *) list_pop(conn->error_handlers);
 }
 
-void print_error(XErrorEvent *event) {
+void print_error(XConnection *conn, XErrorEvent *event) {
   char error_text[MAX_ERROR_TEXT_LENGTH];
-  XGetErrorText(display, event->error_code, error_text, sizeof(error_text));
+  XGetErrorText(conn->display, event->error_code, error_text, sizeof(error_text));
   printf("Error:\n");
-  for (int i = 0; i < error_handlers->count; i++) {
-    ErrorHandler *handler = (ErrorHandler *) error_handlers->entries[i];
+  for (int i = 0; i < conn->error_handlers->count; i++) {
+    ErrorHandler *handler = (ErrorHandler *) conn->error_handlers->entries[i];
     if (handler->context) {
       printf("  %s\n", handler->context);
     }
@@ -48,15 +49,12 @@ void print_error(XErrorEvent *event) {
 }
 
 int error_handler_base_function(ErrorHandler *handler, XErrorEvent *event) {
-  print_error(event);
+  print_error(handler->conn, event);
   if (getenv("GLASS_ERROR_EXIT") != NULL || fork() == 0) {
     *((char *) 0) = 0;
   }
   return 1;
 }
-
-ErrorHandler error_handler_base = {&error_handler_base_function, NULL, "Base error context"};
-
 
 typedef struct {
   int has_error;
@@ -70,8 +68,9 @@ int error_handler_try(ErrorHandler *handler, XErrorEvent *event) {
   return 1;
 }
 
-void try() {
+void try(XConnection *conn) {
   ErrorHandler *handler = malloc(sizeof(ErrorHandler));
+  handler->conn = conn;
   handler->handler = &error_handler_try;
   handler->data = malloc(sizeof(ErrorTry));
   ((ErrorTry *) handler->data)->has_error = False;
@@ -79,8 +78,8 @@ void try() {
   error_handler_push(handler);
 }
 
-int catch(XErrorEvent *error) {
-  ErrorHandler *handler = error_handler_pop();
+int catch(XConnection *conn, XErrorEvent *error) {
+  ErrorHandler *handler = error_handler_pop(conn);
   ErrorTry *try = (ErrorTry *) handler->data;
   int res = try->has_error;
   *error = try->event;
@@ -89,8 +88,13 @@ int catch(XErrorEvent *error) {
   return !res;
 }
 
-void error_init() {
-  error_handlers = list_create();
-  error_handler_push(&error_handler_base);
+void error_init(XConnection *conn) {
+  conn->error_handlers = list_create();
+  ErrorHandler *error_handler = malloc(sizeof(ErrorHandler));
+  error_handler->conn = conn;
+  error_handler->handler = &error_handler_base_function;
+  error_handler->data = NULL;
+  error_handler->context = "Base error context";
+  error_handler_push(error_handler);
   XSetErrorHandler(&x_error_handler);
 }

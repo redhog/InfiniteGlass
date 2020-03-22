@@ -52,8 +52,8 @@ typedef struct {
 
 extern Bool init_shader();
 
-extern Shader *shader_loadX(Atom name);
-extern List *shader_load_all(void);
+extern Shader *shader_loadX(XConnection *conn, Atom name);
+extern List *shader_load_all(XConnection *conn);
 extern void shader_free(Shader *shader);
 extern void shader_free_all(List *shaders);
 extern Shader *shader_find(List *shaders, Atom name);

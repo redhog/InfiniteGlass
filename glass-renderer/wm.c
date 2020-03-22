@@ -42,7 +42,8 @@ Pointer mouse = {0, 0, 0, 0, 0, 0};
 List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
-Mainloop *mainloop;
+Mainloop *mainloop = NULL;
+XConnection *xconn = NULL;
 
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
@@ -60,12 +61,12 @@ void draw() {
       View *v = (View *) views->entries[idx];
       for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
         current_layer = v->layers[layer_idx];
-        view_draw(0, v, items_all, &filter_by_layer);
+        view_draw(xconn, 0, v, items_all, &filter_by_layer);
       }
     }
   }
   glFlush();
-  glXSwapBuffers(display, overlay);
+  glXSwapBuffers(xconn->display, xconn->overlay);
   draw_fps();
 }
 
@@ -107,11 +108,11 @@ void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
     View *v = (View *) views->entries[idx];
     for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
       current_layer = v->layers[layer_idx];
-      view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
+      view_draw_picking(xconn, picking_fb, v, items_all, &filter_by_layer);
     }
   }
   glFlush();
-  view_pick(picking_fb, view, x, y, winx, winy, item, parent_item);
+  view_pick(xconn, picking_fb, view, x, y, winx, winy, item, parent_item);
 }
 
 int init_picking() {
@@ -124,13 +125,13 @@ int init_picking() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, overlay_attr.width, overlay_attr.height, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, xconn->overlay_attr.width, xconn->overlay_attr.height, 0, GL_RGBA, GL_FLOAT, NULL);
   glGenFramebuffers(1, &picking_fb);
   glBindFramebuffer(GL_FRAMEBUFFER, picking_fb);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_tex, 0);
   glGenRenderbuffers(1, &depth_rb);
   glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, overlay_attr.width, overlay_attr.height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, xconn->overlay_attr.width, xconn->overlay_attr.height);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   switch(status) {
@@ -167,61 +168,61 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
   if (event->type == PropertyNotify) {
     Bool changed = True;
-    Item *item = (Item *) item_get_from_window(event->xproperty.window, False);
+    Item *item = (Item *) item_get_from_window(xconn, event->xproperty.window, False);
 
-    if (item && !item_properties_update(item, event->xproperty.atom)) {
+    if (item && !item_properties_update(xconn, item, event->xproperty.atom)) {
       changed = False;
     }
     
     if (changed) {
       // FIXME: Test that item != NULL here...
-      if (event->xproperty.window != root && item && event->xproperty.atom == ATOM("IG_SIZE")) {
+      if (event->xproperty.window != xconn->root && item && event->xproperty.atom == ATOM(xconn, "IG_SIZE")) {
         Atom type_return;
         int format_return;
         unsigned long nitems_return;
         unsigned long bytes_after_return;
         unsigned char *prop_return;
-        XGetWindowProperty(display, event->xproperty.window, ATOM("IG_SIZE"), 0, sizeof(long)*2, 0, AnyPropertyType,
+        XGetWindowProperty(xconn->display, event->xproperty.window, ATOM(xconn, "IG_SIZE"), 0, sizeof(long)*2, 0, AnyPropertyType,
                            &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
         if (type_return != None) {
           XWindowChanges values;
           values.width = ((long *) prop_return)[0];
           values.height = ((long *) prop_return)[1];
           XWindowAttributes attr;
-          XGetWindowAttributes(display, event->xproperty.window, &attr);
+          XGetWindowAttributes(xconn->display, event->xproperty.window, &attr);
           
           if (attr.width != values.width || attr.height != values.height) {
             // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
-            if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
+            if (values.width < 0 || values.height < 0 || values.width > xconn->overlay_attr.width * 5 || values.height > xconn->overlay_attr.height * 5) {
               long arr[2];
               arr[0] = attr.width;
               arr[1] = attr.height;
               DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", event->xproperty.window, attr.width, attr.height);
-              XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+              XChangeProperty(xconn->display, event->xproperty.window, ATOM(xconn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
             } else {
               DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", event->xproperty.window, values.width, values.height);
-              XConfigureWindow(display, event->xproperty.window, CWWidth | CWHeight, &values);
-              item_update((Item *) item);
+              XConfigureWindow(xconn->display, event->xproperty.window, CWWidth | CWHeight, &values);
+              item_update(xconn, (Item *) item);
             }
           }
         }
         XFree(prop_return);
-      } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_VIEWS")) {
+      } else if (event->xproperty.window == xconn->root && event->xproperty.atom == ATOM(xconn, "IG_VIEWS")) {
         view_free_all(views);
-        views = view_load_all();
-      } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_SHADERS")) {
+        views = view_load_all(xconn);
+      } else if (event->xproperty.window == xconn->root && event->xproperty.atom == ATOM(xconn, "IG_SHADERS")) {
         shader_free_all(shaders);
-        shaders = shader_load_all();       
-      } else if (event->xproperty.window == root) {
+        shaders = shader_load_all(xconn);       
+      } else if (event->xproperty.window == xconn->root) {
         Bool handled = False;
         if (views) {
           for (size_t idx = 0; idx < views->count; idx++) {
             View *v = (View *) views->entries[idx];
             if (event->xproperty.atom == v->attr_layer) {
-              view_load_layer(v);
+             view_load_layer(xconn, v);
               handled=True;
             } else if (event->xproperty.atom == v->attr_view) {
-              view_load_screen(v);
+              view_load_screen(xconn, v);
               handled=True;
             }
           }
@@ -229,17 +230,17 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         if (!handled) {
           if (DEBUG_ENABLED("event.other")) {
             DEBUG("event.other", "Ignored property event ");
-            print_xevent(stderr, display, event);
+            print_xevent(stderr, xconn->display, event);
           }
         }
       }
       trigger_draw();
     }
   } else if (cookie->type == GenericEvent) {
-    if (XGetEventData(display, cookie)) {
+    if (XGetEventData(xconn->display, cookie)) {
       if (cookie->evtype == XI_RawMotion) {
         // XIRawEvent *re = (XIRawEvent *) cookie->data;
-        XQueryPointer(display, root,
+        XQueryPointer(xconn->display, xconn->root,
                       &mouse.root, &mouse.win, &mouse.root_x, &mouse.root_y, &mouse.win_x, &mouse.win_y, &mouse.mask);
 
         int winx, winy;
@@ -247,19 +248,19 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         Item *parent_item;
 
         pick(mouse.root_x, mouse.root_y, &winx, &winy, &item, &parent_item);
-        if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
+        if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM(xconn, "IG_LAYER_MENU"))) {
           XWindowChanges values;
           values.x = mouse.root_x - winx;
           values.y = mouse.root_y - winy;
           values.stack_mode = Above;
           if (values.x != item->x || values.y != item->y) {
-            XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
+            XConfigureWindow(xconn->display, item->window, CWX | CWY | CWStackMode, &values);
             item->x = values.x;
             item->y = values.y;
           }
 
           if (parent_item && (parent_item != item->parent_item)) {
-            XChangeProperty(display, item->window, ATOM("IG_PARENT_WINDOW"), XA_WINDOW, 32, PropModeReplace, (void *) &parent_item->window, 1);
+            XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_PARENT_WINDOW"), XA_WINDOW, 32, PropModeReplace, (void *) &parent_item->window, 1);
             item->parent_item = parent_item;
           }
           
@@ -271,28 +272,28 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       } else {
         DEBUG("event", "Unknown XGenericEventCookie\n");
       }
-      XFreeEventData(display, cookie);
+      XFreeEventData(xconn->display, cookie);
     } else {
       DEBUG("event", "Unknown GenericEvent without EventData\n");
     }
-  } else if (event->type == damage_event + XDamageNotify) {
+  } else if (event->type == xconn->damage_event + XDamageNotify) {
     DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
     // Subtract all the damage, repairing the window.
-    Item *item = item_get_from_window(((XDamageNotifyEvent *) event)->drawable, False);
+    Item *item = item_get_from_window(xconn, ((XDamageNotifyEvent *) event)->drawable, False);
     if (item) {
       item->draw_cycles_left = AUTOMATIC_REDRAWS;
       trigger_draw();
     }
-  } else if (event->type == shape_event + ShapeNotify) {
+  } else if (event->type == xconn->shape_event + ShapeNotify) {
    //fprintf(stderr, "Received ShapeNotify\n");
    //XShapeEvent *event = (XShapeEvent*) &e;
   } else if (event->type == ConfigureRequest) {
-    Item *item = item_get_from_window(event->xconfigurerequest.window, False);
+    Item *item = item_get_from_window(xconn, event->xconfigurerequest.window, False);
     if (!item) {
       XWindowChanges values;
       values.width = event->xconfigurerequest.width;
       values.height = event->xconfigurerequest.height;
-      XConfigureWindow(display, event->xconfigurerequest.window, CWWidth | CWHeight, &values);
+      XConfigureWindow(xconn->display, event->xconfigurerequest.window, CWWidth | CWHeight, &values);
     } else {
       if (item->prop_size) {
         unsigned long width = item->prop_size->values.dwords[0];
@@ -320,12 +321,12 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         for (int i = 0; i < 4; i++) {
           coords_arr[i] = *(long *) &coords[i];
         }
-        XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+        XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
 
         long arr[2] = {width, height};
-        XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+        XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 
-        item_update((Item *) item);
+        item_update(xconn, (Item *) item);
         GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
         trigger_draw();
       } else {
@@ -339,8 +340,8 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           event->xconfigure.y,
           event->xconfigure.width,
           event->xconfigure.height);
-    Item *item = item_get_from_window(event->xconfigure.window, False);
-    if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
+    Item *item = item_get_from_window(xconn, event->xconfigure.window, False);
+    if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM(xconn, "IG_LAYER_MENU")) {
       float coords[4];
       View *v = NULL;
       if (views) {
@@ -352,10 +353,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         coords[2] = (v->screen[2] * (float) event->xconfigure.width) / (float) v->width;
         coords[3] = (v->screen[3] * (float) event->xconfigure.height) / (float) v->height;
       } else {
-        coords[0] = ((float) (event->xconfigure.x - overlay_attr.x)) / (float) overlay_attr.width;
-        coords[1] = ((float) (overlay_attr.height - event->xconfigure.y - overlay_attr.y)) / (float) overlay_attr.width;
-        coords[2] = ((float) (event->xconfigure.width)) / (float) overlay_attr.width;
-        coords[3] = ((float) (event->xconfigure.height)) / (float) overlay_attr.width;
+        coords[0] = ((float) (event->xconfigure.x - xconn->overlay_attr.x)) / (float) xconn->overlay_attr.width;
+        coords[1] = ((float) (xconn->overlay_attr.height - event->xconfigure.y - xconn->overlay_attr.y)) / (float) xconn->overlay_attr.width;
+        coords[2] = ((float) (event->xconfigure.width)) / (float) xconn->overlay_attr.width;
+        coords[3] = ((float) (event->xconfigure.height)) / (float) xconn->overlay_attr.width;
       }
 
       float old_coords_nan[4] = {nanf("initial"), nanf("initial"), nanf("initial"), nanf("initial")};
@@ -376,52 +377,52 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       for (int i = 0; i < 4; i++) {
         coords_arr[i] = *(long *) &coords[i];
       }
-      XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+      XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
 
       long arr[2] = {event->xconfigure.width, event->xconfigure.height};
-      XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-      item_update((Item *) item);
+      XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+      item_update(xconn, (Item *) item);
       trigger_draw();
     }
     // FIXME: Update width/height regardless of window type...
   } else if (event->type == DestroyNotify) {
-    Item * item = item_get_from_window(event->xdestroywindow.window, False);
+    Item * item = item_get_from_window(xconn, event->xdestroywindow.window, False);
     if (item) {
-      item_remove(item);
+      item_remove(xconn, item);
     }
   } else if (event->type == ReparentNotify) {
-    Item * item = item_get_from_window(event->xreparent.window, False);
+    Item * item = item_get_from_window(xconn, event->xreparent.window, False);
     if (item) {
-      if (event->xreparent.parent == root) {
-        item_update(item);
+      if (event->xreparent.parent == xconn->root) {
+        item_update(xconn, item);
       } else {
-        item_remove(item);
+        item_remove(xconn, item);
       }
       trigger_draw();
     }
   } else if (event->type == MapNotify) {
-    if (event->xmap.window != overlay) {
+    if (event->xmap.window != xconn->overlay) {
       DEBUG("event.map", "MapNotify %ld\n", event->xmap.window);
-      Item *item = item_get_from_window(event->xmap.window, True);
+      Item *item = item_get_from_window(xconn, event->xmap.window, True);
       item->is_mapped = True;
-      item_update(item);
+      item_update(xconn, item);
       trigger_draw();
 
       char *window_name;
-      if (XFetchName(display, event->xmap.window, &window_name) && window_name) {
+      if (XFetchName(xconn->display, event->xmap.window, &window_name) && window_name) {
         EVENTLOG("window", "{\"window\": %ld, \"name\": \"%s\"}\n", event->xmap.window, window_name);
         XFree(window_name);
       }        
     }
  } else if (event->type == UnmapNotify) {
-    Item *item = item_get_from_window(event->xunmap.window, False);
+    Item *item = item_get_from_window(xconn, event->xunmap.window, False);
     if (item) {
       item->is_mapped = False;
       trigger_draw();
     }
   } else if (event->type == MapRequest) {
-    XMapWindow(display, event->xmaprequest.window);
-  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG")) {
+    XMapWindow(xconn->display, event->xmaprequest.window);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM(xconn, "IG_DEBUG")) {
     printf("DEBUG LIST VIEWS\n");
     if (views) {
       for (size_t idx = 0; idx < views->count; idx++) {
@@ -434,13 +435,13 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     printf("DEBUG LIST ITEMS\n");
     for (size_t idx = 0; idx < items_all->count; idx++) {
       Item *item = (Item *) items_all->entries[idx];
-      item_print(item);
+      item_print(xconn, item);
     }
     printf("DEBUG LIST ITEMS END\n");
-  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM(xconn, "IG_EXIT")) {
     DEBUG("exit", "Exiting by request");
     exit(1);
-  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_PICKING")) {
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM(xconn, "IG_DEBUG_PICKING")) {
     debug_picking = !debug_picking;
     trigger_draw();
   } else {
@@ -449,7 +450,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
   if (EVENTLOG_ENABLED("processing_time")) {
     EVENTLOG("processing_time", "{\"processing_time\": %lu, ", get_timestamp() - start_time);
-    print_xevent_fragment(eventlog, display, event);
+    print_xevent_fragment(eventlog, xconn->display, event);
     EVENTLOG("processing_time", "}\n");
   }
 
@@ -474,40 +475,40 @@ void exit_saving_profile_info(int sig) {
 int main() {
   signal(SIGUSR1, exit_saving_profile_info);
   
-  if (!xinit()) return 1;
+  if (!(xconn = xinit())) return 1;
   if (!init_view()) return 1;
   if (!init_selection()) return 1;
-  if (!glinit(overlay)) return 1;
+  if (!glinit(xconn, xconn->overlay)) return 1;
   if (!init_picking()) return 1;
   if (!init_shader()) return 1;
   if (!init_items()) return 1;
 
-  mainloop = mainloop_create(display);
+  mainloop = mainloop_create(xconn);
 
   manager_selection_create(mainloop,
-                           XInternAtom(display, "WM_S0", False),
+                           ATOM(xconn, "WM_S0"),
                            &selection_sn_handler,
                            &selection_sn_clear,
                            NULL, True, 0, 0);
   
   DEBUG("start", "Initialized X and GL.\n");
 
-  views = view_load_all();
-  shaders = shader_load_all();
+  views = view_load_all(xconn);
+  shaders = shader_load_all(xconn);
 
   DEBUG("XXXXXXXXXXX1", "views=%ld shaders=%ld\n", views, shaders);
   
-  property_type_register(&property_atom);
-  property_type_register(&property_window);
-  property_type_register(&property_int);
-  property_type_register(&property_float);
-  property_type_register(&property_coords);
-  property_type_register(&property_svg);
-  property_type_register(&property_wm_hints_icon);
-  property_type_register(&property_net_wm_icon);
-  property_type_register(&property_item);
+  property_type_register(xconn, &property_atom);
+  property_type_register(xconn, &property_window);
+  property_type_register(xconn, &property_int);
+  property_type_register(xconn, &property_float);
+  property_type_register(xconn, &property_coords);
+  property_type_register(xconn, &property_svg);
+  property_type_register(xconn, &property_wm_hints_icon);
+  property_type_register(xconn, &property_net_wm_icon);
+  property_type_register(xconn, &property_item);
 
-  items_get_from_toplevel_windows();
+  items_get_from_toplevel_windows(xconn);
  
   GL_CHECK_ERROR("start1", "");
 

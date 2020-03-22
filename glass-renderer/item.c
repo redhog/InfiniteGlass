@@ -19,7 +19,7 @@ Bool init_items() {
 }
 
 
-void item_constructor(Item *item, Window window) {
+void item_constructor(XConnection *conn, Item *item, Window window) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
@@ -38,61 +38,61 @@ void item_constructor(Item *item, Window window) {
   item->draw_cycles_left = 0;
   item->parent_item = NULL;
   
-  if (window == root) {
-    Atom layer = ATOM("IG_LAYER_ROOT");
-    XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
-    Atom shader = ATOM("IG_SHADER_ROOT");
-    XChangeProperty(display, window, ATOM("IG_SHADER"), XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
+  if (window == conn->root) {
+    Atom layer = ATOM(conn, "IG_LAYER_ROOT");
+    XChangeProperty(conn->display, window, ATOM(conn, "IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+    Atom shader = ATOM(conn, "IG_SHADER_ROOT");
+    XChangeProperty(conn->display, window, ATOM(conn, "IG_SHADER"), XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
     item->is_mapped = True;
   } else {
-    XGetWindowProperty(display, window, ATOM("IG_LAYER"), 0, sizeof(Atom), 0, XA_ATOM,
+    XGetWindowProperty(conn->display, window, ATOM(conn, "IG_LAYER"), 0, sizeof(Atom), 0, XA_ATOM,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
     if (type_return == None) {
-      Atom layer = ATOM("IG_LAYER_DESKTOP");
-      XGetWindowAttributes(display, window, &item->attr);
+      Atom layer = ATOM(conn, "IG_LAYER_DESKTOP");
+      XGetWindowAttributes(conn->display, window, &item->attr);
       if (item->attr.override_redirect) {
-        layer = ATOM("IG_LAYER_MENU");
+        layer = ATOM(conn, "IG_LAYER_MENU");
       }
-      XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+      XChangeProperty(conn->display, window, ATOM(conn, "IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
     }
     XFree(prop_return);
 
     long value = 1;
-    XChangeProperty(display, window, ATOM("WM_STATE"), XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
+    XChangeProperty(conn->display, window, ATOM(conn, "WM_STATE"), XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
 
-    XGetWindowAttributes(display, window, &item->attr);
+    XGetWindowAttributes(conn->display, window, &item->attr);
     item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
 
-    XSelectInput(display, window, PropertyChangeMask);
-    item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
+    XSelectInput(conn->display, window, PropertyChangeMask);
+    item->damage = XDamageCreate(conn->display, item->window, XDamageReportNonEmpty);
   }
 
-  XGetWindowProperty(display, window, ATOM("IG_DRAW_TYPE"), 0, sizeof(Atom), 0, XA_ATOM,
+  XGetWindowProperty(conn->display, window, ATOM(conn, "IG_DRAW_TYPE"), 0, sizeof(Atom), 0, XA_ATOM,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
-    Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
-    XChangeProperty(display, window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
+    Atom draw_type = ATOM(conn, "IG_DRAW_TYPE_POINTS");
+    XChangeProperty(conn->display, window, ATOM(conn, "IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
   }
   XFree(prop_return);
   
-  item->properties = properties_load(window);
-  item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
-  item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
-  item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
-  item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
-  item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
-  item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
-  item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
+  item->properties = properties_load(conn, window);
+  item->prop_layer = properties_find(item->properties, ATOM(conn, "IG_LAYER"));
+  item->prop_item_layer = properties_find(item->properties, ATOM(conn, "IG_ITEM_LAYER"));
+  item->prop_shader = properties_find(item->properties, ATOM(conn, "IG_SHADER"));
+  item->prop_size = properties_find(item->properties, ATOM(conn, "IG_SIZE"));
+  item->prop_coords = properties_find(item->properties, ATOM(conn, "IG_COORDS"));
+  item->prop_coord_types = properties_find(item->properties, ATOM(conn, "IG_COORD_TYPES"));
+  item->prop_draw_type = properties_find(item->properties, ATOM(conn, "IG_DRAW_TYPE"));
   
-  if (window != root) {
-    item_update_space_pos_from_window(item);
+  if (window != conn->root) {
+    item_update_space_pos_from_window(conn, item);
   }
   
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
 }
-void item_destructor(Item *item) {
-  texture_destroy(&item->window_texture);
+void item_destructor(XConnection *conn, Item *item) {
+  texture_destroy(conn, &item->window_texture);
 }
 void item_draw_subs(Rendering *rendering) {
   Item *parent_item = rendering->parent_item;
@@ -110,8 +110,9 @@ void item_draw_subs(Rendering *rendering) {
   rendering->item = item;
 }
 void item_draw(Rendering *rendering) {
+  XConnection *conn = rendering->conn;
   rendering->texture_unit = 0;
-  rendering->shader = item_get_shader(rendering->item);
+  rendering->shader = item_get_shader(conn, rendering->item);
   if (!rendering->shader) return;
   glUseProgram(rendering->shader->program);
   shader_reset_uniforms(rendering->shader);
@@ -123,7 +124,7 @@ void item_draw(Rendering *rendering) {
     
     if (!rendering->view->picking) {
       if (item->draw_cycles_left > 0) {
-        texture_from_pixmap(&item->window_texture, item->window_pixmap);
+        texture_from_pixmap(conn, &item->window_texture, item->window_pixmap);
         item->draw_cycles_left--;
       }
      
@@ -165,50 +166,50 @@ void item_draw(Rendering *rendering) {
     
     DEBUG("draw_arrays", "%ld.draw(%ld items)\n", rendering->item->window, rendering->array_length);
 
-    Atom prop_draw_type = ATOM("IG_DRAW_TYPE_POINTS");
+    Atom prop_draw_type = ATOM(conn, "IG_DRAW_TYPE_POINTS");
     GLuint draw_type = GL_POINTS;
     if (item->prop_draw_type) {
       prop_draw_type = (Atom) item->prop_draw_type->values.dwords[0];
-      if (prop_draw_type == ATOM("IG_DRAW_TYPE_POINTS")) draw_type = GL_POINTS;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINES")) draw_type = GL_LINES;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINE_STRIP")) draw_type = GL_LINE_STRIP;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINES_ADJACENCY")) draw_type = GL_LINES_ADJACENCY;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINE_STRIP_ADJACENCY")) draw_type = GL_LINE_STRIP_ADJACENCY;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLES")) draw_type = GL_TRIANGLES;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_STRIP")) draw_type = GL_TRIANGLE_STRIP;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_FAN")) draw_type = GL_TRIANGLE_FAN;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLES_ADJACENCY")) draw_type = GL_TRIANGLES_ADJACENCY;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY")) draw_type = GL_TRIANGLE_STRIP_ADJACENCY;
+      if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_POINTS")) draw_type = GL_POINTS;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_LINES")) draw_type = GL_LINES;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_LINE_STRIP")) draw_type = GL_LINE_STRIP;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_LINES_ADJACENCY")) draw_type = GL_LINES_ADJACENCY;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_LINE_STRIP_ADJACENCY")) draw_type = GL_LINE_STRIP_ADJACENCY;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_TRIANGLES")) draw_type = GL_TRIANGLES;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_TRIANGLE_STRIP")) draw_type = GL_TRIANGLE_STRIP;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_TRIANGLE_FAN")) draw_type = GL_TRIANGLE_FAN;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_TRIANGLES_ADJACENCY")) draw_type = GL_TRIANGLES_ADJACENCY;
+      else if (prop_draw_type == ATOM(conn, "IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY")) draw_type = GL_TRIANGLE_STRIP_ADJACENCY;
     }  
     glDrawArrays(draw_type, 0, rendering->array_length);
 
     GL_CHECK_ERROR("item_draw3", "%ld.%s: %s(%ld)",
                    item->window, rendering->shader->name_str,
-                   XGetAtomName(display, prop_draw_type), rendering->array_length);
+                   XGetAtomName(conn->display, prop_draw_type), rendering->array_length);
 
     if (!rendering->view->picking) {
       XErrorEvent error;
-      x_try();
-      XDamageSubtract(display, item->damage, None, None);
-      x_catch(&error);
+      x_try(conn);
+      XDamageSubtract(conn->display, item->damage, None, None);
+      x_catch(conn, &error);
     }
     item_draw_subs(rendering);
   }
 }
 
-void item_update(Item *item) {
-  if (item->window == root) return;
+void item_update(XConnection *conn, Item *item) {
+  if (item->window == conn->root) return;
   if (!item->is_mapped) return;
   item->_is_mapped = item->is_mapped;
 
-  x_push_error_context("item_update_pixmap");
+  x_push_error_context(conn, "item_update_pixmap");
   
   // FIXME: free all other stuff if already created
 
   if (item->window_pixmap) {
-    XFreePixmap(display, item->window_pixmap);
+    XFreePixmap(conn->display, item->window_pixmap);
   }
-  item->window_pixmap = XCompositeNameWindowPixmap(display, item->window);
+  item->window_pixmap = XCompositeNameWindowPixmap(conn->display, item->window);
 
   if (DEBUG_ENABLED("window.update")) {
     Window root_return;
@@ -219,40 +220,40 @@ void item_update(Item *item) {
     unsigned int border_width_return;
     unsigned int depth_return;
 
-    int res = XGetGeometry(display, item->window_pixmap,
+    int res = XGetGeometry(conn->display, item->window_pixmap,
                            &root_return, &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return);
     DEBUG("window.update",
           "XGetGeometry(pixmap=%lu) = status=%d, root=%lu, x=%u, y=%u, w=%u, h=%u border=%u depth=%u\n",
            item->window_pixmap, res, root_return, x_return, y_return, width_return, height_return, border_width_return, depth_return);
   }
   
-  texture_from_pixmap(&item->window_texture, item->window_pixmap);
+  texture_from_pixmap(conn, &item->window_texture, item->window_pixmap);
 
   GL_CHECK_ERROR("item_update_pixmap2", "%ld", item->window);
 
-  x_pop_error_context();  
+  x_pop_error_context(conn);  
 }
 
-Bool item_properties_update(Item *item, Atom name) {
-  Bool res = properties_update(item->properties, name);
+Bool item_properties_update(XConnection *conn, Item *item, Atom name) {
+  Bool res = properties_update(conn, item->properties, name);
   if (res) {
-    if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
-    if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
-    if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
-    if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
-    if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
-    if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
-    if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
+    if (name == ATOM(conn, "IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM(conn, "IG_LAYER"));
+    if (name == ATOM(conn, "IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM(conn, "IG_ITEM_LAYER"));
+    if (name == ATOM(conn, "IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM(conn, "IG_SHADER"));
+    if (name == ATOM(conn, "IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM(conn, "IG_SIZE"));
+    if (name == ATOM(conn, "IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM(conn, "IG_COORDS"));
+    if (name == ATOM(conn, "IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM(conn, "IG_COORD_TYPES"));
+    if (name == ATOM(conn, "IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM(conn, "IG_DRAW_TYPE"));
   }
   return res;
 }
 
-Shader *item_get_shader(Item *item) {
-  Atom shader = ATOM("IG_SHADER_DEFAULT");
+Shader *item_get_shader(XConnection *conn, Item *item) {
+  Atom shader = ATOM(conn, "IG_SHADER_DEFAULT");
   if (item->prop_shader) shader = item->prop_shader->values.dwords[0];
   return shader_find(shaders, shader);
 }
-void item_print(Item *item) {
+void item_print(XConnection *conn, Item *item) {
   float _coords[] = {-1.,-1.,-1.,-1.};
   float *coords = _coords;
   long width = -1, height = -1;
@@ -273,17 +274,17 @@ void item_print(Item *item) {
          coords[2],
          coords[3]);
   printf("    window=%ld\n", item->window);
-  properties_print(item->properties, stderr);
+  properties_print(conn, item->properties, stderr);
 }
 
-Item *item_create(Window window) {
+Item *item_create(XConnection *conn, Window window) {
   Item *item = (Item *) malloc(sizeof(Item));
 
   item->is_mapped = False;
   item->_is_mapped = False;
-  item_constructor(item, window);
+  item_constructor(conn, item, window);
   item_add(item);
-  item_update(item);
+  item_update(conn, item);
   return item;
 }
 
@@ -292,15 +293,15 @@ void item_add(Item *item) {
   list_append(items_all, (void *) item);
 }
 
-void item_remove(Item *item) {
+void item_remove(XConnection *conn, Item *item) {
   list_remove(items_all, (void *) item);
-  item_destructor(item);
+  item_destructor(conn, item);
 }
 
-void item_update_space_pos_from_window(Item *item) {
-  if (item->window == root) return;
+void item_update_space_pos_from_window(XConnection *conn, Item *item) {
+  if (item->window == conn->root) return;
   
-  XGetWindowAttributes(display, item->window, &item->attr);
+  XGetWindowAttributes(conn->display, item->window, &item->attr);
 
   item->x                   = item->attr.x;
   item->y                   = item->attr.y;
@@ -310,14 +311,14 @@ void item_update_space_pos_from_window(Item *item) {
 
   long arr[2] = {width, height};
   DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
-  XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+  XChangeProperty(conn->display, item->window, ATOM(conn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
-  XGetWindowProperty(display, item->window, ATOM("IG_COORDS"), 0, sizeof(float)*4, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, item->window, ATOM(conn, "IG_COORDS"), 0, sizeof(float)*4, 0, AnyPropertyType,
                        &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
     XFree(prop_return);
@@ -335,14 +336,14 @@ void item_update_space_pos_from_window(Item *item) {
       DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
       DEBUG("position", "XXX %f*%d/%d=%f, %f*%d/%d=%f\n", v->screen[2], width, v->width, coords[2], v->screen[3], height, v->height, coords[3]);
     } else {
-      coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
-      coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
-      coords[2] = ((float) (width)) / (float) overlay_attr.width;
-      coords[3] = ((float) (height)) / (float) overlay_attr.width;
+      coords[0] = ((float) (item->x - conn->overlay_attr.x)) / (float) conn->overlay_attr.width;
+      coords[1] = ((float) (conn->overlay_attr.height - item->y - conn->overlay_attr.y)) / (float) conn->overlay_attr.width;
+      coords[2] = ((float) (width)) / (float) conn->overlay_attr.width;
+      coords[3] = ((float) (height)) / (float) conn->overlay_attr.width;
       DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
     }
 
-    if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
+    if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM(conn, "IG_LAYER_MENU")) {
       DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
             item->window,
             item->attr.x, item->attr.y, item->attr.width, item->attr.height,
@@ -354,11 +355,11 @@ void item_update_space_pos_from_window(Item *item) {
     for (int i = 0; i < 4; i++) {
       coords_arr[i] = *(long *) &coords[i];
     }
-    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+    XChangeProperty(conn->display, item->window, ATOM(conn, "IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
   }
 }
 
-Item *item_get_from_window(Window window, int create) {
+Item *item_get_from_window(XConnection *conn, Window window, int create) {
   if (items_all) {
     for (size_t idx = 0; idx < items_all->count; idx++) {
       Item *item = (Item *) items_all->entries[idx];
@@ -368,38 +369,38 @@ Item *item_get_from_window(Window window, int create) {
   if (!create) return NULL;
   
   DEBUG("window.add", "Adding window %ld\n", window);
-  return item_create(window);
+  return item_create(conn, window);
 }
 
-Item *item_get_from_widget(Item *parent, int widget) {
+Item *item_get_from_widget(XConnection *conn, Item *parent, int widget) {
   if (!parent || !widget) return parent;
   widget--;
   if (widget < parent->properties->properties->count) {
     Property *prop = (Property *) parent->properties->properties->entries[widget];
     if (prop->type_handler != &property_item) return NULL;
-    return item_get_from_window((Window) prop->values.dwords[0], False);
+    return item_get_from_window(conn, (Window) prop->values.dwords[0], False);
   }
   widget -= parent->properties->properties->count;
   if ((parent != root_item) && (widget < root_item->properties->properties->count)) {
     Property *prop = (Property *) root_item->properties->properties->entries[widget];
     if (prop->type_handler != &property_item) return NULL;
-    return item_get_from_window((Window) prop->values.dwords[0], False);
+    return item_get_from_window(conn, (Window) prop->values.dwords[0], False);
   }
   return NULL;
 }
 
-void items_get_from_toplevel_windows() {
-  XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
+void items_get_from_toplevel_windows(XConnection *conn) {
+  XCompositeRedirectSubwindows(conn->display, conn->root, CompositeRedirectAutomatic);
 
-  root_item = item_get_from_window(root, True);
+  root_item = item_get_from_window(conn, conn->root, True);
   
-  XGrabServer(display);
+  XGrabServer(conn->display);
   
   Window returned_root, returned_parent;
   Window* top_level_windows;
   unsigned int num_top_level_windows;
-  XQueryTree(display,
-             root,
+  XQueryTree(conn->display,
+             conn->root,
              &returned_root,
              &returned_parent,
              &top_level_windows,
@@ -407,12 +408,12 @@ void items_get_from_toplevel_windows() {
 
   for (unsigned int i = 0; i < num_top_level_windows; ++i) {
     XWindowAttributes attr;
-    XGetWindowAttributes(display, top_level_windows[i], &attr);
+    XGetWindowAttributes(conn->display, top_level_windows[i], &attr);
     if (attr.map_state == IsViewable) {
-      item_get_from_window(top_level_windows[i], True);
+      item_get_from_window(conn, top_level_windows[i], True);
     }
   }
 
   XFree(top_level_windows);
-  XUngrabServer(display);
+  XUngrabServer(conn->display);
 }

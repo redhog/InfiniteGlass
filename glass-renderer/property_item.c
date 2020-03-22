@@ -5,11 +5,14 @@
 #include "debug.h"
 #include "xapi.h"
 
-void property_item_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "IG_ITEM", False); prop->name = AnyPropertyType; }
-void property_item_load(Property *prop) {}
-void property_item_free(Property *prop) {}
+void property_item_init(XConnection *conn, PropertyTypeHandler *prop) {
+  prop->type = XInternAtom(conn->display, "IG_ITEM", False);
+  prop->name = AnyPropertyType;
+}
+void property_item_load(XConnection *conn, Property *prop) {}
+void property_item_free(XConnection *conn, Property *prop) {}
 void property_item_to_gl(Property *prop, Rendering *rendering) {}
-void property_item_print(Property *prop, FILE *fp) {
+void property_item_print(XConnection *conn, Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<item>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
@@ -24,7 +27,7 @@ void property_item_load_program(Property *prop, Rendering *rendering) {
 void property_item_free_program(Property *prop, size_t index) {
 }
 void property_item_draw(Property *prop, Rendering *rendering) {
-  rendering->item = item_get_from_window((Window) prop->values.dwords[0], True);
+  rendering->item = item_get_from_window(rendering->conn, (Window) prop->values.dwords[0], True);
   if (rendering->item == rendering->parent_item) return;
   if (!rendering->item->prop_item_layer) return;
   if (!rendering->item->prop_item_layer->values.dwords) return;

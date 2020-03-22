@@ -20,8 +20,11 @@ typedef struct {
   GLint icon_mask_enabled_location;
 } WmHintsPropertyProgramData;
 
-void property_wm_hints_icon_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "WM_HINTS", False); prop->name = AnyPropertyType; }
-void property_wm_hints_icon_load(Property *prop) {
+void property_wm_hints_icon_init(XConnection *conn, PropertyTypeHandler *prop) {
+  prop->type = XInternAtom(conn->display, "WM_HINTS", False);
+  prop->name = AnyPropertyType;
+}
+void property_wm_hints_icon_load(XConnection *conn, Property *prop) {
   prop->data = malloc(sizeof(WmHintsPropertyData));
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
   
@@ -30,29 +33,29 @@ void property_wm_hints_icon_load(Property *prop) {
 
   data->wm_hints.flags = 0;
   XErrorEvent error;
-  x_try();
-  XWMHints *wm_hints = XGetWMHints(display, prop->window);
+  x_try(conn);
+  XWMHints *wm_hints = XGetWMHints(conn->display, prop->window);
   if (wm_hints) {
     data->wm_hints = *wm_hints;
     XFree(wm_hints);
   }
-  if (!x_catch(&error)) {
+  if (!x_catch(conn, &error)) {
     DEBUG("icon", "Unable to load WM_HINTS: %lu", prop->window);
   }
 
   if (data->wm_hints.flags & IconPixmapHint) {
-    texture_from_pixmap(&data->icon_texture, data->wm_hints.icon_pixmap);
+    texture_from_pixmap(conn, &data->icon_texture, data->wm_hints.icon_pixmap);
   }
   if (data->wm_hints.flags & IconMaskHint) {
-    texture_from_pixmap(&data->icon_mask_texture, data->wm_hints.icon_mask);
+    texture_from_pixmap(conn, &data->icon_mask_texture, data->wm_hints.icon_mask);
   }
   GL_CHECK_ERROR("icon_update_pixmap2", "%ld", prop->window);
 }
 
-void property_wm_hints_icon_free(Property *prop) {
+void property_wm_hints_icon_free(XConnection *conn, Property *prop) {
   WmHintsPropertyData *data = (WmHintsPropertyData *) prop->data;
-  texture_destroy(&data->icon_texture);
-  texture_destroy(&data->icon_mask_texture);
+  texture_destroy(conn, &data->icon_texture);
+  texture_destroy(conn, &data->icon_mask_texture);
   free(prop->data);
 }
 void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
@@ -79,7 +82,7 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
     rendering->texture_unit++;
   }
 }
-void property_wm_hints_icon_print(Property *prop, FILE *fp) {
+void property_wm_hints_icon_print(XConnection *conn, Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<WM_HINTS icon>\n", prop->window, prop->name_str);
 }
 void property_wm_hints_load_program(Property *prop, Rendering *rendering) {

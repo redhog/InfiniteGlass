@@ -4,9 +4,9 @@
 #include "debug.h"
 #include "xapi.h"
 
-void property_atom_init(PropertyTypeHandler *prop) { prop->type = XA_ATOM; prop->name = AnyPropertyType; }
-void property_atom_load(Property *prop) {}
-void property_atom_free(Property *prop) {}
+void property_atom_init(XConnection *conn, PropertyTypeHandler *prop) { prop->type = XA_ATOM; prop->name = AnyPropertyType; }
+void property_atom_load(XConnection *conn, Property *prop) {}
+void property_atom_free(XConnection *conn, Property *prop) {}
 void property_atom_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
@@ -22,11 +22,11 @@ void property_atom_to_gl(Property *prop, Rendering *rendering) {
   } else {
   }
 }
-void property_atom_print(Property *prop, FILE *fp) {
+void property_atom_print(XConnection *conn, Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<atom>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
-    char *name = XGetAtomName(display, (Atom) prop->values.dwords[i]);
+    char *name = XGetAtomName(conn->display, (Atom) prop->values.dwords[i]);
     fprintf(fp, "%s", name);
     XFree(name);
   }

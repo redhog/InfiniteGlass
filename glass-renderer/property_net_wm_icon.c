@@ -12,8 +12,11 @@ typedef struct {
   GLint enabled_location;
 } NetWmIconPropertyProgramData;
 
-void property_net_wm_icon_init(PropertyTypeHandler *prop) { prop->type = XA_CARDINAL; prop->name = XInternAtom(display, "_NET_WM_ICON", False); }
-void property_net_wm_icon_load(Property *prop) {
+void property_net_wm_icon_init(XConnection *conn, PropertyTypeHandler *prop) {
+  prop->type = XA_CARDINAL;
+  prop->name = XInternAtom(conn->display, "_NET_WM_ICON", False);
+}
+void property_net_wm_icon_load(XConnection *conn, Property *prop) {
   prop->data = malloc(sizeof(NetWmIconPropertyData));
   NetWmIconPropertyData *data = (NetWmIconPropertyData *) prop->data;
 
@@ -22,9 +25,9 @@ void property_net_wm_icon_load(Property *prop) {
   GL_CHECK_ERROR("property_net_wm_icon_load", "%ld", prop->window);
 }
 
-void property_net_wm_icon_free(Property *prop) {
+void property_net_wm_icon_free(XConnection *conn, Property *prop) {
   NetWmIconPropertyData *data = (NetWmIconPropertyData *) prop->data;
-  texture_destroy(&data->texture);
+  texture_destroy(conn, &data->texture);
   free(prop->data);
 }
 void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
@@ -42,7 +45,7 @@ void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
   glBindSampler(rendering->texture_unit, 0);
   rendering->texture_unit++;
 }
-void property_net_wm_icon_print(Property *prop, FILE *fp) {
+void property_net_wm_icon_print(XConnection *conn, Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<_NET_WM_ICON icon>\n", prop->window, prop->name_str);
 }
 void property_net_wm_load_program(Property *prop, Rendering *rendering) {

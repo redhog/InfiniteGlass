@@ -47,19 +47,19 @@ extern Item *root_item;
 
 extern Bool init_items();
 
-extern Item *item_create(Window window);
+extern Item *item_create(XConnection *conn, Window window);
 extern void item_add(Item *item);
-extern void item_remove(Item *item);
+extern void item_remove(XConnection *conn, Item *item);
 
 extern void item_draw(Rendering *rendering);
-extern void item_update(Item *item);
-extern Bool item_properties_update(Item *item, Atom name);
-extern Shader *item_get_shader(Item *item);
-extern void item_print(Item *);
+extern void item_update(XConnection *conn, Item *item);
+extern Bool item_properties_update(XConnection *conn, Item *item, Atom name);
+extern Shader *item_get_shader(XConnection *conn, Item *item);
+extern void item_print(XConnection *conn, Item *);
 
-extern void item_update_space_pos_from_window(Item *item);
-extern Item *item_get_from_window(Window window, int create);
-extern Item *item_get_from_widget(Item *parent, int widget);
-extern void items_get_from_toplevel_windows();
+extern void item_update_space_pos_from_window(XConnection *conn, Item *item);
+extern Item *item_get_from_window(XConnection *conn, Window window, int create);
+extern Item *item_get_from_widget(XConnection *conn, Item *parent, int widget);
+extern void items_get_from_toplevel_windows(XConnection *conn);
 
 #endif

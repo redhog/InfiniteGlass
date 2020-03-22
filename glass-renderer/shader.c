@@ -103,16 +103,16 @@ char *atom_load_string(Display *display, Window window, Atom name) {
   return (char *) prop_return;
 }
 
-Shader *shader_loadX(Atom name) {
+Shader *shader_loadX(XConnection *conn, Atom name) {
   Shader *shader = malloc(sizeof(Shader));  
   shader->name = name;
-  shader->name_str = XGetAtomName(display, name);
+  shader->name_str = XGetAtomName(conn->display, name);
   
-  shader->geometry = atom_append(display, shader->name, "_GEOMETRY");
-  shader->vertex = atom_append(display, shader->name, "_VERTEX");
-  shader->fragment = atom_append(display, shader->name, "_FRAGMENT");
+  shader->geometry = atom_append(conn->display, shader->name, "_GEOMETRY");
+  shader->vertex = atom_append(conn->display, shader->name, "_VERTEX");
+  shader->fragment = atom_append(conn->display, shader->name, "_FRAGMENT");
 
-  shader->geometry_src = atom_load_string(display, root, shader->geometry);
+  shader->geometry_src = atom_load_string(conn->display, conn->root, shader->geometry);
   shader->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
   glShaderSource(shader->geometry_shader, 1, (const GLchar**)&(shader->geometry_src), 0);
   glCompileShader(shader->geometry_shader);
@@ -122,7 +122,7 @@ Shader *shader_loadX(Atom name) {
     return NULL;
   }
 
-  shader->vertex_src = atom_load_string(display, root, shader->vertex);
+  shader->vertex_src = atom_load_string(conn->display, conn->root, shader->vertex);
   shader->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(shader->vertex_shader, 1, (const GLchar**)&(shader->vertex_src), 0);
   glCompileShader(shader->vertex_shader);
@@ -133,7 +133,7 @@ Shader *shader_loadX(Atom name) {
     return NULL;
   }
 
-  shader->fragment_src = atom_load_string(display, root, shader->fragment);
+  shader->fragment_src = atom_load_string(conn->display, conn->root, shader->fragment);
   shader->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(shader->fragment_shader, 1, (const GLchar**)&(shader->fragment_src), 0);
   glCompileShader(shader->fragment_shader);
@@ -185,7 +185,7 @@ Shader *shader_loadX(Atom name) {
     if (memcmp("atom_", uniform->uniform_name, strlen("atom_")) == 0) {
       uniform->type = UNIFORM_ATOM;
       uniform->base_name = uniform->uniform_name + strlen("atom_");
-      glUniform1i(i, XInternAtom(display, uniform->base_name, False));
+      glUniform1i(i, XInternAtom(conn->display, uniform->base_name, False));
     } else {
       uniform->type = UNIFORM_PROPERTY;
       uniform->base_name = uniform->uniform_name;
@@ -197,14 +197,14 @@ Shader *shader_loadX(Atom name) {
 }
 
 
-List *shader_load_all(void) {
+List *shader_load_all(XConnection *conn) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, ATOM("IG_SHADERS"), 0, 100000, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, conn->root, ATOM(conn, "IG_SHADERS"), 0, 100000, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
     XFree(prop_return);
@@ -214,7 +214,7 @@ List *shader_load_all(void) {
   List *res = list_create();
   
   for (int i=0; i < nitems_return; i++) {
-    Shader *shader = shader_loadX(((Atom *) prop_return)[i]);
+    Shader *shader = shader_loadX(conn, ((Atom *) prop_return)[i]);
     if (shader) {
       list_append(res, (void *) shader);
     }
@@ -265,7 +265,7 @@ Shader *shader_find(List *shaders, Atom name) {
 void shader_print(Shader *shader) {
   fprintf(stderr,
           "%s:\nGeometry\n%s\n\nVertex:\n%s\n\nFragment:\n%s\n\n",
-          XGetAtomName(display, shader->name),
+          shader->name_str,
           shader->geometry_src,
           shader->vertex_src,
           shader->fragment_src);

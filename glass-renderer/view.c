@@ -56,8 +56,9 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
   *screeny = outvec[1];
 }
 
-void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
+void view_abstract_draw(XConnection *conn, View *view, List *items, ItemFilter *filter) {
   Rendering rendering;
+  rendering.conn = conn;
   rendering.shader = NULL;
   rendering.view = view;
   rendering.array_length = 1;
@@ -67,62 +68,62 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (!filter || filter(item)) {
-      try();
+      try(conn);
       rendering.parent_item = NULL;
       rendering.item = item;
       item_draw(&rendering);
       XErrorEvent e;
-      if (!catch(&e)) {
+      if (!catch(conn, &e)) {
         if (   (   e.error_code == BadWindow
                 || e.error_code == BadDrawable)
             && e.resourceid == item->window) {
           if (!to_delete) to_delete = list_create();
           list_append(to_delete, item);
         } else {
-          throw(&e);
+          throw(conn, &e);
         }
       }
     }
   }
   if (to_delete) {
     for (size_t idx = 0; idx < to_delete->count; idx++) {
-      item_remove((Item *) to_delete->entries[idx]);
+      item_remove(conn, (Item *) to_delete->entries[idx]);
     }
     list_destroy(to_delete);
   }
 }
 
-void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
-  GL_CHECK_ERROR("draw0", "%s", XGetAtomName(display, view->name));
+void view_draw(XConnection *conn, GLint fb, View *view, List *items, ItemFilter *filter) {
+  GL_CHECK_ERROR("draw0", "%s", XGetAtomName(conn->display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glEnablei(GL_BLEND, 0);
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
-  GL_CHECK_ERROR("draw1", "%s", XGetAtomName(display, view->name));
+  GL_CHECK_ERROR("draw1", "%s", XGetAtomName(conn->display, view->name));
   view->picking = debug_picking;
-  view_abstract_draw(view, items, filter);
-  GL_CHECK_ERROR("draw2", "%s", XGetAtomName(display, view->name));
+  view_abstract_draw(conn, view, items, filter);
+  GL_CHECK_ERROR("draw2", "%s", XGetAtomName(conn->display, view->name));
 }
 
-void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
-  GL_CHECK_ERROR("view_draw_picking1", "%s", XGetAtomName(display, view->name));
+void view_draw_picking(XConnection *conn, GLint fb, View *view, List *items, ItemFilter *filter) {
+  GL_CHECK_ERROR("view_draw_picking1", "%s", XGetAtomName(conn->display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
 
   glEnablei(GL_BLEND, 0);
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
   view->picking = 1;
-  view_abstract_draw(view, items, filter);
-  GL_CHECK_ERROR("view_draw_picking2", "%s", XGetAtomName(display, view->name));
+  view_abstract_draw(conn, view, items, filter);
+  GL_CHECK_ERROR("view_draw_picking2", "%s", XGetAtomName(conn->display, view->name));
 }
   
-void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
+void view_pick(XConnection *conn, GLint fb, View *view, int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   float data[4];
   Window window = None;
   int widget = 0;
   memset(data, 0, sizeof(data));
   glReadPixels(x, view->height - y, 1, 1, GL_RGBA, GL_FLOAT, (GLvoid *) data);
-  GL_CHECK_ERROR("pick2", "%s", XGetAtomName(display, view->name));
+  GL_CHECK_ERROR("pick2", "%s", XGetAtomName(conn->display, view->name));
   DEBUG("pick", "Pick %d,%d -> %f,%f,%f,%f\n", x, y, data[0], data[1], data[2], data[3]);
   *winx = 0;
   *winy = 0;
@@ -133,10 +134,10 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
     // for the encoding of this
     window = (Window) (((0b111111 & (int) data[2]) << 23) + (int) data[3]);
     widget = (((int) data[2]) >> 6);
-    *item = item_get_from_window(window, False);
+    *item = item_get_from_window(conn, window, False);
     if (item && widget) {
       *parent_item = *item;
-      *item = item_get_from_widget(*item, widget);
+      *item = item_get_from_widget(conn, *item, widget);
     }
     if (*item && (*item)->prop_size) {
       unsigned long width = (*item)->prop_size->values.dwords[0];
@@ -153,28 +154,32 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
   }
 }
 
-void view_load_layer(View *view) {
+void view_load_layer(XConnection *conn, View *view) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom) * 1000, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, conn->root, view->attr_layer, 0, sizeof(Atom) * 1000, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
     view->layers = (Atom *) prop_return;
     view->nr_layers = nitems_return;
+    view->layers_str = malloc(sizeof(char *) * nitems_return);
+    for (size_t idx = 0; idx < view->nr_layers; idx++) {
+      view->layers_str[idx] = XGetAtomName(conn->display, view->layers[idx]);
+    }
   }
 }
-void view_load_screen(View *view) {
+void view_load_screen(XConnection *conn, View *view) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(float)*4, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, conn->root, view->attr_view, 0, sizeof(float)*4, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
     for (int i = 0; i < 4; i++) {
@@ -185,60 +190,61 @@ void view_load_screen(View *view) {
     }
     if (view->screen[2] == 0.0) {
       view->screen[2] = view->screen[3] * (float) view->width / (float) view->height;     
-      view_update(view);
+      view_update(conn, view);
     } else if (view->screen[3] == 0.0) {
       view->screen[3] = view->screen[2] * (float) view->height / (float) view->width;
-      view_update(view);
+      view_update(conn, view);
     }
   }
   XFree(prop_return);
 }
-void view_load_size(View *view) {
+void view_load_size(XConnection *conn, View *view) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, view->attr_size, 0, sizeof(long)*2, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, conn->root, view->attr_size, 0, sizeof(long)*2, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return != None) {
     view->width = ((long *) prop_return)[0];
     view->height = ((long *) prop_return)[1];
   } else {
-    view->width = overlay_attr.width;
-    view->height = overlay_attr.height;
+    view->width = conn->overlay_attr.width;
+    view->height = conn->overlay_attr.height;
     long arr[2];
     arr[0] = view->width;
     arr[1] = view->height;
-    XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+    XChangeProperty(conn->display, conn->root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
   }
   XFree(prop_return);
 }
 
-View *view_load(Atom name) {
+View *view_load(XConnection *conn, Atom name) {
   View *view = malloc(sizeof(View));
   view->layers = NULL;
   view->nr_layers = 0;
   view->name = name;
-  view->attr_layer = atom_append(display, name, "_LAYER");
-  view->attr_view = atom_append(display, name, "_VIEW");
-  view->attr_size = atom_append(display, name, "_SIZE");
-  view_load_size(view);
-  view_load_layer(view);
-  view_load_screen(view);
+  view->name_str = XGetAtomName(conn->display, name);
+  view->attr_layer = atom_append(conn->display, name, "_LAYER");
+  view->attr_view = atom_append(conn->display, name, "_VIEW");
+  view->attr_size = atom_append(conn->display, name, "_SIZE");
+  view_load_size(conn, view);
+  view_load_layer(conn, view);
+  view_load_screen(conn, view);
   
   return view;
 }
 
-List *view_load_all(void) {
+List *view_load_all(XConnection *conn) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
-  XGetWindowProperty(display, root, ATOM("IG_VIEWS"), 0, 100000, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, conn->root, ATOM(conn, "IG_VIEWS"), 0, 100000, 0, AnyPropertyType,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
     XFree(prop_return);
@@ -248,7 +254,7 @@ List *view_load_all(void) {
   List *res = list_create();
   
   for (int i=0; i < nitems_return; i++) {
-    list_append(res, (void *) view_load(((Atom *) prop_return)[i]));
+    list_append(res, (void *) view_load(conn, ((Atom *) prop_return)[i]));
   }
   XFree(prop_return);
 
@@ -258,7 +264,7 @@ List *view_load_all(void) {
      
      DEBUG("layers",
            "VIEW: view=%s screen=%f,%f,%f,%f\n",
-           XGetAtomName(display, v->name),
+           XGetAtomName(conn->display, v->name),
            v->screen[0],
            v->screen[1],
            v->screen[2],
@@ -270,7 +276,14 @@ List *view_load_all(void) {
 }
 
 void view_free(View *view) {
-  if (view->layers) XFree(view->layers);
+  XFree(view->name_str);
+  if (view->layers) {
+    XFree(view->layers);
+    for (size_t idx = 0; idx < view->nr_layers; idx++) {
+      XFree(view->layers_str[idx]);
+    }
+    free(view->layers_str);
+  }
   free(view);
 }
 
@@ -282,7 +295,7 @@ void view_free_all(List *views) {
   list_destroy(views);
 }
 
-void view_update(View *view) {
+void view_update(XConnection *conn, View *view) {
  if (   (view->_screen[0] != view->screen[0])
      || (view->_screen[1] != view->screen[1])
      || (view->_screen[2] != view->screen[2])
@@ -292,7 +305,7 @@ void view_update(View *view) {
       *(float *) (arr + i) = view->screen[i];
       view->_screen[i] = view->screen[i];
     }
-    XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
+    XChangeProperty(conn->display, conn->root, view->attr_view, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
 }
 
@@ -310,9 +323,9 @@ View *view_find(List *views, Atom name) {
 }
 
 void view_print(View *v) {
-  printf("%s: layers=", XGetAtomName(display, v->name));
+  printf("%s: layers=", v->name_str);
   for (size_t idx = 0; idx < v->nr_layers; idx++) {
-    printf("%s%s", idx == 0 ? "" : ",", XGetAtomName(display, v->layers[idx]));
+    printf("%s%s", idx == 0 ? "" : ",", v->layers_str[idx]);
   }  
   printf(" screen=%f,%f,%f,%f size=%d,%d\n",
          v->screen[0],

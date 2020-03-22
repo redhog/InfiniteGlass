@@ -53,14 +53,14 @@ void texture_from_cairo_surface(Texture *texture, cairo_surface_t *surface) {
   GL_CHECK_ERROR("texture_from_cairo_surface2", "");
 }
 
-void texture_from_glpixmap(Texture *texture) {
+void texture_from_glpixmap(XConnection *conn, Texture *texture) {
   if (!texture->texture_id) {
     glGenTextures(1, &texture->texture_id);
     GL_CHECK_ERROR("texture_from_pixmap1", "");
   }
   glBindTexture(GL_TEXTURE_2D, texture->texture_id);
   GL_CHECK_ERROR("texture_from_pixmap2", "");
-  glXBindTexImageEXT(display, texture->glxpixmap, GLX_FRONT_EXT, NULL);
+  conn->glXBindTexImageEXT(conn->display, texture->glxpixmap, GLX_FRONT_EXT, NULL);
   GL_CHECK_ERROR("texture_from_pixmap3", "");
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   GL_CHECK_ERROR("texture_from_pixmap4", "");
@@ -68,9 +68,9 @@ void texture_from_glpixmap(Texture *texture) {
   GL_CHECK_ERROR("texture_from_pixmap5", "");
 }
 
-void texture_from_pixmap(Texture *texture, Pixmap pixmap) {
+void texture_from_pixmap(XConnection *conn, Texture *texture, Pixmap pixmap) {
   if (texture->glxpixmap) {
-    glXDestroyGLXPixmap(display, texture->glxpixmap);
+    glXDestroyGLXPixmap(conn->display, texture->glxpixmap);
     texture->glxpixmap = 0;
   }
   
@@ -90,14 +90,14 @@ void texture_from_pixmap(Texture *texture, Pixmap pixmap) {
   unsigned int height_return;
   unsigned int border_width_return;
   unsigned int depth_return;
-  if (!XGetGeometry(display, pixmap, &root_return,
+  if (!XGetGeometry(conn->display, pixmap, &root_return,
                     &x_return, &y_return, &width_return, &height_return, &border_width_return, &depth_return)) {
     return;
   }
   
-  texture->glxpixmap = glXCreatePixmap(display, configs[0], pixmap, pixmap_attribs);
+  texture->glxpixmap = glXCreatePixmap(conn->display, configs[0], pixmap, pixmap_attribs);
 
-  texture_from_glpixmap(texture);
+  texture_from_glpixmap(conn, texture);
 }
 
 void texture_initialize(Texture *texture) {
@@ -105,9 +105,9 @@ void texture_initialize(Texture *texture) {
   texture->texture_id = 0;
 }
 
-void texture_destroy(Texture *texture) {
+void texture_destroy(XConnection *conn, Texture *texture) {
   if (texture->glxpixmap) {
-    glXDestroyGLXPixmap(display, texture->glxpixmap);
+    glXDestroyGLXPixmap(conn->display, texture->glxpixmap);
     texture->glxpixmap = 0;
   }
   if (texture->texture_id) {

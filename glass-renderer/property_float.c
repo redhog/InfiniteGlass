@@ -5,15 +5,15 @@
 #include <math.h>
 
 #define FL(value) *((float *) &value)
-void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; prop->name = AnyPropertyType; }
-void property_float_load(Property *prop) {
+void property_float_init(XConnection *conn, PropertyTypeHandler *prop) { prop->type = XA_FLOAT; prop->name = AnyPropertyType; }
+void property_float_load(XConnection *conn, Property *prop) {
   prop->data = realloc(prop->data, sizeof(float) * prop->nitems);
   for (int i = 0; i < prop->nitems; i++) {
     ((float *) prop->data)[i] = FL(prop->values.dwords[i]);
   }
 }
 
-void property_float_free(Property *prop) {
+void property_float_free(XConnection *conn, Property *prop) {
   if (prop->data) free(prop->data);
 }
 
@@ -51,7 +51,7 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
     }
   }
 }
-void property_float_print(Property *prop, FILE *fp) {
+void property_float_print(XConnection *conn, Property *prop, FILE *fp) {
   float *values = (float *) prop->data;
   fprintf(fp, "%ld.%s=<float>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {

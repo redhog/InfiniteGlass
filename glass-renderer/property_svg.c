@@ -130,8 +130,8 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
 }
 
 
-void property_svg_init(PropertyTypeHandler *prop) { prop->type = ATOM("IG_SVG"); prop->name = AnyPropertyType; }
-void property_svg_load(Property *prop) {
+void property_svg_init(XConnection *conn, PropertyTypeHandler *prop) { prop->type = ATOM(conn, "IG_SVG"); prop->name = AnyPropertyType; }
+void property_svg_load(XConnection *conn, Property *prop) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   if (!data) {
     prop->data = malloc(sizeof(SvgPropertyData));
@@ -158,12 +158,12 @@ void property_svg_load(Property *prop) {
   rsvg_handle_get_dimensions(data->rsvg, &data->dimension);  
 }
 
-void property_svg_free(Property *prop) {
+void property_svg_free(XConnection *conn, Property *prop) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   if (!data) return;
   if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
   if (data->surface) cairo_surface_destroy(data->surface);
-  texture_destroy(&data->texture);
+  texture_destroy(conn, &data->texture);
   if (data->rsvg) g_object_unref(data->rsvg);
   data->cairo_ctx = NULL;
   data->surface = NULL;
@@ -200,7 +200,7 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   
   GL_CHECK_ERROR("property_svg_to_gl2", "%ld", prop->window);
 }
-void property_svg_print(Property *prop, FILE *fp) {
+void property_svg_print(XConnection *conn, Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<svg>\n", prop->window, prop->name_str);
 }
 void property_svg_load_program(Property *prop, Rendering *rendering) {

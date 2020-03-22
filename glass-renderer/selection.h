@@ -18,6 +18,8 @@ typedef Bool SelectionHandler(Selection *selection, XEvent *event);
 typedef void SelectionClearHandler(Selection *selection);
 
 struct SelectionStruct {
+ Mainloop *mainloop;
+ 
  SelectionHandler *handler;
  SelectionClearHandler *clear;
  void *data;

@@ -4,9 +4,9 @@
 #include "debug.h"
 #include "xapi.h"
 
-void property_window_init(PropertyTypeHandler *prop) { prop->type = XA_WINDOW; prop->name = AnyPropertyType; }
-void property_window_load(Property *prop) {}
-void property_window_free(Property *prop) {}
+void property_window_init(XConnection *conn, PropertyTypeHandler *prop) { prop->type = XA_WINDOW; prop->name = AnyPropertyType; }
+void property_window_load(XConnection *conn, Property *prop) {}
+void property_window_free(XConnection *conn, Property *prop) {}
 void property_window_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
@@ -20,7 +20,7 @@ void property_window_to_gl(Property *prop, Rendering *rendering) {
   } else {
   }
 }
-void property_window_print(Property *prop, FILE *fp) {
+void property_window_print(XConnection *conn, Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<window>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");

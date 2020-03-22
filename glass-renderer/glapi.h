@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include "xapi.h"
 #include "debug.h"
 
 GLXFBConfig *configs;
@@ -28,6 +29,6 @@ GLXFBConfig *configs;
   errCode != GL_NO_ERROR; \
 })
 
-int glinit(Window window);
+extern int glinit(XConnection *conn, Window window);
 
 #endif

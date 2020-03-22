@@ -9,7 +9,7 @@ typedef struct {
   List *mainloop_event_handlers;
   List *timeout_handlers;
   Bool exit_mainloop_flag;
-  Display *display;
+  XConnection *conn;
 } Mainloop;
 
 #define event_mask_unset(member) memset(&member, 0x00, sizeof(member));
@@ -50,7 +50,7 @@ extern Bool mainloop_event_handle(Mainloop *mainloop, XEvent *event);
 extern void mainloop_run(Mainloop *mainloop);
 extern void mainloop_exit(Mainloop *mainloop);
 
-extern Mainloop *mainloop_create(Display *display);
+extern Mainloop *mainloop_create(XConnection *conn);
 extern void mainloop_destroy(Mainloop *mainloop);
 
 #endif

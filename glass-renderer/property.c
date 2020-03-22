@@ -3,11 +3,11 @@
 #include "rendering.h"
 #include "debug.h"
 
-Property *property_allocate(Properties *properties, Atom name) {
+Property *property_allocate(XConnection *conn, Properties *properties, Atom name) {
   Property *prop = malloc(sizeof(Property));
   prop->window = properties->window;
   prop->name = name;
-  prop->name_str = XGetAtomName(display, prop->name);
+  prop->name_str = XGetAtomName(conn->display, prop->name);
   prop->type = None;
   prop->values.bytes = NULL;
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
@@ -20,10 +20,11 @@ Property *property_allocate(Properties *properties, Atom name) {
   }
   prop->data = NULL;
   prop->type_handler = NULL;
+  prop->type_str = NULL;
   return prop;
 }
 
-Bool property_load(Property *prop) {
+Bool property_load(XConnection *conn, Property *prop) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
@@ -33,15 +34,15 @@ Bool property_load(Property *prop) {
   int old_format = prop->format;
   prop->values.bytes = NULL;
 
-  XGetWindowProperty(display, prop->window, prop->name, 0, 0, 0, AnyPropertyType,
+  XGetWindowProperty(conn->display, prop->window, prop->name, 0, 0, 0, AnyPropertyType,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
   XFree(prop_return);
   if (prop->type == None) {
-    if (prop->type_handler) prop->type_handler->free(prop);
+    if (prop->type_handler) prop->type_handler->free(conn, prop);
     if (old) { XFree(old); return True; }
     return False;
   }
-  XGetWindowProperty(display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
+  XGetWindowProperty(conn->display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
 
@@ -49,17 +50,18 @@ Bool property_load(Property *prop) {
   if (!changed) return False;
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
-  if (prop->type_handler) prop->type_handler->load(prop);
+  if (prop->type_handler) prop->type_handler->load(conn, prop);
+  prop->type_str = XGetAtomName(conn->display, prop->type);
   if (DEBUG_ENABLED(prop->name_str)) {
     DEBUG(prop->name_str, "");
-    property_print(prop, stderr);
+    property_print(conn, prop, stderr);
   }
   
   return True;
 }
 
-void property_free(Property *prop) {
-  if (prop->type_handler) prop->type_handler->free(prop);
+void property_free(XConnection *conn, Property *prop) {
+  if (prop->type_handler) prop->type_handler->free(conn, prop);
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     if (prop->type_handler) prop->type_handler->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
@@ -67,6 +69,7 @@ void property_free(Property *prop) {
   }
   if (prop->name_str) XFree(prop->name_str);
   if (prop->values.bytes) XFree(prop->values.bytes);
+  if (prop->type_str) XFree(prop->type_str);
   free(prop);
 }
 
@@ -124,50 +127,48 @@ void property_draw(Property *prop, Rendering *rendering) {
   type->draw(prop, rendering);
 }
 
-void property_print(Property *prop, FILE *fp) {
+void property_print(XConnection *conn, Property *prop, FILE *fp) {
   PropertyTypeHandler *type = prop->type_handler;
   if (type) {
-    type->print(prop, fp);
+    type->print(conn, prop, fp);
   } else {
-    char *type_name = XGetAtomName(display, prop->type);
-    fprintf(fp, "%ld.%s=<%s>\n", prop->window, prop->name_str, type_name);
-    XFree(type_name);
+    fprintf(fp, "%ld.%s=<%s>\n", prop->window, prop->name_str, prop->type_str);
   }
 }
 
-Properties *properties_load(Window window) {
+Properties *properties_load(XConnection *conn, Window window) {
   Properties *properties = malloc(sizeof(Properties));
   properties->window = window;
   properties->programs_pos = 0; 
   properties->properties = list_create();
   int nr_props;
-  Atom *prop_names = XListProperties(display, window, &nr_props);
+  Atom *prop_names = XListProperties(conn->display, window, &nr_props);
   for (int i = 0; i < nr_props; i++) {
-    Property *prop = property_allocate(properties, prop_names[i]);
-    property_load(prop);
+    Property *prop = property_allocate(conn, properties, prop_names[i]);
+    property_load(conn, prop);
     list_append(properties->properties, (void *) prop);
   }
   XFree(prop_names);
   return properties;
 }
 
-Bool properties_update(Properties *properties, Atom name) {
+Bool properties_update(XConnection *conn, Properties *properties, Atom name) {
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
     if (prop->name == name) {
-      return property_load(prop);
+     return property_load(conn, prop);
     }   
   }
-  Property *prop = property_allocate(properties, name);
-  property_load(prop);
+  Property *prop = property_allocate(conn, properties, name);
+  property_load(conn, prop);
   list_append(properties->properties, (void *) prop);
   return True;
 }
 
-void properties_free(Properties *properties) {
+void properties_free(XConnection *conn, Properties *properties) {
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
-    property_free(prop);
+    property_free(conn, prop);
   }
   list_destroy(properties->properties);
   free(properties);
@@ -225,10 +226,10 @@ void properties_draw(Properties *properties, Rendering *rendering) {
   }
 }
 
-void properties_print(Properties *properties, FILE *fp) {
+void properties_print(XConnection *conn, Properties *properties, FILE *fp) {
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
-    property_print(prop, fp);
+    property_print(conn, prop, fp);
   }
 }
 
@@ -244,11 +245,11 @@ Property *properties_find(Properties *properties, Atom name) {
 
 List *property_types = NULL;
 
-void property_type_register(PropertyTypeHandler *handler) {
+void property_type_register(XConnection *conn, PropertyTypeHandler *handler) {
   if (!property_types) {
     property_types = list_create();
   }
-  handler->init(handler);
+  handler->init(conn, handler);
   list_append(property_types, (void *) handler);
 }
 
