@@ -37,6 +37,7 @@ void item_constructor(XConnection *conn, Item *item, Window window) {
   item->prop_draw_type = NULL;
   item->draw_cycles_left = 0;
   item->parent_item = NULL;
+  item->is_clean = False;
   
   if (window == conn->root) {
     Atom layer = ATOM(conn, "IG_LAYER_ROOT");
@@ -111,6 +112,11 @@ void item_draw_subs(Rendering *rendering) {
 }
 void item_draw(Rendering *rendering) {
   XConnection *conn = rendering->conn;
+
+  if (!rendering->item->is_clean) {
+    item_updateX(rendering->conn, rendering->item);
+  }
+  
   rendering->texture_unit = 0;
   rendering->shader = item_get_shader(conn, rendering->item);
   if (!rendering->shader) return;
@@ -197,10 +203,11 @@ void item_draw(Rendering *rendering) {
   }
 }
 
-void item_update(XConnection *conn, Item *item) {
+void item_updateX(XConnection *conn, Item *item) {
   if (item->window == conn->root) return;
   if (!item->is_mapped) return;
   item->_is_mapped = item->is_mapped;
+  item->is_clean = True;
 
   x_push_error_context(conn, "item_update_pixmap");
   
@@ -232,6 +239,10 @@ void item_update(XConnection *conn, Item *item) {
   GL_CHECK_ERROR("item_update_pixmap2", "%ld", item->window);
 
   x_pop_error_context(conn);  
+}
+
+void item_trigger_update(Item *item) {
+  item->is_clean = False;
 }
 
 Bool item_properties_update(XConnection *conn, Item *item, Atom name) {
@@ -284,7 +295,6 @@ Item *item_create(XConnection *conn, Window window) {
   item->_is_mapped = False;
   item_constructor(conn, item, window);
   item_add(item);
-  item_update(conn, item);
   return item;
 }
 

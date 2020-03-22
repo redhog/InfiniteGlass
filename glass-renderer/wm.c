@@ -157,7 +157,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
             } else {
               DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", event->xproperty.window, values.width, values.height);
               XConfigureWindow(xconn->display, event->xproperty.window, CWWidth | CWHeight, &values);
-              item_update(xconn, (Item *) item);
+              item_trigger_update((Item *) item);
             }
           }
         }
@@ -273,8 +273,8 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         long arr[2] = {width, height};
         XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 
-        item_update(xconn, (Item *) item);
-        GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
+        item_trigger_update((Item *) item);
+        GL_CHECK_ERROR("item_trigger_update_pixmap", "%ld", item->window);
         trigger_draw();
       } else {
         DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", event->xconfigurerequest.window);
@@ -328,7 +328,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
       long arr[2] = {event->xconfigure.width, event->xconfigure.height};
       XChangeProperty(xconn->display, item->window, ATOM(xconn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-      item_update(xconn, (Item *) item);
+      item_trigger_update((Item *) item);
       trigger_draw();
     }
     // FIXME: Update width/height regardless of window type...
@@ -341,7 +341,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     Item * item = item_get_from_window(xconn, event->xreparent.window, False);
     if (item) {
       if (event->xreparent.parent == xconn->root) {
-        item_update(xconn, item);
+        item_trigger_update(item);
       } else {
         item_remove(xconn, item);
       }
@@ -352,7 +352,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       DEBUG("event.map", "MapNotify %ld\n", event->xmap.window);
       Item *item = item_get_from_window(xconn, event->xmap.window, True);
       item->is_mapped = True;
-      item_update(xconn, item);
+      item_trigger_update(item);
       trigger_draw();
 
       char *window_name;
