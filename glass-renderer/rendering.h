@@ -6,6 +6,7 @@
 #include "list.h"
 #include "glapi.h"
 #include "xapi.h"
+#include "mainloop.h"
 
 struct PropertyStruct;
 typedef struct PropertyStruct Property;
@@ -30,5 +31,8 @@ typedef struct {
  GLuint texture_unit;
  size_t array_length;
 } Rendering;
+
+void trigger_draw();
+void init_rendering(Mainloop *mainloop);
 
 #endif

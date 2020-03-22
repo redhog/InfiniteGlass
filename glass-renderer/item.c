@@ -417,3 +417,8 @@ void items_get_from_toplevel_windows(XConnection *conn) {
   XFree(top_level_windows);
   XUngrabServer(conn->display);
 }
+
+Bool item_filter_by_layer(void *data, Item *item) {
+  Atom current_layer = *(Atom *) data;
+  return item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == current_layer;
+}

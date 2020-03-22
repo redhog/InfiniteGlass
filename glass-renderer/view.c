@@ -67,7 +67,7 @@ void view_abstract_draw(XConnection *conn, View *view, List *items, ItemFilter *
   if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
-    if (!filter || filter(item)) {
+    if (!filter || filter->fn(filter->data, item)) {
       try(conn);
       rendering.parent_item = NULL;
       rendering.item = item;

@@ -5,7 +5,12 @@
 #include "list.h"
 #include "view_type.h"
 
-typedef Bool ItemFilter(Item *item);
+
+typedef Bool ItemFilterFN(void *data, Item *item);
+typedef struct {
+  ItemFilterFN *fn;
+  void *data;
+} ItemFilter;
 
 extern Bool debug_picking;
 

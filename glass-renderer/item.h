@@ -62,4 +62,6 @@ extern Item *item_get_from_window(XConnection *conn, Window window, int create);
 extern Item *item_get_from_widget(XConnection *conn, Item *parent, int widget);
 extern void items_get_from_toplevel_windows(XConnection *conn);
 
+extern Bool item_filter_by_layer(void *data, Item *item);
+
 #endif

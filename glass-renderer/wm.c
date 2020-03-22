@@ -31,12 +31,10 @@
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
 #include "property_item.h"
+#include "rendering.h"
 #include <X11/extensions/XInput2.h>
 #include <math.h>
 
-
-
-#define AUTOMATIC_REDRAWS 10
 
 Pointer mouse = {0, 0, 0, 0, 0, 0};
 List *views = NULL;
@@ -44,52 +42,6 @@ List *shaders = NULL;
 GLuint picking_fb;
 Mainloop *mainloop = NULL;
 XConnection *xconn = NULL;
-
-Atom current_layer;
-Bool filter_by_layer(Item *item) {
-  return item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == current_layer;
-}
-
-void draw() {
-  draw_fps_start();
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glDisable(GL_SCISSOR_TEST);
-  glClearColor(0., 0., 0., 1.0);
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-  if (views) {
-    for (size_t idx = 0; idx < views->count; idx++) {
-      View *v = (View *) views->entries[idx];
-      for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
-        current_layer = v->layers[layer_idx];
-        view_draw(xconn, 0, v, items_all, &filter_by_layer);
-      }
-    }
-  }
-  glFlush();
-  glXSwapBuffers(xconn->display, xconn->overlay);
-  draw_fps();
-}
-
-Bool drawn_this_cycle = False;
-int draw_cycles_left = 0;
-
-void cycle_draw() {
-  if (draw_cycles_left == 0) {
-    drawn_this_cycle = False;
-    return;
-  }
-  draw();
-  drawn_this_cycle = True;
-  draw_cycles_left--;
-}
-
-void trigger_draw() {
-  draw_cycles_left = AUTOMATIC_REDRAWS;
-  if (!drawn_this_cycle) {
-    draw();
-    drawn_this_cycle = True;
-  }
-}
 
 void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   if (!views) {
@@ -107,8 +59,11 @@ void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   for (size_t idx = 0; idx < views->count; idx++) {
     View *v = (View *) views->entries[idx];
     for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
-      current_layer = v->layers[layer_idx];
-      view_draw_picking(xconn, picking_fb, v, items_all, &filter_by_layer);
+      ItemFilter filter = {
+        &item_filter_by_layer,
+        &v->layers[layer_idx]
+      };
+      view_draw_picking(xconn, picking_fb, v, items_all, &filter);
     }
   }
   glFlush();
@@ -275,14 +230,6 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       XFreeEventData(xconn->display, cookie);
     } else {
       DEBUG("event", "Unknown GenericEvent without EventData\n");
-    }
-  } else if (event->type == xconn->damage_event + XDamageNotify) {
-    DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
-    // Subtract all the damage, repairing the window.
-    Item *item = item_get_from_window(xconn, ((XDamageNotifyEvent *) event)->drawable, False);
-    if (item) {
-      item->draw_cycles_left = AUTOMATIC_REDRAWS;
-      trigger_draw();
     }
   } else if (event->type == xconn->shape_event + ShapeNotify) {
    //fprintf(stderr, "Received ShapeNotify\n");
@@ -457,10 +404,6 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   return True;
 }
 
-void draw_timeout_handler_function(TimeoutHandler *handler, struct timeval *current_time) {
-  cycle_draw();
-}
-
 
 void exit_saving_profile_info(int sig) {
   fprintf(stderr, "Exiting on SIGUSR1\n");
@@ -512,23 +455,12 @@ int main() {
  
   GL_CHECK_ERROR("start1", "");
 
-  trigger_draw();
+  init_rendering(mainloop);
 
   GL_CHECK_ERROR("start2", "");
 
   DEBUG("start", "Renderer started.\n");
-  
-  TimeoutHandler draw_timeout_handler;
-  draw_timeout_handler.mainloop = mainloop;
-  draw_timeout_handler.interval.tv_sec = 0;
-  draw_timeout_handler.interval.tv_usec = 30000;
-  if (gettimeofday(&draw_timeout_handler.next, NULL) != 0) {
-    ERROR("gettimeofday", "gettimeofday() returned error");
-  }
-  draw_timeout_handler.handler = &draw_timeout_handler_function;
-  draw_timeout_handler.data = NULL;
-  mainloop_install_timeout_handler(&draw_timeout_handler);
-  
+    
   EventHandler main_event_handler;
   main_event_handler.mainloop = mainloop;
   main_event_handler.event_mask = SubstructureRedirectMask | SubstructureNotifyMask | PropertyChangeMask;
