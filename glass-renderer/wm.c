@@ -37,7 +37,6 @@
 
 
 Pointer mouse = {0, 0, 0, 0, 0, 0};
-List *views = NULL;
 List *shaders = NULL;
 GLuint picking_fb;
 Mainloop *mainloop = NULL;
@@ -162,27 +161,11 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           }
         }
         XFree(prop_return);
-      } else if (event->xproperty.window == xconn->root && event->xproperty.atom == ATOM(xconn, "IG_VIEWS")) {
-        view_free_all(views);
-        views = view_load_all(xconn);
       } else if (event->xproperty.window == xconn->root && event->xproperty.atom == ATOM(xconn, "IG_SHADERS")) {
         shader_free_all(shaders);
         shaders = shader_load_all(xconn);       
       } else if (event->xproperty.window == xconn->root) {
-        Bool handled = False;
-        if (views) {
-          for (size_t idx = 0; idx < views->count; idx++) {
-            View *v = (View *) views->entries[idx];
-            if (event->xproperty.atom == v->attr_layer) {
-             view_load_layer(xconn, v);
-              handled=True;
-            } else if (event->xproperty.atom == v->attr_view) {
-              view_load_screen(xconn, v);
-              handled=True;
-            }
-          }
-        }
-        if (!handled) {
+       if (!views_update(xconn, event->xproperty.atom)) {
           if (DEBUG_ENABLED("event.other")) {
             DEBUG("event.other", "Ignored property event ");
             print_xevent(stderr, xconn->display, event);
@@ -436,7 +419,7 @@ int main() {
   
   DEBUG("start", "Initialized X and GL.\n");
 
-  views = view_load_all(xconn);
+  views_update(xconn, ATOM(xconn, "IG_VIEWS"));
   shaders = shader_load_all(xconn);
 
   DEBUG("XXXXXXXXXXX1", "views=%ld shaders=%ld\n", views, shaders);

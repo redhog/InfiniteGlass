@@ -14,6 +14,8 @@ typedef struct {
 
 extern Bool debug_picking;
 
+extern List *views;
+
 extern Bool init_view(void);
 
 extern void mat4mul(float *mat4, float *vec4, float *outvec4);
@@ -34,6 +36,8 @@ extern void view_free_all(List *views);
 extern void view_update(XConnection *conn, View *view);
 extern View *view_find(List *views, Atom name);
 extern void view_print(View *view);
+
+extern Bool views_update(XConnection *conn, Atom atom);
 
 #endif
 

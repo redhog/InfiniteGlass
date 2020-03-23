@@ -9,6 +9,8 @@
 
 Bool debug_picking = False;
 
+List *views = NULL;
+
 Bool init_view(void) {
   return True;
 }
@@ -334,4 +336,27 @@ void view_print(View *v) {
          v->screen[3],
          v->width,
          v->height);
+}
+
+Bool views_update(XConnection *conn, Atom atom) {
+  Bool handled = False;
+  if (atom == ATOM(conn, "IG_VIEWS")) {
+    view_free_all(views);
+    views = view_load_all(conn);
+    handled = True;
+  } else {
+    if (views) {
+      for (size_t idx = 0; idx < views->count; idx++) {
+        View *v = (View *) views->entries[idx];
+        if (atom == v->attr_layer) {
+          view_load_layer(conn, v);
+          handled=True;
+        } else if (atom == v->attr_view) {
+          view_load_screen(conn, v);
+          handled=True;
+        }
+      }
+    }
+  }
+  return handled;
 }
