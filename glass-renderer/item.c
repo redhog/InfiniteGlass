@@ -114,7 +114,7 @@ void item_draw(Rendering *rendering) {
   XConnection *conn = rendering->conn;
 
   if (!rendering->item->is_clean) {
-    item_updateX(rendering->conn, rendering->item);
+    item_update(rendering->conn, rendering->item);
   }
   
   rendering->texture_unit = 0;
@@ -203,7 +203,7 @@ void item_draw(Rendering *rendering) {
   }
 }
 
-void item_updateX(XConnection *conn, Item *item) {
+void item_update(XConnection *conn, Item *item) {
   if (item->window == conn->root) return;
   if (!item->is_mapped) return;
   item->_is_mapped = item->is_mapped;

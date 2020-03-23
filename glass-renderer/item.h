@@ -54,8 +54,8 @@ extern void item_add(Item *item);
 extern void item_remove(XConnection *conn, Item *item);
 
 extern void item_draw(Rendering *rendering);
-extern void item_tigger_update(Item *item);
-extern void item_updateX(XConnection *conn, Item *item);
+extern void item_trigger_update(Item *item);
+extern void item_update(XConnection *conn, Item *item);
 extern Bool item_properties_update(XConnection *conn, Item *item, Atom name);
 extern Shader *item_get_shader(XConnection *conn, Item *item);
 extern void item_print(XConnection *conn, Item *);

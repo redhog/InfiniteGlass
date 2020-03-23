@@ -103,7 +103,7 @@ char *atom_load_string(Display *display, Window window, Atom name) {
   return (char *) prop_return;
 }
 
-Shader *shader_loadX(XConnection *conn, Atom name) {
+Shader *shader_load(XConnection *conn, Atom name) {
   Shader *shader = malloc(sizeof(Shader));  
   shader->name = name;
   shader->name_str = XGetAtomName(conn->display, name);
@@ -214,7 +214,7 @@ List *shader_load_all(XConnection *conn) {
   List *res = list_create();
   
   for (int i=0; i < nitems_return; i++) {
-    Shader *shader = shader_loadX(conn, ((Atom *) prop_return)[i]);
+    Shader *shader = shader_load(conn, ((Atom *) prop_return)[i]);
     if (shader) {
       list_append(res, (void *) shader);
     }
