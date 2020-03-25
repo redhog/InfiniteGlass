@@ -17,8 +17,6 @@ typedef struct {
 } Pointer;
 
 extern Pointer mouse;
-extern List *views;
-extern List *shaders;
 
 extern void draw();
 

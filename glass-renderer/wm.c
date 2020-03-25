@@ -38,7 +38,6 @@
 
 
 Pointer mouse = {0, 0, 0, 0, 0, 0};
-List *shaders = NULL;
 Mainloop *mainloop = NULL;
 XConnection *xconn = NULL;
 
@@ -97,8 +96,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
         }
         XFree(prop_return);
       } else if (event->xproperty.window == xconn->root && event->xproperty.atom == ATOM(xconn, "IG_SHADERS")) {
-        shader_free_all(shaders);
-        shaders = shader_load_all(xconn);       
+        shaders_update(xconn);
       } else if (event->xproperty.window == xconn->root) {
        if (!views_update(xconn, event->xproperty.atom)) {
           if (DEBUG_ENABLED("event.other")) {
@@ -355,7 +353,7 @@ int main() {
   DEBUG("start", "Initialized X and GL.\n");
 
   views_update(xconn, ATOM(xconn, "IG_VIEWS"));
-  shaders = shader_load_all(xconn);
+  shaders_update(xconn);
 
   DEBUG("XXXXXXXXXXX1", "views=%ld shaders=%ld\n", views, shaders);
   

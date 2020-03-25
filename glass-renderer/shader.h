@@ -50,6 +50,8 @@ typedef struct {
   GLint pointer_attr;
 } Shader;
 
+extern List *shaders;
+
 extern Bool init_shader();
 
 extern Shader *shader_load(XConnection *conn, Atom name);
@@ -59,5 +61,7 @@ extern void shader_free_all(List *shaders);
 extern Shader *shader_find(List *shaders, Atom name);
 extern void shader_print(Shader *shader);
 extern void shader_reset_uniforms(Shader *shader);
+
+extern Bool shaders_update(XConnection *conn);
 
 #endif

@@ -8,6 +8,8 @@
 #include "debug.h"
 #include <math.h>
 
+List *shaders = NULL;
+
 int shaderErrorLine(char *error) {
   char *c = index(error, ':');
   if (!c) return -1;
@@ -300,4 +302,10 @@ void shader_reset_uniforms(Shader *shader) {
     }
     GL_CHECK_ERROR(uniform->uniform_name, "%s", shader->name_str);
   }
+}
+
+Bool shaders_update(XConnection *conn) {
+  shader_free_all(shaders);
+  shaders = shader_load_all(conn);
+  return True;
 }
