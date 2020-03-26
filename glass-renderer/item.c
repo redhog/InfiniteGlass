@@ -19,13 +19,17 @@ Bool init_items() {
 }
 
 
-void item_constructor(XConnection *conn, Item *item, Window window) {
+Item *item_constructor(XConnection *conn, Window window) {
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
   unsigned long bytes_after_return;
   unsigned char *prop_return = NULL;
+
+  Item *item = (Item *) malloc(sizeof(Item));
   
+  item->is_mapped = False;
+  item->_is_mapped = False;
   item->window = window;
   item->properties = NULL;
   item->prop_layer = NULL;
@@ -91,6 +95,8 @@ void item_constructor(XConnection *conn, Item *item, Window window) {
   
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
+
+  return item;
 }
 void item_destructor(XConnection *conn, Item *item) {
   texture_destroy(conn, &item->window_texture);
@@ -289,11 +295,7 @@ void item_print(XConnection *conn, Item *item) {
 }
 
 Item *item_create(XConnection *conn, Window window) {
-  Item *item = (Item *) malloc(sizeof(Item));
-
-  item->is_mapped = False;
-  item->_is_mapped = False;
-  item_constructor(conn, item, window);
+  Item *item = item_constructor(conn, window);
   item_add(item);
   return item;
 }
