@@ -56,8 +56,19 @@ struct PropertyStruct {
   PropertyTypeHandler *type_handler;
 };
 
+typedef struct {
+  Window win;
+  Atom name;
+  Atom type;
+  unsigned long nitems;
+  int format;
+  unsigned char *data;
+} PropertyFetch;
+
+extern void property_fetch(XConnection *conn, PropertyFetch *fetch);
+
 extern Property *property_allocate(XConnection *conn, Properties *properties, Atom name);
-extern Bool property_load(XConnection *conn, Property *prop);
+extern Bool property_load(XConnection *conn, Property *prop, PropertyFetch *fetch);
 extern void property_free(XConnection *conn, Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_draw(Property *prop, Rendering *rendering);
@@ -76,7 +87,7 @@ struct PropertiesStruct {
 };
 
 extern Properties *properties_load(XConnection *conn, Window window);
-extern Bool properties_update(XConnection *conn, Properties *properties, Atom name);
+extern Bool properties_update(XConnection *conn, Properties *properties, PropertyFetch *fetch);
 extern void properties_free(XConnection *conn, Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_draw(Properties *properties, Rendering *rendering);

@@ -24,15 +24,6 @@ Property *property_allocate(XConnection *conn, Properties *properties, Atom name
   return prop;
 }
 
-typedef struct {
-  Window win;
-  Atom name;
-  Atom type;
-  unsigned long nitems;
-  int format;
-  unsigned char *data;
-} PropertyFetch;
-
 void property_fetch(XConnection *conn, PropertyFetch *fetch) {
   unsigned long bytes_after_return;
   
@@ -47,21 +38,17 @@ void property_fetch(XConnection *conn, PropertyFetch *fetch) {
                      &fetch->type, &fetch->format, &fetch->nitems, &bytes_after_return, &fetch->data);
 }
 
-Bool property_load(XConnection *conn, Property *prop) {
+Bool property_load(XConnection *conn, Property *prop, PropertyFetch *fetch) {
   unsigned char *old = prop->values.bytes;
   int old_type = prop->type;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
   prop->values.bytes = NULL;
-
-  PropertyFetch fetch = {prop->window, prop->name};
-
-  property_fetch(conn, &fetch);
   
-  prop->type = fetch.type;
-  prop->nitems = fetch.nitems;
-  prop->format = fetch.format;
-  prop->values.bytes = fetch.data;
+  prop->type = fetch->type;
+  prop->nitems = fetch->nitems;
+  prop->format = fetch->format;
+  prop->values.bytes = fetch->data;
   if (prop->type == None) {
     if (prop->type_handler) prop->type_handler->free(conn, prop);
     if (old) { XFree(old); return True; }
@@ -167,23 +154,25 @@ Properties *properties_load(XConnection *conn, Window window) {
   int nr_props;
   Atom *prop_names = XListProperties(conn->display, window, &nr_props);
   for (int i = 0; i < nr_props; i++) {
+    PropertyFetch fetch = {window, prop_names[i]};
+    property_fetch(conn, &fetch);
     Property *prop = property_allocate(conn, properties, prop_names[i]);
-    property_load(conn, prop);
+    property_load(conn, prop, &fetch);
     list_append(properties->properties, (void *) prop);
   }
   XFree(prop_names);
   return properties;
 }
 
-Bool properties_update(XConnection *conn, Properties *properties, Atom name) {
+Bool properties_update(XConnection *conn, Properties *properties, PropertyFetch *fetch) {
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
-    if (prop->name == name) {
-     return property_load(conn, prop);
+    if (prop->name == fetch->name) {
+     return property_load(conn, prop, fetch);
     }   
   }
-  Property *prop = property_allocate(conn, properties, name);
-  property_load(conn, prop);
+  Property *prop = property_allocate(conn, properties, fetch->name);
+  property_load(conn, prop, fetch);
   list_append(properties->properties, (void *) prop);
   return True;
 }

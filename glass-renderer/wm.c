@@ -58,7 +58,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     Bool changed = True;
     Item *item = (Item *) item_get_from_window(xconn, event->xproperty.window, False);
 
-    if (item && !item_properties_update(xconn, item, event->xproperty.atom)) {
+    PropertyFetch fetch = {event->xproperty.window, event->xproperty.atom};
+    property_fetch(xconn, &fetch);
+
+    if (item && !item_properties_update(xconn, item, &fetch)) {
       changed = False;
     }
     
