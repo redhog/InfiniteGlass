@@ -24,26 +24,49 @@ Property *property_allocate(XConnection *conn, Properties *properties, Atom name
   return prop;
 }
 
-Bool property_load(XConnection *conn, Property *prop) {
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
+typedef struct {
+  Window win;
+  Atom name;
+  Atom type;
+  unsigned long nitems;
+  int format;
+  unsigned char *data;
+} PropertyFetch;
 
+void property_fetch(XConnection *conn, PropertyFetch *fetch) {
+  unsigned long bytes_after_return;
+  
+  XGetWindowProperty(conn->display, fetch->win, fetch->name, 0, 0, 0, AnyPropertyType,
+                     &fetch->type, &fetch->format, &fetch->nitems, &bytes_after_return, &fetch->data);
+  XFree(fetch->data);
+  if (fetch->type == None) {
+    fetch->data = NULL;
+    return;
+  }
+  XGetWindowProperty(conn->display, fetch->win, fetch->name, 0, bytes_after_return, 0, fetch->type,
+                     &fetch->type, &fetch->format, &fetch->nitems, &bytes_after_return, &fetch->data);
+}
+
+Bool property_load(XConnection *conn, Property *prop) {
   unsigned char *old = prop->values.bytes;
   int old_type = prop->type;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
   prop->values.bytes = NULL;
 
-  XGetWindowProperty(conn->display, prop->window, prop->name, 0, 0, 0, AnyPropertyType,
-                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
-  XFree(prop_return);
+  PropertyFetch fetch = {prop->window, prop->name};
+
+  property_fetch(conn, &fetch);
+  
+  prop->type = fetch.type;
+  prop->nitems = fetch.nitems;
+  prop->format = fetch.format;
+  prop->values.bytes = fetch.data;
   if (prop->type == None) {
     if (prop->type_handler) prop->type_handler->free(conn, prop);
     if (old) { XFree(old); return True; }
     return False;
   }
-  XGetWindowProperty(conn->display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
-                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
 
   if (old) XFree(old);
