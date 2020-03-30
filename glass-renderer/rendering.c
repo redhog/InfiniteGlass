@@ -3,6 +3,7 @@
 #include "view.h"
 #include "fps.h"
 #include "wm.h"
+#include "concurrency.h"
 
 #define AUTOMATIC_REDRAWS 10
 
@@ -55,11 +56,13 @@ void trigger_draw() {
 Bool damage_handler_function(EventHandler *handler, XEvent *event) {
   if (event->type == xconn->damage_event + XDamageNotify) {
     DEBUG("event.damage", "Received XDamageNotify: %d\n", ((XDamageNotifyEvent *) event)->drawable);
-    // Subtract all the damage, repairing the window.
-    Item *item = item_get_from_window(xconn, ((XDamageNotifyEvent *) event)->drawable, False);
-    if (item) {
-      item->draw_cycles_left = AUTOMATIC_REDRAWS;
-      trigger_draw();
+    WITH_LOCK(&global_lock) {
+      // Subtract all the damage, repairing the window.
+      Item *item = item_get_from_window(xconn, ((XDamageNotifyEvent *) event)->drawable, False);
+      if (item) {
+        item->draw_cycles_left = AUTOMATIC_REDRAWS;
+        trigger_draw();
+      }
     }
     return True;
   }
@@ -67,7 +70,9 @@ Bool damage_handler_function(EventHandler *handler, XEvent *event) {
 }
 
 void draw_timeout_handler_function(TimeoutHandler *handler, struct timeval *current_time) {
-  cycle_draw();
+  WITH_LOCK(&global_lock) {
+    cycle_draw();
+  }
 }
 
 TimeoutHandler draw_timeout_handler;

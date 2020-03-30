@@ -5,8 +5,11 @@
 #include "shader.h"
 #include "item.h"
 #include "list.h"
+#include <pthread.h>
 
 FILE *eventlog;
+
+extern pthread_mutex_t global_lock;
 
 
 typedef struct {

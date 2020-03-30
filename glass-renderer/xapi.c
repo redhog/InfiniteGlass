@@ -30,33 +30,21 @@ int x_catch(XConnection *conn, XErrorEvent *error) {
   return catch(conn, error);
 }
 
-XContext x_conn_context = -1;
+XContext x_conn_context = 0;
 
-XConnection *xinit() {
+XConnection *xinit_basic() {
   XConnection *conn = malloc(sizeof(XConnection));
  
-  XErrorEvent error;
-
   conn->display = XOpenDisplay(NULL);
 
   conn->root = DefaultRootWindow(conn->display);
 
-  if (x_conn_context == -1) x_conn_context = XUniqueContext();
+  if (x_conn_context == 0) x_conn_context = XUniqueContext();
   XSaveContext(conn->display, conn->root, x_conn_context, (XPointer) conn);
 
   error_init(conn);
   
   XA_FLOAT = XInternAtom(conn->display, "FLOAT", False);
-
-  x_try(conn);
-  XSelectInput(conn->display, conn->root,
-               SubstructureRedirectMask |
-               SubstructureNotifyMask |
-               PropertyChangeMask);
-  if (!x_catch(conn, &error)) {
-    fprintf(stderr, "Another window manager is already running"); fflush(stderr);
-    return 0;
-  }
 
   int event_base, error_base;
   if (!XCompositeQueryExtension(conn->display, &event_base, &error_base)) {
@@ -90,13 +78,6 @@ XConnection *xinit() {
   conn->overlay = XCompositeGetOverlayWindow(conn->display, conn->root);
   XGetWindowAttributes(conn->display, conn->overlay, &conn->overlay_attr);
 
-  overlay_set_input(conn, False);
-
-  Cursor cursor;
-  cursor=XCreateFontCursor(conn->display,XC_left_ptr);
-  XDefineCursor(conn->display, conn->overlay, cursor);
-  XFreeCursor(conn->display, cursor);
-
   XDamageQueryExtension(conn->display, &conn->damage_event, &conn->damage_error);
   XShapeQueryExtension(conn->display, &conn->shape_event, &conn->shape_error);
 
@@ -113,7 +94,32 @@ XConnection *xinit() {
     fprintf(stderr, "Internal Error! This is a bug in Xlib.\n");
     return 0;
   }
+
+  DEBUG("init_basic", "root=%ld, overlay=%ld\n", conn->root, conn->overlay);
   
+  return conn;
+}
+
+XConnection *xinit() {
+  XConnection *conn = xinit_basic();
+  XErrorEvent error;
+ 
+  x_try(conn);
+  XSelectInput(conn->display, conn->root,
+               SubstructureRedirectMask |
+               SubstructureNotifyMask |
+               PropertyChangeMask);
+  if (!x_catch(conn, &error)) {
+    fprintf(stderr, "Another window manager is already running"); fflush(stderr);
+    return 0;
+  }
+
+  overlay_set_input(conn, False);
+
+  Cursor cursor;
+  cursor=XCreateFontCursor(conn->display,XC_left_ptr);
+  XDefineCursor(conn->display, conn->overlay, cursor);
+  XFreeCursor(conn->display, cursor);
 
   XIEventMask evmasks[1];
   unsigned char mask1[(XI_LASTEVENT + 7)/8];

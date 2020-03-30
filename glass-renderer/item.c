@@ -251,6 +251,31 @@ void item_trigger_update(Item *item) {
   item->is_clean = False;
 }
 
+void item_update_size(XConnection *conn, Item *item, PropertyFetch *fetch) {
+  if (fetch->type != None) {   
+    XWindowChanges values;
+    values.width = ((long *) fetch->data)[0];
+    values.height = ((long *) fetch->data)[1];
+    XWindowAttributes attr;
+    XGetWindowAttributes(conn->display, fetch->win, &attr);
+
+    if (attr.width != values.width || attr.height != values.height) {
+      // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
+      if (values.width < 0 || values.height < 0 || values.width > conn->overlay_attr.width * 5 || values.height > conn->overlay_attr.height * 5) {
+        long arr[2];
+        arr[0] = attr.width;
+        arr[1] = attr.height;
+        DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", fetch->win, attr.width, attr.height);
+        XChangeProperty(conn->display, fetch->win, ATOM(conn, "IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+      } else {
+        DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", fetch->win, values.width, values.height);
+        XConfigureWindow(conn->display, fetch->win, CWWidth | CWHeight, &values);
+        item_trigger_update((Item *) item);
+      }
+    }
+  }
+}
+
 Bool item_properties_update(XConnection *conn, Item *item, PropertyFetch *fetch) {
   Bool res = properties_update(conn, item->properties, fetch);
   if (res) {
@@ -261,6 +286,7 @@ Bool item_properties_update(XConnection *conn, Item *item, PropertyFetch *fetch)
     if (fetch->name == ATOM(conn, "IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM(conn, "IG_COORDS"));
     if (fetch->name == ATOM(conn, "IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM(conn, "IG_COORD_TYPES"));
     if (fetch->name == ATOM(conn, "IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM(conn, "IG_DRAW_TYPE"));
+    if (fetch->win != conn->root && fetch->name == ATOM(conn, "IG_SIZE")) item_update_size(conn, item, fetch);
   }
   return res;
 }

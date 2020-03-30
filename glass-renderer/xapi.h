@@ -52,6 +52,7 @@ extern void x_pop_error_context(XConnection *conn);
 extern void x_try(XConnection *conn);
 extern int x_catch(XConnection *conn, XErrorEvent *error);
 
+extern XConnection *xinit_basic();
 extern XConnection *xinit();
 extern void overlay_set_input(XConnection *conn, Bool enabled);
 
