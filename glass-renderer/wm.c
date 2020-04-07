@@ -55,7 +55,8 @@ void draw() {
   glClearColor(0., 0., 0., 1.0);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   if (views) {
-    for (size_t idx = 0; idx < views->count; idx++) {
+//    for (size_t idx = 0; idx < views->count; idx++) {
+    for (size_t idx = 0; idx < 1; idx++) {
       View *v = (View *) views->entries[idx];
       for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
         current_layer = v->layers[layer_idx];
