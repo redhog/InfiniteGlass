@@ -56,7 +56,7 @@ struct PropertyStruct {
 };
 
 extern Property *property_allocate(Properties *properties, Atom name);
-extern Bool property_load(Property *prop);
+extern void property_load(Property *prop);
 extern void property_free(Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_draw(Property *prop, Rendering *rendering);
@@ -75,7 +75,7 @@ struct PropertiesStruct {
 };
 
 extern Properties *properties_load(Window window);
-extern Bool properties_update(Properties *properties, Atom name);
+extern void properties_update(Properties *properties, Atom name);
 extern void properties_free(Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_draw(Properties *properties, Rendering *rendering);

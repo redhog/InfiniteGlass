@@ -1,6 +1,7 @@
 #include "property.h"
 #include "shader.h"
 #include "rendering.h"
+#include "wm.h"
 #include "debug.h"
 
 Property *property_allocate(Properties *properties, Atom name) {
@@ -23,7 +24,7 @@ Property *property_allocate(Properties *properties, Atom name) {
   return prop;
 }
 
-Bool property_load(Property *prop) {
+void property_load(Property *prop) {
   unsigned long bytes_after_return;
   unsigned char *prop_return;
 
@@ -38,24 +39,23 @@ Bool property_load(Property *prop) {
   XFree(prop_return);
   if (prop->type == None) {
     if (prop->type_handler) prop->type_handler->free(prop);
-    if (old) { XFree(old); return True; }
-    return False;
+    if (old) { XFree(old); }
+    return;
   }
   XGetWindowProperty(display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
                      &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
   Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
 
   if (old) XFree(old);
-  if (!changed) return False;
+  if (!changed) return;
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
   if (prop->type_handler) prop->type_handler->load(prop);
+  trigger_draw();  
   if (DEBUG_ENABLED(prop->name_str)) {
     DEBUG(prop->name_str, "");
     property_print(prop, stderr);
   }
-  
-  return True;
 }
 
 void property_free(Property *prop) {
@@ -151,17 +151,17 @@ Properties *properties_load(Window window) {
   return properties;
 }
 
-Bool properties_update(Properties *properties, Atom name) {
+void properties_update(Properties *properties, Atom name) {
+  Property *prop = NULL;
   for (size_t i = 0; i < properties->properties->count; i++) {
-    Property *prop = (Property *) properties->properties->entries[i];
-    if (prop->name == name) {
-      return property_load(prop);
-    }   
+    prop = (Property *) properties->properties->entries[i];
+    if (prop->name == name) break;
   }
-  Property *prop = property_allocate(properties, name);
+  if (!prop) {
+    Property *prop = property_allocate(properties, name);
+    list_append(properties->properties, (void *) prop);
+  }
   property_load(prop);
-  list_append(properties->properties, (void *) prop);
-  return True;
 }
 
 void properties_free(Properties *properties) {

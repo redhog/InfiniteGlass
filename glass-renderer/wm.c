@@ -165,16 +165,13 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   GL_CHECK_ERROR("loop", "");
 
   if (event->type == PropertyNotify) {
-    Bool changed = True;
     Item *item = (Item *) item_get_from_window(event->xproperty.window, False);
 
-    if (item && !item_properties_update(item, event->xproperty.atom)) {
-      changed = False;
-    }
-    
-    if (changed) {
+    if (item) {
+      item_properties_update(item, event->xproperty.atom);
+
       // FIXME: Test that item != NULL here...
-      if (event->xproperty.window != root && item && event->xproperty.atom == ATOM("IG_SIZE")) {
+      if (event->xproperty.window != root && event->xproperty.atom == ATOM("IG_SIZE")) {
         Atom type_return;
         int format_return;
         unsigned long nitems_return;
@@ -421,7 +418,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == MapRequest) {
     XMapWindow(display, event->xmaprequest.window);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG")) {
-    printf("DEBUG LIST VIEWS\n");
+   printf("DEBUG LIST VIEWS\n");
     if (views) {
       for (size_t idx = 0; idx < views->count; idx++) {
         View *view = (View *) views->entries[idx];
@@ -436,6 +433,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       item_print(item);
     }
     printf("DEBUG LIST ITEMS END\n");
+    fflush(stdout);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {
     DEBUG("exit", "Exiting by request");
     exit(1);

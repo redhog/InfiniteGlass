@@ -233,18 +233,15 @@ void item_update(Item *item) {
   x_pop_error_context();  
 }
 
-Bool item_properties_update(Item *item, Atom name) {
-  Bool res = properties_update(item->properties, name);
-  if (res) {
-    if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
-    if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
-    if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
-    if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
-    if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
-    if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
-    if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
-  }
-  return res;
+void item_properties_update(Item *item, Atom name) {
+  properties_update(item->properties, name);
+  if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
+  if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
+  if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
+  if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
+  if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
+  if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
+  if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
 }
 
 Shader *item_get_shader(Item *item) {
@@ -273,7 +270,7 @@ void item_print(Item *item) {
          coords[2],
          coords[3]);
   printf("    window=%ld\n", item->window);
-  properties_print(item->properties, stderr);
+  properties_print(item->properties, stdout);
 }
 
 Item *item_create(Window window) {
