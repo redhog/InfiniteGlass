@@ -36,7 +36,8 @@ int xinit() {
   XErrorEvent error;
 
   display = XOpenDisplay(NULL);
-
+  xcb_display = XGetXCBConnection(display);
+  
   error_init();
 
   root = DefaultRootWindow(display);

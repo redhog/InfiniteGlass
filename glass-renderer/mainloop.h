@@ -31,8 +31,12 @@ struct TimeoutHandlerStruct {
   void *data;
 };
 
+typedef void XCBCookieHandlerFunction(void *data, void *reply, xcb_generic_error_t *error); 
+
 extern void mainloop_install_timeout_handler(TimeoutHandler *handler);
 extern void mainloop_uninstall_timeout_handler(TimeoutHandler *handler);
+extern void mainloop_install_xcb_cookie_handler(unsigned int request, XCBCookieHandlerFunction *fn, void *data);
+#define MAINLOOP_XCB_DEFER(cookie, handler, data) mainloop_install_xcb_cookie_handler(cookie.sequence, handler, data)
 
 extern Bool mainloop_event_handle(XEvent *event);
 extern void mainloop_run();

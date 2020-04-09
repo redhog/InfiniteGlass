@@ -1,6 +1,24 @@
 #ifndef XAPI
 #define XAPI
 
+#include <xcb/xcbext.h>
+#include <xcb/bigreq.h>
+#include <xcb/damage.h>
+#include <xcb/dri2.h>
+#include <xcb/dri3.h>
+#include <xcb/glx.h>
+#include <xcb/present.h>
+#include <xcb/randr.h>
+#include <xcb/render.h>
+#include <xcb/shape.h>
+#include <xcb/shm.h>
+#include <xcb/sync.h>
+#include <xcb/xcbext.h>
+#include <xcb/xcb.h>
+#include <xcb/xc_misc.h>
+#include <xcb/xfixes.h>
+#include <xcb/xproto.h>
+#include <X11/Xlib-xcb.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
@@ -21,6 +39,7 @@ Atom XA_FLOAT;
 
 
 Display* display;
+xcb_connection_t *xcb_display;
 Window root;
 Window overlay;
 XWindowAttributes overlay_attr;
