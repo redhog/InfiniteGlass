@@ -27,8 +27,12 @@ void property_atom_print(Property *prop, FILE *fp) {
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
     char *name = XGetAtomName(display, (Atom) prop->values.dwords[i]);
-    fprintf(fp, "%s", name);
-    XFree(name);
+    if (name) {
+      fprintf(fp, "%s", name);
+      XFree(name);
+    } else {
+      fprintf(fp, "[INVALID]");
+    }
   }
   fprintf(fp, "\n");
 }
