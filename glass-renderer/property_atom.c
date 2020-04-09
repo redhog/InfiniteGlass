@@ -11,7 +11,7 @@ void property_atom_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
   if (prop_cache->is_uniform) {
-    unsigned long *data = prop->values.dwords;
+    uint32_t *data = prop->values.dwords;
     #define D(idx) ((idx < prop->nitems) ? data[idx] : -1)
     switch (prop_cache->type) {
       case GL_INT: glUniform1i(prop_cache->location, D(0)); break;

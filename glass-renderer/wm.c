@@ -28,9 +28,10 @@
 #include "property_float.h"
 #include "property_coords.h"
 #include "property_svg.h"
+#include "property_item.h"
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
-#include "property_item.h"
+#include "property_size.h"
 #include <X11/extensions/XInput2.h>
 #include <math.h>
 
@@ -170,39 +171,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     if (item) {
       item_properties_update(item, event->xproperty.atom);
 
-      // FIXME: Test that item != NULL here...
-      if (event->xproperty.window != root && event->xproperty.atom == ATOM("IG_SIZE")) {
-        Atom type_return;
-        int format_return;
-        unsigned long nitems_return;
-        unsigned long bytes_after_return;
-        unsigned char *prop_return;
-        XGetWindowProperty(display, event->xproperty.window, ATOM("IG_SIZE"), 0, sizeof(long)*2, 0, AnyPropertyType,
-                           &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-        if (type_return != None) {
-          XWindowChanges values;
-          values.width = ((long *) prop_return)[0];
-          values.height = ((long *) prop_return)[1];
-          XWindowAttributes attr;
-          XGetWindowAttributes(display, event->xproperty.window, &attr);
-          
-          if (attr.width != values.width || attr.height != values.height) {
-            // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
-            if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
-              long arr[2];
-              arr[0] = attr.width;
-              arr[1] = attr.height;
-              DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", event->xproperty.window, attr.width, attr.height);
-              XChangeProperty(display, event->xproperty.window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-            } else {
-              DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", event->xproperty.window, values.width, values.height);
-              XConfigureWindow(display, event->xproperty.window, CWWidth | CWHeight, &values);
-              item_update((Item *) item);
-            }
-          }
-        }
-        XFree(prop_return);
-      } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_VIEWS")) {
+      if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_VIEWS")) {
         view_free_all(views);
         views = view_load_all();
       } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_SHADERS")) {
@@ -497,9 +466,11 @@ int main() {
   property_type_register(&property_float);
   property_type_register(&property_coords);
   property_type_register(&property_svg);
+  property_type_register(&property_item);
+  
   property_type_register(&property_wm_hints_icon);
   property_type_register(&property_net_wm_icon);
-  property_type_register(&property_item);
+  property_type_register(&property_size);
 
   items_get_from_toplevel_windows();
  
