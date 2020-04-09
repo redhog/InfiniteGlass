@@ -17,7 +17,7 @@ RUN apt update -y && \
 RUN apt install -y xserver-xephyr < /dev/null
 RUN apt install -y xinit < /dev/null
 RUN apt install -y wget curl git zsh unzip sudo \
-   xterm sakura pluma emacs vim
+   xterm sakura pluma emacs vim rofi
 RUN apt install -y chromium-browser
 
 RUN locale-gen en_US.UTF-8
