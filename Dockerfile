@@ -1,47 +1,34 @@
 FROM ubuntu:18.04
 
-RUN apt update -y
-RUN apt install -y build-essential
-RUN apt install -y python
-RUN apt install -y python3
-RUN apt install -y python3-pip
-RUN apt install -y virtualenv
-RUN apt install -y pkg-config
-RUN apt install -y librsvg2-dev
-RUN apt install -y libpango1.0-dev
-RUN apt install -y libxi-dev
-RUN apt install -y libxtst-dev
-RUN apt install -y libxrender-dev
-RUN apt install -y libxrandr-dev
-RUN apt install -y libxcomposite-dev
-RUN apt install -y libxdamage-dev
-RUN apt install -y libglew-dev
-RUN apt install -y xserver-xephyr < /dev/null
-RUN apt install -y xinit < /dev/null
-RUN apt install -y python3-setuptools
-RUN apt install -y x11-xkb-utils
-RUN apt install -y rofi
-RUN apt install -y xterm
-RUN apt install -y chromium-browser
-RUN apt install -y emacs
-RUN apt install -y wget
-RUN apt install -y unzip
-RUN apt install -y sudo
-RUN apt install -y dbus-x11
-RUN apt install -y pluma
-RUN apt install -y locales
-RUN apt install -y locales-all
-RUN locale-gen en_US.UTF-8
-RUN apt install -y git
-RUN apt install -y curl
-RUN apt install -y zsh
+ARG DEBIAN_FRONTEND=noninteractive
 
+ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
+
+RUN apt update -y && \
+   apt install -y build-essential pkg-config locales locales-all \
+      gobject-introspection libgirepository1.0-dev \
+      python python3 python3-pip virtualenv python3-setuptools \
+      librsvg2-dev libpango1.0-dev libcairo2 libcairo2-dev \
+      libxi-dev libxtst-dev libxrender-dev libxrandr-dev \
+      libxcomposite-dev libxdamage-dev libglew-dev \
+      x11-xkb-utils dbus-x11
+RUN apt install -y xserver-xephyr < /dev/null
+RUN apt install -y xinit < /dev/null
+RUN apt install -y wget curl git zsh unzip sudo \
+   xterm sakura pluma emacs vim
+RUN apt install -y chromium-browser
+
+RUN locale-gen en_US.UTF-8
+
+RUN pip3 install --upgrade pip
 
 RUN echo Version 2
 
 ADD . /InfiniteGlass
+
+RUN sed -e '/PyGObject/d' /InfiniteGlass/glass-action/setup.py -i
 
 RUN cd /InfiniteGlass; make all
 RUN cd /InfiniteGlass; make devinstall
@@ -55,4 +42,5 @@ RUN chmod -R ugo+rw /InfiniteGlass
 RUN sed -e "s+\(sudo:.*\)+\1glass+g" /etc/group -i
 RUN sed -e "s+ALL$+NOPASSWD: ALL+g" /etc/sudoers -i
 
-CMD /InfiniteGlass/scripts/docker-runner.sh
+ENTRYPOINT /InfiniteGlass/scripts/docker-runner.sh
+
