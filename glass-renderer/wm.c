@@ -32,6 +32,7 @@
 #include "property_wm_hints_icon.h"
 #include "property_net_wm_icon.h"
 #include "property_size.h"
+#include "property_views.h"
 #include <X11/extensions/XInput2.h>
 #include <math.h>
 
@@ -171,10 +172,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     if (item) {
       item_properties_update(item, event->xproperty.atom);
 
-      if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_VIEWS")) {
-        view_free_all(views);
-        views = view_load_all();
-      } else if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_SHADERS")) {
+      if (event->xproperty.window == root && event->xproperty.atom == ATOM("IG_SHADERS")) {
         shader_free_all(shaders);
         shaders = shader_load_all();       
       } else if (event->xproperty.window == root) {
@@ -471,6 +469,7 @@ int main() {
   property_type_register(&property_wm_hints_icon);
   property_type_register(&property_net_wm_icon);
   property_type_register(&property_size);
+  property_type_register(&property_views);
 
   items_get_from_toplevel_windows();
  
