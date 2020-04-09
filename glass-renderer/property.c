@@ -1,6 +1,7 @@
 #include "property.h"
 #include "shader.h"
 #include "rendering.h"
+#include "mainloop.h"
 #include "wm.h"
 #include "debug.h"
 
@@ -21,41 +22,49 @@ Property *property_allocate(Properties *properties, Atom name) {
   }
   prop->data = NULL;
   prop->type_handler = NULL;
+  prop->property_get_reply = NULL;
   return prop;
 }
 
-void property_load(Property *prop) {
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
+void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  Property *prop = (Property *) data;
+  if (!reply) {
+    ERROR("load", "Property loading failed");
+    return;
+  }
 
-  unsigned char *old = prop->values.bytes;
+  xcb_get_property_reply_t *old = prop->property_get_reply;
+  unsigned char *old_data = prop->values.bytes;
   int old_type = prop->type;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
-  prop->values.bytes = NULL;
+  prop->property_get_reply = reply;
+  prop->format = reply->format;
+  prop->type = reply->type;
+  prop->values.bytes = xcb_get_property_value(reply);
+  prop->nitems = xcb_get_property_value_length(reply) / (prop->format / 8);
+  
+  Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old_data, prop->values.bytes, prop->nitems * prop->format) != 0;
 
-  XGetWindowProperty(display, prop->window, prop->name, 0, 0, 0, AnyPropertyType,
-                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
-  XFree(prop_return);
-  if (prop->type == None) {
-    if (prop->type_handler) prop->type_handler->free(prop);
-    if (old) { XFree(old); }
-    return;
+  if (old) {
+    free(old);
   }
-  XGetWindowProperty(display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
-                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
-  Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
-
-  if (old) XFree(old);
   if (!changed) return;
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
   if (prop->type_handler) prop->type_handler->load(prop);
-  trigger_draw();  
+
+  trigger_draw();
+  
   if (DEBUG_ENABLED(prop->name_str)) {
-    DEBUG(prop->name_str, "");
+    DEBUG(prop->name_str, "[%d]", prop->nitems);
     property_print(prop, stderr);
   }
+}
+
+void property_load(Property *prop) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, prop->window, prop->name, AnyPropertyType, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &property_load_parse, (void *) prop);
 }
 
 void property_free(Property *prop) {
@@ -66,7 +75,7 @@ void property_free(Property *prop) {
     if (prop->programs[i].buffer != -1) glDeleteBuffers(1, &prop->programs[i].buffer);
   }
   if (prop->name_str) XFree(prop->name_str);
-  if (prop->values.bytes) XFree(prop->values.bytes);
+  if (prop->property_get_reply) free(prop->property_get_reply);
   free(prop);
 }
 

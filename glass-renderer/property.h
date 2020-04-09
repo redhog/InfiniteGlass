@@ -53,6 +53,7 @@ struct PropertyStruct {
   PropertyProgramCache programs[PROGRAM_CACHE_SIZE];
   char *data;
   PropertyTypeHandler *type_handler;
+  xcb_get_property_reply_t *property_get_reply;
 };
 
 extern Property *property_allocate(Properties *properties, Atom name);
