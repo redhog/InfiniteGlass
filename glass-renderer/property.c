@@ -161,13 +161,9 @@ Properties *properties_load(Window window) {
 }
 
 void properties_update(Properties *properties, Atom name) {
-  Property *prop = NULL;
-  for (size_t i = 0; i < properties->properties->count; i++) {
-    prop = (Property *) properties->properties->entries[i];
-    if (prop->name == name) break;
-  }
+  Property *prop = properties_find(properties, name);
   if (!prop) {
-    Property *prop = property_allocate(properties, name);
+    prop = property_allocate(properties, name);
     list_append(properties->properties, (void *) prop);
   }
   property_load(prop);
