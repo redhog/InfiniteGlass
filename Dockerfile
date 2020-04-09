@@ -28,6 +28,8 @@ RUN echo Version 2
 
 ADD . /InfiniteGlass
 
+RUN sed -e '/PyGObject/d' /InfiniteGlass/glass-action/setup.py -i
+
 RUN cd /InfiniteGlass; make all
 RUN cd /InfiniteGlass; make devinstall
 
