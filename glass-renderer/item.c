@@ -7,6 +7,7 @@
 #include <limits.h>
 #include "property.h"
 #include "property_item.h"
+#include "property_coords.h"
 #include "debug.h"
 #include "rendering.h"
 #include <X11/Xatom.h>
@@ -250,26 +251,26 @@ Shader *item_get_shader(Item *item) {
   return shader_find(shaders, shader);
 }
 void item_print(Item *item) {
-  float _coords[] = {-1.,-1.,-1.,-1.};
-  float *coords = _coords;
-  long width = -1, height = -1;
+  printf("item(%ld):%s ",
+         item->window,
+         item->is_mapped ? "" : " invisible");
   if (item->prop_size) {
-    width = item->prop_size->values.dwords[0];
-    height = item->prop_size->values.dwords[1];
+    long width = item->prop_size->values.dwords[0];
+    long height = item->prop_size->values.dwords[1];
+    printf("[%ld,%ld] @ ", width, height);
+  } else {
+    printf("[<unknown>] @ ");
   }
   if (item->prop_coords) {
-    coords = (float *) item->prop_coords->data;
+    PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
+    printf("%f,%f[%f,%f]\n",
+           data->ccoords[0],
+           data->ccoords[1],
+           data->ccoords[2],
+           data->ccoords[3]);
+  } else {
+    printf("<unknown>\n");
   }
-  printf("item(%ld):%s [%ld,%ld] @ %f,%f,%f,%f\n",
-         item->window,
-         item->is_mapped ? "" : " invisible",
-         width,
-         height,
-         coords[0],
-         coords[1],
-         coords[2],
-         coords[3]);
-  printf("    window=%ld\n", item->window);
   properties_print(item->properties, stdout);
 }
 
