@@ -46,9 +46,9 @@ struct PropertyStruct {
   int format;
   unsigned long nitems;
   union {
-    unsigned char *bytes;
-    unsigned short *words;
-    unsigned long *dwords;
+    int8_t *bytes;
+    uint16_t *words;
+    uint32_t *dwords;
   } values;
   PropertyProgramCache programs[PROGRAM_CACHE_SIZE];
   char *data;
