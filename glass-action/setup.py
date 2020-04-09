@@ -13,7 +13,6 @@ setuptools.setup(name='glass-action',
       packages=setuptools.find_packages(),
       install_requires=[
           "click",
-          "PyGObject"
       ],
       entry_points={
           'console_scripts': [
