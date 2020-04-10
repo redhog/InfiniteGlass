@@ -12,5 +12,11 @@ void property_shaders_load(Property *prop) {
 }
 
 PropertyTypeHandler property_shaders = {
-  &property_shaders_init, &property_shaders_load,
-  &property_atom_free, &property_atom_to_gl, &property_atom_print, &property_atom_load_program, &property_atom_free_program};
+  .init=&property_shaders_init,
+  .load=&property_shaders_load,
+  .free=&property_atom_free,
+  .to_gl=&property_atom_to_gl,
+  .print=&property_atom_print,
+  .load_program=&property_atom_load_program,
+  .free_program=&property_atom_free_program
+};

@@ -48,4 +48,12 @@ void property_int_load_program(Property *prop, Rendering *rendering) {
 }
 void property_int_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl, &property_int_print, &property_int_load_program, &property_int_free_program};
+PropertyTypeHandler property_int = {
+  .init=&property_int_init,
+  .load=&property_int_load,
+  .free=&property_int_free,
+  .to_gl=&property_int_to_gl,
+  .print=&property_int_print,
+  .load_program=&property_int_load_program,
+  .free_program=&property_int_free_program
+};

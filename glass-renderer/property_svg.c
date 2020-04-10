@@ -237,4 +237,12 @@ void property_svg_free_program(Property *prop, size_t index) {
   free(program_data);
   prop_cache->data = NULL;
 }
-PropertyTypeHandler property_svg = {&property_svg_init, &property_svg_load, &property_svg_free, &property_svg_to_gl, &property_svg_print, &property_svg_load_program, &property_svg_free_program};
+PropertyTypeHandler property_svg = {
+  .init=&property_svg_init,
+  .load=&property_svg_load,
+  .free=&property_svg_free,
+  .to_gl=&property_svg_to_gl,
+  .print=&property_svg_print,
+  .load_program=&property_svg_load_program,
+  .free_program=&property_svg_free_program
+};

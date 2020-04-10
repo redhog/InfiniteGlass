@@ -144,4 +144,13 @@ void property_coords_load_program(Property *prop, Rendering *rendering) {
 }
 void property_coords_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_coords = {&property_coords_init, &property_coords_load, &property_coords_free, &property_coords_to_gl, &property_coords_print, &property_coords_load_program, &property_coords_free_program, NULL, &property_coords_calculate};
+PropertyTypeHandler property_coords = {
+  .init=&property_coords_init,
+  .load=&property_coords_load,
+  .free=&property_coords_free,
+  .to_gl=&property_coords_to_gl,
+  .print=&property_coords_print,
+  .load_program=&property_coords_load_program,
+  .free_program=&property_coords_free_program,
+  .calculate=&property_coords_calculate
+};

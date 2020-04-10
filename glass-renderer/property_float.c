@@ -68,4 +68,12 @@ void property_float_load_program(Property *prop, Rendering *rendering) {
 }
 void property_float_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_float = {&property_float_init, &property_float_load, &property_float_free, &property_float_to_gl, &property_float_print, &property_float_load_program, &property_float_free_program};
+PropertyTypeHandler property_float = {
+  .init=&property_float_init,
+  .load=&property_float_load,
+  .free=&property_float_free,
+  .to_gl=&property_float_to_gl,
+  .print=&property_float_print,
+  .load_program=&property_float_load_program,
+  .free_program=&property_float_free_program
+};

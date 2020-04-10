@@ -44,4 +44,12 @@ void property_atom_load_program(Property *prop, Rendering *rendering) {
 }
 void property_atom_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_atom = {&property_atom_init, &property_atom_load, &property_atom_free, &property_atom_to_gl, &property_atom_print, &property_atom_load_program, &property_atom_free_program};
+PropertyTypeHandler property_atom = {
+  .init=&property_atom_init,
+  .load=&property_atom_load,
+  .free=&property_atom_free,
+  .to_gl=&property_atom_to_gl,
+  .print=&property_atom_print,
+  .load_program=&property_atom_load_program,
+  .free_program=&property_atom_free_program
+};

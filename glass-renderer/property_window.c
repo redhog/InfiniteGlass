@@ -36,4 +36,12 @@ void property_window_load_program(Property *prop, Rendering *rendering) {
 }
 void property_window_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_window = {&property_window_init, &property_window_load, &property_window_free, &property_window_to_gl, &property_window_print, &property_window_load_program, &property_window_free_program};
+PropertyTypeHandler property_window = {
+  .init=&property_window_init,
+  .load=&property_window_load,
+  .free=&property_window_free,
+  .to_gl=&property_window_to_gl,
+  .print=&property_window_print,
+  .load_program=&property_window_load_program,
+  .free_program=&property_window_free_program
+};
