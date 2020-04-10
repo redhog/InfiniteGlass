@@ -111,7 +111,7 @@ struct PropertyTypeHandlerT {
 };
 
 extern void property_type_register(PropertyTypeHandler *handler);
-extern PropertyTypeHandler *property_type_get(Atom type, Atom name);
+extern PropertyTypeHandler *property_type_get(Property *prop);
 
 
 #endif

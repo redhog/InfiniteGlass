@@ -51,7 +51,7 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
   }
   if (!changed) return;
 
-  if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
+  if (old_type != prop->type) prop->type_handler = property_type_get(prop);
   if (prop->type_handler && prop->type_handler->load) prop->type_handler->load(prop);
 
   trigger_draw();
@@ -258,19 +258,22 @@ void property_type_register(PropertyTypeHandler *handler) {
 }
 
 
-PropertyTypeHandler *property_type_get(Atom type, Atom name) {
+PropertyTypeHandler *property_type_get(Property *prop) {
   if (!property_types) return NULL;
   int best_level = -1;
   PropertyTypeHandler *best_type_handler = NULL;
   for (size_t i = 0; i < property_types->count; i++) {
     PropertyTypeHandler *type_handler = property_types->entries[i];
-    if (   (type_handler->type == AnyPropertyType || type_handler->type == type)
-        && (type_handler->name == AnyPropertyType || type_handler->name == name)) {
-      int level = (  (type_handler->name != AnyPropertyType ? 2 : 0)
-                   + (type_handler->type != AnyPropertyType ? 1 : 0));
-      if (level > best_level) {
-        best_type_handler = type_handler;
-      }
+    int level = -1;
+    if (type_handler->match) {
+      level = type_handler->match(prop);
+    } else if (   (type_handler->type == AnyPropertyType || type_handler->type == prop->type)
+               && (type_handler->name == AnyPropertyType || type_handler->name == prop->name)) {
+        level = (  (type_handler->name != AnyPropertyType ? 2 : 0)
+                 + (type_handler->type != AnyPropertyType ? 1 : 0));
+    }
+    if (level > best_level) {
+      best_type_handler = type_handler;
     }
   }
   return best_type_handler;
