@@ -34,7 +34,7 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
   }
 
   xcb_get_property_reply_t *old = prop->property_get_reply;
-  unsigned char *old_data = prop->values.bytes;
+  uint8_t *old_data = prop->values.bytes;
   int old_type = prop->type;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
@@ -52,7 +52,7 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
   if (!changed) return;
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
-  if (prop->type_handler) prop->type_handler->load(prop);
+  if (prop->type_handler && prop->type_handler->load) prop->type_handler->load(prop);
 
   trigger_draw();
   
@@ -68,9 +68,9 @@ void property_load(Property *prop) {
 }
 
 void property_free(Property *prop) {
-  if (prop->type_handler) prop->type_handler->free(prop);
+  if (prop->type_handler && prop->type_handler->free) prop->type_handler->free(prop);
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
-    if (prop->type_handler) prop->type_handler->free_program(prop, i);
+    if (prop->type_handler && prop->type_handler->free_program) prop->type_handler->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
     if (prop->programs[i].buffer != -1) glDeleteBuffers(1, &prop->programs[i].buffer);
   }
@@ -107,7 +107,7 @@ void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache
 
 void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
-  if (!type) return;
+  if (!type || !type->to_gl) return;
 
   size_t program_cache_idx = rendering->program_cache_idx;
   
@@ -135,7 +135,7 @@ void property_draw(Property *prop, Rendering *rendering) {
 
 void property_print(Property *prop, FILE *fp) {
   PropertyTypeHandler *type = prop->type_handler;
-  if (type) {
+  if (type && type->print) {
     type->print(prop, fp);
   } else {
     char *type_name = XGetAtomName(display, prop->type);
@@ -253,7 +253,7 @@ void property_type_register(PropertyTypeHandler *handler) {
   if (!property_types) {
     property_types = list_create();
   }
-  handler->init(handler);
+  if (handler->init) handler->init(handler);
   list_append(property_types, (void *) handler);
 }
 

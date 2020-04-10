@@ -1,6 +1,6 @@
 #include "texture.h"
 
-void texture_from_icon(Texture *texture, unsigned long *data) {
+void texture_from_icon(Texture *texture, uint32_t *data) {
   // Format used by _NET_WM_ICON
   // This is an array of 32bit packed CARDINAL ARGB with high byte being A, low byte being B.
   // The first two cardinals are width, height. Data is in rows, left to right and top to bottom.

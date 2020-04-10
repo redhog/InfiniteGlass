@@ -46,7 +46,7 @@ struct PropertyStruct {
   int format;
   unsigned long nitems;
   union {
-    int8_t *bytes;
+    uint8_t *bytes;
     uint16_t *words;
     uint32_t *dwords;
   } values;
@@ -84,6 +84,7 @@ extern void properties_print(Properties *properties, FILE *fp);
 extern Property *properties_find(Properties *properties, Atom name);
 
 typedef void PropertyInit(PropertyTypeHandler *prop);
+typedef int  PropertyMatch(Property *prop);
 typedef void PropertyLoad(Property *prop);
 typedef void PropertyFree(Property *prop);
 typedef void PropertyLoadProgram(Property *prop, Rendering *rendering);
@@ -95,6 +96,7 @@ typedef void PropertyPrint(Property *prop, FILE *fp);
 
 struct PropertyTypeHandlerT {
   PropertyInit *init;
+  PropertyMatch *match;
   PropertyLoad *load;
   PropertyFree *free;
   PropertyToGl *to_gl;

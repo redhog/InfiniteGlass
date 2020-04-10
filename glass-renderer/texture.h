@@ -10,7 +10,7 @@ typedef struct {
   GLuint texture_id;
 } Texture;
 
-extern void texture_from_icon(Texture *texture, unsigned long *data);
+extern void texture_from_icon(Texture *texture, uint32_t *data);
 extern void texture_from_cairo_surface(Texture *texture, cairo_surface_t *surface);
 extern void texture_from_pixmap(Texture *texture, Pixmap pixmap);
 extern void texture_initialize(Texture *texture);
