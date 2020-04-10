@@ -27,7 +27,7 @@ void property_int_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<int>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
-    fprintf(fp, "%li", prop->values.dwords[i]);
+    fprintf(fp, "%i", prop->values.dwords[i]);
   }
   fprintf(fp, "\n");
 }
