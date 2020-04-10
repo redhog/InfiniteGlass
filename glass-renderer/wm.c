@@ -169,32 +169,8 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
 
   if (event->type == PropertyNotify) {
     Item *item = (Item *) item_get_from_window(event->xproperty.window, False);
-
     if (item) {
       item_properties_update(item, event->xproperty.atom);
-
-      if (event->xproperty.window == root) {
-        Bool handled = False;
-        if (views) {
-          for (size_t idx = 0; idx < views->count; idx++) {
-            View *v = (View *) views->entries[idx];
-            if (event->xproperty.atom == v->attr_layer) {
-              view_load_layer(v);
-              handled=True;
-            } else if (event->xproperty.atom == v->attr_view) {
-              view_load_screen(v);
-              handled=True;
-            }
-          }
-        }
-        if (!handled) {
-          if (DEBUG_ENABLED("event.other")) {
-            DEBUG("event.other", "Ignored property event ");
-            print_xevent(stderr, display, event);
-          }
-        }
-      }
-      trigger_draw();
     }
   } else if (cookie->type == GenericEvent) {
     if (XGetEventData(display, cookie)) {
