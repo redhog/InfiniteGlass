@@ -107,7 +107,8 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[3];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
     } else {
-      ERROR("coord_type", "Unsupported coord type %d\n", type);
+      char *name = XGetAtomName(display, type);
+      ERROR("coord_type", "%d: Unsupported coord type %s[%d]\n", rendering->source_item->window, name ? name : "<INVALID>", type);
     }
   }
   DEBUG("prop_calc", "%ld[%s@%ld].%s (coords) <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
