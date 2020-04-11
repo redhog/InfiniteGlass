@@ -19,6 +19,7 @@ RUN apt install -y xinit < /dev/null
 RUN apt install -y wget curl git zsh unzip sudo \
    xterm sakura pluma emacs vim rofi
 RUN apt install -y chromium-browser
+RUN apt install -y libxcb-damage0-dev
 
 RUN locale-gen en_US.UTF-8
 
