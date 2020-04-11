@@ -100,7 +100,7 @@ char *atom_load_string(Atom name) {
   return res;
 }
 
-Shader *shader_loadX(Atom name) {
+Shader *shader_load(Atom name) {
   Shader *shader = malloc(sizeof(Shader));
   shader->geometry_src = NULL;
   shader->vertex_src = NULL;
@@ -189,28 +189,18 @@ Shader *shader_loadX(Atom name) {
 
 
 List *shader_load_all(void) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
+  if (!root_item) return NULL;
+  Property *prop = properties_find(root_item->properties, ATOM("IG_SHADERS"));
+  if (!prop || prop->type == None) return NULL;
 
-  XGetWindowProperty(display, root, ATOM("IG_SHADERS"), 0, 100000, 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return == None) {
-    XFree(prop_return);
-    return NULL;
-  }
-  
   List *res = list_create();
   
-  for (int i=0; i < nitems_return; i++) {
-    Shader *shader = shader_loadX(((Atom *) prop_return)[i]);
+  for (int i=0; i < prop->nitems; i++) {
+    Shader *shader = shader_load((Atom ) prop->values.dwords[i]);
     if (shader) {
       list_append(res, (void *) shader);
     }
   }
-  XFree(prop_return);
 
   if (DEBUG_ENABLED("shaders")) {
     DEBUG("shaders", "Shaders:\n");
