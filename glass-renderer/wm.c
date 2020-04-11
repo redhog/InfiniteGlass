@@ -160,6 +160,43 @@ Bool selection_sn_handler(Selection *selection, XEvent *event) {
 void selection_sn_clear(Selection *selection) {
 }
 
+void raw_motion_detected(void *data, xcb_query_pointer_reply_t *reply, xcb_generic_error_t *error) {
+  mouse.root = reply->root;
+  mouse.win = reply->child;
+  mouse.root_x = reply->root_x;
+  mouse.root_y = reply->root_y;
+  mouse.win_x = reply->win_x;
+  mouse.win_y = reply->win_y;
+  mouse.mask = reply->mask;
+
+  int winx, winy;
+  Item *item;
+  Item *parent_item;
+
+  pick(mouse.root_x, mouse.root_y, &winx, &winy, &item, &parent_item);
+  if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
+    XWindowChanges values;
+    values.x = mouse.root_x - winx;
+    values.y = mouse.root_y - winy;
+    values.stack_mode = Above;
+    if (values.x != item->x || values.y != item->y) {
+      XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
+      item->x = values.x;
+      item->y = values.y;
+    }
+
+    if (parent_item && (parent_item != item->parent_item)) {
+      XChangeProperty(display, item->window, ATOM("IG_PARENT_WINDOW"), XA_WINDOW, 32, PropModeReplace, (void *) &parent_item->window, 1);
+      item->parent_item = parent_item;
+    }
+
+    DEBUG("position", "Point %d,%d -> %lu/%lu,%d,%d\n", mouse.root_x, mouse.root_y, parent_item ? parent_item->window : 0, item->window, winx, winy);
+  } else {
+    DEBUG("position", "Point %d,%d -> NONE\n", mouse.root_x, mouse.root_y);
+  }
+  trigger_draw();
+}
+
 Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   XGenericEventCookie *cookie = &event->xcookie;
 
@@ -175,36 +212,8 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (cookie->type == GenericEvent) {
     if (XGetEventData(display, cookie)) {
       if (cookie->evtype == XI_RawMotion) {
-        // XIRawEvent *re = (XIRawEvent *) cookie->data;
-        XQueryPointer(display, root,
-                      &mouse.root, &mouse.win, &mouse.root_x, &mouse.root_y, &mouse.win_x, &mouse.win_y, &mouse.mask);
-
-        int winx, winy;
-        Item *item;
-        Item *parent_item;
-
-        pick(mouse.root_x, mouse.root_y, &winx, &winy, &item, &parent_item);
-        if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
-          XWindowChanges values;
-          values.x = mouse.root_x - winx;
-          values.y = mouse.root_y - winy;
-          values.stack_mode = Above;
-          if (values.x != item->x || values.y != item->y) {
-            XConfigureWindow(display, item->window, CWX | CWY | CWStackMode, &values);
-            item->x = values.x;
-            item->y = values.y;
-          }
-
-          if (parent_item && (parent_item != item->parent_item)) {
-            XChangeProperty(display, item->window, ATOM("IG_PARENT_WINDOW"), XA_WINDOW, 32, PropModeReplace, (void *) &parent_item->window, 1);
-            item->parent_item = parent_item;
-          }
-          
-          DEBUG("position", "Point %d,%d -> %lu/%lu,%d,%d\n", event->xmotion.x_root, event->xmotion.y_root, parent_item ? parent_item->window : 0, item->window, winx, winy);
-        } else {
-          DEBUG("position", "Point %d,%d -> NONE\n", mouse.root_x, mouse.root_y);
-        }
-        trigger_draw();
+        xcb_query_pointer_cookie_t query_pointer_cookie = xcb_query_pointer(xcb_display, root);
+        MAINLOOP_XCB_DEFER(query_pointer_cookie, &raw_motion_detected, NULL);
       } else {
         DEBUG("event", "Unknown XGenericEventCookie\n");
       }
