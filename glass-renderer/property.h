@@ -46,17 +46,18 @@ struct PropertyStruct {
   int format;
   unsigned long nitems;
   union {
-    unsigned char *bytes;
-    unsigned short *words;
-    unsigned long *dwords;
+    uint8_t *bytes;
+    uint16_t *words;
+    uint32_t *dwords;
   } values;
   PropertyProgramCache programs[PROGRAM_CACHE_SIZE];
   char *data;
   PropertyTypeHandler *type_handler;
+  xcb_get_property_reply_t *property_get_reply;
 };
 
 extern Property *property_allocate(Properties *properties, Atom name);
-extern Bool property_load(Property *prop);
+extern void property_load(Property *prop);
 extern void property_free(Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_draw(Property *prop, Rendering *rendering);
@@ -75,7 +76,7 @@ struct PropertiesStruct {
 };
 
 extern Properties *properties_load(Window window);
-extern Bool properties_update(Properties *properties, Atom name);
+extern void properties_update(Properties *properties, Atom name);
 extern void properties_free(Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_draw(Properties *properties, Rendering *rendering);
@@ -83,6 +84,7 @@ extern void properties_print(Properties *properties, FILE *fp);
 extern Property *properties_find(Properties *properties, Atom name);
 
 typedef void PropertyInit(PropertyTypeHandler *prop);
+typedef int  PropertyMatch(Property *prop);
 typedef void PropertyLoad(Property *prop);
 typedef void PropertyFree(Property *prop);
 typedef void PropertyLoadProgram(Property *prop, Rendering *rendering);
@@ -94,6 +96,7 @@ typedef void PropertyPrint(Property *prop, FILE *fp);
 
 struct PropertyTypeHandlerT {
   PropertyInit *init;
+  PropertyMatch *match;
   PropertyLoad *load;
   PropertyFree *free;
   PropertyToGl *to_gl;
@@ -108,7 +111,7 @@ struct PropertyTypeHandlerT {
 };
 
 extern void property_type_register(PropertyTypeHandler *handler);
-extern PropertyTypeHandler *property_type_get(Atom type, Atom name);
+extern PropertyTypeHandler *property_type_get(Property *prop);
 
 
 #endif

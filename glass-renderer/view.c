@@ -6,6 +6,7 @@
 #include "debug.h"
 #include <limits.h>
 #include <math.h>
+#include <string.h>
 
 Bool debug_picking = False;
 
@@ -154,66 +155,46 @@ void view_pick(GLint fb, View *view, int x, int y, int *winx, int *winy, Item **
 }
 
 void view_load_layer(View *view) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
-
-  XGetWindowProperty(display, root, view->attr_layer, 0, sizeof(Atom) * 1000, 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return != None) {
-    view->layers = (Atom *) prop_return;
-    view->nr_layers = nitems_return;
+  if (!root_item) return;
+  Property *prop = properties_find(root_item->properties, view->attr_layer);
+  if (!prop || prop->type == None) return;
+  view->nr_layers = prop->nitems;
+  view->layers = malloc(sizeof(Atom) * prop->nitems);
+  for (int i = 0; i < prop->nitems; i++) {
+    view->layers[i] = prop->values.dwords[i];
   }
 }
 void view_load_screen(View *view) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
-
-  XGetWindowProperty(display, root, view->attr_view, 0, sizeof(float)*4, 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return != None) {
-    for (int i = 0; i < 4; i++) {
-      // Yes, on 64bit linux, long is 8 bytes, and XGetWindowProperty inserts a bunch of zeroes!
-      // So we need to step through the array in chunks of long, not float (which is still 4 bytes)...
-      view->screen[i] = *(float *) &((long *) prop_return)[i];
-      view->_screen[i] = *(float *) &((long *) prop_return)[i];
-    }
-    if (view->screen[2] == 0.0) {
-      view->screen[2] = view->screen[3] * (float) view->width / (float) view->height;     
-      view_update(view);
-    } else if (view->screen[3] == 0.0) {
-      view->screen[3] = view->screen[2] * (float) view->height / (float) view->width;
-      view_update(view);
-    }
+  if (!root_item) return;
+  Property *prop = properties_find(root_item->properties, view->attr_view);
+  if (!prop || prop->type == None) return;
+  for (int i = 0; i < 4; i++) {
+    view->screen[i] = *(float *) &prop->values.dwords[i];
+    view->_screen[i] = *(float *) &prop->values.dwords[i];
   }
-  XFree(prop_return);
+  if (view->screen[2] == 0.0) {
+    view->screen[2] = view->screen[3] * (float) view->width / (float) view->height;     
+    view_update(view);
+  } else if (view->screen[3] == 0.0) {
+    view->screen[3] = view->screen[2] * (float) view->height / (float) view->width;
+    view_update(view);
+  }
 }
 void view_load_size(View *view) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
-
-  XGetWindowProperty(display, root, view->attr_size, 0, sizeof(long)*2, 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return != None) {
-    view->width = ((long *) prop_return)[0];
-    view->height = ((long *) prop_return)[1];
-  } else {
-    view->width = overlay_attr.width;
-    view->height = overlay_attr.height;
-    long arr[2];
-    arr[0] = view->width;
-    arr[1] = view->height;
-    XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+  if (root_item) {
+    Property *prop = properties_find(root_item->properties, view->attr_size);
+    if (prop && prop->type != None) {
+      view->width = *(float *) &prop->values.dwords[0];
+      view->height = *(float *) &prop->values.dwords[1];
+      return;
+    }
   }
-  XFree(prop_return);
+  view->width = overlay_attr.width;
+  view->height = overlay_attr.height;
+  long arr[2];
+  arr[0] = view->width;
+  arr[1] = view->height;
+  XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
 }
 
 View *view_load(Atom name) {
@@ -232,37 +213,27 @@ View *view_load(Atom name) {
 }
 
 List *view_load_all(void) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
-
-  XGetWindowProperty(display, root, ATOM("IG_VIEWS"), 0, 100000, 0, AnyPropertyType,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return == None) {
-    XFree(prop_return);
-    return NULL;
-  }
-  
   List *res = list_create();
+  if (!root_item) return res;
   
-  for (int i=0; i < nitems_return; i++) {
-    list_append(res, (void *) view_load(((Atom *) prop_return)[i]));
-  }
-  XFree(prop_return);
+  Property *prop = properties_find(root_item->properties, ATOM("IG_VIEWS"));
+  if (prop && prop->type != None) {
+    for (int i=0; i < prop->nitems; i++) {
+      list_append(res, (void *) view_load((Atom) prop->values.dwords[i]));
+    }
 
-  if (DEBUG_ENABLED("layers")) {
-   for (size_t idx = 0; idx < res->count; idx++) {
-     View *v = (View *) res->entries[idx];
-     
-     DEBUG("layers",
-           "VIEW: view=%s screen=%f,%f,%f,%f\n",
-           XGetAtomName(display, v->name),
-           v->screen[0],
-           v->screen[1],
-           v->screen[2],
-           v->screen[3]);
+    if (DEBUG_ENABLED("layers")) {
+     for (size_t idx = 0; idx < res->count; idx++) {
+       View *v = (View *) res->entries[idx];
+
+       DEBUG("layers",
+             "VIEW: view=%s screen=%f,%f,%f,%f\n",
+             XGetAtomName(display, v->name),
+             v->screen[0],
+             v->screen[1],
+             v->screen[2],
+             v->screen[3]);
+      }
     }
   }
   
@@ -270,7 +241,7 @@ List *view_load_all(void) {
 }
 
 void view_free(View *view) {
-  if (view->layers) XFree(view->layers);
+  if (view->layers) free(view->layers);
   free(view);
 }
 

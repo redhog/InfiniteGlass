@@ -53,7 +53,7 @@ extern void item_remove(Item *item);
 
 extern void item_draw(Rendering *rendering);
 extern void item_update(Item *item);
-extern Bool item_properties_update(Item *item, Atom name);
+extern void item_properties_update(Item *item, Atom name);
 extern Shader *item_get_shader(Item *item);
 extern void item_print(Item *);
 

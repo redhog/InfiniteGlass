@@ -146,5 +146,13 @@ void property_wm_hints_free_program(Property *prop, size_t index) {
   free(data->icon_mask_enabled_str);
   free(data);
 }
-PropertyTypeHandler property_wm_hints_icon = {&property_wm_hints_icon_init, &property_wm_hints_icon_load, &property_wm_hints_icon_free, &property_wm_hints_icon_to_gl, &property_wm_hints_icon_print, &property_wm_hints_load_program, &property_wm_hints_free_program};
+PropertyTypeHandler property_wm_hints_icon = {
+  .init=&property_wm_hints_icon_init,
+  .load=&property_wm_hints_icon_load,
+  .free=&property_wm_hints_icon_free,
+  .to_gl=&property_wm_hints_icon_to_gl,
+  .print=&property_wm_hints_icon_print,
+  .load_program=&property_wm_hints_load_program,
+  .free_program=&property_wm_hints_free_program
+};
 

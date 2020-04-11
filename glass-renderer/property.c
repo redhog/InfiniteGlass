@@ -1,6 +1,8 @@
 #include "property.h"
 #include "shader.h"
 #include "rendering.h"
+#include "mainloop.h"
+#include "wm.h"
 #include "debug.h"
 
 Property *property_allocate(Properties *properties, Atom name) {
@@ -20,53 +22,60 @@ Property *property_allocate(Properties *properties, Atom name) {
   }
   prop->data = NULL;
   prop->type_handler = NULL;
+  prop->property_get_reply = NULL;
   return prop;
 }
 
-Bool property_load(Property *prop) {
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
+void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  Property *prop = (Property *) data;
+  if (!reply) {
+    ERROR("load", "Property loading failed");
+    return;
+  }
 
-  unsigned char *old = prop->values.bytes;
+  xcb_get_property_reply_t *old = prop->property_get_reply;
+  uint8_t *old_data = prop->values.bytes;
   int old_type = prop->type;
   int old_nitems = prop->nitems;
   int old_format = prop->format;
-  prop->values.bytes = NULL;
+  prop->property_get_reply = reply;
+  prop->format = reply->format;
+  prop->type = reply->type;
+  prop->values.bytes = xcb_get_property_value(reply);
+  prop->nitems = xcb_get_property_value_length(reply) / (prop->format / 8);
+  
+  Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old_data, prop->values.bytes, prop->nitems * prop->format) != 0;
 
-  XGetWindowProperty(display, prop->window, prop->name, 0, 0, 0, AnyPropertyType,
-                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop_return);
-  XFree(prop_return);
-  if (prop->type == None) {
-    if (prop->type_handler) prop->type_handler->free(prop);
-    if (old) { XFree(old); return True; }
-    return False;
+  if (old) {
+    free(old);
   }
-  XGetWindowProperty(display, prop->window, prop->name, 0, bytes_after_return, 0, prop->type,
-                     &prop->type, &prop->format, &prop->nitems, &bytes_after_return, &prop->values.bytes);
-  Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old, prop->values.bytes, prop->nitems * prop->format) != 0;
+  if (!changed) return;
 
-  if (old) XFree(old);
-  if (!changed) return False;
+  if (old_type != prop->type) prop->type_handler = property_type_get(prop);
+  if (prop->type_handler && prop->type_handler->load) prop->type_handler->load(prop);
 
-  if (old_type != prop->type) prop->type_handler = property_type_get(prop->type, prop->name);
-  if (prop->type_handler) prop->type_handler->load(prop);
+  trigger_draw();
+  
   if (DEBUG_ENABLED(prop->name_str)) {
-    DEBUG(prop->name_str, "");
+    DEBUG(prop->name_str, "[%d]", prop->nitems);
     property_print(prop, stderr);
   }
-  
-  return True;
+}
+
+void property_load(Property *prop) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, prop->window, prop->name, AnyPropertyType, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &property_load_parse, (void *) prop);
 }
 
 void property_free(Property *prop) {
-  if (prop->type_handler) prop->type_handler->free(prop);
+  if (prop->type_handler && prop->type_handler->free) prop->type_handler->free(prop);
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
-    if (prop->type_handler) prop->type_handler->free_program(prop, i);
+    if (prop->type_handler && prop->type_handler->free_program) prop->type_handler->free_program(prop, i);
     if (prop->programs[i].name_str) free(prop->programs[i].name_str);
     if (prop->programs[i].buffer != -1) glDeleteBuffers(1, &prop->programs[i].buffer);
   }
   if (prop->name_str) XFree(prop->name_str);
-  if (prop->values.bytes) XFree(prop->values.bytes);
+  if (prop->property_get_reply) free(prop->property_get_reply);
   free(prop);
 }
 
@@ -98,7 +107,7 @@ void property_update_gl_cache(Property *prop, Rendering *rendering, ProgramCache
 
 void property_to_gl(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
-  if (!type) return;
+  if (!type || !type->to_gl) return;
 
   size_t program_cache_idx = rendering->program_cache_idx;
   
@@ -126,7 +135,7 @@ void property_draw(Property *prop, Rendering *rendering) {
 
 void property_print(Property *prop, FILE *fp) {
   PropertyTypeHandler *type = prop->type_handler;
-  if (type) {
+  if (type && type->print) {
     type->print(prop, fp);
   } else {
     char *type_name = XGetAtomName(display, prop->type);
@@ -151,17 +160,13 @@ Properties *properties_load(Window window) {
   return properties;
 }
 
-Bool properties_update(Properties *properties, Atom name) {
-  for (size_t i = 0; i < properties->properties->count; i++) {
-    Property *prop = (Property *) properties->properties->entries[i];
-    if (prop->name == name) {
-      return property_load(prop);
-    }   
+void properties_update(Properties *properties, Atom name) {
+  Property *prop = properties_find(properties, name);
+  if (!prop) {
+    prop = property_allocate(properties, name);
+    list_append(properties->properties, (void *) prop);
   }
-  Property *prop = property_allocate(properties, name);
   property_load(prop);
-  list_append(properties->properties, (void *) prop);
-  return True;
 }
 
 void properties_free(Properties *properties) {
@@ -248,24 +253,27 @@ void property_type_register(PropertyTypeHandler *handler) {
   if (!property_types) {
     property_types = list_create();
   }
-  handler->init(handler);
+  if (handler->init) handler->init(handler);
   list_append(property_types, (void *) handler);
 }
 
 
-PropertyTypeHandler *property_type_get(Atom type, Atom name) {
+PropertyTypeHandler *property_type_get(Property *prop) {
   if (!property_types) return NULL;
   int best_level = -1;
   PropertyTypeHandler *best_type_handler = NULL;
   for (size_t i = 0; i < property_types->count; i++) {
     PropertyTypeHandler *type_handler = property_types->entries[i];
-    if (   (type_handler->type == AnyPropertyType || type_handler->type == type)
-        && (type_handler->name == AnyPropertyType || type_handler->name == name)) {
-      int level = (  (type_handler->name != AnyPropertyType ? 2 : 0)
-                   + (type_handler->type != AnyPropertyType ? 1 : 0));
-      if (level > best_level) {
-        best_type_handler = type_handler;
-      }
+    int level = -1;
+    if (type_handler->match) {
+      level = type_handler->match(prop);
+    } else if (   (type_handler->type == AnyPropertyType || type_handler->type == prop->type)
+               && (type_handler->name == AnyPropertyType || type_handler->name == prop->name)) {
+        level = (  (type_handler->name != AnyPropertyType ? 2 : 0)
+                 + (type_handler->type != AnyPropertyType ? 1 : 0));
+    }
+    if (level > best_level) {
+      best_type_handler = type_handler;
     }
   }
   return best_type_handler;

@@ -7,6 +7,7 @@
 #include <limits.h>
 #include "property.h"
 #include "property_item.h"
+#include "property_coords.h"
 #include "debug.h"
 #include "rendering.h"
 #include <X11/Xatom.h>
@@ -233,18 +234,15 @@ void item_update(Item *item) {
   x_pop_error_context();  
 }
 
-Bool item_properties_update(Item *item, Atom name) {
-  Bool res = properties_update(item->properties, name);
-  if (res) {
-    if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
-    if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
-    if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
-    if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
-    if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
-    if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
-    if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
-  }
-  return res;
+void item_properties_update(Item *item, Atom name) {
+  properties_update(item->properties, name);
+  if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
+  if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
+  if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
+  if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
+  if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
+  if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
+  if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
 }
 
 Shader *item_get_shader(Item *item) {
@@ -253,27 +251,27 @@ Shader *item_get_shader(Item *item) {
   return shader_find(shaders, shader);
 }
 void item_print(Item *item) {
-  float _coords[] = {-1.,-1.,-1.,-1.};
-  float *coords = _coords;
-  long width = -1, height = -1;
+  printf("item(%ld):%s ",
+         item->window,
+         item->is_mapped ? "" : " invisible");
   if (item->prop_size) {
-    width = item->prop_size->values.dwords[0];
-    height = item->prop_size->values.dwords[1];
+    long width = item->prop_size->values.dwords[0];
+    long height = item->prop_size->values.dwords[1];
+    printf("[%ld,%ld] @ ", width, height);
+  } else {
+    printf("[<unknown>] @ ");
   }
   if (item->prop_coords) {
-    coords = (float *) item->prop_coords->data;
+    PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
+    printf("%f,%f[%f,%f]\n",
+           data->ccoords[0],
+           data->ccoords[1],
+           data->ccoords[2],
+           data->ccoords[3]);
+  } else {
+    printf("<unknown>\n");
   }
-  printf("item(%ld):%s [%ld,%ld] @ %f,%f,%f,%f\n",
-         item->window,
-         item->is_mapped ? "" : " invisible",
-         width,
-         height,
-         coords[0],
-         coords[1],
-         coords[2],
-         coords[3]);
-  printf("    window=%ld\n", item->window);
-  properties_print(item->properties, stderr);
+  properties_print(item->properties, stdout);
 }
 
 Item *item_create(Window window) {

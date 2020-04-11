@@ -13,7 +13,7 @@ void property_item_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<item>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
-    fprintf(fp, "%ld", prop->values.dwords[i]);
+    fprintf(fp, "%d", prop->values.dwords[i]);
   }
   fprintf(fp, "\n");
 }
@@ -35,4 +35,13 @@ void property_item_draw(Property *prop, Rendering *rendering) {
   item_draw(rendering);
 }
 
-PropertyTypeHandler property_item = {&property_item_init, &property_item_load, &property_item_free, &property_item_to_gl, &property_item_print, &property_item_load_program, &property_item_free_program, &property_item_draw};
+PropertyTypeHandler property_item = {
+  .init=&property_item_init,
+  .load=&property_item_load,
+  .free=&property_item_free,
+  .to_gl=&property_item_to_gl,
+  .print=&property_item_print,
+  .load_program=&property_item_load_program,
+  .free_program=&property_item_free_program,
+  .draw=&property_item_draw
+};

@@ -1,10 +1,18 @@
 #include "mainloop.h"
+#include "xapi.h"
 #include "list.h"
 #include "debug.h"
 #include <string.h>
 
+typedef struct {
+  unsigned int request;
+  XCBCookieHandlerFunction *handler;
+  void *data;
+} XCBCookieHandler;
+
 List *mainloop_event_handlers = NULL;
 List *timeout_handlers = NULL;
+List *xcb_cookie_handlers = NULL;
 
 Bool event_match(XEvent *event, XEvent *match_event, XEvent *match_mask) {
  char *e = (char *) event;
@@ -42,6 +50,14 @@ void mainloop_uninstall_timeout_handler(TimeoutHandler *handler) {
   list_remove(timeout_handlers, (void *) handler);
 }
 
+void mainloop_install_xcb_cookie_handler(unsigned int request, XCBCookieHandlerFunction *fn, void *data) {
+  if (!xcb_cookie_handlers) xcb_cookie_handlers = list_create();
+  XCBCookieHandler *handler = malloc(sizeof(XCBCookieHandler));
+  handler->request = request;
+  handler->handler = fn;
+  handler->data = data;
+  list_append(xcb_cookie_handlers, (void *) handler);
+}
 
 
 Bool mainloop_event_handle(XEvent *event) {
@@ -80,6 +96,30 @@ void timeout_handle() {
   return;
 }
 
+void xcb_cookies_handle() {
+  if (!xcb_cookie_handlers) return;
+  List *to_delete = NULL;
+  for (int idx = 0; idx < xcb_cookie_handlers->count; idx++) {
+    XCBCookieHandler *handler = (XCBCookieHandler *) xcb_cookie_handlers->entries[idx];
+    void *reply;
+    xcb_generic_error_t *error;
+    int res = xcb_poll_for_reply(xcb_display, handler->request, &reply, &error);
+    if (res) {
+      if (!to_delete) to_delete = list_create();
+      list_append(to_delete, handler);
+      handler->handler(handler->data, reply, error);
+    }
+  }
+  if (to_delete) {
+    for (size_t idx = 0; idx < to_delete->count; idx++) {
+      list_remove(xcb_cookie_handlers, (void *) to_delete->entries[idx]);
+      free(to_delete->entries[idx]);
+    }
+    list_destroy(to_delete);
+  }
+  return;
+}
+
 Bool exit_mainloop_flag = False;
 
 void mainloop_run() {
@@ -96,6 +136,8 @@ void mainloop_run() {
 
     select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
     timeout_handle();
+    xcb_cookies_handle();
+    
     while (XPending(display)) {
       XNextEvent(display, &e);
       mainloop_event_handle(&e);

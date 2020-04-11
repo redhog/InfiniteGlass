@@ -86,5 +86,13 @@ void property_net_wm_free_program(Property *prop, size_t index) {
   free(data);
   prop_cache->data = NULL;
 }
-PropertyTypeHandler property_net_wm_icon = {&property_net_wm_icon_init, &property_net_wm_icon_load, &property_net_wm_icon_free, &property_net_wm_icon_to_gl, &property_net_wm_icon_print, &property_net_wm_load_program, &property_net_wm_free_program};
+PropertyTypeHandler property_net_wm_icon = {
+  .init=&property_net_wm_icon_init,
+  .load=&property_net_wm_icon_load,
+  .free=&property_net_wm_icon_free,
+  .to_gl=&property_net_wm_icon_to_gl,
+  .print=&property_net_wm_icon_print,
+  .load_program=&property_net_wm_load_program,
+  .free_program=&property_net_wm_free_program
+};
 

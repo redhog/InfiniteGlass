@@ -35,8 +35,8 @@ def get_pointer_window(display):
             cb(window)
     return get_pointer_window
 
-def send_msg(cb):
-    def send_msg(display, win, mask, event):
+def send_msg(display, win, mask, event):
+    def send_msg(cb):
         @str_to_win(display, win)
         def send_msg(win):
             def conv(item):
@@ -47,9 +47,9 @@ def send_msg(cb):
                         return int(item)
                 except:
                     return item
-            event = [conv(item) for item in event]
-            print("SEND win=%s, mask=%s %s" % (win, mask, ", ".join(repr(item) for item in event)))
-            win.send(win, *event, event_mask=getattr(Xlib.X, mask))
+            eventlst = [conv(item) for item in event]
+            print("SEND win=%s, mask=%s %s" % (win, mask, ", ".join(repr(item) for item in eventlst)))
+            win.send(win, *eventlst, event_mask=getattr(Xlib.X, mask))
             display.flush()
             cb()
     return send_msg

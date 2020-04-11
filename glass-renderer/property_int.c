@@ -12,7 +12,7 @@ void property_int_to_gl(Property *prop, Rendering *rendering) {
   if (prop_cache->location == -1) return;
 
   if (prop_cache->is_uniform) {
-    unsigned long *data = prop->values.dwords;
+    uint32_t *data = prop->values.dwords;
     #define D(idx) ((idx < prop->nitems) ? data[idx] : -1)
     switch (prop_cache->type) {
       case GL_INT: glUniform1i(prop_cache->location, D(0)); break;
@@ -27,7 +27,7 @@ void property_int_print(Property *prop, FILE *fp) {
   fprintf(fp, "%ld.%s=<int>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
-    fprintf(fp, "%li", prop->values.dwords[i]);
+    fprintf(fp, "%i", prop->values.dwords[i]);
   }
   fprintf(fp, "\n");
 }
@@ -48,4 +48,12 @@ void property_int_load_program(Property *prop, Rendering *rendering) {
 }
 void property_int_free_program(Property *prop, size_t index) {
 }
-PropertyTypeHandler property_int = {&property_int_init, &property_int_load, &property_int_free, &property_int_to_gl, &property_int_print, &property_int_load_program, &property_int_free_program};
+PropertyTypeHandler property_int = {
+  .init=&property_int_init,
+  .load=&property_int_load,
+  .free=&property_int_free,
+  .to_gl=&property_int_to_gl,
+  .print=&property_int_print,
+  .load_program=&property_int_load_program,
+  .free_program=&property_int_free_program
+};
