@@ -41,9 +41,13 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
   prop->property_get_reply = reply;
   prop->format = reply->format;
   prop->type = reply->type;
-  prop->values.bytes = xcb_get_property_value(reply);
-  prop->nitems = xcb_get_property_value_length(reply) / (prop->format / 8);
-  
+  if (reply->type != None) {
+    prop->values.bytes = xcb_get_property_value(reply);
+    prop->nitems = xcb_get_property_value_length(reply) / (prop->format / 8);
+  } else {
+    prop->values.bytes = NULL;
+    prop->nitems = 0;
+  }
   Bool changed = !old || old_nitems != prop->nitems || old_format != prop->format || memcmp(old_data, prop->values.bytes, prop->nitems * prop->format) != 0;
 
   if (old) {
