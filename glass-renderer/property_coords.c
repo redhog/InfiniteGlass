@@ -51,41 +51,57 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
   data->ccoords[3] = 0.0;
 
   int types_nitems = 0;
-  Atom *types = NULL;
+  uint32_t *types = NULL;
   if (rendering->source_item->prop_coord_types) {
     types_nitems = rendering->source_item->prop_coord_types->nitems;
-    types = (Atom *) rendering->source_item->prop_coord_types->values.dwords;
+    types = rendering->source_item->prop_coord_types->values.dwords;
   }
 
   for (int i = 0; i < prop->nitems; i += 4) {
     Atom type = ATOM("IG_COORD_DESKTOP");
-    if (i / 4 < types_nitems) type = types[i / 4];
+    if (i / 4 < types_nitems) type = (Atom) types[i / 4];
 
     if (type == ATOM("IG_COORD_DESKTOP")) {
       data->ccoords[0] += data->coords[i+0];
       data->ccoords[1] += data->coords[i+1];
       data->ccoords[2] += data->coords[i+2];
       data->ccoords[3] += data->coords[i+3];
-    } else if (type == ATOM("IG_COORD_PARENT_BASE") && parent_data) {
-      data->ccoords[0] += parent_data->ccoords[0] + data->coords[i+0] * parent_data->ccoords[2];
-      data->ccoords[1] += parent_data->ccoords[1] + data->coords[i+1] * parent_data->ccoords[3];
-      data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
-      data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == ATOM("IG_COORD_PARENT") && parent_data) {
-      data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
-      data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
-      data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
-      data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
-    } else if (type == ATOM("IG_COORD_PARENT_X") && parent_data) {
-      data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
-      data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[2];
-      data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
-      data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[2];
-    } else if (type == ATOM("IG_COORD_PARENT_Y") && parent_data) {
-      data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[3];
-      data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
-      data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[3];
-      data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
+    } else if (type == ATOM("IG_COORD_PARENT_BASE")) {
+      if (parent_data) {
+        data->ccoords[0] += parent_data->ccoords[0] + data->coords[i+0] * parent_data->ccoords[2];
+        data->ccoords[1] += parent_data->ccoords[1] + data->coords[i+1] * parent_data->ccoords[3];
+        data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
+        data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
+      } else {
+        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT_BASE[%d] used without a parent window\n", rendering->source_item->window, type);
+      }
+    } else if (type == ATOM("IG_COORD_PARENT")) {
+      if (parent_data) {
+        data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
+        data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
+        data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
+        data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
+      } else {
+        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT[%d] used without a parent window\n", rendering->source_item->window, type);
+      }
+    } else if (type == ATOM("IG_COORD_PARENT_X")) {
+      if (parent_data) {
+        data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[2];
+        data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[2];
+        data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[2];
+        data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[2];
+      } else {
+        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT_X[%d] used without a parent window\n", rendering->source_item->window, type);
+      }
+    } else if (type == ATOM("IG_COORD_PARENT_Y")) {
+      if (parent_data) {
+        data->ccoords[0] += data->coords[i+0] * parent_data->ccoords[3];
+        data->ccoords[1] += data->coords[i+1] * parent_data->ccoords[3];
+        data->ccoords[2] += data->coords[i+2] * parent_data->ccoords[3];
+        data->ccoords[3] += data->coords[i+3] * parent_data->ccoords[3];
+      } else {
+        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT_Y[%d] used without a parent window\n", rendering->source_item->window, type);
+      }
     } else if (type == ATOM("IG_COORD_SCREEN_BASE")) {
       data->ccoords[0] += rendering->view->screen[0] + data->coords[i+0] * rendering->view->screen[2];
       data->ccoords[1] += rendering->view->screen[1] + data->coords[i+1] * rendering->view->screen[3];
@@ -107,7 +123,8 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
       data->ccoords[2] += data->coords[i+2] * rendering->view->screen[3];
       data->ccoords[3] += data->coords[i+3] * rendering->view->screen[3];
     } else {
-      ERROR("coord_type", "Unsupported coord type %d\n", type);
+      char *name = XGetAtomName(display, type);
+      ERROR("coord_type", "%d: Unsupported coord type %s[%d]\n", rendering->source_item->window, name ? name : "<INVALID>", type);
     }
   }
   DEBUG("prop_calc", "%ld[%s@%ld].%s (coords) <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
