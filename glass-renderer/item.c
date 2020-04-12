@@ -42,7 +42,7 @@ void item_constructor(Item *item) {
 void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
   if (reply->type == None) {
     Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
-    XChangeProperty(display, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, 1, (void *) &draw_type);    
   }
   
   item->properties = properties_load(item->window);
@@ -74,7 +74,7 @@ void item_initialize_layer_load(Item *item, xcb_get_property_reply_t *reply, xcb
     if (item->attr->override_redirect) {
       layer = ATOM("IG_LAYER_MENU");
     }
-    XChangeProperty(display, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, 1, (void *) &layer);    
   }
 
   item->is_mapped = item->attr->map_state == IsViewable; // FIXME: Remove is_mapped...
@@ -93,14 +93,14 @@ void item_initialize_attr_load(Item *item, xcb_get_window_attributes_reply_t *re
   item->attr = reply;
   if (item->window == root) {
     Atom layer = ATOM("IG_LAYER_ROOT");
-    XChangeProperty(display, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, 1, (void *) &layer);    
     Atom shader = ATOM("IG_SHADER_ROOT");
-    XChangeProperty(display, item->window, ATOM("IG_SHADER"), XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SHADER"), XA_ATOM, 32, 1, (void *) &shader);    
     item->is_mapped = True;
     item_initialize_draw_type(item);
   } else {
     long value = 1;
-    XChangeProperty(display, item->window, ATOM("WM_STATE"), XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("WM_STATE"), XA_INTEGER, 32, 1, (void *) &value);    
     item_initialize_layer(item);
   }
 }
@@ -337,8 +337,8 @@ void item_update_space_pos_from_window(Item *item) {
 
   long arr[2] = {width, height};
   DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
-  XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-  
+  xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);    
+
   Atom type_return;
   int format_return;
   unsigned long nitems_return;
@@ -381,7 +381,7 @@ void item_update_space_pos_from_window(Item *item) {
     for (int i = 0; i < 4; i++) {
       coords_arr[i] = *(long *) &coords[i];
     }
-    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords_arr);    
   }
 }
 
