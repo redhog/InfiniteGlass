@@ -6,6 +6,7 @@
 ## Reference documentation
 * Graphics
   * [Xlib](https://www.x.org/releases/X11R7.7/doc/libX11/libX11/libX11.html)
+  * [Xcb](https://xcb.freedesktop.org/manual/group__XCB____API.html)
   * [glX](https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/#glX)
   * [OpenGL 2.1](https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/)
   * [GLSL 3.30](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.3.30.pdf)
