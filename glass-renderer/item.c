@@ -20,14 +20,10 @@ Bool init_items() {
 }
 
 
-void item_constructor(Item *item, Window window) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return = NULL;
-  
-  item->window = window;
+void item_constructor(Item *item) {
+  item->window = None;
+  item->is_mapped = False;
+  item->_is_mapped = False;
   item->properties = NULL;
   item->prop_layer = NULL;
   item->prop_item_layer = NULL;
@@ -38,45 +34,23 @@ void item_constructor(Item *item, Window window) {
   item->prop_draw_type = NULL;
   item->draw_cycles_left = 0;
   item->parent_item = NULL;
-  
-  if (window == root) {
-    Atom layer = ATOM("IG_LAYER_ROOT");
-    XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
-    Atom shader = ATOM("IG_SHADER_ROOT");
-    XChangeProperty(display, window, ATOM("IG_SHADER"), XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
-    item->is_mapped = True;
-  } else {
-    XGetWindowProperty(display, window, ATOM("IG_LAYER"), 0, sizeof(Atom), 0, XA_ATOM,
-                       &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-    if (type_return == None) {
-      Atom layer = ATOM("IG_LAYER_DESKTOP");
-      XGetWindowAttributes(display, window, &item->attr);
-      if (item->attr.override_redirect) {
-        layer = ATOM("IG_LAYER_MENU");
-      }
-      XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
-    }
-    XFree(prop_return);
+}
 
-    long value = 1;
-    XChangeProperty(display, window, ATOM("WM_STATE"), XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
-
-    XGetWindowAttributes(display, window, &item->attr);
-    item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
-
-    XSelectInput(display, window, PropertyChangeMask);
-    item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
-  }
-
-  XGetWindowProperty(display, window, ATOM("IG_DRAW_TYPE"), 0, sizeof(Atom), 0, XA_ATOM,
+void item_initialize_draw_type(Item *item) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return = NULL;
+  XGetWindowProperty(display, item->window, ATOM("IG_DRAW_TYPE"), 0, sizeof(Atom), 0, XA_ATOM,
                      &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
   if (type_return == None) {
     Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
-    XChangeProperty(display, window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
+    XChangeProperty(display, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
   }
   XFree(prop_return);
   
-  item->properties = properties_load(window);
+  item->properties = properties_load(item->window);
   item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
   item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
   item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
@@ -85,13 +59,60 @@ void item_constructor(Item *item, Window window) {
   item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
   item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
   
-  if (window != root) {
+  if (item->window != root) {
     item_update_space_pos_from_window(item);
   }
   
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
+
+  item_update(item);
 }
+
+void item_initialize_layer(Item *item) {
+  Atom type_return;
+  int format_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char *prop_return = NULL;
+
+  XGetWindowProperty(display, item->window, ATOM("IG_LAYER"), 0, sizeof(Atom), 0, XA_ATOM,
+                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
+  if (type_return == None) {
+    Atom layer = ATOM("IG_LAYER_DESKTOP");
+    XGetWindowAttributes(display, item->window, &item->attr);
+    if (item->attr.override_redirect) {
+      layer = ATOM("IG_LAYER_MENU");
+    }
+    XChangeProperty(display, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+  }
+  XFree(prop_return);
+
+  XGetWindowAttributes(display, item->window, &item->attr);
+  item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
+
+  XSelectInput(display, item->window, PropertyChangeMask);
+  item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
+  
+  item_initialize_draw_type(item);
+}
+
+void item_initialize(Item *item, Window window) {
+  item->window = window;
+  if (window == root) {
+    Atom layer = ATOM("IG_LAYER_ROOT");
+    XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+    Atom shader = ATOM("IG_SHADER_ROOT");
+    XChangeProperty(display, window, ATOM("IG_SHADER"), XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
+    item->is_mapped = True;
+    item_initialize_draw_type(item);
+  } else {
+    long value = 1;
+    XChangeProperty(display, window, ATOM("WM_STATE"), XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
+    item_initialize_layer(item);
+  }
+}
+
 void item_destructor(Item *item) {
   texture_destroy(&item->window_texture);
 }
@@ -276,12 +297,9 @@ void item_print(Item *item) {
 
 Item *item_create(Window window) {
   Item *item = (Item *) malloc(sizeof(Item));
-
-  item->is_mapped = False;
-  item->_is_mapped = False;
-  item_constructor(item, window);
+  item_constructor(item);
   item_add(item);
-  item_update(item);
+  item_initialize(item, window);
   return item;
 }
 
