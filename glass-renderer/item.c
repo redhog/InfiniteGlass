@@ -10,6 +10,7 @@
 #include "property_coords.h"
 #include "debug.h"
 #include "rendering.h"
+#include "mainloop.h"
 #include <X11/Xatom.h>
 
 List *items_all = NULL;
@@ -36,19 +37,11 @@ void item_constructor(Item *item) {
   item->parent_item = NULL;
 }
 
-void item_initialize_draw_type(Item *item) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return = NULL;
-  XGetWindowProperty(display, item->window, ATOM("IG_DRAW_TYPE"), 0, sizeof(Atom), 0, XA_ATOM,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return == None) {
+void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (reply->type == None) {
     Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
     XChangeProperty(display, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
   }
-  XFree(prop_return);
   
   item->properties = properties_load(item->window);
   item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
@@ -68,17 +61,13 @@ void item_initialize_draw_type(Item *item) {
 
   item_update(item);
 }
+void item_initialize_draw_type(Item *item) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &item_initialize_draw_type_load, (void *) item);
+}
 
-void item_initialize_layer(Item *item) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return = NULL;
-
-  XGetWindowProperty(display, item->window, ATOM("IG_LAYER"), 0, sizeof(Atom), 0, XA_ATOM,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return == None) {
+void item_initialize_layer_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (reply->type == None) {
     Atom layer = ATOM("IG_LAYER_DESKTOP");
     XGetWindowAttributes(display, item->window, &item->attr);
     if (item->attr.override_redirect) {
@@ -86,7 +75,6 @@ void item_initialize_layer(Item *item) {
     }
     XChangeProperty(display, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
   }
-  XFree(prop_return);
 
   XGetWindowAttributes(display, item->window, &item->attr);
   item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
@@ -95,6 +83,10 @@ void item_initialize_layer(Item *item) {
   item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
   
   item_initialize_draw_type(item);
+}
+void item_initialize_layer(Item *item) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_LAYER"), XA_ATOM, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &item_initialize_layer_load, (void *) item);
 }
 
 void item_initialize(Item *item, Window window) {
