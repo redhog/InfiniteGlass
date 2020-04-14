@@ -40,7 +40,7 @@
 
 
 
-#define AUTOMATIC_REDRAWS 10
+#define AUTOMATIC_REDRAWS 1
 
 Pointer mouse = {0, 0, 0, 0, 0, 0};
 List *views = NULL;

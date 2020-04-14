@@ -14,8 +14,6 @@ typedef struct {
   int y;
   int width;
   int height;
-  int _width;
-  int _height;
   int itemwidth;
   int itemheight;
 
@@ -80,13 +78,14 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
 
   pixelwidth = px2 - px1;
   pixelheight = py2 - py1;
-  
-  data->width = pixelwidth;
-  data->height = pixelheight;
-  data->x = px1;
-  data->y = py1;
-  data->itemwidth = itempixelwidth;
-  data->itemheight = itempixelheight;
+
+  if (   (data->width == pixelwidth)
+      && (data->height == pixelheight)
+      && (data->x = px1)
+      && (data->y = py1)
+      && (data->itemwidth = itempixelwidth)
+      && (data->itemheight = itempixelheight))
+    return; 
 
   // Actually generate the drawing
   
@@ -95,13 +94,11 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   rsvg_handle_get_dimensions(data->rsvg, &dimension);
 
   // Check if current surface size is wrong before recreating...
-  if (!data->surface || data->_width != data->width || data->_height != data->height) {
+  if (!data->surface || pixelwidth != data->width || pixelheight != data->height) {
     if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
     if (data->surface) cairo_surface_destroy(data->surface);
-    data->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, data->width, data->height);
+    data->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pixelwidth, pixelheight);
     data->cairo_ctx = cairo_create(data->surface);
-    data->_width = data->width;
-    data->_height = data->height;
   } else {
     cairo_identity_matrix (data->cairo_ctx);
     cairo_set_operator(data->cairo_ctx, CAIRO_OPERATOR_CLEAR);
@@ -109,6 +106,13 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
     cairo_set_operator(data->cairo_ctx, CAIRO_OPERATOR_OVER);
   }
 
+  data->width = pixelwidth;
+  data->height = pixelheight;
+  data->x = px1;
+  data->y = py1;
+  data->itemwidth = itempixelwidth;
+  data->itemheight = itempixelheight;
+  
   DEBUG("window.svg", "RENDER %d,%d[%f,%f] = [%d,%d]\n",
         -data->x,
         -data->y,
