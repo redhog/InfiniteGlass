@@ -18,6 +18,7 @@
 #include <xcb/xc_misc.h>
 #include <xcb/xfixes.h>
 #include <xcb/xproto.h>
+#include <xcb/xcb_icccm.h>
 #include <X11/Xlib-xcb.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

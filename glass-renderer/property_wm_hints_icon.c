@@ -4,7 +4,7 @@
 #include "debug.h"
 
 typedef struct {
-  XWMHints wm_hints;
+  xcb_icccm_wm_hints_t wm_hints;
   Texture icon_texture;
   Texture icon_mask_texture;
 } WmHintsPropertyData;
@@ -27,23 +27,13 @@ void property_wm_hints_icon_load(Property *prop) {
   
   texture_initialize(&data->icon_texture);
   texture_initialize(&data->icon_mask_texture);
+  
+  xcb_icccm_get_wm_hints_from_reply(&data->wm_hints, prop->property_get_reply);
 
-  data->wm_hints.flags = 0;
-  XErrorEvent error;
-  x_try();
-  XWMHints *wm_hints = XGetWMHints(display, prop->window);
-  if (wm_hints) {
-    data->wm_hints = *wm_hints;
-    XFree(wm_hints);
-  }
-  if (!x_catch(&error)) {
-    DEBUG("icon", "Unable to load WM_HINTS: %lu", prop->window);
-  }
-
-  if (data->wm_hints.flags & IconPixmapHint) {
+  if (data->wm_hints.flags & XCB_ICCCM_WM_HINT_ICON_PIXMAP) {
     texture_from_pixmap(&data->icon_texture, data->wm_hints.icon_pixmap);
   }
-  if (data->wm_hints.flags & IconMaskHint) {
+  if (data->wm_hints.flags & XCB_ICCCM_WM_HINT_ICON_MASK) {
     texture_from_pixmap(&data->icon_mask_texture, data->wm_hints.icon_mask);
   }
   GL_CHECK_ERROR("icon_update_pixmap2", "%ld", prop->window);
@@ -62,7 +52,7 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
   WmHintsPropertyProgramData *program_data = (WmHintsPropertyProgramData *) prop_cache->data;
   if (!prop_cache->is_uniform || program_data->icon_location == -1 || program_data->icon_mask_location == -1) return;
 
-  if (data->wm_hints.flags & IconPixmapHint) {
+  if (data->wm_hints.flags & XCB_ICCCM_WM_HINT_ICON_PIXMAP) {
     glUniform1i(program_data->icon_enabled_location, 1);
     glUniform1i(program_data->icon_location, rendering->texture_unit);
     glActiveTexture(GL_TEXTURE0+rendering->texture_unit);
@@ -70,7 +60,7 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
     glBindSampler(rendering->texture_unit, 0);
     rendering->texture_unit++;
   }
-  if (data->wm_hints.flags & IconMaskHint) {
+  if (data->wm_hints.flags & XCB_ICCCM_WM_HINT_ICON_MASK) {
     glUniform1i(program_data->icon_mask_enabled_location, 1);
     glUniform1i(program_data->icon_mask_location, rendering->texture_unit);
     glActiveTexture(GL_TEXTURE0+rendering->texture_unit);
