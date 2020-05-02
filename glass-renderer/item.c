@@ -133,9 +133,12 @@ void item_initialize_layer_load(Item *item, xcb_get_property_reply_t *reply, xcb
   free(reply);
   
   item->is_mapped = item->attr->map_state == IsViewable; // FIXME: Remove is_mapped...
+  
+  uint32_t values[] = {PropertyChangeMask};
+  xcb_change_window_attributes(xcb_display, item->window, XCB_CW_EVENT_MASK, values);
 
-  XSelectInput(display, item->window, PropertyChangeMask);
-  item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
+  item->damage = xcb_generate_id(xcb_display);
+  xcb_damage_create(xcb_display, item->damage, item->window, XCB_DAMAGE_REPORT_LEVEL_NON_EMPTY);
   
   item_initialize_draw_type(item);
 }

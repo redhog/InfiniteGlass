@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "xapi.h"
 
-void property_item_init(PropertyTypeHandler *prop) { prop->type = XInternAtom(display, "IG_ITEM", False); prop->name = AnyPropertyType; }
+void property_item_init(PropertyTypeHandler *prop) { prop->type = ATOM("IG_ITEM"); prop->name = AnyPropertyType; }
 void property_item_load(Property *prop) {}
 void property_item_free(Property *prop) {}
 void property_item_to_gl(Property *prop, Rendering *rendering) {}

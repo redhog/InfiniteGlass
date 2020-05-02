@@ -33,7 +33,7 @@ struct ItemStruct {
   Property *prop_coord_types;
   Property *prop_draw_type;
 
-  Damage damage;
+  xcb_damage_damage_t damage;
  
   Pixmap window_pixmap;
   Texture window_texture;
