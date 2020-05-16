@@ -1,0 +1,13 @@
+glslangValidator -V cube.frag
+xxd -i -g 4 frag.spv > cube.frag.inc
+tail -n +2 cube.frag.inc > cube.frag.tmp
+head -n -2 cube.frag.tmp > cube.frag.inc
+rm cube.frag.tmp
+rm frag.spv 
+
+glslangValidator -V cube.vert
+xxd -i -g 4 vert.spv > cube.vert.inc
+tail -n +2 cube.vert.inc > cube.vert.tmp
+head -n -2 cube.vert.tmp > cube.vert.inc
+rm cube.vert.tmp
+rm vert.spv 

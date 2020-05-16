@@ -1,3 +1,4 @@
 gcc -g -o ../build/glass-renderer main.c \
 	-lvulkan -lm -DVK_USE_PLATFORM_XCB_KHR \
-	-lxcb -lxcb-composite -lxcb-shape -lxcb-xfixes
+	-lxcb -lxcb-composite -lxcb-shape -lxcb-xfixes \
+	-I/usr/include/apr-1 -lapr-1

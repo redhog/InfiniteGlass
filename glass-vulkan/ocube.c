@@ -8,8 +8,6 @@
 #include <signal.h>
 #include <X11/Xutil.h>
 
-#include <apr_general.h>
-#include <apr_tables.h>
 
 #include <vulkan/vk_sdk_platform.h>
 #include "linmath.h"
@@ -20,11 +18,9 @@
 #define MILLION 1000000L
 #define BILLION 1000000000L
 
-#define H2_UTIL_IMPLEMENTATION
-#include "h2_util.h"
-
-#define APP_SHORT_NAME "wmdemo"
-#define APP_LONG_NAME "Vulkan WM Demo"
+#define DEMO_TEXTURE_COUNT 1
+#define APP_SHORT_NAME "vkcube"
+#define APP_LONG_NAME "Vulkan Cube"
 
 // Allow a maximum of two outstanding presentation operations.
 #define FRAME_LAG 2
@@ -79,23 +75,9 @@ static PFN_vkGetDeviceProcAddr g_gdpa = NULL;
 	} \
 }
 
-// structure for keeping track of a window's state and associated resources
-typedef struct win_t {
-	int xid; // id of this window inside X11 server
-	// allocated_resources is a bitfield: a checklist of allocated resources
-	// that need to be released before deleting this structure
-	// 1, 2, 4, 8 - associated textures in video memory
-	uint32_t allocated_resources;
-	xcb_get_geometry_reply_t geom; // X11 window geometry
-} win_t;
-
-// structure representing a single vertex of a window. 6 vertexes per window
-typedef struct win_vertex_t {
-	float x, y, z;
-	float tex_ind; // integer index of the texture in the array of textures
-} win_vertex_t;
-
-// structure to track all objects related to a texture.
+/*
+ * structure to track all objects related to a texture.
+ */
 struct texture_object {
 	VkSampler sampler;
 
@@ -109,9 +91,7 @@ struct texture_object {
 	int32_t tex_width, tex_height;
 };
 
-static int cur_texture_count = 0;
-#define DEMO_TEXTURE_COUNT 40
-static char *tex_files[] = {"screenshot.png"};
+static char *tex_files[] = {"lunarg.ppm"};
 
 static int validation_error = 0;
 
@@ -122,24 +102,24 @@ struct vktexcube_vs_uniform {
 	float attr[12 * 3][4];
 };
 
-//------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------
 // Mesh and VertexFormat Data
-//------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------
 // clang-format off
-static float g_vertex_buffer_data[] = {
-    -2.0f, 1.0f, 2.0f,  // +Z side
-    -2.0f,-1.0f, 2.0f,
-     0.0f, 1.0f, 2.0f,
-    -2.0f,-1.0f, -2.0f,
-     0.0f,-1.0f, -2.0f,
-     0.0f, 1.0f, -2.0f,
+static const float g_vertex_buffer_data[] = {
+    -1.0f,-1.0f,-1.0f,  // -X side
+    -1.0f,-1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
 
-    -0.5f, 2.0f, 1.0f,  // +Z side
-    -0.5f, 0.0f, 1.0f,
-     1.5f, 2.0f, 1.0f,
-    -0.5f, 0.0f, 1.0f,
-     1.5f, 0.0f, 1.0f,
-     1.5f, 2.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,  // -Z side
+     1.0f, 1.0f,-1.0f,
+     1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+     1.0f, 1.0f,-1.0f,
 
     -1.0f,-1.0f,-1.0f,  // -Y side
      1.0f,-1.0f,-1.0f,
@@ -162,28 +142,28 @@ static float g_vertex_buffer_data[] = {
      1.0f,-1.0f,-1.0f,
      1.0f, 1.0f,-1.0f,
 
-     1.3f, 0.0f,-1.0f,  // +X side
-     1.3f, 0.0f, 1.0f,
-     1.3f,-1.0f, 1.0f,
-     1.3f,-1.0f, 1.0f,
-     1.3f,-1.0f,-1.0f,
-     1.3f, 0.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,  // +Z side
+    -1.0f,-1.0f, 1.0f,
+     1.0f, 1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+     1.0f,-1.0f, 1.0f,
+     1.0f, 1.0f, 1.0f,
 };
 
 static const float g_uv_buffer_data[] = {
-    0.0f, 1.0f,  // +Z side
-    0.0f, 0.0f,
+    0.0f, 1.0f,  // -X side
     1.0f, 1.0f,
-    0.0f, 0.0f,
     1.0f, 0.0f,
-    1.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f,
 
-    0.0f, 0.0f,  // +Z side
-    0.0f, 1.0f,
-    1.0f, 0.0f,
+    1.0f, 1.0f,  // -Z side
+    0.0f, 0.0f,
     0.0f, 1.0f,
     1.0f, 1.0f,
     1.0f, 0.0f,
+    0.0f, 0.0f,
 
     1.0f, 0.0f,  // -Y side
     1.0f, 1.0f,
@@ -369,14 +349,6 @@ struct Wm {
 
 	uint32_t current_buffer;
 	uint32_t queue_family_count;
-
-	apr_pool_t *mp; // default memory pool
-	apr_array_header_t *vertarr; // vertex array of type win_vertex_t
-
-	VkBuffer vertex_buffer;
-	VkDeviceMemory vertex_memory;
-
-	h2_ihash_t *winhash; // hash table of windows indexed by their X11 ids
 };
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger_callback(
@@ -386,7 +358,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger_callback(
 		void *pUserData) {
 	char prefix[64] = "";
 	char *message = (char *)malloc(strlen(pCallbackData->pMessage) + 5000);
-	dassert(message);
+	assert(message);
 	struct Wm *wm = (struct Wm *)pUserData;
 
 	if(wm->use_break) {
@@ -474,7 +446,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger_callback(
 		}
 	}
 
-	dlog("%s\n", message);
+	printf("%s\n", message);
+	fflush(stdout);
 
 	free(message);
 
@@ -549,13 +522,13 @@ static void wm_flush_init_cmd(struct Wm *wm) {
 	if(wm->cmd == VK_NULL_HANDLE) return;
 
 	err = vkEndCommandBuffer(wm->cmd);
-	dassert(!err);
+	assert(!err);
 
 	VkFence fence;
 	VkFenceCreateInfo fence_ci = {.sType =
 		VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, .pNext = NULL, .flags = 0};
 	err = vkCreateFence(wm->device, &fence_ci, NULL, &fence);
-	dassert(!err);
+	assert(!err);
 
 	const VkCommandBuffer cmd_bufs[] = {wm->cmd};
 	VkSubmitInfo submit_info = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -569,10 +542,10 @@ static void wm_flush_init_cmd(struct Wm *wm) {
 			.pSignalSemaphores = NULL};
 
 	err = vkQueueSubmit(wm->graphics_queue, 1, &submit_info, fence);
-	dassert(!err);
+	assert(!err);
 
 	err = vkWaitForFences(wm->device, 1, &fence, VK_TRUE, UINT64_MAX);
-	dassert(!err);
+	assert(!err);
 
 	vkFreeCommandBuffers(wm->device, wm->cmd_pool, 1, cmd_bufs);
 	vkDestroyFence(wm->device, fence, NULL);
@@ -584,7 +557,7 @@ static void wm_set_image_layout(struct Wm *wm, VkImage image,
 		VkImageLayout new_image_layout, VkAccessFlagBits srcAccessMask,
 		VkPipelineStageFlags src_stages,
 		VkPipelineStageFlags dest_stages) {
-	dassert(wm->cmd);
+	assert(wm->cmd);
 
 	VkImageMemoryBarrier image_memory_barrier = {
 			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -651,7 +624,7 @@ static void wm_draw_build_cmd(struct Wm *wm, VkCommandBuffer cmd_buf) {
 		.pInheritanceInfo = NULL,
 	};
 	const VkClearValue clear_values[2] = {
-		[0] = {.color.float32 = {0.0f, 0.0f, 0.01f, 0.0f}},
+		[0] = {.color.float32 = {0.2f, 0.2f, 0.2f, 0.2f}},
 		[1] = {.depthStencil = {1.0f, 0}},
 	};
 	const VkRenderPassBeginInfo rp_begin = {
@@ -692,7 +665,7 @@ static void wm_draw_build_cmd(struct Wm *wm, VkCommandBuffer cmd_buf) {
 		wm->CmdBeginDebugUtilsLabelEXT(cmd_buf, &label);
 	}
 
-	dassert(!err);
+	assert(!err);
 	vkCmdBeginRenderPass(cmd_buf, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 
 	if(wm->validate) {
@@ -708,9 +681,6 @@ static void wm_draw_build_cmd(struct Wm *wm, VkCommandBuffer cmd_buf) {
 
 	vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
 			wm->pipeline);
-	VkBuffer vertexBuffers[1] = {wm->vertex_buffer};
-	VkDeviceSize vboffsets[1] = {0};
-	vkCmdBindVertexBuffers(cmd_buf, 0, 1, vertexBuffers, vboffsets);
 	vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
 			wm->pipeline_layout, 0, 1,
 			&wm->swapchain_image_resources[
@@ -750,7 +720,7 @@ static void wm_draw_build_cmd(struct Wm *wm, VkCommandBuffer cmd_buf) {
 		wm->CmdBeginDebugUtilsLabelEXT(cmd_buf, &label);
 	}
 
-	vkCmdDraw(cmd_buf, wm->vertarr->nelts, 1, 0, 0);
+	vkCmdDraw(cmd_buf, 12 * 3, 1, 0, 0);
 	if(wm->validate) {
 		wm->CmdEndDebugUtilsLabelEXT(cmd_buf);
 	}
@@ -792,7 +762,7 @@ static void wm_draw_build_cmd(struct Wm *wm, VkCommandBuffer cmd_buf) {
 		wm->CmdEndDebugUtilsLabelEXT(cmd_buf);
 	}
 	err = vkEndCommandBuffer(cmd_buf);
-	dassert(!err);
+	assert(!err);
 }
 
 void wm_build_image_ownership_cmd(struct Wm *wm, int i) {
@@ -807,7 +777,7 @@ void wm_build_image_ownership_cmd(struct Wm *wm, int i) {
 	err = vkBeginCommandBuffer(
 			wm->swapchain_image_resources[i]
 			.graphics_to_present_cmd, &cmd_buf_info);
-	dassert(!err);
+	assert(!err);
 
 	VkImageMemoryBarrier image_ownership_barrier = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -827,7 +797,7 @@ void wm_build_image_ownership_cmd(struct Wm *wm, int i) {
 		&image_ownership_barrier);
 	err = vkEndCommandBuffer(wm->swapchain_image_resources[i]
 			.graphics_to_present_cmd);
-	dassert(!err);
+	assert(!err);
 }
 
 void wm_update_data_buffer(struct Wm *wm) {
@@ -839,15 +809,148 @@ void wm_update_data_buffer(struct Wm *wm) {
 	// Rotate around the Y axis
 	mat4x4_dup(Model, wm->model_matrix);
 	mat4x4_rotate(wm->model_matrix, Model, 0.0f, 1.0f, 0.0f,
-		(float)degreesToRadians(wm->spin_angle * wm->spin_increment));
+		(float)degreesToRadians(wm->spin_angle));
 	mat4x4_mul(MVP, VP, wm->model_matrix);
 
 	memcpy(wm->swapchain_image_resources[wm->current_buffer]
 		.uniform_memory_ptr, (const void *)&MVP[0][0], matrixSize);
-//	wm->spin_angle = 0;
 }
 
 void DemoUpdateTargetIPD(struct Wm *wm) {
+	// Look at what happened to previous presents, and make appropriate
+	// adjustments in timing:
+	VkResult U_ASSERT_ONLY err;
+	VkPastPresentationTimingGOOGLE *past = NULL;
+	uint32_t count = 0;
+
+	err = wm->fpGetPastPresentationTimingGOOGLE(wm->device, wm->swapchain,
+		&count, NULL);
+	assert(!err);
+	if(count) {
+		past = (VkPastPresentationTimingGOOGLE *)malloc(
+				sizeof(VkPastPresentationTimingGOOGLE) * count);
+		assert(past);
+		err = wm->fpGetPastPresentationTimingGOOGLE(
+				wm->device, wm->swapchain, &count, past);
+		assert(!err);
+
+		bool early = false;
+		bool late = false;
+		bool calibrate_next = false;
+		for(uint32_t i = 0; i < count; i++) {
+			if(!wm->syncd_with_actual_presents) {
+                // This is the first time that we've received an
+                // actualPresentTime for this swapchain.  In order to not
+                // perceive these early frames as "late", we need to sync-up
+                // our future desiredPresentTime's with the
+                // actualPresentTime(s) that we're receiving now.
+				calibrate_next = true;
+
+                // So that we don't suspect any pending presents as late,
+                // record them all as suspected-late presents:
+				wm->last_late_id = wm->next_present_id - 1;
+				wm->last_early_id = 0;
+				wm->syncd_with_actual_presents = true;
+				break;
+			} else if(CanPresentEarlier(past[i].earliestPresentTime,
+					past[i].actualPresentTime,
+					past[i].presentMargin,
+					wm->refresh_duration)) {
+                // This image could have been presented earlier.  We don't want
+                // to decrease the target_IPD until we've seen early presents
+                // for at least two seconds.
+				if(wm->last_early_id == past[i].presentID) {
+                    // We've now seen two seconds worth of early presents.
+                    // Flag it as such, and reset the counter:
+					early = true;
+					wm->last_early_id = 0;
+				} else if(wm->last_early_id == 0) {
+                    // This is the first early present we've seen.
+                    // Calculate the presentID for two seconds from now.
+					uint64_t lastEarlyTime =
+						past[i].actualPresentTime +
+						(2 * BILLION);
+						uint32_t howManyPresents =
+						(uint32_t)((lastEarlyTime -
+						past[i].actualPresentTime) /
+						wm->target_IPD);
+					wm->last_early_id = past[i].presentID +
+						howManyPresents;
+				} else {
+                    // We are in the midst of a set of early images,
+                    // and so we won't do anything.
+				}
+				late = false;
+				wm->last_late_id = 0;
+			} else if(ActualTimeLate(past[i].desiredPresentTime,
+				past[i].actualPresentTime,
+				wm->refresh_duration)) {
+                // This image was presented after its desired time.  Since
+                // there's a delay between calling vkQueuePresentKHR and when
+                // we get the timing data, several presents may have been late.
+                // Thus, we need to threat all of the outstanding presents as
+                // being likely late, so that we only increase the target_IPD
+                // once for all of those presents.
+				if((wm->last_late_id == 0) ||
+							(wm->last_late_id <
+							past[i].presentID)) {
+					late = true;
+				// Record the last suspected-late present:
+					wm->last_late_id =
+						wm->next_present_id - 1;
+				} else {
+                    // We are in the midst of a set of likely-late images,
+                    // and so we won't do anything.
+				}
+				early = false;
+				wm->last_early_id = 0;
+			} else {
+                // Since this image was not presented early or late, reset
+                // any sets of early or late presentIDs:
+				early = false;
+				late = false;
+				calibrate_next = true;
+				wm->last_early_id = 0;
+				wm->last_late_id = 0;
+			}
+		}
+
+		if(early) {
+            // Since we've seen at least two-seconds worth of presnts that
+            // could have occured earlier than desired, let's decrease the
+            // target_IPD (i.e. increase the frame rate):
+            //
+            // TODO(ianelliott): Try to calculate a better target_IPD based
+            // on the most recently-seen present (this is overly-simplistic).
+			wm->refresh_duration_multiplier--;
+			if(wm->refresh_duration_multiplier == 0) {
+                // This should never happen, but in case it does, don't
+                // try to go faster.
+				wm->refresh_duration_multiplier = 1;
+			}
+			wm->target_IPD = wm->refresh_duration *
+					wm->refresh_duration_multiplier;
+		}
+		if(late) {
+            // Since we found a new instance of a late present, we want to
+            // increase the target_IPD (i.e. decrease the frame rate):
+            //
+            // TODO(ianelliott): Try to calculate a better target_IPD based
+            // on the most recently-seen present (this is overly-simplistic).
+			wm->refresh_duration_multiplier++;
+			wm->target_IPD = wm->refresh_duration *
+					wm->refresh_duration_multiplier;
+		}
+
+		if(calibrate_next) {
+			int64_t multiple = wm->next_present_id -
+						past[count - 1].presentID;
+			wm->prev_desired_present_time =
+				(past[count - 1].actualPresentTime +
+				(multiple * wm->target_IPD));
+		}
+		free(past);
+	}
 }
 
 static void wm_draw(struct Wm *wm) {
@@ -878,11 +981,23 @@ static void wm_draw(struct Wm *wm) {
 			wm_create_surface(wm);
 			wm_resize(wm);
 		} else {
-			dassert(!err);
+			assert(!err);
 		}
 	} while(err != VK_SUCCESS);
 
 	wm_update_data_buffer(wm);
+
+	if(wm->VK_GOOGLE_display_timing_enabled) {
+        // Look at what happened to previous presents, and make appropriate
+        // adjustments in timing:
+		DemoUpdateTargetIPD(wm);
+
+        // Note: a real application would position its geometry to that it's in
+        // the correct locatoin for when the next image is presented.  It might
+        // also wait, so that there's less latency between any input and when
+        // the next image is rendered/presented.  This demo program is so
+        // simple that it doesn't do either of those.
+	}
 
     // Wait for the image acquired semaphore to be signaled to ensure
     // that the image won't be rendered to until the presentation
@@ -905,7 +1020,7 @@ static void wm_draw(struct Wm *wm) {
 			&wm->draw_complete_semaphores[wm->frame_index];
 	err = vkQueueSubmit(wm->graphics_queue, 1, &submit_info,
 			wm->fences[wm->frame_index]);
-	dassert(!err);
+	assert(!err);
 
 	if(wm->separate_present_queue) {
      // If we are using separate queues, change image ownership to the
@@ -925,7 +1040,7 @@ static void wm_draw(struct Wm *wm) {
 			&wm->image_ownership_semaphores[wm->frame_index];
 		err = vkQueueSubmit(wm->present_queue, 1, &submit_info,
 			nullFence);
-		dassert(!err);
+		assert(!err);
 	}
 
 	// If we are using separate queues we have to wait for image ownership,
@@ -971,6 +1086,43 @@ static void wm_draw(struct Wm *wm) {
 		present.pNext = &regions;
 	}
 
+	if(wm->VK_GOOGLE_display_timing_enabled) {
+		VkPresentTimeGOOGLE ptime;
+		if(wm->prev_desired_present_time == 0) {
+            // This must be the first present for this swapchain.
+            //
+            // We don't know where we are relative to the presentation engine's
+            // display's refresh cycle.  We also don't know how long rendering
+            // takes.  Let's make a grossly-simplified assumption that the
+            // desiredPresentTime should be half way between now and
+            // now+target_IPD.  We will adjust over time.
+			uint64_t curtime = getTimeInNanoseconds();
+			if(curtime == 0) {
+		// Since we didn't find out the current time, don't give a
+		// desiredPresentTime:
+				ptime.desiredPresentTime = 0;
+			} else {
+				ptime.desiredPresentTime = curtime +
+						(wm->target_IPD >> 1);
+			}
+		} else {
+			ptime.desiredPresentTime =
+			(wm->prev_desired_present_time + wm->target_IPD);
+		}
+		ptime.presentID = wm->next_present_id++;
+		wm->prev_desired_present_time = ptime.desiredPresentTime;
+
+		VkPresentTimesInfoGOOGLE present_time = {
+			.sType = VK_STRUCTURE_TYPE_PRESENT_TIMES_INFO_GOOGLE,
+			.pNext = present.pNext,
+			.swapchainCount = present.swapchainCount,
+			.pTimes = &ptime,
+		};
+		if(wm->VK_GOOGLE_display_timing_enabled) {
+			present.pNext = &present_time;
+		}
+	}
+
 	err = wm->fpQueuePresentKHR(wm->present_queue, &present);
 	wm->frame_index += 1;
 	wm->frame_index %= FRAME_LAG;
@@ -987,7 +1139,7 @@ static void wm_draw(struct Wm *wm) {
 		wm_create_surface(wm);
 		wm_resize(wm);
 	} else {
-		dassert(!err);
+		assert(!err);
 	}
 }
 
@@ -999,18 +1151,18 @@ static void wm_prepare_buffers(struct Wm *wm) {
 	VkSurfaceCapabilitiesKHR surfCapabilities;
 	err = wm->fpGetPhysicalDeviceSurfaceCapabilitiesKHR(
 			wm->gpu, wm->surface, &surfCapabilities);
-	dassert(!err);
+	assert(!err);
 
 	uint32_t presentModeCount;
 	err = wm->fpGetPhysicalDeviceSurfacePresentModesKHR(
 			wm->gpu, wm->surface, &presentModeCount, NULL);
-	dassert(!err);
+	assert(!err);
 	VkPresentModeKHR *presentModes = (VkPresentModeKHR *)malloc(
 			presentModeCount * sizeof(VkPresentModeKHR));
-	dassert(presentModes);
+	assert(presentModes);
 	err = wm->fpGetPhysicalDeviceSurfacePresentModesKHR(
 			wm->gpu, wm->surface, &presentModeCount, presentModes);
-	dassert(!err);
+	assert(!err);
 
 	VkExtent2D swapchainExtent;
 	// width and height are either both 0xFFFFFFFF, or both not 0xFFFFFFFF.
@@ -1057,6 +1209,33 @@ static void wm_prepare_buffers(struct Wm *wm) {
 	// and to have no tearing.  It's a great default present mode to use.
 //	VkPresentModeKHR swapchainPresentMode = VK_PRESENT_MODE_FIFO_KHR;
 	VkPresentModeKHR swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+
+    //  There are times when you may wish to use another present mode.  The
+    //  following code shows how to select them, and the comments provide some
+    //  reasons you may wish to use them.
+    //
+    // It should be noted that Vulkan 1.0 doesn't provide a method for
+    // synchronizing rendering with the presentation engine's display.  There
+    // is a method provided for throttling rendering with the display, but
+    // there are some presentation engines for which this method will not work.
+    // If an application doesn't throttle its rendering, and if it renders much
+    // faster than the refresh rate of the display, this can waste power on
+    // mobile devices.  That is because power is being spent rendering images
+    // that may never be seen.
+
+    // VK_PRESENT_MODE_IMMEDIATE_KHR is for applications that don't care about
+    // tearing, or have some way of synchronizing their rendering with the
+    // display.
+    // VK_PRESENT_MODE_MAILBOX_KHR may be useful for applications that
+    // generally render a new presentable image every refresh cycle, but are
+    // occasionally early.  In this case, the application wants the new image
+    // to be displayed instead of the previously-queued-for-presentation image
+    // that has not yet been displayed.
+    // VK_PRESENT_MODE_FIFO_RELAXED_KHR is for applications that generally
+    // render a new presentable image every refresh cycle, but are occasionally
+    // late.  In this case (perhaps because of stuttering/latency concerns),
+    // the application wants the late image to be immediately displayed, even
+    // though that may mean some tearing.
 
 	if(wm->presentMode != swapchainPresentMode) {
 		for(size_t i = 0; i < presentModeCount; ++i) {
@@ -1137,7 +1316,7 @@ static void wm_prepare_buffers(struct Wm *wm) {
 	uint32_t i;
 	err = wm->fpCreateSwapchainKHR(wm->device, &swapchain_ci, NULL,
 			&wm->swapchain);
-	dassert(!err);
+	assert(!err);
 
     // If we just re-created an existing swapchain, we should destroy the old
     // swapchain at this point.
@@ -1149,19 +1328,19 @@ static void wm_prepare_buffers(struct Wm *wm) {
 
 	err = wm->fpGetSwapchainImagesKHR(wm->device, wm->swapchain,
 			&wm->swapchainImageCount, NULL);
-	dassert(!err);
+	assert(!err);
 
 	VkImage *swapchainImages = (VkImage *)malloc(
 				wm->swapchainImageCount * sizeof(VkImage));
-	dassert(swapchainImages);
+	assert(swapchainImages);
 	err = wm->fpGetSwapchainImagesKHR(wm->device, wm->swapchain,
 		&wm->swapchainImageCount, swapchainImages);
-	dassert(!err);
+	assert(!err);
 
 	wm->swapchain_image_resources =
 			(SwapchainImageResources *)malloc(sizeof(
 			SwapchainImageResources) * wm->swapchainImageCount);
-	dassert(wm->swapchain_image_resources);
+	assert(wm->swapchain_image_resources);
 
 	for(i = 0; i < wm->swapchainImageCount; i++) {
 		VkImageViewCreateInfo color_image_view = {
@@ -1188,7 +1367,22 @@ static void wm_prepare_buffers(struct Wm *wm) {
 
 		err = vkCreateImageView(wm->device, &color_image_view, NULL,
 			&wm->swapchain_image_resources[i].view);
-		dassert(!err);
+		assert(!err);
+	}
+
+	if(wm->VK_GOOGLE_display_timing_enabled) {
+		VkRefreshCycleDurationGOOGLE rc_dur;
+		err = wm->fpGetRefreshCycleDurationGOOGLE(wm->device,
+						wm->swapchain, &rc_dur);
+		assert(!err);
+		wm->refresh_duration = rc_dur.refreshDuration;
+
+		wm->syncd_with_actual_presents = false;
+		// Initially target 1X the refresh duration:
+		wm->target_IPD = wm->refresh_duration;
+		wm->refresh_duration_multiplier = 1;
+		wm->prev_desired_present_time = 0;
+		wm->next_present_id = 1;
 	}
 
 	if(NULL != swapchainImages) {
@@ -1237,10 +1431,10 @@ static void wm_prepare_depth(struct Wm *wm) {
 
 	// create image
 	err = vkCreateImage(wm->device, &image, NULL, &wm->depth.image);
-	dassert(!err);
+	assert(!err);
 
 	vkGetImageMemoryRequirements(wm->device, wm->depth.image, &mem_reqs);
-	dassert(!err);
+	assert(!err);
 
 	wm->depth.mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	wm->depth.mem_alloc.pNext = NULL;
@@ -1250,115 +1444,55 @@ static void wm_prepare_depth(struct Wm *wm) {
 	pass = memory_type_from_properties(wm, mem_reqs.memoryTypeBits,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			&wm->depth.mem_alloc.memoryTypeIndex);
-	dassert(pass);
+	assert(pass);
 
 	// allocate memory
 	err = vkAllocateMemory(wm->device, &wm->depth.mem_alloc, NULL,
 		&wm->depth.mem);
-	dassert(!err);
+	assert(!err);
 
 	// bind memory
 	err = vkBindImageMemory(wm->device, wm->depth.image, wm->depth.mem, 0);
-	dassert(!err);
+	assert(!err);
 
 	// create image view
 	view.image = wm->depth.image;
 	err = vkCreateImageView(wm->device, &view, NULL, &wm->depth.view);
-	dassert(!err);
+	assert(!err);
 }
 
-#define STB_IMAGE_IMPLEMENTATION 1
-#include "stb_image.h"
-// normally this function will be called twice: first time just to get
-// the image size, second time we copy the image data
+// Convert ppm image data from header file into RGBA texture image
+#include "lunarg.ppm.h"
 bool loadTexture(const char *filename, uint8_t *rgba_data,
 		VkSubresourceLayout *layout, int32_t *width, int32_t *height) {
-	int imgw, imgh, imgc; // image width, height and number of components
-
-	if(!rgba_data) {
-		// only get the image width and height
-		if(!stbi_info(filename, &imgw, &imgh, &imgc)) {
-			return false;
-		}
-		*width = imgw;
-		*height = imgh;
-		return true;
-	}
-
-	unsigned char *data = stbi_load(filename, &imgw, &imgh, &imgc, 4);
-	if(!data) {
+	(void)filename;
+	char *cPtr;
+	cPtr = (char *)lunarg_ppm;
+	if((unsigned char *)cPtr >= (lunarg_ppm + lunarg_ppm_len) ||
+			strncmp(cPtr, "P6\n", 3)) {
 		return false;
 	}
-	*width = imgw;
-	*height = imgh;
-
-	memcpy(rgba_data, data, imgw * imgh * 4);
-
-	stbi_image_free(data);
-	return true;
-}
-
-// grab a screenshot of a window given its xid aka xcb_drawable_t
-bool grabTexture(struct Wm *wm, xcb_drawable_t win, uint8_t *bgra_data,
-		VkSubresourceLayout *layout, int32_t *width, int32_t *height) {
-
-	// debug: create a dummy texture if win == 0
-	if(!win) {
-		*width = 1;
-		*height = 1;
-		if(!bgra_data) {
-			return true;
+	while(strncmp(cPtr++, "\n", 1));
+	sscanf(cPtr, "%u %u", width, height);
+	if(rgba_data == NULL) {
+		return true;
+	}
+	while(strncmp(cPtr++, "\n", 1));
+	if((unsigned char *)cPtr >= (lunarg_ppm + lunarg_ppm_len) ||
+			strncmp(cPtr, "255\n", 4)) {
+		return false;
+	}
+	while(strncmp(cPtr++, "\n", 1));
+	for(int y = 0; y < *height; y++) {
+		uint8_t *rowPtr = rgba_data;
+		for(int x = 0; x < *width; x++) {
+			memcpy(rowPtr, cPtr, 3);
+			rowPtr[3] = 255; // Alpha of 1
+			rowPtr += 4;
+			cPtr += 3;
 		}
-		int npixels = 1;
-		bgra_data[0] = 84; // blue
-		bgra_data[1] = 74; // green
-		bgra_data[2] = 14; // red
-		bgra_data[3] = 255; // alpha
-		return true;
+		rgba_data += layout->rowPitch;
 	}
-
-	int npixels;
-
-	// get window's geometry
-	xcb_get_geometry_reply_t *geom = xcb_get_geometry_reply(
-			wm->connection, xcb_get_geometry(
-			wm->connection, win), 0);
-
-	*width = geom->width;
-	*height = geom->height;
-	free(geom);
-
-	if(!bgra_data) {
-		return true;
-	}
-
-	xcb_get_image_reply_t *image = xcb_get_image_reply(
-			wm->connection, xcb_get_image(
-			wm->connection, XCB_IMAGE_FORMAT_Z_PIXMAP,
-			win,
-			0,
-			0,
-			*width,
-			*height,
-			((uint32_t)~0UL)), NULL);
-
-	dassert(image);
-
-	int data_length = xcb_get_image_data_length(image);
-
-	uint8_t *image_data = xcb_get_image_data(image);
-	dassert(image_data);
-
-	npixels = (*width) * (*height);
-
-//	printf("Npixels = %d, data length = %d\n", npixels, data_length);
-
-	dassert(npixels * 4 == data_length);
-
-	memcpy(bgra_data, image_data, npixels * 4);
-
-	free(image);
-
 	return true;
 }
 
@@ -1369,7 +1503,6 @@ static void wm_prepare_texture_buffer(struct Wm *wm, const char *filename,
 	VkResult U_ASSERT_ONLY err;
 	bool U_ASSERT_ONLY pass;
 
-	printf("1.\n");
 	if(!loadTexture(filename, NULL, NULL, &tex_width, &tex_height)) {
 		ERR_EXIT("Failed to load textures", "Load Texture Failure");
 	}
@@ -1389,7 +1522,7 @@ static void wm_prepare_texture_buffer(struct Wm *wm, const char *filename,
 
 	err = vkCreateBuffer(wm->device, &buffer_create_info, NULL,
 			&tex_obj->buffer);
-	dassert(!err);
+	assert(!err);
 
 	VkMemoryRequirements mem_reqs;
 	vkGetBufferMemoryRequirements(wm->device, tex_obj->buffer, &mem_reqs);
@@ -1403,15 +1536,15 @@ static void wm_prepare_texture_buffer(struct Wm *wm, const char *filename,
 			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	pass = memory_type_from_properties(wm, mem_reqs.memoryTypeBits,
 			requirements, &tex_obj->mem_alloc.memoryTypeIndex);
-	dassert(pass);
+	assert(pass);
 
 	err = vkAllocateMemory(wm->device, &tex_obj->mem_alloc, NULL,
 			&(tex_obj->mem));
-	dassert(!err);
+	assert(!err);
 
 	// bind memory
 	err = vkBindBufferMemory(wm->device, tex_obj->buffer, tex_obj->mem, 0);
-	dassert(!err);
+	assert(!err);
 
 	VkSubresourceLayout layout;
 	memset(&layout, 0, sizeof(layout));
@@ -1420,9 +1553,8 @@ static void wm_prepare_texture_buffer(struct Wm *wm, const char *filename,
 	void *data;
 	err = vkMapMemory(wm->device, tex_obj->mem, 0,
 			tex_obj->mem_alloc.allocationSize, 0, &data);
-	dassert(!err);
+	assert(!err);
 
-	printf("2.\n");
 	if(!loadTexture(filename, data, &layout, &tex_width, &tex_height)) {
 		fprintf(stderr, "Error loading texture: %s\n", filename);
 	}
@@ -1434,13 +1566,12 @@ static void wm_prepare_texture_image(struct Wm *wm, const char *filename,
 		struct texture_object *tex_obj,
 		VkImageTiling tiling, VkImageUsageFlags usage,
 		VkFlags required_props) {
-	const VkFormat tex_format = VK_FORMAT_B8G8R8A8_UNORM;
+	const VkFormat tex_format = VK_FORMAT_R8G8B8A8_UNORM;
 	int32_t tex_width;
 	int32_t tex_height;
 	VkResult U_ASSERT_ONLY err;
 	bool U_ASSERT_ONLY pass;
 
-	printf("3.\n");
 	if(!loadTexture(filename, NULL, NULL, &tex_width, &tex_height)) {
 		ERR_EXIT("Failed to load textures", "Load Texture Failure");
 	}
@@ -1467,7 +1598,7 @@ static void wm_prepare_texture_image(struct Wm *wm, const char *filename,
 
 	err = vkCreateImage(wm->device, &image_create_info, NULL,
 			&tex_obj->image);
-	dassert(!err);
+	assert(!err);
 
 	vkGetImageMemoryRequirements(wm->device, tex_obj->image, &mem_reqs);
 
@@ -1478,16 +1609,16 @@ static void wm_prepare_texture_image(struct Wm *wm, const char *filename,
 
 	pass = memory_type_from_properties(wm, mem_reqs.memoryTypeBits,
 			required_props, &tex_obj->mem_alloc.memoryTypeIndex);
-	dassert(pass);
+	assert(pass);
 
 	// allocate memory
 	err = vkAllocateMemory(wm->device, &tex_obj->mem_alloc, NULL,
 			&(tex_obj->mem));
-	dassert(!err);
+	assert(!err);
 
 	// bind memory
 	err = vkBindImageMemory(wm->device, tex_obj->image, tex_obj->mem, 0);
-	dassert(!err);
+	assert(!err);
 
 	if(required_props & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
 		const VkImageSubresource subres = {
@@ -1503,169 +1634,12 @@ static void wm_prepare_texture_image(struct Wm *wm, const char *filename,
 
 		err = vkMapMemory(wm->device, tex_obj->mem, 0,
 				tex_obj->mem_alloc.allocationSize, 0, &data);
-		dassert(!err);
+		assert(!err);
 
-		printf("4.\n");
 		if(!loadTexture(filename, data, &layout, &tex_width,
 				&tex_height)) {
 			fprintf(stderr, "Error loading texture: %s\n",
 					filename);
-		}
-
-		vkUnmapMemory(wm->device, tex_obj->mem);
-	}
-
-	tex_obj->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-}
-
-static void wm_prepare_texture_buffer_win(struct Wm *wm, xcb_drawable_t win,
-		struct texture_object *tex_obj) {
-	int32_t tex_width;
-	int32_t tex_height;
-	VkResult U_ASSERT_ONLY err;
-	bool U_ASSERT_ONLY pass;
-
-	printf("1.\n");
-	if(!grabTexture(wm, win, NULL, NULL, &tex_width, &tex_height)) {
-		ERR_EXIT("Failed to load textures", "Load Texture Failure");
-	}
-
-	tex_obj->tex_width = tex_width;
-	tex_obj->tex_height = tex_height;
-
-	const VkBufferCreateInfo buffer_create_info = {
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.pNext = NULL,
-		.flags = 0,
-		.size = tex_width * tex_height * 4,
-		.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		.queueFamilyIndexCount = 0,
-		.pQueueFamilyIndices = NULL};
-
-	err = vkCreateBuffer(wm->device, &buffer_create_info, NULL,
-			&tex_obj->buffer);
-	dassert(!err);
-
-	VkMemoryRequirements mem_reqs;
-	vkGetBufferMemoryRequirements(wm->device, tex_obj->buffer, &mem_reqs);
-
-	tex_obj->mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	tex_obj->mem_alloc.pNext = NULL;
-	tex_obj->mem_alloc.allocationSize = mem_reqs.size;
-	tex_obj->mem_alloc.memoryTypeIndex = 0;
-
-	VkFlags requirements = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-	pass = memory_type_from_properties(wm, mem_reqs.memoryTypeBits,
-			requirements, &tex_obj->mem_alloc.memoryTypeIndex);
-	dassert(pass);
-
-	err = vkAllocateMemory(wm->device, &tex_obj->mem_alloc, NULL,
-			&(tex_obj->mem));
-	dassert(!err);
-
-	// bind memory
-	err = vkBindBufferMemory(wm->device, tex_obj->buffer, tex_obj->mem, 0);
-	dassert(!err);
-
-	VkSubresourceLayout layout;
-	memset(&layout, 0, sizeof(layout));
-	layout.rowPitch = tex_width * 4;
-
-	void *data;
-	err = vkMapMemory(wm->device, tex_obj->mem, 0,
-			tex_obj->mem_alloc.allocationSize, 0, &data);
-	dassert(!err);
-
-	printf("2.\n");
-	if(!grabTexture(wm, win, data, &layout, &tex_width, &tex_height)) {
-		fprintf(stderr, "Error grabbing texture: %d\n", win);
-	}
-
-	vkUnmapMemory(wm->device, tex_obj->mem);
-}
-
-static void wm_prepare_texture_image_win(struct Wm *wm, xcb_drawable_t win,
-		struct texture_object *tex_obj,
-		VkImageTiling tiling, VkImageUsageFlags usage,
-		VkFlags required_props) {
-	const VkFormat tex_format = VK_FORMAT_B8G8R8A8_UNORM;
-	int32_t tex_width;
-	int32_t tex_height;
-	VkResult U_ASSERT_ONLY err;
-	bool U_ASSERT_ONLY pass;
-
-	printf("3.\n");
-	if(!grabTexture(wm, win, NULL, NULL, &tex_width, &tex_height)) {
-		ERR_EXIT("Failed to load textures", "Load Texture Failure");
-	}
-
-	tex_obj->tex_width = tex_width;
-	tex_obj->tex_height = tex_height;
-
-	const VkImageCreateInfo image_create_info = {
-		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-		.pNext = NULL,
-		.imageType = VK_IMAGE_TYPE_2D,
-		.format = tex_format,
-		.extent = {tex_width, tex_height, 1},
-		.mipLevels = 1,
-		.arrayLayers = 1,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.tiling = tiling,
-		.usage = usage,
-		.flags = 0,
-		.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED,
-	};
-
-	VkMemoryRequirements mem_reqs;
-
-	err = vkCreateImage(wm->device, &image_create_info, NULL,
-			&tex_obj->image);
-	dassert(!err);
-
-	vkGetImageMemoryRequirements(wm->device, tex_obj->image, &mem_reqs);
-
-	tex_obj->mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	tex_obj->mem_alloc.pNext = NULL;
-	tex_obj->mem_alloc.allocationSize = mem_reqs.size;
-	tex_obj->mem_alloc.memoryTypeIndex = 0;
-
-	pass = memory_type_from_properties(wm, mem_reqs.memoryTypeBits,
-			required_props, &tex_obj->mem_alloc.memoryTypeIndex);
-	dassert(pass);
-
-	// allocate memory
-	err = vkAllocateMemory(wm->device, &tex_obj->mem_alloc, NULL,
-			&(tex_obj->mem));
-	dassert(!err);
-
-	// bind memory
-	err = vkBindImageMemory(wm->device, tex_obj->image, tex_obj->mem, 0);
-	dassert(!err);
-
-	if(required_props & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
-		const VkImageSubresource subres = {
-			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-			.mipLevel = 0,
-			.arrayLayer = 0,
-		};
-		VkSubresourceLayout layout;
-		void *data;
-
-		vkGetImageSubresourceLayout(wm->device, tex_obj->image,
-				&subres, &layout);
-
-		err = vkMapMemory(wm->device, tex_obj->mem, 0,
-				tex_obj->mem_alloc.allocationSize, 0, &data);
-		dassert(!err);
-
-		printf("4.\n");
-		if(!grabTexture(wm, win, data, &layout, &tex_width,
-				&tex_height)) {
-			fprintf(stderr, "Error grabbing texture: %d\n",
-					win);
 		}
 
 		vkUnmapMemory(wm->device, tex_obj->mem);
@@ -1682,38 +1656,20 @@ static void wm_destroy_texture(struct Wm *wm, struct texture_object *tex_objs) {
 }
 
 static void wm_prepare_textures(struct Wm *wm) {
-	dlog("wm prepare textures\n");
-	const VkFormat tex_format = VK_FORMAT_B8G8R8A8_UNORM;
+	const VkFormat tex_format = VK_FORMAT_R8G8B8A8_UNORM;
 	VkFormatProperties props;
 	uint32_t i;
 
 	vkGetPhysicalDeviceFormatProperties(wm->gpu, tex_format, &props);
 
-	// iterate through all elements contained in wm->winhash
-	apr_hash_index_t *winhash_it = apr_hash_first(NULL, wm->winhash->hash);
-
-	for(i = 0; i < DEMO_TEXTURE_COUNT; ++i, winhash_it = winhash_it?
-					apr_hash_next(winhash_it): NULL) {
-		if(i >= cur_texture_count || !winhash_it) {
-			wm->textures[i].sampler = wm->textures[0].sampler;
-			wm->textures[i].view = wm->textures[0].view;
-			continue;
-		}
-
-		const int *key;
-		const win_t *val;
-		apr_hash_this(winhash_it, (const void **)&key, NULL,
-								(void **)&val);
-		dlog("iteration %d key %d\n", i, *key);
-		xcb_drawable_t win = *key;
-
+	for(i = 0; i < DEMO_TEXTURE_COUNT; i++) {
 		VkResult U_ASSERT_ONLY err;
 
 		if((props.linearTilingFeatures &
 				VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) &&
 				!wm->use_staging_buffer) {
 			// Device can texture using linear textures
-			wm_prepare_texture_image_win(wm, win,
+			wm_prepare_texture_image(wm, tex_files[i],
 					&wm->textures[i],
 					VK_IMAGE_TILING_LINEAR,
 					VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -1736,10 +1692,10 @@ static void wm_prepare_textures(struct Wm *wm) {
 
 			memset(&wm->staging_texture, 0,
 					sizeof(wm->staging_texture));
-			wm_prepare_texture_buffer_win(wm, win,
+			wm_prepare_texture_buffer(wm, tex_files[i],
 					&wm->staging_texture);
 
-			wm_prepare_texture_image_win(wm, win,
+			wm_prepare_texture_image(wm, tex_files[i],
 					&wm->textures[i],
 					VK_IMAGE_TILING_OPTIMAL,
 					(VK_IMAGE_USAGE_TRANSFER_DST_BIT |
@@ -1779,26 +1735,23 @@ static void wm_prepare_textures(struct Wm *wm) {
 				VK_PIPELINE_STAGE_TRANSFER_BIT,
 				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 		} else {
-			// Can't support VK_FORMAT_B8G8R8A8_UNORM !?
-			dassert(!"No support for B8G8R8A8_UNORM "
+			// Can't support VK_FORMAT_R8G8B8A8_UNORM !?
+			assert(!"No support for R8G8B8A8_UNORM "
 						"as texture image format");
 		}
-
-		dlog("Image size: %d, %d\n", wm->textures[i].tex_width,
-					wm->textures[i].tex_height);
 
 		const VkSamplerCreateInfo sampler = {
 			.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
 			.pNext = NULL,
-			.magFilter = VK_FILTER_LINEAR,
-			.minFilter = VK_FILTER_LINEAR,
+			.magFilter = VK_FILTER_NEAREST,
+			.minFilter = VK_FILTER_NEAREST,
 			.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
 			.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 			.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 			.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 			.mipLodBias = 0.0f,
 			.anisotropyEnable = VK_FALSE,
-			.maxAnisotropy = 0,
+			.maxAnisotropy = 1,
 			.compareOp = VK_COMPARE_OP_NEVER,
 			.minLod = 0.0f,
 			.maxLod = 0.0f,
@@ -1826,61 +1779,14 @@ static void wm_prepare_textures(struct Wm *wm) {
 		// create sampler
 		err = vkCreateSampler(wm->device, &sampler, NULL,
 				&wm->textures[i].sampler);
-		dassert(!err);
+		assert(!err);
 
 		// create image view
 		view.image = wm->textures[i].image;
 		err = vkCreateImageView(wm->device, &view, NULL,
 				&wm->textures[i].view);
-		dassert(!err);
+		assert(!err);
 	}
-}
-
-void wm_mk_vertex_buffers(struct Wm *wm) {
-	VkBufferCreateInfo buf_info;
-	VkResult U_ASSERT_ONLY err;
-	VkResult U_ASSERT_ONLY pass;
-	VkMemoryRequirements mem_reqs;
-	VkMemoryAllocateInfo mem_alloc;
-
-	memset(&buf_info, 0, sizeof(buf_info));
-	buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	buf_info.pNext = NULL;
-	buf_info.size = sizeof(win_vertex_t) * wm->vertarr->nelts;
-	buf_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	dlog("vertex buf_info size: %lu\n", buf_info.size);
-	err = vkCreateBuffer(wm->device, &buf_info, NULL, &wm->vertex_buffer);
-	dassert(!err);
-
-	vkGetBufferMemoryRequirements(wm->device, wm->vertex_buffer, &mem_reqs);
-
-	mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	mem_alloc.pNext = NULL;
-	mem_alloc.allocationSize = mem_reqs.size;
-	mem_alloc.memoryTypeIndex = 0;
-
-	pass = memory_type_from_properties(wm, mem_reqs.memoryTypeBits,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			&mem_alloc.memoryTypeIndex);
-	dassert(pass);
-
-	err = vkAllocateMemory(wm->device, &mem_alloc, NULL,
-			&wm->vertex_memory);
-	dassert(!err);
-
-	err = vkBindBufferMemory(wm->device, wm->vertex_buffer,
-			wm->vertex_memory, 0);
-
-	void *data;
-	err = vkMapMemory(wm->device, wm->vertex_memory, 0, buf_info.size, 0,
-			&data);
-	dassert(!err);
-	memcpy(data, (void *)wm->vertarr->elts, buf_info.size);
-	vkUnmapMemory(wm->device, wm->vertex_memory);
-
 }
 
 void wm_prepare_cube_data_buffers(struct Wm *wm) {
@@ -1915,7 +1821,7 @@ void wm_prepare_cube_data_buffers(struct Wm *wm) {
 	for(unsigned int i = 0; i < wm->swapchainImageCount; i++) {
 		err = vkCreateBuffer(wm->device, &buf_info, NULL,
 			&wm->swapchain_image_resources[i].uniform_buffer);
-		dassert(!err);
+		assert(!err);
 
 		vkGetBufferMemoryRequirements(wm->device,
 				wm->swapchain_image_resources[i].uniform_buffer,
@@ -1930,17 +1836,17 @@ void wm_prepare_cube_data_buffers(struct Wm *wm) {
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 				&mem_alloc.memoryTypeIndex);
-		dassert(pass);
+		assert(pass);
 
 		err = vkAllocateMemory(wm->device, &mem_alloc, NULL,
 			&wm->swapchain_image_resources[i].uniform_memory);
-		dassert(!err);
+		assert(!err);
 
 		err = vkMapMemory(wm->device,
 			wm->swapchain_image_resources[i].uniform_memory, 0,
 			VK_WHOLE_SIZE, 0,
                         &wm->swapchain_image_resources[i].uniform_memory_ptr);
-		dassert(!err);
+		assert(!err);
 
 		memcpy(wm->swapchain_image_resources[i].uniform_memory_ptr,
 				&data, sizeof data);
@@ -1949,7 +1855,7 @@ void wm_prepare_cube_data_buffers(struct Wm *wm) {
 				wm->swapchain_image_resources[i].uniform_buffer,
 				wm->swapchain_image_resources[i].uniform_memory,
 				0);
-		dassert(!err);
+		assert(!err);
 	}
 }
 
@@ -1980,7 +1886,7 @@ static void wm_prepare_descriptor_layout(struct Wm *wm) {
 
 	err = vkCreateDescriptorSetLayout(wm->device, &descriptor_layout, NULL,
 			&wm->desc_layout);
-	dassert(!err);
+	assert(!err);
 
 	const VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -1991,7 +1897,7 @@ static void wm_prepare_descriptor_layout(struct Wm *wm) {
 
 	err = vkCreatePipelineLayout(wm->device, &pPipelineLayoutCreateInfo,
 			NULL, &wm->pipeline_layout);
-	dassert(!err);
+	assert(!err);
 }
 
 static void wm_prepare_render_pass(struct Wm *wm) {
@@ -2100,7 +2006,7 @@ static void wm_prepare_render_pass(struct Wm *wm) {
 	VkResult U_ASSERT_ONLY err;
 
 	err = vkCreateRenderPass(wm->device, &rp_info, NULL, &wm->render_pass);
-	dassert(!err);
+	assert(!err);
 }
 
 static VkShaderModule wm_prepare_shader_module(struct Wm *wm,
@@ -2116,26 +2022,24 @@ static VkShaderModule wm_prepare_shader_module(struct Wm *wm,
 	moduleCreateInfo.pCode = code;
 
 	err = vkCreateShaderModule(wm->device, &moduleCreateInfo, NULL,&module);
-	dassert(!err);
+	assert(!err);
 
 	return module;
 }
 
 static void wm_prepare_vs(struct Wm *wm) {
-	const uint8_t vs_code[] = {
+	const uint32_t vs_code[] = {
 #include "cube.vert.inc"
 	};
-	wm->vert_shader_module = wm_prepare_shader_module(wm,
-			(const uint32_t *)vs_code,
+	wm->vert_shader_module = wm_prepare_shader_module(wm, vs_code,
 			sizeof(vs_code));
 }
 
 static void wm_prepare_fs(struct Wm *wm) {
-	const uint8_t fs_code[] = {
+	const uint32_t fs_code[] = {
 #include "cube.frag.inc"
 	};
-	wm->frag_shader_module = wm_prepare_shader_module(wm,
-			(const uint32_t *)fs_code,
+	wm->frag_shader_module = wm_prepare_shader_module(wm, fs_code,
 			sizeof(fs_code));
 }
 
@@ -2166,24 +2070,6 @@ static void wm_prepare_pipeline(struct Wm *wm) {
 	memset(&vi, 0, sizeof(vi));
 	vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-	VkVertexInputBindingDescription vibd;
-	memset(&vibd, 0, sizeof(vibd));
-	vibd.binding = 0;
-	vibd.stride = 4 * sizeof(float);
-	vibd.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	VkVertexInputAttributeDescription viad;
-	memset(&viad, 0, sizeof(viad));
-	viad.binding = 0;
-	viad.location = 0;
-	viad.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	viad.offset = 0;
-
-	vi.vertexBindingDescriptionCount = 1;
-	vi.vertexAttributeDescriptionCount = 1;
-	vi.pVertexBindingDescriptions = &vibd;
-	vi.pVertexAttributeDescriptions = &viad;
-
 	memset(&ia, 0, sizeof(ia));
 	ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -2192,8 +2078,7 @@ static void wm_prepare_pipeline(struct Wm *wm) {
 	rs.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rs.polygonMode = VK_POLYGON_MODE_FILL;
 	rs.cullMode = VK_CULL_MODE_BACK_BIT;
-//	rs.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	rs.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rs.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rs.depthClampEnable = VK_FALSE;
 	rs.rasterizerDiscardEnable = VK_FALSE;
 	rs.depthBiasEnable = VK_FALSE;
@@ -2258,7 +2143,7 @@ static void wm_prepare_pipeline(struct Wm *wm) {
 
 	err = vkCreatePipelineCache(wm->device, &pipelineCache, NULL,
 			&wm->pipelineCache);
-	dassert(!err);
+	assert(!err);
 
 	pipeline.pVertexInputState = &vi;
 	pipeline.pInputAssemblyState = &ia;
@@ -2276,7 +2161,7 @@ static void wm_prepare_pipeline(struct Wm *wm) {
 
 	err = vkCreateGraphicsPipelines(wm->device, wm->pipelineCache, 1,
 			&pipeline, NULL, &wm->pipeline);
-	dassert(!err);
+	assert(!err);
 
 	vkDestroyShaderModule(wm->device, wm->frag_shader_module, NULL);
 	vkDestroyShaderModule(wm->device, wm->vert_shader_module, NULL);
@@ -2304,7 +2189,7 @@ static void wm_prepare_descriptor_pool(struct Wm *wm) {
 
 	err = vkCreateDescriptorPool(wm->device, &descriptor_pool, NULL,
 			&wm->desc_pool);
-	dassert(!err);
+	assert(!err);
 }
 
 static void wm_prepare_descriptor_set(struct Wm *wm) {
@@ -2347,7 +2232,7 @@ static void wm_prepare_descriptor_set(struct Wm *wm) {
 	for(unsigned int i = 0; i < wm->swapchainImageCount; i++) {
 		err = vkAllocateDescriptorSets(wm->device, &alloc_info,
 			&wm->swapchain_image_resources[i].descriptor_set);
-		dassert(!err);
+		assert(!err);
 		buffer_info.buffer =
 			wm->swapchain_image_resources[i].uniform_buffer;
 		writes[0].dstSet =
@@ -2379,7 +2264,7 @@ static void wm_prepare_framebuffers(struct Wm *wm) {
 		attachments[0] = wm->swapchain_image_resources[i].view;
 		err = vkCreateFramebuffer(wm->device, &fb_info, NULL,
 			&wm->swapchain_image_resources[i].framebuffer);
-		dassert(!err);
+		assert(!err);
 	}
 }
 
@@ -2394,7 +2279,7 @@ static void wm_prepare(struct Wm *wm) {
 		};
 		err = vkCreateCommandPool(wm->device, &cmd_pool_info, NULL,
 				&wm->cmd_pool);
-		dassert(!err);
+		assert(!err);
 	}
 
 	const VkCommandBufferAllocateInfo cmd = {
@@ -2405,7 +2290,7 @@ static void wm_prepare(struct Wm *wm) {
 		.commandBufferCount = 1,
 	};
 	err = vkAllocateCommandBuffers(wm->device, &cmd, &wm->cmd);
-	dassert(!err);
+	assert(!err);
 	VkCommandBufferBeginInfo cmd_buf_info = {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 		.pNext = NULL,
@@ -2413,7 +2298,7 @@ static void wm_prepare(struct Wm *wm) {
 		.pInheritanceInfo = NULL,
 	};
 	err = vkBeginCommandBuffer(wm->cmd, &cmd_buf_info);
-	dassert(!err);
+	assert(!err);
 
 	wm_prepare_buffers(wm);
 
@@ -2426,8 +2311,6 @@ static void wm_prepare(struct Wm *wm) {
 	wm_prepare_textures(wm);
 	wm_prepare_cube_data_buffers(wm);
 
-	wm_mk_vertex_buffers(wm);
-
 	wm_prepare_descriptor_layout(wm);
 	wm_prepare_render_pass(wm);
 	wm_prepare_pipeline(wm);
@@ -2435,7 +2318,7 @@ static void wm_prepare(struct Wm *wm) {
 	for(uint32_t i = 0; i < wm->swapchainImageCount; i++) {
 		err = vkAllocateCommandBuffers(wm->device, &cmd,
 				&wm->swapchain_image_resources[i].cmd);
-		dassert(!err);
+		assert(!err);
 	}
 
 	if(wm->separate_present_queue) {
@@ -2447,7 +2330,7 @@ static void wm_prepare(struct Wm *wm) {
 		};
 		err = vkCreateCommandPool(wm->device, &present_cmd_pool_info,
 				NULL, &wm->present_cmd_pool);
-		dassert(!err);
+		assert(!err);
 		const VkCommandBufferAllocateInfo present_cmd_info = {
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 			.pNext = NULL,
@@ -2460,7 +2343,7 @@ static void wm_prepare(struct Wm *wm) {
 					&present_cmd_info,
 					&wm->swapchain_image_resources[i]
 						.graphics_to_present_cmd);
-			dassert(!err);
+			assert(!err);
 			wm_build_image_ownership_cmd(wm, i);
 		}
 	}
@@ -2485,16 +2368,6 @@ static void wm_prepare(struct Wm *wm) {
 
 	wm->current_buffer = 0;
 	wm->prepared = true;
-}
-
-static void wm_textures_cleanup(struct Wm *wm) {
-	for(int i = 0; i < cur_texture_count; ++i) {
-		dlog("Removing image from video memory: %d\n", i);
-		vkDestroyImageView(wm->device, wm->textures[i].view, NULL);
-		vkDestroyImage(wm->device, wm->textures[i].image, NULL);
-		vkFreeMemory(wm->device, wm->textures[i].mem, NULL);
-		vkDestroySampler(wm->device, wm->textures[i].sampler, NULL);
-	}
 }
 
 static void wm_cleanup(struct Wm *wm) {
@@ -2533,8 +2406,14 @@ static void wm_cleanup(struct Wm *wm) {
 		vkDestroyPipelineLayout(wm->device, wm->pipeline_layout, NULL);
 		vkDestroyDescriptorSetLayout(wm->device, wm->desc_layout, NULL);
 
-		wm_textures_cleanup(wm);
-
+		for(i = 0; i < DEMO_TEXTURE_COUNT; i++) {
+			vkDestroyImageView(wm->device, wm->textures[i].view,
+									NULL);
+			vkDestroyImage(wm->device, wm->textures[i].image, NULL);
+			vkFreeMemory(wm->device, wm->textures[i].mem, NULL);
+			vkDestroySampler(wm->device, wm->textures[i].sampler,
+									NULL);
+		}
 		wm->fpDestroySwapchainKHR(wm->device, wm->swapchain, NULL);
 
 		vkDestroyImageView(wm->device, wm->depth.view, NULL);
@@ -2553,9 +2432,6 @@ static void wm_cleanup(struct Wm *wm) {
 			vkFreeMemory(wm->device,
 			wm->swapchain_image_resources[i].uniform_memory, NULL);
 		}
-		vkDestroyBuffer(wm->device, wm->vertex_buffer, NULL);
-//		vkUnmapMemory(wm->device, wm->vertex_memory);
-		vkFreeMemory(wm->device, wm->vertex_memory, NULL);
 		free(wm->swapchain_image_resources);
 		free(wm->queue_props);
 		vkDestroyCommandPool(wm->device, wm->cmd_pool, NULL);
@@ -2578,12 +2454,6 @@ static void wm_cleanup(struct Wm *wm) {
 	free(wm->atom_wm_delete_window);
 
 	vkDestroyInstance(wm->inst, NULL);
-
-	// destroy the global memory pool with everything it contains
-	apr_pool_destroy(wm->mp);
-
-	//  terminate apr runtime
-	apr_terminate();
 }
 
 static void wm_resize(struct Wm *wm) {
@@ -2615,7 +2485,12 @@ static void wm_resize(struct Wm *wm) {
 	vkDestroyPipelineLayout(wm->device, wm->pipeline_layout, NULL);
 	vkDestroyDescriptorSetLayout(wm->device, wm->desc_layout, NULL);
 
-	wm_textures_cleanup(wm);
+	for(i = 0; i < DEMO_TEXTURE_COUNT; i++) {
+		vkDestroyImageView(wm->device, wm->textures[i].view, NULL);
+		vkDestroyImage(wm->device, wm->textures[i].image, NULL);
+		vkFreeMemory(wm->device, wm->textures[i].mem, NULL);
+		vkDestroySampler(wm->device, wm->textures[i].sampler, NULL);
+	}
 
 	vkDestroyImageView(wm->device, wm->depth.view, NULL);
 	vkDestroyImage(wm->device, wm->depth.image, NULL);
@@ -2633,10 +2508,6 @@ static void wm_resize(struct Wm *wm) {
 		vkFreeMemory(wm->device,
 			wm->swapchain_image_resources[i].uniform_memory, NULL);
 	}
-	vkDestroyBuffer(wm->device, wm->vertex_buffer, NULL);
-//	vkUnmapMemory(wm->device, wm->vertex_memory);
-	vkFreeMemory(wm->device, wm->vertex_memory, NULL);
-
 	vkDestroyCommandPool(wm->device, wm->cmd_pool, NULL);
 	wm->cmd_pool = VK_NULL_HANDLE;
 	if(wm->separate_present_queue) {
@@ -2648,6 +2519,9 @@ static void wm_resize(struct Wm *wm) {
 	// the swapchain:
 	wm_prepare(wm);
 }
+
+// On MS-Windows, make this a global, so it's available to WndProc()
+//struct Wm wm;
 
 // Return 1 (true) if all layer names specified in check_names
 // can be found in given layer properties.
@@ -2663,7 +2537,8 @@ static VkBool32 wm_check_layers(uint32_t check_count, char **check_names,
 			}
 		}
 		if(!found) {
-			dlog("Cannot find layer: %s\n", check_names[i]);
+			fprintf(stderr,
+				"Cannot find layer: %s\n", check_names[i]);
 			return 0;
 		}
 	}
@@ -2685,7 +2560,7 @@ static void wm_init_vk(struct Wm *wm) {
 	if(wm->validate) {
 		err =
 		vkEnumerateInstanceLayerProperties(&instance_layer_count, NULL);
-		dassert(!err);
+		assert(!err);
 
 		if(instance_layer_count > 0) {
 			VkLayerProperties *instance_layers =
@@ -2693,7 +2568,7 @@ static void wm_init_vk(struct Wm *wm) {
 					instance_layer_count);
 			err = vkEnumerateInstanceLayerProperties(
 					&instance_layer_count, instance_layers);
-			dassert(!err);
+			assert(!err);
 
 			validation_found = wm_check_layers(ARRAY_SIZE(
 					instance_validation_layers),
@@ -2725,7 +2600,7 @@ static void wm_init_vk(struct Wm *wm) {
 
 	err = vkEnumerateInstanceExtensionProperties(NULL,
 			&instance_extension_count, NULL);
-	dassert(!err);
+	assert(!err);
 
 	if(instance_extension_count > 0) {
 		VkExtensionProperties *instance_extensions =
@@ -2733,7 +2608,7 @@ static void wm_init_vk(struct Wm *wm) {
 				instance_extension_count);
 		err = vkEnumerateInstanceExtensionProperties(NULL,
 			&instance_extension_count, instance_extensions);
-		dassert(!err);
+		assert(!err);
 		for(uint32_t i = 0; i < instance_extension_count; i++) {
 			if(!strcmp(VK_KHR_SURFACE_EXTENSION_NAME,
 					instance_extensions[i].extensionName)) {
@@ -2757,7 +2632,7 @@ static void wm_init_vk(struct Wm *wm) {
 					VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
 				}
 			}
-			dassert(wm->enabled_extension_count < 64);
+			assert(wm->enabled_extension_count < 64);
 		}
 
 		free(instance_extensions);
@@ -2852,14 +2727,14 @@ static void wm_init_vk(struct Wm *wm) {
 
 	// Make initial call to query gpu_count, then second call for gpu info
 	err = vkEnumeratePhysicalDevices(wm->inst, &gpu_count, NULL);
-	dassert(!err);
+	assert(!err);
 
 	if(gpu_count > 0) {
 		VkPhysicalDevice *physical_devices =
 				malloc(sizeof(VkPhysicalDevice) * gpu_count);
 		err = vkEnumeratePhysicalDevices(wm->inst, &gpu_count,
 				physical_devices);
-		dassert(!err);
+		assert(!err);
 		// For cube demo we just grab the first physical device
 		wm->gpu = physical_devices[0];
 		free(physical_devices);
@@ -2881,14 +2756,14 @@ static void wm_init_vk(struct Wm *wm) {
 
 	err = vkEnumerateDeviceExtensionProperties(wm->gpu, NULL,
 			&device_extension_count, NULL);
-	dassert(!err);
+	assert(!err);
 
 	if(device_extension_count > 0) {
 		VkExtensionProperties *device_extensions =
 		malloc(sizeof(VkExtensionProperties) * device_extension_count);
 		err = vkEnumerateDeviceExtensionProperties(wm->gpu, NULL,
 				&device_extension_count, device_extensions);
-		dassert(!err);
+		assert(!err);
 
 		for(uint32_t i = 0; i < device_extension_count; i++) {
 			if(!strcmp(VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -2898,7 +2773,7 @@ static void wm_init_vk(struct Wm *wm) {
 						wm->enabled_extension_count++] =
 						VK_KHR_SWAPCHAIN_EXTENSION_NAME;
 			}
-			dassert(wm->enabled_extension_count < 64);
+			assert(wm->enabled_extension_count < 64);
 		}
 
 		if(wm->VK_KHR_incremental_present_enabled) {
@@ -2919,7 +2794,7 @@ static void wm_init_vk(struct Wm *wm) {
 					DbgMsg(
 			"VK_KHR_incremental_present extension enabled\n");
 				}
-				dassert(wm->enabled_extension_count < 64);
+				assert(wm->enabled_extension_count < 64);
 			}
 			if(!wm->VK_KHR_incremental_present_enabled) {
 		DbgMsg("VK_KHR_incremental_present extension NOT AVAILABLE\n");
@@ -2942,7 +2817,7 @@ static void wm_init_vk(struct Wm *wm) {
 				wm->VK_GOOGLE_display_timing_enabled = true;
 			DbgMsg("VK_GOOGLE_display_timing extension enabled\n");
 				}
-				dassert(wm->enabled_extension_count < 64);
+				assert(wm->enabled_extension_count < 64);
 			}
 			if(!wm->VK_GOOGLE_display_timing_enabled) {
 		DbgMsg("VK_GOOGLE_display_timing extension NOT AVAILABLE\n");
@@ -3024,7 +2899,7 @@ static void wm_init_vk(struct Wm *wm) {
 	// Call with NULL data to get count
 	vkGetPhysicalDeviceQueueFamilyProperties(wm->gpu,
 			&wm->queue_family_count, NULL);
-	dassert(wm->queue_family_count >= 1);
+	assert(wm->queue_family_count >= 1);
 
 	wm->queue_props = (VkQueueFamilyProperties *)malloc(
 		wm->queue_family_count * sizeof(VkQueueFamilyProperties));
@@ -3080,7 +2955,7 @@ static void wm_create_device(struct Wm *wm) {
 		device.queueCreateInfoCount = 2;
 	}
 	err = vkCreateDevice(wm->gpu, &device, NULL, &wm->device);
-	dassert(!err);
+	assert(!err);
 }
 
 static void wm_create_surface(struct Wm *wm) {
@@ -3095,7 +2970,7 @@ static void wm_create_surface(struct Wm *wm) {
 	createInfo.window = wm->xcb_window;
 
 	err = vkCreateXcbSurfaceKHR(wm->inst, &createInfo, NULL, &wm->surface);
-	dassert(!err);
+	assert(!err);
 }
 
 static void wm_init_vk_swapchain(struct Wm *wm) {
@@ -3181,19 +3056,19 @@ static void wm_init_vk_swapchain(struct Wm *wm) {
 	uint32_t formatCount;
 	err = wm->fpGetPhysicalDeviceSurfaceFormatsKHR(wm->gpu, wm->surface,
 			&formatCount, NULL);
-	dassert(!err);
+	assert(!err);
 	VkSurfaceFormatKHR *surfFormats = (VkSurfaceFormatKHR *)malloc(
 			formatCount * sizeof(VkSurfaceFormatKHR));
 	err = wm->fpGetPhysicalDeviceSurfaceFormatsKHR(wm->gpu, wm->surface,
 			&formatCount, surfFormats);
-	dassert(!err);
+	assert(!err);
 	// If the format list includes just one entry of VK_FORMAT_UNDEFINED,
 	// the surface has no preferred format.  Otherwise, at least one
 	// supported format will be returned.
 	if(formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED) {
 		wm->format = VK_FORMAT_B8G8R8A8_UNORM;
 	} else {
-		dassert(formatCount >= 1);
+		assert(formatCount >= 1);
 		wm->format = surfFormats[0].format;
 	}
 	wm->color_space = surfFormats[0].colorSpace;
@@ -3218,21 +3093,21 @@ static void wm_init_vk_swapchain(struct Wm *wm) {
 	for(uint32_t i = 0; i < FRAME_LAG; i++) {
 		err = vkCreateFence(wm->device, &fence_ci, NULL,
 				&wm->fences[i]);
-		dassert(!err);
+		assert(!err);
 
 		err = vkCreateSemaphore(wm->device, &semaphoreCreateInfo, NULL,
 				&wm->image_acquired_semaphores[i]);
-		dassert(!err);
+		assert(!err);
 
 		err = vkCreateSemaphore(wm->device, &semaphoreCreateInfo, NULL,
 				&wm->draw_complete_semaphores[i]);
-		dassert(!err);
+		assert(!err);
 
 		if(wm->separate_present_queue) {
 			err = vkCreateSemaphore(wm->device,
 				&semaphoreCreateInfo, NULL,
 				&wm->image_ownership_semaphores[i]);
-			dassert(!err);
+			assert(!err);
 		}
 	}
 	wm->frame_index = 0;
@@ -3243,185 +3118,31 @@ static void wm_init_vk_swapchain(struct Wm *wm) {
 
 static void wm_init_connection(struct Wm *wm);
 
-static xcb_atom_t getatom(xcb_connection_t* c, char *atom_name) {
-	xcb_intern_atom_cookie_t atom_cookie;
-	xcb_atom_t atom;
-	xcb_intern_atom_reply_t *rep;
-
-	atom_cookie = xcb_intern_atom(c, 0, strlen(atom_name), atom_name);
-	rep = xcb_intern_atom_reply(c, atom_cookie, NULL);
-	if(NULL != rep) {
-		atom = rep->atom;
-		free(rep);
-		dlog("\natom: %d", atom);
-		return atom;
-	}
-	dlog("\nError getting atom.\n");
-	exit(1);
-}
-
-static void wm_iterate_tree(struct Wm *wm, xcb_window_t node, int depth,
-								int x, int y) {
-	xcb_generic_error_t *e;
-	xcb_query_tree_reply_t *tree;
-
-	tree = xcb_query_tree_reply(wm->connection,
-			xcb_query_tree(wm->connection, node), &e);
-	if(tree) {
-		xcb_window_t *wins = xcb_query_tree_children(tree);
-		size_t nwins = xcb_query_tree_children_length(tree);
-		for(int i = 0; i < nwins &&
-				cur_texture_count < DEMO_TEXTURE_COUNT; ++i) {
-			// get X11 geometry of this window
-			xcb_get_geometry_reply_t *geom = xcb_get_geometry_reply(
-					wm->connection, xcb_get_geometry(
-					wm->connection, wins[i]), 0);
-
-			wm_iterate_tree(wm, wins[i], depth + 1,
-					x + geom->x, y + geom->y);
-
-			if(!geom->depth ||
-				h2_ihash_get(wm->winhash, (int)wins[i])) {
-				continue;
-			}
-
-			for(int j = 0; j < depth; ++j) {
-				dlog("-");
-			}
-
-			dlog("> window = %d x,y - w,h, depth: "
-					"%d,%d - %d,%d, %d:\n",
-					wins[i], geom->x, geom->y,
-					geom->width, geom->height,
-					geom->depth);
-
-			xcb_get_image_reply_t *image = xcb_get_image_reply(
-				wm->connection, xcb_get_image(
-				wm->connection, XCB_IMAGE_FORMAT_Z_PIXMAP,
-				wins[i], 0, 0, geom->width, geom->height,
-				((uint32_t)~0UL)), NULL);
-
-
-//			if(geom->x < 1 || !geom->depth) {
-			if(!image) {
-				// ignore questionable windows
-				continue;
-			}
-
-			free(image);
-
-			win_t *w = apr_pcalloc(wm->mp, sizeof(win_t));
-			w->xid = (int)wins[i];
-			memcpy(&w->geom, geom,
-					sizeof(xcb_get_geometry_reply_t));
-			free(geom);
-
-			h2_ihash_add(wm->winhash, w);
-			++cur_texture_count;
-		}
-		free(tree);
-	}
-}
-
-// this slow function is called once to get all the currently open
-// windows. after that the window states will be updated on window events
-static void wm_init_winhash(struct Wm *wm) {
-	// create a dummy window fof debugging only
-	xcb_get_geometry_reply_t geom = {
-		0, 32, 0, 0, 0, 100, 100, 484, 316, 0, 0, 0
-	};
-	win_t *w = apr_pcalloc(wm->mp, sizeof(win_t));
-	w->xid = 0; // special value for our dummy window
-	memcpy(&w->geom, &geom, sizeof(xcb_get_geometry_reply_t));
-	h2_ihash_add(wm->winhash, w);
-	++cur_texture_count;
-
-	wm_iterate_tree(wm, wm->screen->root, 0, 0, 0);
-	dlog("Windows added: %d\n", cur_texture_count);
-}
-
-// create vertex array when wm->winhash is populated with window geometry data
-static void wm_init_vertarr(struct Wm *wm) {
-	// initialize the vertex array
-	wm->vertarr = apr_array_make(wm->mp, 1024, sizeof(win_vertex_t));
-
-	// fill array with two triangles per window = 6 vertexes per window
-	apr_hash_index_t *winhash_it;
-	float offset = 0.0f;
-	float scale = 0.001f;
-	float tind = 0.0f;
-	for(winhash_it = apr_hash_first(NULL, wm->winhash->hash); winhash_it;
-					winhash_it = apr_hash_next(winhash_it),
-					offset += 0.1, tind += 1.0) {
-		const int *key;
-		const win_t *val;
-		apr_hash_this(winhash_it, (const void **)&key, NULL,
-								(void **)&val);
-		float x0 = - 3.0 + (float)val->geom.x * scale;
-		float y0 = - 1.0 + (float)val->geom.y * scale;
-		float x1 = x0 + (float)val->geom.width * scale;
-		float y1 = y0 + (float)val->geom.height * scale;
-		dlog("Window x,y = %d,%d = %f,%f\n", val->geom.x,
-			val->geom.y, x0, y0);
-		*(win_vertex_t *)apr_array_push(wm->vertarr) =
-			(win_vertex_t) { x0, y1, 2.0f, tind };
-		*(win_vertex_t *)apr_array_push(wm->vertarr) =
-			(win_vertex_t) { x0, y0, 2.0f, tind };
-		*(win_vertex_t *)apr_array_push(wm->vertarr) =
-			(win_vertex_t) { x1, y1, 2.0f, tind };
-		*(win_vertex_t *)apr_array_push(wm->vertarr) =
-			(win_vertex_t) { x0, y0, 2.0f, tind };
-		*(win_vertex_t *)apr_array_push(wm->vertarr) =
-			(win_vertex_t) { x1, y0, 2.0f, tind };
-		*(win_vertex_t *)apr_array_push(wm->vertarr) =
-			(win_vertex_t) { x1, y1, 2.0f, tind };
-	}
-
-	dlog("Number of elements in vertarr = %d\n", wm->vertarr->nelts);
-	dlog("%f\n", ((float *)wm->vertarr->elts)[0]);
-}
-
 static void wm_init(struct Wm *wm, int argc, char **argv) {
-	vec3 eye = {0.0f, 0.0f, 5.0f};
+	vec3 eye = {0.0f, 3.0f, 5.0f};
 	vec3 origin = {0, 0, 0};
 	vec3 up = {0.0f, 1.0f, 0.0};
 
 	memset(wm, 0, sizeof(*wm));
-//	wm->validate = true;
 	wm->presentMode = VK_PRESENT_MODE_FIFO_KHR;
 	wm->frameCount = INT32_MAX;
 
-	wm->use_staging_buffer = true;
-
 	wm_init_connection(wm);
-
-	// initialize apr and global memory pool
-	apr_initialize();
-	apr_pool_create(&wm->mp, NULL);
-
-	wm->winhash = h2_ihash_create(wm->mp, offsetof(win_t, xid));
-	wm_init_winhash(wm); // initialize the hash table of X11 windows
-
-	wm_init_vertarr(wm);
 
 	wm_init_vk(wm);
 
-	wm->width = 1000;
-	wm->height = 1000;
+	wm->width = 500;
+	wm->height = 500;
 
 	wm->spin_angle = 4.0f;
-	wm->spin_increment = 0.0f;
-	wm->pause = true;
+	wm->spin_increment = 0.2f;
+	wm->pause = false;
 
-//	mat4x4_perspective(wm->projection_matrix,
-//			(float)degreesToRadians(45.0f), 1.0f, 0.1f, 100.0f);
-	mat4x4_ortho(wm->projection_matrix,
-			-3.0f, 1.0f, -1.0f, 3.0f, -100.0f, 100.0f);
-
+	mat4x4_perspective(wm->projection_matrix,
+			(float)degreesToRadians(45.0f), 1.0f, 0.1f, 100.0f);
 	mat4x4_look_at(wm->view_matrix, eye, origin, up);
 	mat4x4_identity(wm->model_matrix);
 
-//	wm->projection_matrix[1][1] *= -1;  // Flip projection matrix from GL to Vulkan orientation.
-
+	wm->projection_matrix[1][1] *= -1;  // Flip projection matrix from GL to Vulkan orientation.
 }
 

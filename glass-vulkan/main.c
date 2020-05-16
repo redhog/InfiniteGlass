@@ -12,6 +12,24 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
+
+#ifndef NDEBUG
+FILE *dlog_fp; // the file to save the debug log records to
+#define dlog(...) fprintf(dlog_fp, __VA_ARGS__); fflush(dlog_fp)
+#define dassert(expr)							\
+  ((void) sizeof ((expr) ? 1 : 0), __extension__ ({			\
+      if (expr)								\
+        ;							\
+      else { \
+	dlog("Assert failed\n"); \
+        assert(expr);	\
+	} \
+    }))
+#else
+#define dlog(...) ((void)0)
+#define dassert(ignore) ((void)0)
+#endif // NDEBUG
 
 #include "cube.c"
 
@@ -48,15 +66,19 @@ static void wm_handle_xcb_event(struct Wm *wm,
 	uint8_t event_code = event->response_type &0x7f;
 	switch(event_code) {
 	case XCB_EXPOSE:
+		dlog("XCB_EXPOSE event\n");
 		// TODO: Resize window
 		break;
 	case XCB_CLIENT_MESSAGE:
-		if((*(xcb_client_message_event_t *)event).data.data32[0] ==
-				(*wm->atom_wm_delete_window).atom) {
-			wm->quit = true;
-		}
+		dlog("XCB_CLIENT_MESSAGE event\n");
 		break;
+//		if((*(xcb_client_message_event_t *)event).data.data32[0] ==
+//				(*wm->atom_wm_delete_window).atom) {
+//			wm->quit = true;
+//		}
+//		break;
 	case XCB_KEY_RELEASE: {
+		dlog("XCB_KEY_RELEASE event\n");
 		const xcb_key_release_event_t *key =
 				(const xcb_key_release_event_t *)event;
 
@@ -76,6 +98,8 @@ static void wm_handle_xcb_event(struct Wm *wm,
 		}
 	} break;
 	case XCB_CONFIGURE_NOTIFY: {
+		dlog("XCB_CONFIGURE_NOTIFY event\n");
+		break;
 		const xcb_configure_notify_event_t *cfg =
 				(const xcb_configure_notify_event_t *)event;
 		if((wm->width != cfg->width) ||
@@ -109,8 +133,6 @@ static void wm_run_xcb(struct Wm *wm) {
 
 		wm_draw(wm);
 		++wm->curFrame;
-		if(wm->frameCount != INT32_MAX && wm->curFrame ==
-				wm->frameCount) wm->quit = true;
 	}
 }
 
@@ -123,7 +145,7 @@ static void wm_create_xcb_window(struct Wm *wm) {
 		XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS |
 		XCB_EVENT_MASK_ENTER_WINDOW |
 		XCB_EVENT_MASK_LEAVE_WINDOW |
-		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
+//		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY |
 		XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
 		XCB_EVENT_MASK_PROPERTY_CHANGE |
@@ -160,23 +182,50 @@ static void wm_create_xcb_window(struct Wm *wm) {
 		free(reply);
 		free(error);
 	} else {
+		dlog("Could not get overlay window. Exiting.\n");
 		exit(-25);
 	}
 }
 
 int main(int argc, char **argv, char **envp) {
+#ifndef NDEBUG
+	dlog_fp = fopen("/tmp/wm.log", "w"); // open the debug log file
+	assert(dlog_fp);
+#endif //NDEBUG
+
+	dlog("Starting glass-vulkan renderer\n");
+
 	struct Wm wm;
+	system("xterm -geometry +0+18 &");
+	signal(SIGCHLD, SIG_IGN);
+
+	dlog("entering wm_init\n");
+
 	wm_init(&wm, argc, argv);
+
+	dlog("entering wm_create_xcb_window\n");
 
 	wm_create_xcb_window(&wm);
 
+	dlog("entering wm_init_vk_swapchain\n");
+
 	wm_init_vk_swapchain(&wm);
+
+	dlog("entering wm_prepare\n");
 
 	wm_prepare(&wm);
 
+	dlog("entering wm_run_xcb\n");
+
 	wm_run_xcb(&wm);
 
+	dlog("entering wm_cleanup\n");
+
 	wm_cleanup(&wm);
+
+#ifndef NDEBUG
+	fclose(dlog_fp); // close the debug log file
+#endif //NDEBUG
 
 	return validation_error;
 }
