@@ -22,7 +22,9 @@ FILE *dlog_fp; // the file to save the debug log records to
       if (expr)								\
         ;							\
       else { \
-	dlog("Assert failed\n"); \
+	dlog("%s:%d: %s: Assertion '%s' failed. Exiting.\n", \
+		__FILE__, __LINE__, \
+		__ASSERT_FUNCTION, #expr); \
         assert(expr);	\
 	} \
     }))
@@ -64,7 +66,33 @@ static void wm_init_connection(struct Wm *wm) {
 static void wm_handle_xcb_event(struct Wm *wm,
 					const xcb_generic_event_t *event) {
 	uint8_t event_code = event->response_type &0x7f;
+	if(event_code == XCB_CREATE_NOTIFY) {
+		const xcb_create_notify_event_t *ev;
+		dlog("X11 event %d new window: %d\n",
+				(int32_t)event_code, (int32_t)ev->window);
+		// take not of current drawable window count:
+		int ntex_drawn = wm->ntex_drawn;
+		wm_iterate_tree(wm, wm->screen->root, 0, 0, 0);
+		if(ntex_drawn < wm->ntex_drawn) {
+			wm_resize(wm);
+			wm_draw(wm);
+		}
+	}
 	switch(event_code) {
+	case XCB_CREATE_NOTIFY:
+		{
+			const xcb_create_notify_event_t *ev;
+			dlog("X11 event %d new window: %d\n",
+				(int32_t)event_code, (int32_t)ev->window);
+			// take not of current drawable window count:
+			int ntex_drawn = wm->ntex_drawn;
+			wm_iterate_tree(wm, wm->screen->root, 0, 0, 0);
+			if(ntex_drawn < wm->ntex_drawn) {
+				wm_resize(wm);
+				wm_draw(wm);
+			}
+		}
+		break;
 	case XCB_EXPOSE:
 		dlog("XCB_EXPOSE event\n");
 		// TODO: Resize window
@@ -88,6 +116,7 @@ static void wm_handle_xcb_event(struct Wm *wm,
 			break;
 		case 0x71:  // left arrow key
 			wm->spin_angle -= wm->spin_increment;
+			wm_draw(wm);
 			break;
 		case 0x72:  // right arrow key
 			wm->spin_angle += wm->spin_increment;
@@ -99,6 +128,7 @@ static void wm_handle_xcb_event(struct Wm *wm,
 	} break;
 	case XCB_CONFIGURE_NOTIFY: {
 		dlog("XCB_CONFIGURE_NOTIFY event\n");
+		wm_draw(wm);
 		break;
 		const xcb_configure_notify_event_t *cfg =
 				(const xcb_configure_notify_event_t *)event;
@@ -110,6 +140,7 @@ static void wm_handle_xcb_event(struct Wm *wm,
 		}
 	} break;
 	default:
+		dlog("Unknown event %d\n", event_code);
 		break;
 	}
 }
@@ -196,7 +227,7 @@ int main(int argc, char **argv, char **envp) {
 	dlog("Starting glass-vulkan renderer\n");
 
 	struct Wm wm;
-	system("xterm -geometry +0+18 &");
+	system("xterm -geometry +600+20 &");
 	signal(SIGCHLD, SIG_IGN);
 
 	dlog("entering wm_init\n");
