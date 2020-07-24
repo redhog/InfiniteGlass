@@ -12,7 +12,7 @@ typedef struct {
   GLint enabled_location;
 } NetWmIconPropertyProgramData;
 
-void property_net_wm_icon_init(PropertyTypeHandler *prop) { prop->type = XA_CARDINAL; prop->name = XInternAtom(display, "_NET_WM_ICON", False); }
+void property_net_wm_icon_init(PropertyTypeHandler *prop) { prop->type = XA_CARDINAL; prop->name = ATOM("_NET_WM_ICON"); }
 void property_net_wm_icon_load(Property *prop) {
   prop->data = malloc(sizeof(NetWmIconPropertyData));
   NetWmIconPropertyData *data = (NetWmIconPropertyData *) prop->data;

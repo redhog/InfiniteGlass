@@ -3,37 +3,43 @@
 #include "item.h"
 #include "shader.h"
 #include "rendering.h"
+#include "mainloop.h"
 #include "debug.h"
 #include "glapi.h"
 
 void property_size_init(PropertyTypeHandler *prop) { prop->type = XA_INTEGER; prop->name = ATOM("IG_SIZE"); }
+
+void property_size_load_geom(Property *prop, xcb_get_geometry_reply_t *reply, xcb_generic_error_t *error) {
+  int width = prop->values.dwords[0];
+  int height = prop->values.dwords[1];
+
+  Item *item = (Item *) item_get_from_window(prop->window, False);
+  if (!item) return;
+
+  if (reply->width != width || reply->height != height) {
+    // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
+    if (width < 0 || height < 0 || width > overlay_attr.width * 5 || height > overlay_attr.height * 5) {
+      long arr[2];
+      arr[0] = reply->width;
+      arr[1] = reply->height;
+      DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", prop->window, reply->width, reply->height);
+      xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, prop->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);    
+    } else {
+      DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", prop->window, width, height);
+      const uint32_t values[] = {width, height};
+      xcb_configure_window(xcb_display, prop->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+      item_update((Item *) item);
+    }
+  }
+}
+
+
 void property_size_load(Property *prop) {
   if (prop->window == root) return;
   if (prop->type == None) return;
  
-  Item *item = (Item *) item_get_from_window(prop->window, False);
-  if (!item) return;
-  
-  XWindowChanges values;
-  values.width = prop->values.dwords[0];
-  values.height = prop->values.dwords[1];
-  XWindowAttributes attr;
-  XGetWindowAttributes(display, prop->window, &attr);
-
-  if (attr.width != values.width || attr.height != values.height) {
-    // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
-    if (values.width < 0 || values.height < 0 || values.width > overlay_attr.width * 5 || values.height > overlay_attr.height * 5) {
-      long arr[2];
-      arr[0] = attr.width;
-      arr[1] = attr.height;
-      DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", prop->window, attr.width, attr.height);
-      XChangeProperty(display, prop->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-    } else {
-      DEBUG("event.size", "%ld: SIZE CHANGED TO %i,%i\n", prop->window, values.width, values.height);
-      XConfigureWindow(display, prop->window, CWWidth | CWHeight, &values);
-      item_update((Item *) item);
-    }
-  }
+  xcb_get_geometry_cookie_t cookie = xcb_get_geometry(xcb_display, prop->window);
+  MAINLOOP_XCB_DEFER(cookie, &property_size_load_geom, (void *) prop);  
 }
 
 PropertyTypeHandler property_size = {

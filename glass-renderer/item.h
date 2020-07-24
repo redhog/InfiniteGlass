@@ -15,7 +15,8 @@ typedef struct ItemStruct Item;
 
 struct ItemStruct {
   Window window;
-  XWindowAttributes attr;
+  xcb_get_window_attributes_reply_t *attr;
+  xcb_get_geometry_reply_t *geom;
  
   uint is_mapped; 
   uint _is_mapped;
@@ -32,7 +33,7 @@ struct ItemStruct {
   Property *prop_coord_types;
   Property *prop_draw_type;
 
-  Damage damage;
+  xcb_damage_damage_t damage;
  
   Pixmap window_pixmap;
   Texture window_texture;
@@ -57,7 +58,6 @@ extern void item_properties_update(Item *item, Atom name);
 extern Shader *item_get_shader(Item *item);
 extern void item_print(Item *);
 
-extern void item_update_space_pos_from_window(Item *item);
 extern Item *item_get_from_window(Window window, int create);
 extern Item *item_get_from_widget(Item *parent, int widget);
 extern void items_get_from_toplevel_windows();

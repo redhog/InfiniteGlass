@@ -141,7 +141,7 @@ void mainloop_run() {
     while (XPending(display)) {
       XNextEvent(display, &e);
       mainloop_event_handle(&e);
-      XSync(display, False);
+      XFlush(display);
     }
   }
 }

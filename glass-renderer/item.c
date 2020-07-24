@@ -10,6 +10,7 @@
 #include "property_coords.h"
 #include "debug.h"
 #include "rendering.h"
+#include "mainloop.h"
 #include <X11/Xatom.h>
 
 List *items_all = NULL;
@@ -20,14 +21,10 @@ Bool init_items() {
 }
 
 
-void item_constructor(Item *item, Window window) {
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return = NULL;
-  
-  item->window = window;
+void item_constructor(Item *item) {
+  item->window = None;
+  item->is_mapped = False;
+  item->_is_mapped = False;
   item->properties = NULL;
   item->prop_layer = NULL;
   item->prop_item_layer = NULL;
@@ -38,45 +35,71 @@ void item_constructor(Item *item, Window window) {
   item->prop_draw_type = NULL;
   item->draw_cycles_left = 0;
   item->parent_item = NULL;
-  
-  if (window == root) {
-    Atom layer = ATOM("IG_LAYER_ROOT");
-    XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
-    Atom shader = ATOM("IG_SHADER_ROOT");
-    XChangeProperty(display, window, ATOM("IG_SHADER"), XA_ATOM, 32, PropModeReplace, (void *) &shader, 1);
-    item->is_mapped = True;
-  } else {
-    XGetWindowProperty(display, window, ATOM("IG_LAYER"), 0, sizeof(Atom), 0, XA_ATOM,
-                       &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-    if (type_return == None) {
-      Atom layer = ATOM("IG_LAYER_DESKTOP");
-      XGetWindowAttributes(display, window, &item->attr);
-      if (item->attr.override_redirect) {
-        layer = ATOM("IG_LAYER_MENU");
-      }
-      XChangeProperty(display, window, ATOM("IG_LAYER"), XA_ATOM, 32, PropModeReplace, (void *) &layer, 1);
+  item->attr = NULL;
+  item->geom = NULL;
+}
+
+void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  item->x                   = item->geom->x;
+  item->y                   = item->geom->y;
+  int width                 = item->geom->width;
+  int height                = item->geom->height;
+  DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
+
+  long arr[2] = {width, height};
+  DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
+  xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);    
+
+  if (!reply->type) {
+    View *v = NULL;
+    if (views && item->prop_layer && item->prop_layer->values.dwords) {
+      v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
     }
-    XFree(prop_return);
+    float coords[4];
+    if (v) {
+      coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
+      coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
+      coords[2] = (v->screen[2] * (float) width) / (float) v->width;
+      coords[3] = (v->screen[3] * (float) height) / (float) v->height;
+      DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
+      DEBUG("position", "XXX %f*%d/%d=%f, %f*%d/%d=%f\n", v->screen[2], width, v->width, coords[2], v->screen[3], height, v->height, coords[3]);
+    } else {
+      coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
+      coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
+      coords[2] = ((float) (width)) / (float) overlay_attr.width;
+      coords[3] = ((float) (height)) / (float) overlay_attr.width;
+      DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
+    }
 
-    long value = 1;
-    XChangeProperty(display, window, ATOM("WM_STATE"), XA_INTEGER, 32, PropModeReplace, (void *) &value, 1);
+    if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
+      DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
+            item->window,
+            item->geom->x, item->geom->y, item->geom->width, item->geom->height,
+            coords[0],coords[1],coords[2],coords[3]);
+    }
 
-    XGetWindowAttributes(display, window, &item->attr);
-    item->is_mapped = item->attr.map_state == IsViewable; // FIXME: Remove is_mapped...
-
-    XSelectInput(display, window, PropertyChangeMask);
-    item->damage = XDamageCreate(display, item->window, XDamageReportNonEmpty);
+    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
+    long coords_arr[4];
+    for (int i = 0; i < 4; i++) {
+      coords_arr[i] = *(long *) &coords[i];
+    }
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords_arr);    
   }
+  free(reply);
+}
+void item_update_space_pos_from_window(Item *item) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_COORDS"), AnyPropertyType, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &item_update_space_pos_from_window_load, (void *) item);
+}
 
-  XGetWindowProperty(display, window, ATOM("IG_DRAW_TYPE"), 0, sizeof(Atom), 0, XA_ATOM,
-                     &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return == None) {
+void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (reply->type == None) {
     Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
-    XChangeProperty(display, window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, PropModeReplace, (void *) &draw_type, 1);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, 1, (void *) &draw_type);    
   }
-  XFree(prop_return);
+  free(reply);
   
-  item->properties = properties_load(window);
+  item->properties = properties_load(item->window);
   item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
   item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
   item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
@@ -85,14 +108,83 @@ void item_constructor(Item *item, Window window) {
   item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
   item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
   
-  if (window != root) {
+  if (item->window != root) {
     item_update_space_pos_from_window(item);
   }
   
   item->window_pixmap = 0;
   texture_initialize(&item->window_texture);
+
+  item_update(item);
 }
+void item_initialize_draw_type(Item *item) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &item_initialize_draw_type_load, (void *) item);
+}
+
+void item_initialize_layer_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (reply->type == None) {
+    Atom layer = ATOM("IG_LAYER_DESKTOP");
+    if (item->attr->override_redirect) {
+      layer = ATOM("IG_LAYER_MENU");
+    }
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, 1, (void *) &layer);    
+  }
+  free(reply);
+  
+  item->is_mapped = item->attr->map_state == IsViewable; // FIXME: Remove is_mapped...
+  
+  uint32_t values[] = {PropertyChangeMask};
+  xcb_change_window_attributes(xcb_display, item->window, XCB_CW_EVENT_MASK, values);
+
+  item->damage = xcb_generate_id(xcb_display);
+  xcb_damage_create(xcb_display, item->damage, item->window, XCB_DAMAGE_REPORT_LEVEL_NON_EMPTY);
+  
+  item_initialize_draw_type(item);
+}
+void item_initialize_layer(Item *item) {
+  xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_LAYER"), XA_ATOM, 0, 1000000000);
+  MAINLOOP_XCB_DEFER(cookie, &item_initialize_layer_load, (void *) item);
+}
+
+void item_initialize_attr_load(Item *item, xcb_get_window_attributes_reply_t *reply, xcb_generic_error_t *error) {
+  item->attr = reply;
+  if (item->window == root) {
+    Atom layer = ATOM("IG_LAYER_ROOT");
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, 1, (void *) &layer);    
+    Atom shader = ATOM("IG_SHADER_ROOT");
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SHADER"), XA_ATOM, 32, 1, (void *) &shader);    
+    item->is_mapped = True;
+    item_initialize_draw_type(item);
+  } else {
+    long value = 1;
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("WM_STATE"), XA_INTEGER, 32, 1, (void *) &value);    
+    item_initialize_layer(item);
+  }
+}
+void item_initialize_attr(Item *item) {
+  xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(xcb_display, item->window);
+  MAINLOOP_XCB_DEFER(cookie, &item_initialize_attr_load, (void *) item);
+}
+
+void item_initialize_geom_load(Item *item, xcb_get_geometry_reply_t *reply, xcb_generic_error_t *error) {
+  item->geom = reply;
+  item_initialize_attr(item);
+}
+void item_initialize_geom(Item *item) {
+  xcb_get_geometry_cookie_t cookie = xcb_get_geometry(xcb_display, item->window);
+  MAINLOOP_XCB_DEFER(cookie, &item_initialize_geom_load, (void *) item);
+}
+
+
+void item_initialize(Item *item, Window window) {
+  item->window = window;
+  item_initialize_geom(item);
+}
+
 void item_destructor(Item *item) {
+  if (item->attr) free(item->attr);
+  if (item->geom) free(item->geom);
   texture_destroy(&item->window_texture);
 }
 void item_draw_subs(Rendering *rendering) {
@@ -150,7 +242,7 @@ void item_draw(Rendering *rendering) {
     glUniform1i(shader->picking_mode_attr, rendering->view->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
-    glUniform1i(shader->border_width_attr, rendering->item->attr.border_width);
+    glUniform1i(shader->border_width_attr, rendering->item->geom->border_width);
     glUniform2i(shader->pointer_attr, mouse.root_x, rendering->view->height - mouse.root_y);
 
     DEBUG("setwin", "%ld\n", rendering->item->window);
@@ -276,12 +368,9 @@ void item_print(Item *item) {
 
 Item *item_create(Window window) {
   Item *item = (Item *) malloc(sizeof(Item));
-
-  item->is_mapped = False;
-  item->_is_mapped = False;
-  item_constructor(item, window);
+  item_constructor(item);
   item_add(item);
-  item_update(item);
+  item_initialize(item, window);
   return item;
 }
 
@@ -293,67 +382,6 @@ void item_add(Item *item) {
 void item_remove(Item *item) {
   list_remove(items_all, (void *) item);
   item_destructor(item);
-}
-
-void item_update_space_pos_from_window(Item *item) {
-  if (item->window == root) return;
-  
-  XGetWindowAttributes(display, item->window, &item->attr);
-
-  item->x                   = item->attr.x;
-  item->y                   = item->attr.y;
-  int width                 = item->attr.width;
-  int height                = item->attr.height;
-  DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
-
-  long arr[2] = {width, height};
-  DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
-  XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-  
-  Atom type_return;
-  int format_return;
-  unsigned long nitems_return;
-  unsigned long bytes_after_return;
-  unsigned char *prop_return;
-  XGetWindowProperty(display, item->window, ATOM("IG_COORDS"), 0, sizeof(float)*4, 0, AnyPropertyType,
-                       &type_return, &format_return, &nitems_return, &bytes_after_return, &prop_return);
-  if (type_return != None) {
-    XFree(prop_return);
-  } else {
-    View *v = NULL;
-    if (views && item->prop_layer && item->prop_layer->values.dwords) {
-      v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
-    }
-    float coords[4];
-    if (v) {
-      coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
-      coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
-      coords[2] = (v->screen[2] * (float) width) / (float) v->width;
-      coords[3] = (v->screen[3] * (float) height) / (float) v->height;
-      DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
-      DEBUG("position", "XXX %f*%d/%d=%f, %f*%d/%d=%f\n", v->screen[2], width, v->width, coords[2], v->screen[3], height, v->height, coords[3]);
-    } else {
-      coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
-      coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
-      coords[2] = ((float) (width)) / (float) overlay_attr.width;
-      coords[3] = ((float) (height)) / (float) overlay_attr.width;
-      DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
-    }
-
-    if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
-      DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
-            item->window,
-            item->attr.x, item->attr.y, item->attr.width, item->attr.height,
-            coords[0],coords[1],coords[2],coords[3]);
-    }
-
-    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
-    long coords_arr[4];
-    for (int i = 0; i < 4; i++) {
-      coords_arr[i] = *(long *) &coords[i];
-    }
-    XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
-  }
 }
 
 Item *item_get_from_window(Window window, int create) {
