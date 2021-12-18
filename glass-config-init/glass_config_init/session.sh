@@ -12,6 +12,8 @@
 # export GLASS_DEBUG_glass_ghosts=1
 # export GLASS_DEBUG_glass_input=1
 
+# export GLASS_PROFILE_glass_input=1
+
 # The eventlog is a newline separated JSON file that can be used to
 # generate statistics of X events to the renderer and their processing
 # time.
@@ -20,3 +22,5 @@
 # Error paths work just like debug paths, but are =1 by default. You
 # can disable all error reporting by uncommenting the following line
 # export GLASS_ERROR_renderer=0
+
+xsetroot -cursor_name arrow &
