@@ -122,6 +122,11 @@ def pop(self):
     self.eventhandlers = []
 Xlib.display.Display.pop = pop
 
+def exit(self):
+    self.eventhandlerstack = [[] for entry in self.eventhandlerstack]
+    self.pop()
+Xlib.display.Display.exit = exit
+
 @property
 def display_root(self):
     return self.screen(0).root

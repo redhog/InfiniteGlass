@@ -34,6 +34,7 @@ def send_exit(self, event):
         self.display.root, "IG_GHOSTS_EXIT",
         event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
     self.display.flush()
+    self.display.exit()
     
 def send_debug(self, event):
     "Make glass-renderer print its state to stdout"
