@@ -64,6 +64,7 @@
             "Mod4Mask,KeyPress,XK_F1": "send_debug",
             "Mod4Mask,KeyPress,XK_F4": "send_close",
             "Mod4Mask,KeyPress,XK_F5": "send_sleep",
+            "KeyPress,XK_E": "send_exit",
             "KeyPress,XK_D": "send_debug",
             "KeyPress,XK_C": "send_close",
             "KeyPress,XK_S": "send_sleep",
