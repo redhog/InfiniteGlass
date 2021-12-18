@@ -3,6 +3,7 @@ default: run
 
 XSERVER=Xephyr
 GLASS_DEBUGGER=
+PYTHON=python3.8
 
 ifeq ($(XSERVEROPTS),)
   ifeq ($(XSERVER),Xephyr)
@@ -33,7 +34,7 @@ $(BINARIES):
 	$(MAKE) GLASS_DMALLOC="$(GLASS_DMALLOC)" -C $(notdir $@)
 
 $(BUILD)/env:
-	virtualenv --python=python3 $@
+	virtualenv --python=$(PYTHON) $@
 	. $@/bin/activate; pip install setuptools
 	. $@/bin/activate; cd glass-lib; python3 setup.py develop
 

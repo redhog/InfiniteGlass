@@ -16,6 +16,7 @@ setuptools.setup(
     url='https://github.com/redhog/InfiniteGlass',
     packages=setuptools.find_packages(),
     install_requires=[
+        'importlib-metadata>=0.12;python_version<"3.8"',
     ],
     entry_points={
         'console_scripts': [

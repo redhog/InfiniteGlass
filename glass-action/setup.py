@@ -13,7 +13,8 @@ setuptools.setup(name='glass-action',
       packages=setuptools.find_packages(),
       install_requires=[
           "click",
-          "PyGObject"
+          "pycairo",
+          "python3-gi"
       ],
       entry_points={
           'console_scripts': [
