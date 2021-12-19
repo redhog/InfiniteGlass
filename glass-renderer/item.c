@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "rendering.h"
 #include "mainloop.h"
+#include "texture.h"
 #include <X11/Xatom.h>
 
 List *items_all = NULL;
@@ -37,6 +38,7 @@ void item_constructor(Item *item) {
   item->parent_item = NULL;
   item->attr = NULL;
   item->geom = NULL;
+  texture_initialize(&item->window_texture);
 }
 
 void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
