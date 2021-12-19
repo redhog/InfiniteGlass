@@ -77,7 +77,7 @@ uninstall-binaries:
 	rm /etc/emacs/site-start.d/glass-emacs-xsession.el
 
 $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
-	cd $(patsubst install-%,%,$@); python3 setup.py install
+	cd $(patsubst install-%,%,$@); pip install -e .
 
 $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS)):
 	cd $(patsubst devinstall-%,%,$@); python3 setup.py develop
