@@ -59,7 +59,7 @@ void texture_from_glpixmap(Texture *texture) {
     GL_CHECK_ERROR("texture_from_pixmap1", "");
   }
   glBindTexture(GL_TEXTURE_2D, texture->texture_id);
-  GL_CHECK_ERROR("texture_from_pixmap2", "");
+  GL_CHECK_ERROR("texture_from_pixmap2", "texture_id=%d", texture->texture_id);  
   glXBindTexImageEXT(display, texture->glxpixmap, GLX_FRONT_EXT, NULL);
   GL_CHECK_ERROR("texture_from_pixmap3", "");
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
