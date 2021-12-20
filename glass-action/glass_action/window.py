@@ -31,6 +31,29 @@ def send(ctx, window, mask, event):
         def done():
             sys.exit(0)
             
+
+@window.command()
+@click.option('--window', default="click")
+@click.argument('name')
+@click.argument('value')
+@click.pass_context
+def set(ctx, window, name, value):
+    with InfiniteGlass.Display() as display:
+        @glass_action.window_tools.str_to_win(display, window)
+        def set(win):
+            v = value
+            try:
+                v = json.loads(v)
+            except:
+                pass
+            properties = json.loads(
+                json.dumps({name: v}),
+                object_hook=InfiniteGlass.fromjson(display))
+            for k, v in properties.items():
+                win[k] = v
+            display.flush()
+            sys.exit(0)
+            
 @window.group()
 @click.pass_context
 def inspect(ctx, **kw):
