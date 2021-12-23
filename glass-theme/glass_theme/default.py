@@ -80,6 +80,7 @@ class Theme(glass_theme.base.ThemeBase):
 
     def setup_splash(self):
         w1 = self.display.root.create_window(map=False)
+        w1["WM_NAME"] = b"splash"
         w1["IG_LAYER"] = "IG_LAYER_SPLASH"
         w1["IG_SHADER"] = "IG_SHADER_SPLASH"
         w1["IG_DRAW_TYPE"] = "IG_DRAW_TYPE_LINES"
@@ -88,6 +89,7 @@ class Theme(glass_theme.base.ThemeBase):
         w1.map()
 
         w2 = self.display.root.create_window(map=False)
+        w2["WM_NAME"] = b"splash-background"
         w2["IG_LAYER"] = "IG_LAYER_SPLASH_BACKGROUND"
         w2["IG_SHADER"] = "IG_SHADER_SPLASH_BACKGROUND"
         w2.map()
