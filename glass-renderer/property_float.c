@@ -4,14 +4,25 @@
 #include "debug.h"
 #include <math.h>
 
+#define FL(value) *((float *) &value)
 void property_float_init(PropertyTypeHandler *prop) { prop->type = XA_FLOAT; prop->name = AnyPropertyType; }
+void property_float_load(Property *prop) {
+  prop->data = realloc(prop->data, sizeof(float) * prop->nitems);
+  for (int i = 0; i < prop->nitems; i++) {
+    ((float *) prop->data)[i] = FL(prop->values.dwords[i]);
+  }
+}
+
+void property_float_free(Property *prop) {
+  if (prop->data) free(prop->data);
+}
 
 void property_float_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
   
   if (prop_cache->is_uniform) {
-    float *data = (float *) prop->values.dwords;
+    float *data = (float *) prop->data;
     #define D(idx) ((idx < prop->nitems) ? data[idx] : nanf("initial"))
     switch (prop_cache->type) {
       case GL_FLOAT: glUniform1f(prop_cache->location, D(0)); break;
@@ -41,7 +52,7 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
   }
 }
 void property_float_print(Property *prop, FILE *fp) {
-  float *values = (float *) prop->values.dwords;
+  float *values = (float *) prop->data;
   fprintf(fp, "%ld.%s=<float>", prop->window, prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ",");
@@ -59,6 +70,8 @@ void property_float_free_program(Property *prop, size_t index) {
 }
 PropertyTypeHandler property_float = {
   .init=&property_float_init,
+  .load=&property_float_load,
+  .free=&property_float_free,
   .to_gl=&property_float_to_gl,
   .print=&property_float_print,
   .load_program=&property_float_load_program,
