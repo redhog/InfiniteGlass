@@ -17,7 +17,7 @@ void property_views_load(Property *prop) {
   if (prop->type == XA_ATOM) {
     property_atom_load(prop);
   } else if (prop->type == XA_FLOAT) {
-    // property_float_load(prop);
+    property_float_load(prop);
   } else if (prop->type == XA_INTEGER) {
     property_int_load(prop);
   }
@@ -44,7 +44,7 @@ void property_views_free(Property *prop) {
   if (prop->type == XA_ATOM) {
     property_atom_free(prop);
   } else if (prop->type == XA_FLOAT) {
-   // property_float_free(prop);
+    property_float_free(prop);
   } else if (prop->type == XA_INTEGER) {
     property_int_free(prop);
   }
