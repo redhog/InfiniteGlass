@@ -181,20 +181,21 @@ void view_load_screen(View *view) {
   }
 }
 void view_load_size(View *view) {
+  Property *prop = NULL;
   if (root_item) {
-    Property *prop = properties_find(root_item->properties, view->attr_size);
-    if (prop && prop->type != None) {
-      view->width = *(float *) &prop->values.dwords[0];
-      view->height = *(float *) &prop->values.dwords[1];
-      return;
-    }
+    prop = properties_find(root_item->properties, view->attr_size);
   }
-  view->width = overlay_attr.width;
-  view->height = overlay_attr.height;
-  long arr[2];
-  arr[0] = view->width;
-  arr[1] = view->height;
-  XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+  if (prop && prop->type != None) {
+    view->width = prop->values.dwords[0];
+    view->height = prop->values.dwords[1];
+  } else {
+    view->width = overlay_attr.width;
+    view->height = overlay_attr.height;
+    long arr[2];
+    arr[0] = view->width;
+    arr[1] = view->height;
+    XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+  }
 }
 
 View *view_load(Atom name) {
