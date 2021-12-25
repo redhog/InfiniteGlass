@@ -81,11 +81,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
     }
 
     DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
-    long coords_arr[4];
-    for (int i = 0; i < 4; i++) {
-      coords_arr[i] = *(long *) &coords[i];
-    }
-    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords_arr);    
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords);
   }
   free(reply);
 }
