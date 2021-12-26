@@ -60,9 +60,40 @@ void property_views_print(Property *prop, FILE *fp) {
   }
 }
 
+void property_views_to_gl(Property *prop, Rendering *rendering) {
+  if (prop->type == XA_ATOM) {
+    property_atom_to_gl(prop, rendering);
+  } else if (prop->type == XA_FLOAT) {
+    property_float_to_gl(prop, rendering);
+  } else if (prop->type == XA_INTEGER) {
+    property_int_to_gl(prop, rendering);
+  }
+}
+void property_views_load_program(Property *prop, Rendering *rendering) {
+  if (prop->type == XA_ATOM) {
+    property_atom_load_program(prop, rendering);
+  } else if (prop->type == XA_FLOAT) {
+    property_float_load_program(prop, rendering);
+  } else if (prop->type == XA_INTEGER) {
+    property_int_load_program(prop, rendering);
+  }
+}
+void property_views_free_program(Property *prop, size_t index) {
+  if (prop->type == XA_ATOM) {
+    property_atom_free_program(prop, index);
+  } else if (prop->type == XA_FLOAT) {
+    property_float_free_program(prop, index);
+  } else if (prop->type == XA_INTEGER) {
+    property_int_free_program(prop, index);
+  }
+}
+
 PropertyTypeHandler property_views = {
   .match=&property_views_match,
   .load=&property_views_load,
   .free=&property_views_free,
   .print=&property_views_print,
+  .to_gl=&property_views_to_gl,
+  .load_program=&property_views_load_program,
+  .free_program=&property_views_free_program
 };
