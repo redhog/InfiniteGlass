@@ -48,7 +48,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
   int height                = item->geom->height;
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
-  long arr[2] = {width, height};
+  int arr[2] = {width, height};
   DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
   xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);    
 
@@ -155,7 +155,7 @@ void item_initialize_attr_load(Item *item, xcb_get_window_attributes_reply_t *re
     item->is_mapped = True;
     item_initialize_draw_type(item);
   } else {
-    long value = 1;
+    int value = 1;
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("WM_STATE"), XA_INTEGER, 32, 1, (void *) &value);    
     item_initialize_layer(item);
   }

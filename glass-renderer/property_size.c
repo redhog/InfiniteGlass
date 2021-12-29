@@ -19,7 +19,7 @@ void property_size_load_geom(Property *prop, xcb_get_geometry_reply_t *reply, xc
   if (reply->width != width || reply->height != height) {
     // Do not allow way to big windows, as that screws up OpenGL and X11 and everything will crash...
     if (width < 0 || height < 0 || width > overlay_attr.width * 5 || height > overlay_attr.height * 5) {
-      long arr[2];
+      int arr[2];
       arr[0] = reply->width;
       arr[1] = reply->height;
       DEBUG("event.size", "%ld: Warning IG_SIZE outside of bounds, resetting to %i,%i\n", prop->window, reply->width, reply->height);
