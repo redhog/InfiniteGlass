@@ -153,6 +153,7 @@ void property_svg_load(Property *prop) {
     
   GError *error = NULL;
   unsigned char *src = (unsigned char *) prop->values.bytes;
+  src[prop->nitems] = '\0';
   data->rsvg = rsvg_handle_new_from_data(src, strlen((char *) src), &error);
   if (!data->rsvg) {
     DEBUG("window.svg.error", "Unable to load svg: %s: %s, len=%ld\n",  error->message, src, prop->nitems);
