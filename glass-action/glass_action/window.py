@@ -26,6 +26,13 @@ def window(ctx, **kw):
 @click.argument("event", nargs=-1)
 @click.pass_context
 def send(ctx, window, mask, event):
+    """Usage examples:
+
+\b
+    glass-action window send --mask SubstructureNotifyMask --window root IG_DEBUG_PICKING
+    glass-action window send --mask StructureNotifyMask --window root IG_GHOSTS_EXIT
+    glass-action window send --mask SubstructureNotifyMask --window root IG_EXIT
+    """
     with InfiniteGlass.Display() as display:
         @glass_action.window_tools.send_msg(display, window, mask, event)
         def done():
@@ -38,6 +45,19 @@ def send(ctx, window, mask, event):
 @click.argument('value')
 @click.pass_context
 def set(ctx, window, name, value):
+    """Name is the property atom name as a string.
+
+Value is the property value as a JSON value, parsed using
+InfiniteGlass.fromjson (so any __jsonclass__ values supported by it
+are supported). In particular, strings are interpreted as atom names,
+actual string values need to use the __jsonclass__ encoding.
+
+Usage examples:
+
+\b
+    glass-action window set --window 1234567 IG_COORDS "[1.0, 1.0, 1.0, 1.0]"
+
+    """
     with InfiniteGlass.Display() as display:
         @glass_action.window_tools.str_to_win(display, window)
         def set(win):
