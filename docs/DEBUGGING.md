@@ -6,7 +6,8 @@ environment variable system. These variables can be set in your shell
 when running 'make run', or in
 [~/.config/glass/session.sh](../glass-config-init/glass_config_init/session.sh).
 
-All such environment variable names begin with 'GLASS_DEBUG'.
+All such environment variable names begin with 'GLASS_DEBUG'. For a complete list of
+options, see [DEBUGGING_OPTIONS.txt](./DEBUGGING_OPTIONS.txt).
 
 Each logging statement has a path, which is printed before the
 message. Example:
