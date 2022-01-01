@@ -116,25 +116,25 @@ Shader *shader_load(Atom name) {
     shader->fragment = atom_append(display, shader->name, "_FRAGMENT");
 
     shader->geometry_src = atom_load_string(shader->geometry);
-    if (!shader->geometry_src) break;
+    if (!shader->geometry_src) { DEBUG("shader_load_geometry", "Failed\n"); break; }
     shader->geometry_shader = glCreateShader(GL_GEOMETRY_SHADER_ARB);
     glShaderSource(shader->geometry_shader, 1, (const GLchar**)&(shader->geometry_src), 0);
     glCompileShader(shader->geometry_shader);
-    if (!checkShaderError(shader->name_str, "geometry", shader->geometry_src, shader->geometry_shader)) break;
+    if (!checkShaderError(shader->name_str, "geometry", shader->geometry_src, shader->geometry_shader)) { DEBUG("shader_compile_geometry", "Failed\n"); break; }
 
     shader->vertex_src = atom_load_string(shader->vertex);
-    if (!shader->vertex_src) break;
+    if (!shader->vertex_src) { DEBUG("shader_load_vertex", "Failed\n"); break; }
     shader->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(shader->vertex_shader, 1, (const GLchar**)&(shader->vertex_src), 0);
     glCompileShader(shader->vertex_shader);
-    if (!checkShaderError(shader->name_str, "vertex", shader->vertex_src, shader->vertex_shader)) break;
+    if (!checkShaderError(shader->name_str, "vertex", shader->vertex_src, shader->vertex_shader)) { DEBUG("shader_compile_vertex", "Failed\n"); break; }
 
     shader->fragment_src = atom_load_string(shader->fragment);
-    if (!shader->fragment_src) break;
+    if (!shader->fragment_src) { DEBUG("shader_load_fragment", "Failed\n"); break; }
     shader->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(shader->fragment_shader, 1, (const GLchar**)&(shader->fragment_src), 0);
     glCompileShader(shader->fragment_shader);
-    if (!checkShaderError(shader->name_str, "fragment", shader->fragment_src, shader->fragment_shader)) break;
+    if (!checkShaderError(shader->name_str, "fragment", shader->fragment_src, shader->fragment_shader)) { DEBUG("shader_compile_fragment", "Failed\n"); break; }
 
     shader->program = glCreateProgram();
 
@@ -143,7 +143,7 @@ Shader *shader_load(Atom name) {
     glAttachShader(shader->program, shader->fragment_shader);
 
     glLinkProgram(shader->program);
-    if (!checkProgramError(shader->name_str, shader->program)) break;
+    if (!checkProgramError(shader->name_str, shader->program)) { DEBUG("shader_link", "Failed\n"); break; }
 
     glUseProgram(shader->program);
 
