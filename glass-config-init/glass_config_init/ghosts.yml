@@ -1,68 +1,71 @@
-{
-    # Do not make ghosts for windows with any of these properties or
-    # property values (in the case of name-value pairs)
-    "ignore": ["IG_GHOST",
-               # "WM_TRANSIENT_FOR",
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"],
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DOCK"],
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_TOOLBAR"],
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"],
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"],
-               ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"],
-               ["WM_WINDOW_ROLE", {"__jsonclass__": ["string", "GtkFileChooserDialog"]}]],
-    # Use these properties to match a window to an existing ghost
-    "match": ["WM_CLASS", "WM_NAME"],
-    # Set these stored properties on a window that has been matched to a ghost
-    "set": ["IG_LAYER",
-            "IG_SIZE",
-            "IG_COORDS",
-            "_NET_WM_DESKTOP",
-            "_NET_WM_ICON_GEOMETRY"
-           ],
-    # Set these stored properties on a ghost
-    "ghost_set": ["IG_LAYER",
-                  "IG_SIZE",
-                  "IG_COORDS",
-                  "SM_CLIENT_ID",
-                  "WM_NAME",
-                  "WM_ICON_NAME",
-                  "WM_NORMAL_HINTS",
-                  "WM_CLASS",
-                  "WM_ICON_SIZE",
-                  "_NET_WM_NAME",
-                  "_NET_WM_VISIBLE_NAME",
-                  "_NET_WM_ICON_NAME",
-                  "_NET_WM_VISIBLE_ICON_NAME",
-                  "_NET_WM_DESKTOP",
-                  "_NET_WM_WINDOW_TYPE",
-                  "_NET_WM_STRUT",
-                  "_NET_WM_STRUT_PARTIAL",
-                  "_NET_WM_ICON_GEOMETRY",
-                  "_NET_WM_ICON"
-                 ],
-    # Update these stored properties from properties set on a ghost
-    "ghost_update": ["IG_COORDS",
-                     "IG_SIZE"],
+# Do not make ghosts for windows with any of these properties or
+# property values (in the case of name-value pairs)
+ignore:
+  - IG_GHOST
+  # - "WM_TRANSIENT_FOR",
+  - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DESKTOP"]
+  - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_DOCK"]
+  - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_TOOLBAR"]
+  - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"]
+  - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"]
+  - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"]
+  - ["WM_WINDOW_ROLE", {"__jsonclass__": ["string", "GtkFileChooserDialog"]}]
 
-    "components": {
-        "glass-input": {"command": ["glass-input"]},
-        "glass-theme": {"command": ["glass-theme"]},
-        "glass-widgets": {"command": ["glass-widgets"]},
-        "glass-animator": {"command": ["glass-animator"]},
-        "glass-renderer": {"command": ["glass-renderer"]},
-        "glass-islands": {"command": ["glass-islands"]},
-        "xkb": {"command": ["setxkbmap", "-model", "pc101", "-layout", "us"]},
-        "root-cursor": {"command": ["xsetroot", "-cursor_name", "arrow"]},
-        "panelterm": {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]}
-    },
+# Use these properties to match a window to an existing ghost
+match:
+  - WM_CLASS
+  - WM_NAME
 
-    "ghosts": {
-        "(b'xterm', b'XTerm', b'')/b'panelterm'": {
-            "IG_COORDS": [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875],
-            "IG_SIZE": ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"],
-            "IG_LAYER": "IG_LAYER_OVERLAY",
-            "WM_CLASS": [{"__jsonclass__": ["string", "xterm"]}, {"__jsonclass__": ["string", "XTerm"]}, {"__jsonclass__": ["string", ""]}],
-            "WM_NAME": {"__jsonclass__": ["string", "panelterm"]},
-        }
-    }
-}
+# Set these stored properties on a window that has been matched to a ghost
+set:
+  - IG_LAYER
+  - IG_SIZE
+  - IG_COORDS
+  - _NET_WM_DESKTOP
+  - _NET_WM_ICON_GEOMETRY
+
+# Set these stored properties on a ghost
+ghost_set:
+  - IG_LAYER
+  - IG_SIZE
+  - IG_COORDS
+  - SM_CLIENT_ID
+  - WM_NAME
+  - WM_ICON_NAME
+  - WM_NORMAL_HINTS
+  - WM_CLASS
+  - WM_ICON_SIZE
+  - _NET_WM_NAME
+  - _NET_WM_VISIBLE_NAME
+  - _NET_WM_ICON_NAME
+  - _NET_WM_VISIBLE_ICON_NAME
+  - _NET_WM_DESKTOP
+  - _NET_WM_WINDOW_TYPE
+  - _NET_WM_STRUT
+  - _NET_WM_STRUT_PARTIAL
+  - _NET_WM_ICON_GEOMETRY
+  - _NET_WM_ICON
+
+# Update these stored properties from properties set on a ghost
+ghost_update:
+  - IG_COORDS
+  - IG_SIZE
+
+components:
+  glass-input: {"command": ["glass-input"]}
+  glass-theme: {"command": ["glass-theme"]}
+  glass-widgets: {"command": ["glass-widgets"]}
+  glass-animator: {"command": ["glass-animator"]}
+  glass-renderer: {"command": ["glass-renderer"]}
+  glass-islands: {"command": ["glass-islands"]}
+  xkb: {"command": ["setxkbmap", "-model", "pc101", "-layout", "us"]}
+  root-cursor: {"command": ["xsetroot", "-cursor_name", "arrow"]}
+  panelterm: {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]}
+
+ghosts:
+  "(b'xterm', b'XTerm', b'')/b'panelterm'":
+    IG_COORDS: [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875]
+    IG_SIZE: ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"]
+    IG_LAYER: IG_LAYER_OVERLAY
+    WM_CLASS: [{"__jsonclass__": ["string", "xterm"]}, {"__jsonclass__": ["string", "XTerm"]}, {"__jsonclass__": ["string", ""]}]
+    WM_NAME: {"__jsonclass__": ["string", "panelterm"]}
