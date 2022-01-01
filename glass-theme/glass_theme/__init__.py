@@ -11,7 +11,7 @@ import importlib
 
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
-        configpath = os.path.expanduser(os.environ.get("GLASS_THEME_CONFIG", "~/.config/glass/theme.json"))
+        configpath = os.path.expanduser(os.environ.get("GLASS_THEME_CONFIG", "~/.config/glass/theme.yml"))
         with open(configpath) as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
 

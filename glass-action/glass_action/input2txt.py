@@ -158,7 +158,7 @@ def format_bindings(bindings, indent="    "):
 def format_input_config():
     global config
     
-    configpath = os.path.expanduser(os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.json"))
+    configpath = os.path.expanduser(os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.yml"))
     with open(configpath) as f:
         set_config(yaml.load(f, Loader=yaml.SafeLoader))
 

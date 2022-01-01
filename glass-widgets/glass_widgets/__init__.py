@@ -12,7 +12,7 @@ if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
     rpdb.handle_trap()
 
 def main(*arg, **kw):
-    configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.json"))
+    configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.yml"))
     with open(configpath) as f:
         config = yaml.load(f, Loader=yaml.SafeLoader)
             

@@ -88,7 +88,7 @@ def key(ctx, window):
         def inspect(win):
             import glass_ghosts.helpers
 
-            configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.json"))
+            configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.yml"))
             with open(configpath) as f:
                 config = yaml.load(f, Loader=yaml.SafeLoader)
 
