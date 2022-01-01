@@ -1,3 +1,5 @@
+# Logging
+
 The InfiniteGlass components have extensive logging / debug print
 facilities. These are turned on and of using a fine grained
 environment variable system. These variables can be set in your shell
@@ -30,3 +32,15 @@ possibly set to 0, others to 1), the longest one is used. For example, if both
 
 are defined, the above logging line would not be printed, as the
 longer matching variable is det to 0.
+
+# Client messages
+
+The renderer accepts a set of `ClientMessage`:s that causes it to print lists of objects in its memory to its standard out
+- items (windows), views and shaders. These messages have to be sent to the root window with a SubstructureNotifyMask.
+This can be achived easily using the `glass-action` command line tool:
+
+```
+glass-action window send --mask SubstructureNotifyMask --window root IG_DEBUG_LIST_ITEMS 
+glass-action window send --mask SubstructureNotifyMask --window root IG_DEBUG_LIST_SHADERS
+glass-action window send --mask SubstructureNotifyMask --window root IG_DEBUG_LIST_VIEWS
+```
