@@ -36,10 +36,10 @@ $(BINARIES):
 $(BUILD)/env:
 	virtualenv --python=$(PYTHON) $@
 	. $@/bin/activate; pip install setuptools
-	. $@/bin/activate; cd glass-lib; python3 setup.py develop
+	. $@/bin/activate; cd glass-lib; pip install -e .
 
 $(PYTHONAPPS): $(BUILD)/env
-	. $(BUILD)/env/bin/activate; cd $(notdir $@); python3 setup.py develop
+	. $(BUILD)/env/bin/activate; cd $(notdir $@); pip install -e .
 
 .PHONY: all run run-in-docker install devinstall uninstall install-binaries uninstall-binaries
 all: $(BINARIES) $(PYTHONAPPS)
