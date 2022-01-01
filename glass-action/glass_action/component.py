@@ -25,7 +25,12 @@ def list(ctx):
     with InfiniteGlass.Display() as display:
         for key in display.root.keys():
             if key.startswith("IG_COMPONENT_"):
-                print(key[len("IG_COMPONENT_"):])
+                name = key[len("IG_COMPONENT_"):]
+                pidkey = "IG_COMPONENTPID_" + name
+                pid = "not running"
+                if pidkey in display.root:
+                    pid = str(display.root[pidkey])
+                print("%s (%s)" % (name, pid))
     
 @component.command()
 @click.argument("name")

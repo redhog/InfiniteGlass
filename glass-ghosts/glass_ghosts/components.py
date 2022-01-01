@@ -40,6 +40,7 @@ class Components(object):
                     InfiniteGlass.debug.DEBUG("SIGCHLD", "Reaped pid=%s, exitcode=%s, ru_child=%s\n" % (pid, exitcode, ru_child))
                     if pid in self.components_by_pid:
                         name = self.components_by_pid.pop(pid)
+                        del self.display.root["IG_COMPONENTPID_" + name]
                         if (    not exitcode == 0
                             and (   not os.WIFSIGNALED(exitcode)
                                  or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
@@ -58,11 +59,12 @@ class Components(object):
             traceback.print_exc()
                 
     def start_component(self, spec):
-        InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (spec["name"], " ".join(spec["command"])))
-        if spec["name"] in self.components:
-            pid = self.components[spec["name"]]["pid"]
-            name = self.components_by_pid.pop(pid, None)
-            if name is not None:
+        name = spec["name"]
+        InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (name, " ".join(spec["command"])))
+        if name in self.components:
+            pid = self.components[name]["pid"]
+            existing_name = self.components_by_pid.pop(pid, None)
+            if existing_name is not None:
                 try:
                     os.kill(pid, signal.SIGINT)
                 except ProcessLookupError:
@@ -72,8 +74,8 @@ class Components(object):
             try:
                 os.execlp(spec["command"][0], *spec["command"])
             except Exception as e:
-                raise Exception("%s (%s): %s" % (spec["name"], " ".join(spec["command"]), e))
+                raise Exception("%s (%s): %s" % (name, " ".join(spec["command"]), e))
         else:
-            self.components[spec["name"]] = {"pid": pid, "component": spec}
-            self.components_by_pid[pid] = spec["name"]
-
+            self.components[name] = {"pid": pid, "component": spec}
+            self.components_by_pid[pid] = name
+            self.display.root["IG_COMPONENTPID_" + name] = pid
