@@ -268,16 +268,27 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     }
   } else if (event->type == MapRequest) {
     XMapWindow(display, event->xmaprequest.window);
-  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG")) {
-   printf("DEBUG LIST VIEWS\n");
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_VIEWS")) {
+    printf("DEBUG LIST VIEWS\n");
     if (views) {
       for (size_t idx = 0; idx < views->count; idx++) {
         View *view = (View *) views->entries[idx];
         view_print(view);
       }
     }
-    
     printf("DEBUG LIST VIEWS END\n");
+    fflush(stdout);    
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_SHADERS")) {
+    printf("DEBUG LIST SHADERS\n");
+    if (views) {
+      for (size_t idx = 0; idx < shaders->count; idx++) {
+        Shader *shader = (Shader *) shaders->entries[idx];
+        shader_print(shader);
+      }
+    }
+    printf("DEBUG LIST SHADERS END\n");
+    fflush(stdout);    
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_ITEMS")) {
     printf("DEBUG LIST ITEMS\n");
     for (size_t idx = 0; idx < items_all->count; idx++) {
       Item *item = (Item *) items_all->entries[idx];
