@@ -36,7 +36,15 @@ int xinit() {
   XErrorEvent error;
 
   display = XOpenDisplay(NULL);
+  if (!display) {
+    fprintf(stderr, "Unable to open display using xlib"); fflush(stderr);
+    return 0;
+  }
   xcb_display = XGetXCBConnection(display);
+  if (!xcb_display) {
+    fprintf(stderr, "Unable to open display using xcb"); fflush(stderr);
+    return 0;
+  }
   
   error_init();
 
