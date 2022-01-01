@@ -63,7 +63,7 @@ components:
   panelterm: {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]}
 
 ghosts:
-  "(b'xterm', b'XTerm', b'')/b'panelterm'":
+  xterm-xterm-panelterm:
     IG_COORDS: [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875]
     IG_SIZE: ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"]
     IG_LAYER: IG_LAYER_OVERLAY
