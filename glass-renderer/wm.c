@@ -347,12 +347,10 @@ int main() {
                            NULL, True, 0, 0);
   
   DEBUG("start", "Initialized X and GL.\n");
-
-  views = view_load_all();
-  shaders = shader_load_all();
-
-  DEBUG("XXXXXXXXXXX1", "views=%ld shaders=%ld\n", views, shaders);
   
+  views = list_create();
+  shaders = list_create();
+
   property_type_register(&property_atom);
   property_type_register(&property_window);
   property_type_register(&property_int);
@@ -367,6 +365,7 @@ int main() {
   property_type_register(&property_views);
   property_type_register(&property_shaders);
 
+  // Note: This also loads root_item and therefore the root window properties
   items_get_from_toplevel_windows();
  
   GL_CHECK_ERROR("start1", "");
