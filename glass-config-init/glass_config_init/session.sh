@@ -22,5 +22,3 @@
 # Error paths work just like debug paths, but are =1 by default. You
 # can disable all error reporting by uncommenting the following line
 # export GLASS_ERROR_renderer=0
-
-xsetroot -cursor_name arrow &
