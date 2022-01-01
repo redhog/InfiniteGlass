@@ -35,8 +35,8 @@ longer matching variable is det to 0.
 
 # Client messages
 
-The renderer accepts a set of `ClientMessage`:s that causes it to print lists of objects in its memory to its standard out
-- items (windows), views and shaders. These messages have to be sent to the root window with a SubstructureNotifyMask.
+The renderer accepts a set of `ClientMessage`:s that causes it to print lists of objects in its memory to its standard
+out - items (windows), views and shaders. These messages have to be sent to the root window with a SubstructureNotifyMask.
 This can be achived easily using the `glass-action` command line tool:
 
 ```
