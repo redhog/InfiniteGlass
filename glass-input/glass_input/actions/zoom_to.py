@@ -6,7 +6,6 @@ from . import item_zoom_to
 
 def zoom_to_window(self, event):
     "Zoom the screen so that the current window is full-screen"
-    print("ZOOM IN TO WINDOW")
     win = self.get_event_window(event)
     old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
     view = list(win["IG_COORDS"])
@@ -17,7 +16,6 @@ def zoom_to_window(self, event):
 
 def zoom_to_fewer_windows(self, event, margin=0.01):
     "Zoom in the screen so that one fewer window is visible"
-    print("ZOOM IN TO FEWER WINDOWS")
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     vx = view[0] + view[2] / 2.
     vy = view[1] + view[3] / 2.
@@ -55,7 +53,7 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
             adjusted_view = item_zoom_to.adjust_view(self, new_view, windows[-i-1][2])
             if adjusted_view[2] < new_view[2] and adjusted_view[3] < new_view[3]:
                 new_view = adjusted_view
-            print("Removed %s windows to reduce width by %s and height by %s" % (i, view[2] - new_view[2], view[3] - new_view[3]))
+            InfiniteGlass.DEBUG("view", "Removed %s windows to reduce width by %s and height by %s\n" % (i, view[2] - new_view[2], view[3] - new_view[3]))
             InfiniteGlass.DEBUG("view", "View %s\n" % (new_view,))
             # self.display.root["IG_VIEW_DESKTOP_VIEW"] = new_view
             self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = new_view
@@ -66,7 +64,6 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
 
 def zoom_to_more_windows(self, event):
     "Zoom out the screen so that one more window is visible"
-    print("ZOOM OUT TO MORE WINDOWS")
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     vx = view[0] + view[2] / 2.
     vy = view[1] + view[3] / 2.

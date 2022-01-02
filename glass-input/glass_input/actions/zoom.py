@@ -19,10 +19,8 @@ def zoom(self, factor, around_aspect=(0.5, 0.5), around_pos=None, view="IG_VIEW_
 
 def zoom_in(self, event):
     "Zoom the screen in one step"
-    print("ZOOM IN")
     zoom(self, 1 / 1.1)
 
 def zoom_out(self, event):
     "Zoom the screen out one step"
-    print("ZOOM OUT")
     zoom(self, 1.1)

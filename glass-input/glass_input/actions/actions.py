@@ -4,14 +4,13 @@ from .. import mode
 
 def toggle_ghosts_enabled(self, event):
     win = self.get_event_window(event)
-    print("XXXXXXXXXXXXXXXXXXX", win)
     if win and win != self.display.root:
         old = win.get("IG_GHOSTS_DISABLED", 0)
         if old == 1:
             value = 0
         else:
             value = 1
-        print("toggle_ghosts_enabled", "%s.IG_GHOSTS_DISABLED=%s\n" % (win, value))
+        InfiniteGlass.DEBUG("toggle_ghosts_enabled", "%s.IG_GHOSTS_DISABLED=%s\n" % (win, value))
         win["IG_GHOSTS_DISABLED"] = value
         self.display.flush()
 
@@ -47,7 +46,7 @@ def send_debug(self, event):
 def send_close(self, event):
     "Close the active window"
     win = self.get_event_window(event)
-    print("XXXXXXXXXXXXXXXXX CLOSE", win, win.get("WM_NAME", None))
+    InfiniteGlass.DEBUG("close", "Close %s %s\n" % (win, win.get("WM_NAME", None)))
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
         win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
@@ -56,7 +55,7 @@ def send_close(self, event):
 def send_sleep(self, event):
     "Make the active application store its state and exit"
     win = self.get_event_window(event)
-    print("XXXXXXXXXXXXXXXXX SLEEP", win, win.get("WM_NAME", None))
+    InfiniteGlass.DEBUG("sleep", "Sleep %s %s\n" % (win, win.get("WM_NAME", None)))
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)

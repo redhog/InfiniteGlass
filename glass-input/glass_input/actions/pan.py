@@ -77,7 +77,6 @@ def zoom_to_window_calc(self, view, window, view_center=None, coords=None, cente
     return item_zoom_to.adjust_view(self, view, win=window)
     
 def zoom_to_window_to_the(self, event, direction):
-    print("ZOOM OUT TO WINDOW TO %s" % (direction))
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     vx = view[0] + view[2] / 2.
     vy = view[1] + view[3] / 2.

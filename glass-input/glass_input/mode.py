@@ -169,7 +169,7 @@ class Mode(object):
         return False
 
     def action(self, eventfilter, action, event, **kw):
-        InfiniteGlass.DEBUG("action", "Action %s(%s) [%s]" % (action, kw, eventfilter))
+        InfiniteGlass.DEBUG("action", "Action %s(%s) [%s]\n" % (action, kw, eventfilter))
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)
@@ -180,7 +180,9 @@ class Mode(object):
             elif "keymap" in action:
                 self.handle(event, keymap=action["keymap"])
             elif "shell" in action:
-                os.system(action["shell"] % Formatter(self))
+                cmd = action["shell"] % Formatter(self)
+                InfiniteGlass.DEBUG("final_action", "Shell command %s\n" % (cmd,))
+                os.system(cmd)
             elif "timer" in action:
                 name = action['timer']
                 self.state[name] = datetime.datetime.now()
@@ -194,12 +196,13 @@ class Mode(object):
                 name = next(iter(action.keys()))
                 self.action(eventfilter, name, event, **action[name])
             else:
-                InfiniteGlass.DEBUG("error", "Unknown action parameters: %s" % (action,))
+                InfiniteGlass.DEBUG("error", "Unknown action parameters: %s\n" % (action,))
         elif isinstance(action, str) and action in config["modes"]:
             self.action(eventfilter, config["modes"][action], event, **kw)
         elif isinstance(action, str) and hasattr(self, action):
             getattr(self, action)(event, **kw)
         elif isinstance(action, str) and action in functions:
+            InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, kw))
             functions[action](self, event, **kw)
         else:
             InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action))
