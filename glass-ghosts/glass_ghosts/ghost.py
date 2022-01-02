@@ -72,15 +72,18 @@ class Shadow(object):
             client.ghosts[self.current_key] = self
 
     def apply(self, window, type="set"):
-        InfiniteGlass.DEBUG("ghost", "SHADOW APPLY window_id=%s %s\n" % (window.__window__(), self)); sys.stderr.flush()
+        InfiniteGlass.DEBUG("ghost.apply", "SHADOW APPLY %s window_id=%s %s\n" % (type, window, self)); sys.stderr.flush()
         if self.properties.get("IG_GHOSTS_DISABLED", 0):
             window["IG_GHOSTS_DISABLED"] = 1
         else:
             for key in self.manager.config[type]:
                 if key in self.properties:
-                    InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(self.properties[key])[:100])); sys.stderr.flush()
+                    if InfiniteGlass.DEBUG_ENABLED("ghost.apply.properties"):
+                        itemtype, items, fmt = InfiniteGlass.parse_value(self.manager.display, self.properties[key])
+                        InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(items)[:100])); sys.stderr.flush()
                     window[key] = self.properties[key]
-
+                    InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
+                    
     def format_pair(self, name, value, sep=b"/"):
         pattern = ("{%s}" % name).encode("utf-8")
         if not isinstance(value, (array.array, list, tuple)):
@@ -163,12 +166,11 @@ class Shadow(object):
             if name not in self.manager.config["ghost_update"]: return
             try:
                 self.properties.update(glass_ghosts.helpers.expand_property(win, name))
-                InfiniteGlass.DEBUG("ghost.property", "%s=%s\n" % (name, self.properties[name])); sys.stderr.flush()
+                InfiniteGlass.DEBUG("ghost.update.property", "%s.%s=%s from %s\n" % (self, name, self.properties[name], win)); sys.stderr.flush()
             except:
                 pass
             else:
                 self.update_key()
-            InfiniteGlass.DEBUG("setprop", "%s=%s" % (name, self.properties.get(name)))
         self.PropertyNotify = PropertyNotify
             
         @self.window.on()
@@ -233,4 +235,4 @@ class Shadow(object):
             self.manager.dbconn.commit()
 
     def __str__(self):
-        return self.key()
+        return "%s(@%s)" % (self.key(), id(self))
