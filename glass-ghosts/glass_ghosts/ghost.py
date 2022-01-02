@@ -60,9 +60,15 @@ class Shadow(object):
         client = self.manager.clients.get(self.properties.get("SM_CLIENT_ID"))
         
         if self.current_key is not None:
-            del self.manager.ghosts[self.current_key]
+            try:
+                del self.manager.ghosts[self.current_key]
+            except:
+                InfiniteGlass.DEBUG("ghost", "OLD KEY %s is missing\n" % (self.current_key,)); sys.stderr.flush()
             if client:
-                del client.ghosts[self.current_key]
+                try:
+                    del client.ghosts[self.current_key]
+                except:
+                    InfiniteGlass.DEBUG("ghost", "OLD KEY %s is missing on client %s\n" % (self.current_key, client)); sys.stderr.flush()
             InfiniteGlass.DEBUG("ghost", "UPDATE KEY from %s to %s\n" % (self.current_key, key)); sys.stderr.flush()
 
         self.current_key = key
