@@ -48,9 +48,16 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
   int height                = item->geom->height;
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
-  int arr[2] = {width, height};
-  DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d\n", item->window, width, height);
-  xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);    
+  Property *existing = properties_find(item->properties, ATOM("IG_SIZE"));
+  if (existing && (existing->type == XA_INTEGER)) {
+    DEBUG("set_geometry", "%ld.Setting geometry = %d,%d from IG_SIZE\n", item->window,existing->values.dwords[0], existing->values.dwords[1]);
+    xcb_configure_window(xcb_display, item->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, existing->values.dwords);
+    item_update(item);
+  } else {
+    int arr[2] = {width, height};
+    DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d from geometry\n", item->window, width, height);
+    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);
+  }
 
   if (!reply->type) {
     View *v = NULL;
