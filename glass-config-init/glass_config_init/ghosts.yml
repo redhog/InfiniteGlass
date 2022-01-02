@@ -71,9 +71,12 @@ components:
 # WM_COMMAND. Do not use this to set IG_COORDS, as multiple windows
 # might match the same template (by design).
 templates:
-  gimp-.*:
+  gimp-gimp-.*:
     WM_COMMAND: [{"__jsonclass__": ["string", "gimp"]}]
 
+  gimp-2-8-.*:
+    WM_COMMAND: [{"__jsonclass__": ["string", "gimp-2.8"]}]
+    
 # Predefine ghosts. Useful for configuring windows created by the
 # applications started as components.
 ghosts:
