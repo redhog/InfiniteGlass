@@ -1,5 +1,5 @@
 The session configuration is done in
-[~/.config/glass/ghosts.json](../glass-config-init/glass_config_init/ghosts.json).
+[~/.config/glass/ghosts.yml](../glass-config-init/glass_config_init/ghosts.yml).
 
 
 # Clients and ghosts
