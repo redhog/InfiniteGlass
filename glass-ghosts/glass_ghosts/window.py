@@ -3,6 +3,7 @@ import Xlib.X
 import glass_ghosts.ghost
 import glass_ghosts.helpers
 import sys
+import re
 
 class Window(object):
     def __new__(cls, manager, window):
@@ -34,7 +35,7 @@ class Window(object):
                 pass
             else:
                 self.match()
-            InfiniteGlass.DEBUG("setprop", "%s=%s" % (name, self.properties.get(name)))
+            InfiniteGlass.DEBUG("setprop", "%s=%s\n" % (name, self.properties.get(name)))
         self.PropertyNotify = PropertyNotify
 
         @self.window.on(mask="StructureNotifyMask")
@@ -49,19 +50,19 @@ class Window(object):
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
         def ClientMessage(win, event):
-            InfiniteGlass.DEBUG("message", "RECEIVED SLEEP %s %s %s" % (win, event, self.client)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("message", "RECEIVED SLEEP %s %s %s\n" % (win, event, self.client)); sys.stderr.flush()
             self.sleep()
         self.SleepMessage = ClientMessage
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_CLOSE")
         def ClientMessage(win, event):
-            InfiniteGlass.DEBUG("message", "RECEIVED CLOSE %s %s %s" % (win, event, self.client)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("message", "RECEIVED CLOSE %s %s %s\n" % (win, event, self.client)); sys.stderr.flush()
             self.close()
         self.CloseMessage = ClientMessage
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_DELETE")
         def ClientMessage(win, event):
-            InfiniteGlass.DEBUG("message", "RECEIVED DELETE %s %s %s" % (win, event, self.client)); sys.stderr.flush()
+            InfiniteGlass.DEBUG("message", "RECEIVED DELETE %s %s %s\n" % (win, event, self.client)); sys.stderr.flush()
             self.under_deletion = True
             self.close()
         self.DeleteMessage = ClientMessage
@@ -162,6 +163,15 @@ class Window(object):
             self.ghost.deactivate()
         else:
             InfiniteGlass.DEBUG("window", "FAILED MATCHING window=%s key=%s against SHADOWS %s\n" % (self.id, key, self.manager.ghosts.keys()))
+            if "IG_TEMPLATE_APPLIED" not in self.window:
+                for pattern, template in self.manager.config.get("templates", {}).items():
+                    if re.match(pattern, key):
+                        self.window["IG_TEMPLATE_APPLIED"] = pattern.encode("UTF-8")
+                        InfiniteGlass.DEBUG("window", "MATCHED window=%s key=%s against TEMPLATE %s\n" % (self.id, key, pattern))
+                        for name, value in template.items():
+                            self.window[name] = value
+                        self.manager.display.flush()
+                        break
             
     def match_client(self):
         if self.client: return

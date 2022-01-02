@@ -23,6 +23,7 @@ set:
   - IG_COORDS
   - _NET_WM_DESKTOP
   - _NET_WM_ICON_GEOMETRY
+  - WM_COMMAND
 
 # Set these stored properties on a ghost
 ghost_set:
@@ -30,6 +31,7 @@ ghost_set:
   - IG_SIZE
   - IG_COORDS
   - SM_CLIENT_ID
+  - WM_COMMAND
   - WM_NAME
   - WM_ICON_NAME
   - WM_NORMAL_HINTS
@@ -45,7 +47,7 @@ ghost_set:
   - _NET_WM_STRUT_PARTIAL
   - _NET_WM_ICON_GEOMETRY
   - _NET_WM_ICON
-
+  
 # Update these stored properties from properties set on a ghost
 ghost_update:
   - IG_COORDS
@@ -62,6 +64,18 @@ components:
   root-cursor: {"command": ["xsetroot", "-cursor_name", "arrow"]}
   panelterm: {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]}
 
+# Match windows against these templates (using regexps against their
+# keys) and set the templated properties on them when they first
+# appear. This is particularly useful to set WM_COMMAND to be able to
+# restart apps that lack SMLib support and don't themselves set
+# WM_COMMAND. Do not use this to set IG_COORDS, as multiple windows
+# might match the same template (by design).
+templates:
+  gimp-.*:
+    WM_COMMAND: [{"__jsonclass__": ["string", "gimp"]}]
+
+# Predefine ghosts. Useful for configuring windows created by the
+# applications started as components.
 ghosts:
   xterm-xterm-panelterm:
     IG_COORDS: [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875]

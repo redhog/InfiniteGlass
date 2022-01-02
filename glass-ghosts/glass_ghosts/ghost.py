@@ -4,6 +4,8 @@ import pkg_resources
 import json
 import glass_ghosts.helpers
 import sys
+import os
+import re
 
 class NoValue: pass
 
@@ -89,7 +91,8 @@ class Shadow(object):
                         InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(items)[:100])); sys.stderr.flush()
                     window[key] = self.properties[key]
                     InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
-                    
+        self.manager.display.flush()
+        
     def format_pair(self, name, value, sep=b"/"):
         pattern = ("{%s}" % name).encode("utf-8")
         if not isinstance(value, (array.array, list, tuple)):
@@ -134,7 +137,11 @@ class Shadow(object):
             pattern, value = self.format_pair("SM_CLIENT_ID", "No state saved")
             if pattern in ghost_image:
                 ghost_image = ghost_image.replace(pattern, value)
-                    
+            if "WM_COMMAND" in self.properties:
+                pattern, value = self.format_pair("RestartCommand", self.properties["WM_COMMAND"])
+                if pattern in ghost_image:
+                    ghost_image = ghost_image.replace(pattern, value)
+                
         self.window["IG_CONTENT"] = ("IG_SVG", ghost_image)
         self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
         self.apply(self.window, type="ghost_set")
@@ -181,15 +188,12 @@ class Shadow(object):
             
         @self.window.on()
         def ButtonPress(win, event):
-            if "SM_CLIENT_ID" not in self.properties: return
-            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+            self.restart()
         self.ButtonPress = ButtonPress
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_RESTART")
         def ClientMessage(win, event):
-            InfiniteGlass.DEBUG("ghost", "GHOST RESTART %s\n" % (self,)); sys.stderr.flush()
-            if "SM_CLIENT_ID" not in self.properties: return
-            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+            self.restart()
         self.RestartMessage = ClientMessage
 
         @self.window.on()
@@ -200,6 +204,17 @@ class Shadow(object):
         self.window.map()
         self.redraw()
 
+    def restart(self):
+        InfiniteGlass.DEBUG("ghost", "GHOST RESTART %s\n" % (self,)); sys.stderr.flush()
+        if "SM_CLIENT_ID" in self.properties:
+            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+        elif "WM_COMMAND" in self.properties:
+           if os.fork() == 0:
+               cmd = self.properties["WM_COMMAND"]
+               if not isinstance(cmd, list): cmd = [cmd]
+               cmd = [name.decode("utf-8") for name in cmd]
+               os.execlp(cmd[0], *cmd)
+            
     def redraw(self):
         gcbg = self.manager.display.root.create_gc(foreground=self.manager.display.screen(0).white_pixel,
                                                    background=self.manager.display.screen(0).black_pixel)
