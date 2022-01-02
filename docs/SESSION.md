@@ -22,9 +22,12 @@ purposes, and restart them as you see fit, always having say "social apps" far u
 Exactly what window properties are saved, restored and used for matching ghosts against new windows is
 configurable.
 
-glass-ghosts acts as an SMlib server, meaning that it can
+`glass-ghosts` acts as an SMlib server, meaning that it can
 store and restore application state for supporting applications. Each
 such application is called a client.
+
+[INTEGRATIONS.md](INTEGRATIONS.md) describes how to adapt/wrap applications that do not natively support SMlib to
+support restart, and in some cases, rudimentary restore functionality.
 
 ## Pre-defined ghosts
 
