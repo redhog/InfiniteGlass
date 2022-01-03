@@ -1,3 +1,5 @@
+Implemented by: [`glass-ghosts`](../glass-ghosts)
+
 The session configuration is done in
 [~/.config/glass/ghosts.yml](../glass-config-init/glass_config_init/ghosts.yml).
 
