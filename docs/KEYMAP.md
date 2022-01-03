@@ -1,6 +1,8 @@
 # Key bindings
 
-Key bindings are implemented by glass-input. They are specified in [~/.config/glass/input.yml](../glass-config-init/glass_config_init/input.yml).
+Implemented by: [`glass-input`](../glass-input)
+
+Keybindings are specified in [~/.config/glass/input.yml](../glass-config-init/glass_config_init/input.yml).
 
 All key bindings require the Windows key (Super_L) to be pressed, in
 addition to some other keys or mouse buttons.
