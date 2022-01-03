@@ -14,6 +14,8 @@ created and will then be stored in the ghost window when stopped.
 
 # The session wrapper
 
+Implemented by: [`glass-session-wrapper`](../glass-session-wrapper)
+
 Some applications can be told to save their state in a specific directory on disk when exiting,
 and to reload the state from the same directory. Such applications can be wrapped using the `glass-session-wrapper`
 SMLib client. By starting such an application with a command like
