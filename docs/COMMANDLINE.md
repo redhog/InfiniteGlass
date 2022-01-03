@@ -1,3 +1,5 @@
+Implemented by: [`glass-action`](../glass-action)
+
 InfiniteGlass internally uses window properties to communicate between
 its various components. This makes it very easy to script from most
 programming languages, in particular Python, for which there is a
