@@ -1,5 +1,7 @@
 # Styling
 
+Implemented by: [`glass-theme`](../glass-theme)
+
 All rendering in InfiniteGlass is controlled by the OpenGL shader code
 and window properties. These are set up by the current theme. The
 theme is selected and configured in
@@ -32,5 +34,8 @@ In particular, all coordinate handling, SVG rendering and picking
 files in the "glass_theme/shaders/lib".
 
 # Widgets
+
+Implemented by: [`glass-widgets`](../glass-widgets)
+
 Desktop widgets and window decorations, that is, clickable action buttons, are defined in [~/.config/glass/widgets.yml](../glass-config-init/glass_config_init/widgets.yml). They each define a window, typically setting an SVG image as content, and a click action.
 The click actions are the same ones available when defining [keyboard shortcuts](KEYMAP.md).
