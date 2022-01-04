@@ -101,25 +101,35 @@ def zoom_1_1_1(self, event):
 
 def adjust_view(self, view, win=None):
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
-    if not visible: return view
+
+    visible_pixelcontent = [(w, c) for w, c in visible if "IG_CONTENT" not in w]
     
     if win is None:
         for win in visible:
             if "IG_CONTENT" not in win:
                 break
         else:
+            InfiniteGlass.DEBUG("zoom", "No focus window, and no visible windows without IG_CONTENT to focus instead\n")
             return view
 
     if "IG_CONTENT" in win:
         return view
 
-    InfiniteGlass.DEBUG("zoom", "Zoom 1-to-1 to %s @ %s\n" % (win, win.get("IG_COORDS")))
     zoomed_view = item_zoom_1_1_to_window_calc(self, win=win, screen=view)
     
-    bbox = utils.bbox([c for w, c in visible])
-    if zoomed_view[2] >= bbox[2] and zoomed_view[3] >= bbox[3]:
-        view = zoomed_view
+    if len(visible_pixelcontent) > 1:
+        bbox = utils.bbox([c for w, c in visible])
+        InfiniteGlass.DEBUG("zoom", "Visible windows bbox: %s\n" % (bbox,))
+        if zoomed_view[2] >= bbox[2] and zoomed_view[3] >= bbox[3]:
+            InfiniteGlass.DEBUG("zoom", "Zoom 1-to-1 to %s @ %s (View still contains all visible windows)\n" % (win, win.get("IG_COORDS")))
+            view = zoomed_view
 
+        view[0] = bbox[0] - ((view[2] - bbox[2]) / 2)
+        view[1] = bbox[1]-bbox[3] - ((view[3] - bbox[3]) / 2)
+    else:
+        InfiniteGlass.DEBUG("zoom", "Zoom 1-to-1 to %s @ %s (Less than 2 visible windows)\n" % (win, win.get("IG_COORDS")))
+        return zoomed_view
+            
     InfiniteGlass.DEBUG("zoom", "Zoom-adjusted view: %s\n" % (view,))
         
     # Move the view as long as that makes more windows visible without removing any windows
