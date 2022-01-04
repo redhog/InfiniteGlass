@@ -1,5 +1,32 @@
 # Session handling integrations
 
+Some applications do not have SMLib support, or might need special configuration to allow saving state.
+This document describes some tools for this as well as how to integrate some common applications
+that need such configuration.
+
+# Providing a restart command 
+
+For applications that just can't save state, but that you'd like to be able to restart anyway,
+you can set up a `template` in [~/.config/glass/ghosts.yml](../glass-config-init/glass_config_init/ghosts.yml)
+that matches the window key using a regexp and sets the `WM_COMMAND` window property to the command
+line as a list of strings. The template properties will be applied to a matching window when it is first
+created and will then be stored in the ghost window when stopped.
+
+# The session wrapper
+
+Implemented by: [`glass-session-wrapper`](../glass-session-wrapper)
+
+Some applications can be told to save their state in a specific directory on disk when exiting,
+and to reload the state from the same directory. Such applications can be wrapped using the `glass-session-wrapper`
+SMLib client. By starting such an application with a command like
+
+    glass-session-wrapper myapp --foo --fie=123 --someswitch=~/myappstate/%(sessionid)s bar
+
+it will be run as a child of `glass-session-wrapper`, with `%(sessionid)s` replaced by the SMLib client id.
+It will be sent `SIGINT` when `glass-session-wrapper` receives the `die` signal.
+
+# Common applications
+
 ## Chrome/chromium
 
 Chrome does not have any SMlib support. However, it reads/writes its

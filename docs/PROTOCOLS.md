@@ -9,6 +9,8 @@ actions.
 
 # Renderer
 
+Implemented by: [`glass-renderer`](../glass-renderer)
+
 Window rendering is implemented by the compositor, glass-renderer. It
 is controlled by properties both on individual client windows and on
 the root window.
@@ -136,6 +138,8 @@ Example root properties:
     IG_VIEW_DESKTOP_LAYER=IG_LAYER_DESKTOP
 
 # Animator
+
+Implemented by: [`glass-animator`](../glass-animator)
 
 Animations are implemented by glass-animator and controlled by setting
 window properties and sending ClientMessages.
