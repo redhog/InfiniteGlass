@@ -79,7 +79,11 @@ void raw_motion_detected(void *data, xcb_query_pointer_reply_t *reply, xcb_gener
   Item *parent_item;
 
   pick(mouse.root_x, mouse.root_y, &winx, &winy, &item, &parent_item);
-  if (item && (!item->prop_layer || !item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU"))) {
+  if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
+    XWindowChanges values;
+    values.stack_mode = Above;
+    XConfigureWindow(display, item->window, CWStackMode, &values);
+  } else if (item) {
     XWindowChanges values;
     values.x = mouse.root_x - winx;
     values.y = mouse.root_y - winy;
