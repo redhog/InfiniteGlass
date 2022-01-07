@@ -187,49 +187,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           event->xconfigure.width,
           event->xconfigure.height);
     Item *item = item_get_from_window(event->xconfigure.window, False);
-    if (item && item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
-      float coords[4];
-      View *v = NULL;
-      if (views) {
-        v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
-      }
-      if (v) {
-        coords[0] = v->screen[0] + (v->screen[2] * (float) event->xconfigure.x) / (float) v->width;
-        coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) event->xconfigure.y) / (float) v->height;
-        coords[2] = (v->screen[2] * (float) event->xconfigure.width) / (float) v->width;
-        coords[3] = (v->screen[3] * (float) event->xconfigure.height) / (float) v->height;
-      } else {
-        coords[0] = ((float) (event->xconfigure.x - overlay_attr.x)) / (float) overlay_attr.width;
-        coords[1] = ((float) (overlay_attr.height - event->xconfigure.y - overlay_attr.y)) / (float) overlay_attr.width;
-        coords[2] = ((float) (event->xconfigure.width)) / (float) overlay_attr.width;
-        coords[3] = ((float) (event->xconfigure.height)) / (float) overlay_attr.width;
-      }
-
-      float old_coords_nan[4] = {nanf("initial"), nanf("initial"), nanf("initial"), nanf("initial")};
-      float *old_coords = old_coords_nan;
-      if (item->prop_coords) {
-        old_coords = (float *) item->prop_coords->data;
-      }
-      DEBUG("menu.reconfigure", "%ld: %d,%d->%d,%d[%d,%d]   %f,%f,%f,%f->%f,%f,%f,%f\n",
-            item->window,
-            item->x, item->y, event->xconfigure.x, event->xconfigure.y, event->xconfigure.width, event->xconfigure.height,
-            old_coords[0],old_coords[1],old_coords[2],old_coords[3],
-            coords[0],coords[1],coords[2],coords[3]);
-
-      item->x = event->xconfigure.x;
-      item->y = event->xconfigure.y;        
-
-      long coords_arr[4];
-      for (int i = 0; i < 4; i++) {
-        coords_arr[i] = *(long *) &coords[i];
-      }
-      XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
-
-      long arr[2] = {event->xconfigure.width, event->xconfigure.height};
-      XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-      item_update((Item *) item);
-      trigger_draw();
-    }
+    item_menu_update_space_pos_from_window(item, event->xconfigure.x,  event->xconfigure.y,  event->xconfigure.width,  event->xconfigure.height);
     // FIXME: Update width/height regardless of window type...
   } else if (event->type == DestroyNotify) {
     Item * item = item_get_from_window(event->xdestroywindow.window, False);

@@ -15,6 +15,7 @@ typedef struct ItemStruct Item;
 
 struct ItemStruct {
   Window window;
+
   xcb_get_window_attributes_reply_t *attr;
   xcb_get_geometry_reply_t *geom;
  
