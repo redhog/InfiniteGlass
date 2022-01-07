@@ -165,6 +165,7 @@ Properties *properties_load(Window window) {
 }
 
 void properties_update(Properties *properties, Atom name) {
+  if (!properties) return;
   Property *prop = properties_find(properties, name);
   if (!prop) {
     prop = property_allocate(properties, name);
@@ -174,6 +175,7 @@ void properties_update(Properties *properties, Atom name) {
 }
 
 void properties_free(Properties *properties) {
+  if (!properties) return;
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
     property_free(prop);
@@ -203,6 +205,7 @@ void properties_set_program_cache_idx(Rendering *rendering) {
 }
 
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
+  if (!properties) return;
   rendering->properties = properties;
   rendering->properties_prefix = prefix;
   properties_set_program_cache_idx(rendering);
@@ -221,6 +224,7 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
 }
 
 void properties_draw(Properties *properties, Rendering *rendering) {
+  if (!properties) return;
   rendering->properties = properties;
   
   GL_CHECK_ERROR("properties_draw", "%ld", properties->window);
@@ -235,6 +239,7 @@ void properties_draw(Properties *properties, Rendering *rendering) {
 }
 
 void properties_print(Properties *properties, FILE *fp) {
+  if (!properties) return;
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
     property_print(prop, fp);
@@ -242,6 +247,7 @@ void properties_print(Properties *properties, FILE *fp) {
 }
 
 Property *properties_find(Properties *properties, Atom name) {
+  if (!properties) return NULL;
   for (size_t idx = 0; idx < properties->properties->count; idx++) {
     Property *p = (Property *) properties->properties->entries[idx];   
     if (p->name == name) {
