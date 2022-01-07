@@ -125,6 +125,9 @@ matching the window LAYER IG_LAYER_MENU, with a viewport of 0,0,1,0.75
 (or whatever aspect ration your screen is). This layer will be used to
 display override redirect windows, such as popup-menus.
 
+If either width or height of a view is set to 0.0, it will be updated (by `glass-renderer`) with a value
+corresponding to the other one (typically set to 1.0) and the current screen aspect ratio.
+
 Example root properties:
 
     IG_VIEWS=[IG_VIEW_DESKTOP, IG_VIEW_OVERLAY, IG_VIEW_MENU]
