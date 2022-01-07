@@ -226,6 +226,11 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     }
   } else if (event->type == MapRequest) {
     XMapWindow(display, event->xmaprequest.window);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_HIDE_OVERLAY")) {
+    XUnmapWindow(display, overlay);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_SHOW_OVERLAY")) {
+    XMapWindow(display, overlay);
+    trigger_draw();
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_VIEWS")) {
     printf("DEBUG LIST VIEWS\n");
     if (views) {
