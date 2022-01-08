@@ -150,14 +150,18 @@ class Window(object):
     def match_ghost(self):
         if self.ghost: return
         key = self.key()
+        ghost = None
         if key in self.manager.ghosts:
-            self.ghost = self.manager.ghosts[key]
+            ghost = self.manager.ghosts[key]
         else:
             if "SM_CLIENT_ID" in self.properties and self.properties["SM_CLIENT_ID"] in self.manager.clients:
                 client = self.manager.clients[self.properties["SM_CLIENT_ID"]]
                 if len(client.ghosts) == 1:
-                    self.ghost = list(client.ghosts.values())[0]
-        if self.ghost:
+                    ghost = list(client.ghosts.values())[0]
+        if ghost is not None and not ghost.is_active:
+            ghost = None
+        if ghost is not None:
+            self.ghost = ghost
             InfiniteGlass.DEBUG("window", "MATCHING SHADOW window=%s ghost=%s\n" % (self.id, key,))
             self.ghost.apply(self.window)
             self.ghost.deactivate()

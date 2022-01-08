@@ -255,5 +255,9 @@ class Shadow(object):
             """, (self.key(),))
             self.manager.dbconn.commit()
 
+    @property
+    def is_active(self):
+        return self.window is not None
+            
     def __str__(self):
         return "%s(@%s)" % (self.key(), id(self))
