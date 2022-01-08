@@ -42,7 +42,7 @@ int init_picking() {
 }
 
 void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
-  if (!views) {
+  if (!views || !views->entries) {
     *winy = *winx = 0;
     *item = NULL;
     return;
