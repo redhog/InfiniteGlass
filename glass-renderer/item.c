@@ -12,6 +12,7 @@
 #include "rendering.h"
 #include "mainloop.h"
 #include "texture.h"
+#include <math.h>
 #include <X11/Xatom.h>
 
 List *items_all = NULL;
@@ -43,19 +44,22 @@ void item_constructor(Item *item) {
 
 void item_menu_update_space_pos_from_window(Item *item, int x, int y, int width, int height) {
   if (!item) { DEBUG("no_item", "item is null\n"); return; }
-  if (item->prop_layer) {
-    if (!item->prop_layer->values.dwords || (Atom) item->prop_layer->values.dwords[0] != ATOM("IG_LAYER_MENU")) {
+  Atom layer = None;
+  if (item->prop_layer && item->prop_layer->values.dwords) {
+    layer = (Atom) item->prop_layer->values.dwords[0];
+    if (layer != ATOM("IG_LAYER_MENU")) {
       DEBUG("wrong_layer", "%d.IG_LAYER != IG_LAYER_MENU\n", item->window); return;
     }
   } else {
     if (!item->attr || !item->attr->override_redirect) { DEBUG("no_overrideredirect", "%d.override_redirect is false\n", item->window); return; }
+    layer = ATOM("IG_LAYER_MENU");
   }
 
   DEBUG("update", "%d.Setting menu space coords to %d,%d[%d,%d]\n", item->window, x, y, width, height);
   float coords[4];
   View *v = NULL;
   if (views) {
-    v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
+    v = view_find(views, layer);
   }
   if (v) {
     coords[0] = v->screen[0] + (v->screen[2] * (float) x) / (float) v->width;
@@ -113,7 +117,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);
   }
 
-  if (!reply->type) {
+  if (!reply || !reply->type) {
     View *v = NULL;
     if (views && item->prop_layer && item->prop_layer->values.dwords) {
       v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
@@ -144,7 +148,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
     DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords);
   }
-  free(reply);
+  if (reply) free(reply);
 
   item_menu_update_space_pos_from_window(item,
                                          item->geom->x,
@@ -158,11 +162,11 @@ void item_update_space_pos_from_window(Item *item) {
 }
 
 void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
-  if (reply->type == None) {
+  if (!reply || reply->type == None) {
     Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, 1, (void *) &draw_type);    
   }
-  free(reply);
+  if (reply) free(reply);
   
   item->properties = properties_load(item->window);
   item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
@@ -188,16 +192,16 @@ void item_initialize_draw_type(Item *item) {
 }
 
 void item_initialize_layer_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
-  if (reply->type == None) {
+  if (!reply || reply->type == None) {
     Atom layer = ATOM("IG_LAYER_DESKTOP");
-    if (item->attr->override_redirect) {
+    if (item->attr && item->attr->override_redirect) {
       layer = ATOM("IG_LAYER_MENU");
     }
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_LAYER"), XA_ATOM, 32, 1, (void *) &layer);    
   }
-  free(reply);
+  if (reply) free(reply);
   
-  item->is_mapped = item->attr->map_state == IsViewable; // FIXME: Remove is_mapped...
+  item->is_mapped = item->attr && item->attr->map_state == IsViewable; // FIXME: Remove is_mapped...
   
   uint32_t values[] = {PropertyChangeMask};
   xcb_change_window_attributes(xcb_display, item->window, XCB_CW_EVENT_MASK, values);
