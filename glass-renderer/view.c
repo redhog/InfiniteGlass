@@ -4,6 +4,7 @@
 #include "list.h"
 #include "item.h"
 #include "debug.h"
+#include "property_coords.h"
 #include <limits.h>
 #include <math.h>
 #include <string.h>
@@ -67,21 +68,30 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
-    if (!filter || filter(item)) {
-      try();
-      rendering.parent_item = NULL;
-      rendering.item = item;
-      item_draw(&rendering);
-      XErrorEvent e;
-      if (!catch(&e)) {
-        if (   (   e.error_code == BadWindow
-                || e.error_code == BadDrawable)
-            && e.resourceid == item->window) {
-          if (!to_delete) to_delete = list_create();
-          list_append(to_delete, item);
-        } else {
-          throw(&e);
-        }
+    if (filter && !filter(item)) continue;
+    if (item->prop_coords) {
+      PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
+      if (data->coords) {
+        if (data->coords[0] > view->screen[0] + view->screen[2]) continue;
+        if (data->coords[0] + data->coords[2] < view->screen[0]) continue;
+        if (data->coords[1] - data->coords[3] > view->screen[1] + view->screen[3]) continue;
+        if (data->coords[1] < view->screen[1]) continue;
+     }
+   }
+    
+    try();
+    rendering.parent_item = NULL;
+    rendering.item = item;
+    item_draw(&rendering);
+    XErrorEvent e;
+    if (!catch(&e)) {
+      if (   (   e.error_code == BadWindow
+              || e.error_code == BadDrawable)
+          && e.resourceid == item->window) {
+        if (!to_delete) to_delete = list_create();
+        list_append(to_delete, item);
+      } else {
+        throw(&e);
       }
     }
   }
