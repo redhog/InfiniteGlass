@@ -8,7 +8,7 @@
 #include "shader.h"
 #include <stdio.h>
 
-#define PROGRAM_CACHE_SIZE 2
+#define PROGRAM_CACHE_SIZE 10
 
 struct ProgramCacheStruct;
 typedef struct ProgramCacheStruct ProgramCache;
