@@ -22,6 +22,11 @@ def focus_follows_mouse(self, event):
     if win == getattr(self, "focus", None): return
     if not win: return
     if not InfiniteGlass.windows.is_inside_window(self.display, win): return
+    redir = getattr(win, "is_override_redirect", None)
+    if redir is None:
+        redir = win.get_attributes().override_redirect
+        win.is_override_redirect = redir
+    if redir: return
     set_focus(self, win)
     
 
