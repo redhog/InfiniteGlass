@@ -100,6 +100,8 @@ void item_menu_update_space_pos_from_window(Item *item, int x, int y, int width,
 }
 
 void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (!reply) DEBUG("no_reply", "%d.item_update_space_pos_from_window: No reply\n", item->window);
+ 
   item->x                   = item->geom->x;
   item->y                   = item->geom->y;
   int width                 = item->geom->width;
@@ -162,6 +164,7 @@ void item_update_space_pos_from_window(Item *item) {
 }
 
 void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (!reply) DEBUG("no_reply", "%d.item_initialize_draw_type: No reply\n", item->window);
   if (!reply || reply->type == None) {
     Atom draw_type = ATOM("IG_DRAW_TYPE_POINTS");
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 32, 1, (void *) &draw_type);    
@@ -192,6 +195,7 @@ void item_initialize_draw_type(Item *item) {
 }
 
 void item_initialize_layer_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
+  if (!reply) DEBUG("no_reply", "%d.item_initialize_layer: No reply\n", item->window);
   if (!reply || reply->type == None) {
     Atom layer = ATOM("IG_LAYER_DESKTOP");
     if (item->attr && item->attr->override_redirect) {
@@ -217,6 +221,7 @@ void item_initialize_layer(Item *item) {
 }
 
 void item_initialize_attr_load(Item *item, xcb_get_window_attributes_reply_t *reply, xcb_generic_error_t *error) {
+  if (!reply) DEBUG("no_reply", "%d.item_initialize_attr: No reply\n", item->window);
   item->attr = reply;
   if (item->window == root) {
     Atom layer = ATOM("IG_LAYER_ROOT");

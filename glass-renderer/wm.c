@@ -190,6 +190,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     item_menu_update_space_pos_from_window(item, event->xconfigure.x,  event->xconfigure.y,  event->xconfigure.width,  event->xconfigure.height);
     // FIXME: Update width/height regardless of window type...
   } else if (event->type == DestroyNotify) {
+    DEBUG("unmap", "%d.DestroyNotify\n", event->xunmap.window);
     Item * item = item_get_from_window(event->xdestroywindow.window, False);
     if (item) {
       item_remove(item);
@@ -219,6 +220,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
       }        
     }
  } else if (event->type == UnmapNotify) {
+    DEBUG("unmap", "%d.UnmapNotify\n", event->xunmap.window);
     Item *item = item_get_from_window(event->xunmap.window, False);
     if (item) {
       item->is_mapped = False;
