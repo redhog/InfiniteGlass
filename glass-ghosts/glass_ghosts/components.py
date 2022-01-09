@@ -60,15 +60,19 @@ class Components(object):
                 
     def start_component(self, spec):
         name = spec["name"]
-        InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (name, " ".join(spec["command"])))
+        InfiniteGlass.debug.DEBUG("component", "Updating %s\n" % (name,))
         if name in self.components:
             pid = self.components[name]["pid"]
             existing_name = self.components_by_pid.pop(pid, None)
             if existing_name is not None:
                 try:
-                    os.kill(pid, signal.SIGINT)
+                    os.kill(pid, signal.SIGQUIT)
                 except ProcessLookupError:
                     InfiniteGlass.debug.DEBUG("component", "Old process had died unnoticed.\n")
+        if not spec.get("run", True):
+            InfiniteGlass.debug.DEBUG("component", "Stopped %s\n" % (name,))
+            return
+        InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (name, " ".join(spec["command"])))
         pid = os.fork()
         if pid == 0:
             try:
@@ -79,3 +83,4 @@ class Components(object):
             self.components[name] = {"pid": pid, "component": spec}
             self.components_by_pid[pid] = name
             self.display.root["IG_COMPONENTPID_" + name] = pid
+        

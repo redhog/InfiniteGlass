@@ -57,5 +57,18 @@ def show(ctx, name):
 def restart(ctx, name):
     with InfiniteGlass.Display() as display:
         key = "IG_COMPONENT_%s" % name
-        display.root[key] = display.root[key]
+        spec = json.loads(display.root[key].decode("utf-8"))
+        spec["run"] = True
+        display.root[key] = json.dumps(spec).encode("utf-8")
+        display.flush()
+
+@component.command()
+@click.argument("name")
+@click.pass_context
+def stop(ctx, name):
+    with InfiniteGlass.Display() as display:
+        key = "IG_COMPONENT_%s" % name
+        spec = json.loads(display.root[key].decode("utf-8"))
+        spec["run"] = False
+        display.root[key] = json.dumps(spec).encode("utf-8")
         display.flush()
