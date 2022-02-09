@@ -61,6 +61,20 @@ int xinit() {
     return 0;
   }
 
+  int nextensions_return;
+  char **xextensions = XListExtensions(display, &nextensions_return);
+  if (DEBUG_ENABLED("init")) {
+    debug_print(stderr, 0, "GLASS_DEBUG.renderer", __FILE__, __func__, "init", "X extensions: ");
+    for (int i = 0; i < nextensions_return; i++) {
+      fprintf(stderr, i ? ", %s" : "%s", xextensions[i]);
+    }
+    fprintf(stderr, "\n");
+    BACKTRACE("init");
+  }
+  
+  extensions = glXQueryExtensionsString(display, 0); fflush(stderr);
+  DEBUG("init", "glX extensions: %s\n", extensions);
+
   int event_base, error_base;
   if (!XCompositeQueryExtension(display, &event_base, &error_base)) {
     fprintf(stderr, "X server does not support the Composite extension"); fflush(stderr);
@@ -74,9 +88,6 @@ int xinit() {
     return 0;
   }
 
-  extensions = glXQueryExtensionsString(display, 0); fflush(stderr);
-
-  DEBUG("init", "Extensions: %s\n", extensions);
   if(! strstr(extensions, "GLX_EXT_texture_from_pixmap")) {
     fprintf(stderr, "GLX_EXT_texture_from_pixmap not supported!\n");
     return 0;
