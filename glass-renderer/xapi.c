@@ -61,11 +61,10 @@ int xinit() {
     return 0;
   }
 
-  int nextensions_return;
-  char **xextensions = XListExtensions(display, &nextensions_return);
+  xextensions = XListExtensions(display, &nxextensions);
   if (DEBUG_ENABLED("init")) {
     debug_print(stderr, 0, "GLASS_DEBUG.renderer", __FILE__, __func__, "init", "X extensions: ");
-    for (int i = 0; i < nextensions_return; i++) {
+    for (int i = 0; i < nxextensions; i++) {
       fprintf(stderr, i ? ", %s" : "%s", xextensions[i]);
     }
     fprintf(stderr, "\n");
@@ -101,6 +100,14 @@ int xinit() {
     return 0;
   }
 
+  on_xephyr = True; 
+  for (int i = 0; i < nxextensions; i++) {
+    if (strcmp(xextensions[i], "XFree86-VidModeExtension") == 0) {
+      on_xephyr = False;
+    }
+  }
+  DEBUG("init", on_xephyr ? "Running under Xephyr / Xnest\n" : "Running on a physical display\n");
+  
   overlay = XCompositeGetOverlayWindow(display, root);
   XGetWindowAttributes(display, overlay, &overlay_attr);
 
