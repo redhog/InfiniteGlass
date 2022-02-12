@@ -11,6 +11,16 @@ if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
     rpdb.handle_trap()
     rpdb.handle_trap()
 
+def redraw(display, win):
+    gcbg = display.root.create_gc(foreground=display.screen(0).white_pixel,
+                                  background=display.screen(0).black_pixel)
+    gcfg = display.root.create_gc(foreground=display.screen(0).black_pixel,
+                                  background=display.screen(0).white_pixel)
+    geom = win.get_geometry()
+    win.fill_rectangle(gcbg, 0, 0, geom.width, geom.height)
+    win.draw_text(gcfg, 10, 10, str(win["WM_NAME"]))
+    display.flush()
+    
 def main(*arg, **kw):
     configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.yml"))
     with open(configpath) as f:
@@ -62,5 +72,12 @@ def main(*arg, **kw):
                                       "IG_INPUT_ACTION", target, "IG_INPUT_ACTION",
                                       event_mask=Xlib.X.SubstructureNotifyMask|Xlib.X.SubstructureRedirectMask)
                     display.flush()
+                    
+                @w.on()
+                def Expose(win, event):
+                    redraw(display, win)
+
+                w.map()
+                redraw(display, w)
                 
         InfiniteGlass.DEBUG("init", "Widgets started\n")
