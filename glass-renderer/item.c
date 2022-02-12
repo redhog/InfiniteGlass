@@ -417,9 +417,23 @@ Shader *item_get_shader(Item *item) {
   return shader_find(shaders, shader);
 }
 void item_print(Item *item) {
-  printf("item(%ld):%s ",
-         item->window,
-         item->is_mapped ? "" : " invisible");
+  XTextProperty name_ret;
+  char **names;
+  int name_nr;
+  if (  (XGetWMName(display, item->window, &name_ret) > 0)
+      & (name_ret.format == 8)
+      & (XmbTextPropertyToTextList(display, &name_ret, &names, &name_nr) == Success)
+      & (name_nr > 0)) {
+    printf("item(%ld / %s):%s ",
+           item->window,
+           names[0],
+           item->is_mapped ? "" : " invisible");
+    XFreeStringList(names);
+  } else {
+    printf("item(%ld):%s ",
+           item->window,
+           item->is_mapped ? "" : " invisible");
+  }
   if (item->prop_size) {
     long width = item->prop_size->values.dwords[0];
     long height = item->prop_size->values.dwords[1];
