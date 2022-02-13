@@ -69,7 +69,7 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (filter && !filter(item)) continue;
-    if (item->prop_coords) {
+    if (item->prop_coords && item->prop_coords->data) {
       PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
       if (data->coords) {
         if (data->coords[0] > view->screen[0] + view->screen[2]) continue;
