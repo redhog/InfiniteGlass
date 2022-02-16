@@ -9,6 +9,7 @@ import pkg_resources
 import array
 from . import manager
 
+@InfiniteGlass.profilable
 def main():
     with InfiniteGlass.Display() as display:
         island_manager = manager.IslandManager(display)

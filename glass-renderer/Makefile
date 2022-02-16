@@ -1,5 +1,8 @@
 CC=gcc
 PACKAGES=librsvg-2.0 pangocairo cairo xi x11 x11-xcb xcb xcb-icccm xcb-damage gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
+
+# EXTRA_CFLAGS=-pg
+
 CFLAGS=-rdynamic -g -ggdb $(shell pkg-config --cflags $(PACKAGES)) -O0 -Wall $(EXTRA_CFLAGS)
 LIBS:=-ldl $(shell pkg-config --libs $(PACKAGES))
 

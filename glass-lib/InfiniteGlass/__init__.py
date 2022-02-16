@@ -11,6 +11,7 @@ from . import windows
 from .keymap import *
 from .valueencoding import *
 from .debug import *
+from .profile import *
 
 from Xlib.display import Display
 

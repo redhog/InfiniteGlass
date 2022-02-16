@@ -9,6 +9,7 @@ import os.path
 import yaml
 import importlib
 
+@InfiniteGlass.profilable
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
         configpath = os.path.expanduser(os.environ.get("GLASS_THEME_CONFIG", "~/.config/glass/theme.yml"))

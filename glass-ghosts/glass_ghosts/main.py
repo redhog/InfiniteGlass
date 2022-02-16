@@ -11,7 +11,8 @@ if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
     rpdb.handle_trap()
     rpdb.handle_trap()
 
-def main2():
+@InfiniteGlass.profilable
+def main():
     manager = None
     try:
         with InfiniteGlass.Display() as display:
@@ -39,10 +40,3 @@ def main2():
             traceback.print_exc()
         os.execlp(sys.argv[0], *sys.argv)        
     print("END")
-
-def main():
-    if os.environ.get("GLASS_PROFILE_glass_ghosts", "0") == "1":
-        import cProfile
-        cProfile.runctx('main2()', globals(), locals(), "glass-ghosts.prof")
-    else:
-        main2()
