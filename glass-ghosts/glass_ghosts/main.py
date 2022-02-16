@@ -30,13 +30,6 @@ def main2():
     except Exception as e:
         print("Ghost manager systemic failure, restarting: %s" % (e,))
         traceback.print_exc()
-        try:
-            if manager is not None and hasattr(manager, "components") and hasattr(manager.components, "components_by_pid"):
-                for pid in manager.components.components_by_pid.keys():
-                    os.kill(pid, signal.SIGINT)
-        except Exception as e:
-            print(e)
-            traceback.print_exc()
         os.execlp(sys.argv[0], *sys.argv)        
     print("END")
 

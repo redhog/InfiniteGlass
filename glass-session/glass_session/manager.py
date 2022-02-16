@@ -1,16 +1,33 @@
+import InfiniteGlass
+import array
+import sqlite3
+import os.path
+import yaml
+import json
+import base64
+import pkg_resources
+import sys
 import InfiniteGlass.debug
 import Xlib.X
-import glass_ghosts.ghost
-import glass_ghosts.window
-import json
-import os
 import signal
 import traceback
 
-class Components(object):
-    def __init__(self, manager, display):
-        self.manager = manager
+
+class SessionManager(object):
+    def __init__(self, display):
+
         self.display = display
+
+        configpath = os.path.expanduser(os.environ.get("GLASS_SESSION_CONFIG", "~/.config/glass/session.yml"))
+        with open(configpath) as f:
+            self.config = json.loads(json.dumps(yaml.load(f, Loader=yaml.SafeLoader)), object_hook=InfiniteGlass.fromjson(self.display))
+                
+        self.shutting_down = False
+        @display.root.on(mask="StructureNotifyMask", client_type="IG_GHOSTS_EXIT")
+        def ClientMessage(win, event):
+            print("message", "RECEIVED EXIT"); sys.stderr.flush()
+            self.shutdown()
+
         self.components = {}
         self.components_by_pid = {}
         
@@ -18,16 +35,30 @@ class Components(object):
         
         @display.root.on()
         def PropertyNotify(win, event):
-            name = self.manager.display.get_atom_name(event.atom)
+            name = self.display.get_atom_name(event.atom)
             if name.startswith("IG_COMPONENT_"):
                 spec = json.loads(display.root[name].decode("utf-8"))
                 self.start_component(spec)
 
-        for name, spec in self.manager.config.get("components", {}).items():
+        for name, spec in self.config.get("components", {}).items():
             spec["name"] = name
             display.root["IG_COMPONENT_" + name] = json.dumps(spec).encode("utf-8")
-
             
+        InfiniteGlass.DEBUG("init", "Session handler started\n")
+
+    def shutdown(self):
+        self.shutting_down = True
+        @self.display.mainloop.add_interval(0.1)
+        def attempt_shutdown(timestamp, idx):
+            waiting = 0
+            for component in self.components[name].items():
+                if "pid" not in component: continue
+                os.kill(component["pid"], signal.SIGQUIT)
+                waiting += 1
+            if not waiting:
+                InfiniteGlass.DEBUG("conmmit", "Committing...\n")
+                sys.exit(0)
+        
     def sigchild(self, signum, frame):
         try:
             if signum == signal.SIGCHLD:
@@ -40,8 +71,10 @@ class Components(object):
                     InfiniteGlass.debug.DEBUG("SIGCHLD", "Reaped pid=%s, exitcode=%s, ru_child=%s\n" % (pid, exitcode, ru_child))
                     if pid in self.components_by_pid:
                         name = self.components_by_pid.pop(pid)
+                        del self.components[name]["pid"]
                         del self.display.root["IG_COMPONENTPID_" + name]
-                        if (    not exitcode == 0
+                        if (    not self.shutting_down
+                            and not exitcode == 0
                             and (   not os.WIFSIGNALED(exitcode)
                                  or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
                             # This is a component, and it wasn't killed intentionally... restart it

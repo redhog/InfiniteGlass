@@ -1,0 +1,11 @@
+components:
+  glass-ghosts: {"command": ["glass-ghosts"]}
+  glass-input: {"command": ["glass-input"]}
+  glass-theme: {"command": ["glass-theme"]}
+  glass-widgets: {"command": ["glass-widgets"]}
+  glass-animator: {"command": ["glass-animator"]}
+  glass-renderer: {"command": ["glass-renderer"]}
+  glass-islands: {"command": ["glass-islands"]}
+  xkb: {"command": ["setxkbmap", "-model", "pc101", "-layout", "us"]}
+  root-cursor: {"command": ["xsetroot", "-cursor_name", "arrow"]}
+  panelterm: {"command": ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]}

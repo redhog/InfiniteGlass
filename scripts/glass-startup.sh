@@ -9,4 +9,4 @@ if [ -e ~/.config/glass/session.sh ]; then
 fi
 
 glass-config-init
-glass-ghosts
+glass-session
