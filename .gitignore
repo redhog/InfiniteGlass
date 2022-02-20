@@ -17,3 +17,4 @@ build
 chrome-sessions/
 eventlog.log
 gmon.*
+*.prof
