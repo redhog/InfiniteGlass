@@ -1,6 +1,10 @@
 #version 330 core
 precision highp float;
 
+/* This code is available as a stand-alone fractal demo
+   at https://www.shadertoy.com/view/sdXfzl
+*/
+
 uniform ivec2 size;
 uniform vec4 root_IG_VIEW_DESKTOP_VIEW;
 
