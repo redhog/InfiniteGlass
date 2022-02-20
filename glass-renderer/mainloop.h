@@ -39,7 +39,7 @@ extern void mainloop_install_xcb_cookie_handler(unsigned int request, XCBCookieH
 #define MAINLOOP_XCB_DEFER(cookie, handler, data) mainloop_install_xcb_cookie_handler(cookie.sequence, (XCBCookieHandlerFunction *) handler, data)
 
 extern Bool mainloop_event_handle(XEvent *event);
-extern void mainloop_run();
+extern Bool mainloop_run();
 extern void mainloop_exit();
 
 

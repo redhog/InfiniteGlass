@@ -6,6 +6,7 @@ import json
 import os
 import signal
 import traceback
+import time
 
 class Components(object):
     def __init__(self, manager, display):
@@ -27,6 +28,22 @@ class Components(object):
             spec["name"] = name
             display.root["IG_COMPONENT_" + name] = json.dumps(spec).encode("utf-8")
 
+    def shutdown(self):
+        InfiniteGlass.DEBUG("shutdown", "Shutting down components\n")
+        for i in range(5):
+            for pid, name in list(self.components_by_pid.items()):
+                InfiniteGlass.DEBUG("shutdown", "Shutting down component %s (%s)\n" % (name, pid))
+                try:
+                    os.kill(pid, signal.SIGQUIT)
+                except ProcessLookupError:
+                    try:
+                        del self.components_by_pid[pid]
+                    except:
+                        pass
+                    InfiniteGlass.debug.DEBUG("component", "Old process had died unnoticed.\n")
+            if not self.components_by_pid:
+                break
+            time.sleep(1)
             
     def sigchild(self, signum, frame):
         try:

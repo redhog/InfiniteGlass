@@ -5,6 +5,7 @@ import sys
 import traceback
 import signal
 import os
+import time
 
 if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
     import rpdb
@@ -28,6 +29,7 @@ def main():
             sys.stdout.write("%s\n" % manager.session.listen_address())
             sys.stdout.flush()
             InfiniteGlass.DEBUG("init", "Session manager listening to %s\n" % manager.session.listen_address())
+        manager.components.shutdown()
     except Exception as e:
         print("Ghost manager systemic failure, restarting: %s" % (e,))
         traceback.print_exc()
@@ -38,5 +40,5 @@ def main():
         except Exception as e:
             print(e)
             traceback.print_exc()
-        os.execlp(sys.argv[0], *sys.argv)        
+        os.execlp(sys.argv[0], *sys.argv)
     print("END")

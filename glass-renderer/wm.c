@@ -359,7 +359,11 @@ int main() {
   main_event_handler.data = NULL;
   mainloop_install_event_handler(&main_event_handler);
 
-  mainloop_run();
-  
-  return 0;
+  if (!mainloop_run()) {
+    DEBUG("shutdown", "Renderer lost X server connection.\n");
+    return 1;
+  } else {
+    DEBUG("shutdown", "Renderer shut down.\n");
+    return 0;
+  }
 }

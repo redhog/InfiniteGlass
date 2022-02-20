@@ -2,7 +2,9 @@
 #include "xapi.h"
 #include "list.h"
 #include "debug.h"
+#include <errno.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 typedef struct {
   unsigned int request;
@@ -122,7 +124,7 @@ void xcb_cookies_handle() {
 
 Bool exit_mainloop_flag = False;
 
-void mainloop_run() {
+Bool mainloop_run() {
   int display_fd = ConnectionNumber(display);
   fd_set in_fds;
   struct timeval timeout;
@@ -134,7 +136,18 @@ void mainloop_run() {
     timeout.tv_usec = 30000;
     timeout.tv_sec = 0;
 
-    select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
+    int ret = select(display_fd + 1, &in_fds, NULL, NULL, &timeout);
+    if ((ret == -1) && (errno == EBADF)) {
+      return False;
+    }
+    if (FD_ISSET(display_fd, &in_fds)) {
+      int n = 0;
+      ioctl(display_fd, FIONREAD, &n);
+      if (n == 0) {
+        return False;
+      }
+    }
+    
     timeout_handle();
     xcb_cookies_handle();
     
@@ -144,6 +157,7 @@ void mainloop_run() {
       XFlush(display);
     }
   }
+  return True;
 }
 
 void mainloop_exit() {
