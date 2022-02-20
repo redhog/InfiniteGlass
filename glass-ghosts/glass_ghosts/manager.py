@@ -61,7 +61,7 @@ class GhostManager(object):
             if not waiting:
                 InfiniteGlass.DEBUG("conmmit", "Committing...\n")
                 self.dbconn.commit()
-                sys.exit(0)
+                self.display.exit()
         
     def save_ghosts(self, current_time, idx):
         if self.changes:
