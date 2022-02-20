@@ -25,6 +25,7 @@ class Theme(glass_theme.base.ThemeBase):
 
     views = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
     shader_path = "resource://glass_theme/shaders"
+    shader_ROOT = "root-fractal-lyapunov"
     latlon = (70., 18.)
     start_latlon = None
 

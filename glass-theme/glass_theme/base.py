@@ -5,6 +5,7 @@ import numpy
 import Xlib.X
 import sys
 import re
+import os.path
 
 class ThemeBase(object):
     def __init__(self, display, **kw):
@@ -46,13 +47,27 @@ class ThemeBase(object):
             src = re.sub(rb'#include  *"%s"' % (name,), self._load_shader(name.decode("utf-8")), src, re.MULTILINE)
         return src
 
+    def get_shader(self, SHADER, PART):
+        part_name = "shader_%s_%s" % (SHADER, PART)
+        shader_name = "shader_%s" % (SHADER,)
+        if hasattr(self, part_name):
+            part = getattr(self, part_name)
+        elif hasattr(self, shader_name):
+            part = "%s/%s" % (getattr(self, shader_name), PART.lower())
+        else:
+            part = "%s/%s" % (SHADER.lower(), PART.lower())
+        if "." not in part.split("/")[-1]:
+            part = "%s.glsl" % (part,)
+        if "://" not in part and not part.startswith("./") and not part.startswith("../") and not part.startswith("~"):
+            part = "%s/%s" % (self.shader_path, part)
+        part = os.path.expanduser(part)            
+        return part
+    
     def setup_shaders(self):
         self.display.root["IG_SHADER"] = "IG_SHADER_ROOT"
         for SHADER in self.shaders:
-            shader = SHADER.lower()
             for PART in self.shader_parts:
-                part = PART.lower()
-                self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader("%s/%s/%s.glsl" % (self.shader_path, shader, part))
+                self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader(self.get_shader(SHADER, PART))
         self.display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in self.shaders]
 
     def setup_views(self):
