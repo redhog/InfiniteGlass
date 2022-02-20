@@ -204,6 +204,7 @@ easings = {
   "InOutBack": lambda t: (0.5*(4*t*t*(3.5949095 * t*2 - 2.5949095)) if t<0.5 else 0.5 * ((t*2 - 2).pow(2) * ((4.9572369875) * (t*2-2) + 3.9572369875) + 2))
 }
 
+@InfiniteGlass.profilable
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
         @display.mainloop.add_interval(0.1)

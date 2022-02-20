@@ -11,8 +11,14 @@ def get_calling_function(level=1):
         frame.f_globals["__name__"],
         frame.f_code.co_name)
 
-def DEBUG_ENABLED(entry, level=1):
-    key = "%s.%s.%s" % ("GLASS_DEBUG", get_calling_function(level+1), entry)
+def FUNCTIONALITY_ENABLED(base, entry=None, level=1, fn=None):
+    if fn is None:
+        fn = get_calling_function(level+1)
+    elif not isinstance(fn, str):
+        fn = "%s.%s" % (fn.__name__, fn.__module__)
+    key = "%s.%s" % (base, fn)
+    if entry is not None:
+        key += "." + entry
     envkey = key.replace(".", "_")
     res = os.environ.get(envkey)
     if res == '1': return key
@@ -23,6 +29,9 @@ def DEBUG_ENABLED(entry, level=1):
         if res == '1': return key
         if res == '0': return None
     return None
+
+def DEBUG_ENABLED(entry, level=1):
+    return FUNCTIONALITY_ENABLED("GLASS_DEBUG", entry, level+1)
 
 def DEBUG(entry, s, level=1):
     key = DEBUG_ENABLED(entry, level+1)

@@ -21,6 +21,7 @@ def redraw(display, win):
     win.draw_text(gcfg, 10, 10, str(win["WM_NAME"]))
     display.flush()
     
+@InfiniteGlass.profilable
 def main(*arg, **kw):
     configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.yml"))
     with open(configpath) as f:

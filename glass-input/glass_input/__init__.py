@@ -15,7 +15,8 @@ if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
     rpdb.handle_trap()
     rpdb.handle_trap()
 
-def main2(*arg, **kw):
+@InfiniteGlass.profilable
+def main(*arg, **kw):
     mode.load_config()
 
     with InfiniteGlass.Display() as display:
@@ -66,11 +67,3 @@ def main2(*arg, **kw):
         ])
 
         InfiniteGlass.DEBUG("init", "Input handler started\n")
-
-    
-def main(*arg, **kw):
-    if os.environ.get("GLASS_PROFILE_glass_input", "0") == "1":
-        import cProfile
-        cProfile.runctx('main2()', globals(), locals(), "glass-input.prof")
-    else:
-        main2()
