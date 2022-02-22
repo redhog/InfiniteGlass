@@ -2,37 +2,37 @@ widgets:
   Zoom in:
     properties:
       IG_COORDS: [0.01, "eq://0.4 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-plus.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/search-plus.fl.svg"]}
     action: zoom_to_fewer_windows
     
   Zoom out:
     properties:
       IG_COORDS: [0.01, "eq://0.5 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-minus.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/search-minus.fl.svg"]}
     action: zoom_to_more_windows
 
   Zoom home:
     properties:
       IG_COORDS: [0.01, "eq://0.6 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-location.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/home.fl.svg"]}
     action: zoom_home
 
   Tile:
     properties:
       IG_COORDS: [0.01, "eq://0.7 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/th-list.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/th-list.fl.svg"]}
     action: tile_visible_to_1_1
 
   Exit:
     properties:
       IG_COORDS: [0.01, "eq://0.8 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/eject.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/eject.fl.svg"]}
     action: send_exit
 
   Debug:
     properties:
       IG_COORDS: [0.01, "eq://0.9 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/bug.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/bug.fl.svg"]}
     action: send_debug
 
 window-decorations:
@@ -42,8 +42,8 @@ window-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.02, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/pause-circle.svg"]}
-      IG_CONTENT_ALT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/play-circle.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/pause.fl.svg"]}
+      IG_CONTENT_ALT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/play.fl.svg"]}
     action: toggle_sleep
 
   Enable/disable ghosts:
@@ -52,8 +52,8 @@ window-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.045, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/save.svg"]}
-      IG_CONTENT_ALT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/save.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/pin-active.fl.svg"]}
+      IG_CONTENT_ALT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/pin-inactive.fl.svg"]}
     action: toggle_ghosts_enabled
 
   Close:
@@ -61,7 +61,7 @@ window-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.070, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/times-circle.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/times.fl.svg"]}
     action: send_close
 
   Maximize:
@@ -69,16 +69,16 @@ window-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.095, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/tv.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/tv.fl.svg"]}
     action: zoom_1_1_1
 
-  More:
-    properties:
-      IG_COORDS: [1.0, -1.0, 0.0, 0.0,
-                  0.01, 0.12, 0.02, 0.02]
-      IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/bars.svg"]}
-    action: ""
+  #More:
+  #  properties:
+  #    IG_COORDS: [1.0, -1.0, 0.0, 0.0,
+  #                0.01, 0.12, 0.02, 0.02]
+  #    IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
+  #    IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/bars.svg"]}
+  #  action: ""
 
 island-decorations:
   Save/restore island:
@@ -87,8 +87,8 @@ island-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.02, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/pause-circle.svg"]}
-      IG_CONTENT_ALT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/play-circle.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/pause.fl.svg"]}
+      IG_CONTENT_ALT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/play.fl.svg"]}
     action: island_toggle_sleep
 
   Close island:
@@ -96,7 +96,7 @@ island-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.045, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/times-circle.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/times.fl.svg"]}
     action: island_delete
 
   Break apart island:
@@ -104,7 +104,7 @@ island-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.070, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/unlink.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/unlink.fl.svg"]}
     action: island_ungroup
 
   Change background:
@@ -112,5 +112,5 @@ island-decorations:
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.095, 0.02, 0.02]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
-      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/regular/image.svg"]}
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "resource://glass_widgets/icons/image.fl.svg"]}
     action: "island_change_background"
