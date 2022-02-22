@@ -11,7 +11,7 @@ def get_calling_function(level=1):
         frame.f_globals["__name__"],
         frame.f_code.co_name)
 
-def FUNCTIONALITY_ENABLED(base, entry=None, level=1, fn=None):
+def FUNCTIONALITY_ENABLED(base, entry=None, level=1, fn=None, default=False):
     if fn is None:
         fn = get_calling_function(level+1)
     elif not isinstance(fn, str):
@@ -28,13 +28,19 @@ def FUNCTIONALITY_ENABLED(base, entry=None, level=1, fn=None):
         res = os.environ.get(envkey)
         if res == '1': return key
         if res == '0': return None
-    return None
+    return key if default else None
 
 def DEBUG_ENABLED(entry, level=1):
     return FUNCTIONALITY_ENABLED("GLASS_DEBUG", entry, level+1)
 
 def DEBUG(entry, s, level=1):
     key = DEBUG_ENABLED(entry, level+1)
+    if not key: return
+    sys.stderr.write("%s: %s" % (key, s))
+    sys.stderr.flush()
+
+def ERROR(entry, s, level=1):
+    key = FUNCTIONALITY_ENABLED("GLASS_ERROR", entry, level+1, default=True)
     if not key: return
     sys.stderr.write("%s: %s" % (key, s))
     sys.stderr.flush()

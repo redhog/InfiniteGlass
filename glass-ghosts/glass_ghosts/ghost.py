@@ -89,8 +89,12 @@ class Shadow(object):
                     if InfiniteGlass.DEBUG_ENABLED("ghost.apply.properties"):
                         itemtype, items, fmt = InfiniteGlass.parse_value(self.manager.display, self.properties[key])
                         InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(items)[:100])); sys.stderr.flush()
-                    window[key] = self.properties[key]
-                    InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
+                    try:
+                        window[key] = self.properties[key]
+                    except Exception as e:
+                        InfiniteGlass.ERROR("ghost.properties", "Unable to set property %s.%s=%s\n" % (window, key, self.properties[key]))
+                    else:
+                        InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
         self.manager.display.flush()
         
     def format_pair(self, name, value, sep=b"/"):
