@@ -140,7 +140,7 @@ Bool mainloop_run() {
     if ((ret == -1) && (errno == EBADF)) {
       return False;
     }
-    if (FD_ISSET(display_fd, &in_fds)) {
+    if ((ret > 0) && FD_ISSET(display_fd, &in_fds)) {
       int n = 0;
       ioctl(display_fd, FIONREAD, &n);
       if (n == 0) {
