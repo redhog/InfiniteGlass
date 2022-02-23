@@ -93,8 +93,10 @@ def zoom_to_more_windows(self, event):
 
     ratio = view[2] / view[3]
 
-    xs = [window[0], window[0] + window[2]] + [x for w, coords in visible for x in (coords[0], coords[0] + coords[2])]
-    ys = [window[1], window[1] - window[3]] + [y for w, coords in visible for y in (coords[1], coords[1] - coords[3])]
+    wxs = [x for w, coords in visible for x in (coords[0], coords[0] + coords[2])]
+    wys = [y for w, coords in visible for y in (coords[1], coords[1] - coords[3])]
+    xs = [window[0], window[0] + window[2]] + wxs
+    ys = [window[1], window[1] - window[3]] + wys
 
     view = [min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)]
 
@@ -105,7 +107,17 @@ def zoom_to_more_windows(self, event):
         view[2] = ratio * view[3]
     InfiniteGlass.DEBUG("view", "View after aspect ratio corr %s\n" % (view,))
 
-    view = item_zoom_to.adjust_view(self, view, next_window)
+    adjusted_view = item_zoom_to.adjust_view(self, view, next_window)    
+    if len(visible):
+        visible_view = [min(wxs), min(wys), max(wxs) - min(wxs), max(wys) - min(wys)]
+        if (   visible_view[0] >= adjusted_view[0]
+            and visible_view[1] >= adjusted_view[1]
+            and visible_view[0] + visible_view[2] <= adjusted_view[0] + adjusted_view[2]
+            and visible_view[1] + visible_view[3] <= adjusted_view[1] + adjusted_view[3]):
+            view = adjusted_view
+    else:
+        view = adjusted_view
+
     InfiniteGlass.DEBUG("view", "View after adjustment %s\n" % (view,))
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
