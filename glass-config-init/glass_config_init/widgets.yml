@@ -1,21 +1,27 @@
 widgets:
   Zoom in:
     properties:
-      IG_COORDS: [0.01, "eq://0.3 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.2 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/circle-plus.fl.svg"]}
     action: zoom_to_fewer_windows
     
   Zoom out:
     properties:
-      IG_COORDS: [0.01, "eq://0.4 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.3 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/circle-minus.fl.svg"]}
     action: zoom_to_more_windows
 
   Zoom home:
     properties:
-      IG_COORDS: [0.01, "eq://0.5 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.4 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/home.fl.svg"]}
     action: zoom_home
+
+  Group:
+    properties:
+      IG_COORDS: [0.01, "eq://0.5 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_CONTENT: {"__jsonclass__": ["tuple", "IG_SVG", "@resource://glass_widgets/icons/group.fl.svg"]}
+    action: send_island_create
 
   Tile:
     properties:
