@@ -15,6 +15,8 @@ def zoom_to_window(self, event):
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
 def zoom_to_fewer_windows(self, event, margin=0.01):
+    focus_win = self.get_event_window(event)
+    
     "Zoom in the screen so that one fewer window is visible"
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
     vx = view[0] + view[2] / 2.
@@ -34,6 +36,10 @@ def zoom_to_fewer_windows(self, event, margin=0.01):
         return zoom.zoom_in(self, event)
 
     windows.sort(key=lambda a: a[0])
+    if focus_win is not None:
+        # Move the focus window first, so we remove it last...
+        focus_win_child = [(d, coords, child) for (d, coords, child) in windows if child == focus_win]
+        windows = focus_win_child + [(d, coords, child) for (d, coords, child) in windows if child != focus_win]
 
     ratio = view[2] / view[3]
 
