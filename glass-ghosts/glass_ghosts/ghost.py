@@ -79,22 +79,33 @@ class Shadow(object):
         if client:
             client.ghosts[self.current_key] = self
 
-    def apply(self, window, type="set"):
-        InfiniteGlass.DEBUG("ghost.apply", "SHADOW APPLY %s window_id=%s %s\n" % (type, window, self)); sys.stderr.flush()
+    def apply(self, window, action_type="set"):
+        InfiniteGlass.DEBUG("ghost.apply", "SHADOW APPLY %s window_id=%s %s\n" % (action_type, window, self)); sys.stderr.flush()
         if self.properties.get("IG_GHOSTS_DISABLED", 0):
             window["IG_GHOSTS_DISABLED"] = 1
         else:
-            for key in self.manager.config[type]:
+            for key in self.manager.config[action_type]:
                 if key in self.properties:
                     if InfiniteGlass.DEBUG_ENABLED("ghost.apply.properties"):
                         itemtype, items, fmt = InfiniteGlass.parse_value(self.manager.display, self.properties[key])
-                        InfiniteGlass.DEBUG("ghost.properties", "%s=%s\n" % (key, str(items)[:100])); sys.stderr.flush()
-                    try:
-                        window[key] = self.properties[key]
-                    except Exception as e:
-                        InfiniteGlass.ERROR("ghost.properties", "Unable to set property %s.%s=%s\n" % (window, key, self.properties[key]))
+                        itemtype = self.manager.display.get_atom_name(itemtype)
+                        InfiniteGlass.DEBUG("ghost.properties", "%s=<%s/%s>%s\n" % (key, itemtype, fmt, str(items)[:100])); sys.stderr.flush()
+                    #if key == "__attributes__":
+                    #    window.change_attributes(**self.properties[key])
+                    if key == "__config__":
+                        try:
+                            window.configure(**self.properties[key])
+                        except Exception as e:
+                            InfiniteGlass.ERROR("ghost.properties", "Unable to configure %s[%s]\n" % (window, self.properties[key]))
+                        else:
+                            InfiniteGlass.DEBUG("ghost.properties", "    => %s[%s]\n" % (window.id, self.properties[key]))
                     else:
-                        InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
+                        try:
+                            window[key] = self.properties[key]
+                        except Exception as e:
+                            InfiniteGlass.ERROR("ghost.properties", "Unable to set property %s.%s=%s\n" % (window, key, self.properties[key]))
+                        else:
+                            InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
         self.manager.display.flush()
         
     def format_pair(self, name, value, sep=b"/"):
@@ -148,7 +159,7 @@ class Shadow(object):
                 
         self.window["IG_CONTENT"] = ("IG_SVG", ghost_image)
         self.window["WM_PROTOCOLS"] = ["WM_DELETE_WINDOW"]
-        self.apply(self.window, type="ghost_set")
+        self.apply(self.window, action_type="ghost_set")
 
         @self.window.on(mask="StructureNotifyMask")
         def DestroyNotify(win, event):
@@ -183,7 +194,11 @@ class Shadow(object):
             if name not in self.manager.config["ghost_update"]: return
             try:
                 self.properties.update(glass_ghosts.helpers.expand_property(win, name))
-                InfiniteGlass.DEBUG("ghost.update.property", "%s.%s=%s from %s\n" % (self, name, self.properties[name], win)); sys.stderr.flush()
+                InfiniteGlass.DEBUG(
+                    "ghost.update.property",
+                    "%s.%s=<%s>%s from %s\n" % (
+                        self, name, type(self.properties[name]), self.properties[name], win))
+                sys.stderr.flush()
             except:
                 pass
             else:

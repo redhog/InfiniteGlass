@@ -35,17 +35,19 @@ class Window(object):
                 pass
             else:
                 self.match()
-            InfiniteGlass.DEBUG("setprop", "%s=%s\n" % (name, self.properties.get(name)))
+            InfiniteGlass.DEBUG("setprop", "%s.%s=%s\n" % (self.id, name, self.properties.get(name)))
         self.PropertyNotify = PropertyNotify
 
         @self.window.on(mask="StructureNotifyMask")
         def ConfigureNotify(win, event):
-            self.properties.update({"__attributes__": {
+            config = {
                 "x": event.x,
                 "y": event.y,
                 "width": event.width,
                 "height": event.height
-            }})
+            }
+            self.properties.update({"__config__": config})
+            InfiniteGlass.DEBUG("setprop", "%s[%s]\n" % (self.id, config))
         self.ConfigureNotify = ConfigureNotify
 
         @self.window.on(mask="StructureNotifyMask", client_type="IG_SLEEP")
@@ -118,10 +120,10 @@ class Window(object):
         return glass_ghosts.helpers.ghost_key(self.properties, self.manager.config["match"])
 
     def destroy(self):
-        InfiniteGlass.DEBUG("destroy", "Window destroyed %s" % self.window.get("WM_NAME", self.window))
-        InfiniteGlass.DEBUG("destroy", "  key=%s" % self.key())
-        InfiniteGlass.DEBUG("destroy", "  %s" % ("IGNORED" if self.is_ignored() else "NOT IGNORED"))
-        InfiniteGlass.DEBUG("destroy", "  %s" % ("has ghost" if self.ghost else "no ghost"))
+        InfiniteGlass.DEBUG("destroy", "Window destroyed %s" % (self.window.get("WM_NAME", self.window),))
+        InfiniteGlass.DEBUG("destroy", "  key=%s" % (self.key(),))
+        InfiniteGlass.DEBUG("destroy", "  %s" % ("IGNORED" if self.is_ignored() else "NOT IGNORED",))
+        InfiniteGlass.DEBUG("destroy", "  %s" % ("has ghost" if self.ghost else "no ghost",))
         
         if not self.is_ignored():
             if not self.ghost:
