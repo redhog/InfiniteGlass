@@ -135,49 +135,48 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
    //XShapeEvent *event = (XShapeEvent*) &e;
   } else if (event->type == ConfigureRequest) {
     Item *item = item_get_from_window(event->xconfigurerequest.window, False);
-    if (!item) {
+    if (!item || !item->prop_size) {
+      if (item) {
+        DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", event->xconfigurerequest.window);
+      }    
       XWindowChanges values;
       values.width = event->xconfigurerequest.width;
       values.height = event->xconfigurerequest.height;
       XConfigureWindow(display, event->xconfigurerequest.window, CWWidth | CWHeight, &values);
     } else {
-      if (item->prop_size) {
-        unsigned long width = item->prop_size->values.dwords[0];
-        unsigned long height = item->prop_size->values.dwords[1];
-        float *orig_coords = ((PropertyCoords *) item->prop_coords->data)->coords;
-        float coords[4] = {orig_coords[0], orig_coords[1], orig_coords[2], orig_coords[3]};
-        
-        coords[2] *= (float) event->xconfigurerequest.width / (float) width;
-        coords[3] *= (float) event->xconfigurerequest.height / (float) height;
+      unsigned long width = item->prop_size->values.dwords[0];
+      unsigned long height = item->prop_size->values.dwords[1];
+      float *orig_coords = ((PropertyCoords *) item->prop_coords->data)->coords;
+      float coords[4] = {orig_coords[0], orig_coords[1], orig_coords[2], orig_coords[3]};
 
-        DEBUG("configure", "%ld.ConfigureRequest(%d,%d @ %f,%f[%f,%f], %d,%d): %f,%f => %f,%f[%f,%f]\n",
-              event->xconfigurerequest.window,
-              width,
-              height,
-              orig_coords[0],
-              orig_coords[1],
-              orig_coords[2],
-              orig_coords[3],
-              event->xconfigurerequest.width,
-              event->xconfigurerequest.height,
-              (float) event->xconfigurerequest.width / (float) width,
-              (float) event->xconfigurerequest.height / (float) height,
-              coords[0],coords[1],coords[2],coords[3]);
-        long coords_arr[4];
-        for (int i = 0; i < 4; i++) {
-          coords_arr[i] = *(long *) &coords[i];
-        }
-        XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+      coords[2] *= (float) event->xconfigurerequest.width / (float) width;
+      coords[3] *= (float) event->xconfigurerequest.height / (float) height;
 
-        long arr[2] = {width, height};
-        XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
-
-        item_update((Item *) item);
-        GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
-        trigger_draw();
-      } else {
-        DEBUG("error", "%ld: prop_size not set before ConfigureRequest\n", event->xconfigurerequest.window);
+      DEBUG("configure", "%ld.ConfigureRequest(%d,%d @ %f,%f[%f,%f], %d,%d): %f,%f => %f,%f[%f,%f]\n",
+            event->xconfigurerequest.window,
+            width,
+            height,
+            orig_coords[0],
+            orig_coords[1],
+            orig_coords[2],
+            orig_coords[3],
+            event->xconfigurerequest.width,
+            event->xconfigurerequest.height,
+            (float) event->xconfigurerequest.width / (float) width,
+            (float) event->xconfigurerequest.height / (float) height,
+            coords[0],coords[1],coords[2],coords[3]);
+      long coords_arr[4];
+      for (int i = 0; i < 4; i++) {
+        coords_arr[i] = *(long *) &coords[i];
       }
+      XChangeProperty(display, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, PropModeReplace, (void *) coords_arr, 4);
+
+      long arr[2] = {width, height};
+      XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+
+      item_update((Item *) item);
+      GL_CHECK_ERROR("item_update_pixmap", "%ld", item->window);
+      trigger_draw();
     }
   } else if (event->type == ConfigureNotify) {
     DEBUG("event.configure", "%ld.ConfigureNotify(%d,%d[%d,%d])\n",
