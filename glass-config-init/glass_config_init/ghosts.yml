@@ -25,6 +25,7 @@ set:
   - _NET_WM_DESKTOP
   - _NET_WM_ICON_GEOMETRY
   - WM_COMMAND
+  - __config__
 
 # Set these stored properties on a ghost
 ghost_set:
@@ -48,6 +49,7 @@ ghost_set:
   - _NET_WM_STRUT_PARTIAL
   - _NET_WM_ICON_GEOMETRY
   - _NET_WM_ICON
+  - __config__
   
 # Update these stored properties from properties set on a ghost
 ghost_update:
