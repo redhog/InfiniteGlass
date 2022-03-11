@@ -7,6 +7,7 @@ precision highp float;
 
 uniform ivec2 size;
 uniform vec4 root_IG_VIEW_DESKTOP_VIEW;
+uniform int IG_COLOR_TRANSFORM;
 
 in vec2 px_coord;
 
@@ -47,5 +48,12 @@ void main() {
   float v = pow(float(i), s) / pow(float(local_iter), s);
   v = 2. * abs(v - 0.5);
   
-  gl_FragColor = BACKGROUND_COLOR_TRANSFORM * vec4(v, v, v, 1.);
+  fragColor = vec4(v, v, v, 1.);
+  if (IG_COLOR_TRANSFORM == 1) {
+    fragColor = COLOR_TRANSFORM_1 * fragColor;
+  } else if (IG_COLOR_TRANSFORM == 2) { 
+    fragColor = COLOR_TRANSFORM_2 * fragColor;
+  } else if (IG_COLOR_TRANSFORM == 3) { 
+    fragColor = COLOR_TRANSFORM_3 * fragColor;
+  }
 }

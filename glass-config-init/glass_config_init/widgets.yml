@@ -1,6 +1,7 @@
 widgets:
   Zoom in:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.2 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -9,6 +10,7 @@ widgets:
     
   Zoom out:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.3 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -17,6 +19,7 @@ widgets:
 
   Zoom home:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.4 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -25,6 +28,7 @@ widgets:
 
   Group:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.5 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -33,6 +37,7 @@ widgets:
 
   Tile:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.6 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -41,6 +46,7 @@ widgets:
 
   Exit:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.7 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -49,6 +55,7 @@ widgets:
 
   Debug:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [0.01, "eq://0.8 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
       IG_CONTENT:
         type: IG_SVG
@@ -58,6 +65,7 @@ widgets:
 window-decorations:
   Save/restore:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_DECORATION: IG_DECORATION_SAVE
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.02, 0.03, 0.03]
@@ -72,6 +80,7 @@ window-decorations:
 
   Enable/disable ghosts:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_DECORATION: IG_DECORATION_GHOSTS_ENABLE
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.055, 0.03, 0.03]
@@ -86,6 +95,7 @@ window-decorations:
 
   Close:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.09, 0.03, 0.03]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
@@ -96,6 +106,7 @@ window-decorations:
 
   Maximize:
     properties:
+      IG_COLOR_TRANSFORM: 1
       IG_COORDS: [1.0, -1.0, 0.0, 0.0,
                   0.01, 0.125, 0.03, 0.03]
       IG_COORD_TYPES: ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]

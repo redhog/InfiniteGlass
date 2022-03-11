@@ -30,6 +30,8 @@ out vec4 fragColor;
 uniform sampler2D IG_CONTENT_ALT;
 uniform vec4 IG_CONTENT_ALT_transform;
 
+uniform int IG_COLOR_TRANSFORM;
+
 void main() {
   vec2 window_coord = px_coord - px_window_bottom_left;
   vec2 window_size = px_window_top_right - px_window_bottom_left;
@@ -57,6 +59,14 @@ void main() {
     }
     if (mouse_dist > DECORATION_MOUSEDIST_1) {
       fragColor.a *= 1. - (mouse_dist - DECORATION_MOUSEDIST_1) / (DECORATION_MOUSEDIST_2 - DECORATION_MOUSEDIST_1);
+    }
+
+    if (IG_COLOR_TRANSFORM == 1) {
+      fragColor = COLOR_TRANSFORM_1 * fragColor;
+    } else if (IG_COLOR_TRANSFORM == 2) { 
+      fragColor = COLOR_TRANSFORM_2 * fragColor;
+    } else if (IG_COLOR_TRANSFORM == 3) { 
+      fragColor = COLOR_TRANSFORM_3 * fragColor;
     }
   }
 }

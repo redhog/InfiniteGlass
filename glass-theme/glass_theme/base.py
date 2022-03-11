@@ -14,6 +14,7 @@ class ThemeBase(object):
             setattr(self, name, value)
         self.setup_views()
         self.setup_shaders()
+        self.setup_properties()
 
     shader_path = None
     shaders = ("DEFAULT", "DECORATION", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
@@ -87,3 +88,8 @@ class ThemeBase(object):
         self.display.root["IG_VIEW_ROOT_VIEW"] = [0.0, 0.0, 1.0, 0.0]
 
         self.display.root["IG_VIEWS"] = self.views
+
+    def setup_properties(self):
+        for name in dir(self):
+            if name.startswith("root_"):
+                self.display.root[name[len("root_"):]] = getattr(self, name)
