@@ -12,15 +12,31 @@ class ThemeBase(object):
         self.display = display
         for name, value in kw.items():
             setattr(self, name, value)
-        self.setup_views()
         self.setup_shaders()
         self.setup_properties()
 
     shader_path = None
     shaders = ("DEFAULT", "DECORATION", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
     shader_parts = ("GEOMETRY", "VERTEX", "FRAGMENT")
-    views = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
-            
+
+    root_IG_VIEW_SPLASH_LAYER = "IG_LAYER_SPLASH"
+    root_IG_VIEW_SPLASH_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_SPLASH_BACKGROUND_LAYER = "IG_LAYER_SPLASH_BACKGROUND"
+    root_IG_VIEW_SPLASH_BACKGROUND_VIEW = [0.0, 0.0, 1.0, 0.0]
+
+    root_IG_VIEW_MENU_LAYER = "IG_LAYER_MENU"
+    root_IG_VIEW_MENU_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_OVERLAY_LAYER = "IG_LAYER_OVERLAY"
+    root_IG_VIEW_OVERLAY_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_DESKTOP_LAYER = ["IG_LAYER_ISLAND", "IG_LAYER_DESKTOP"]
+    root_IG_VIEW_DESKTOP_VIEW = [0.0, 0.0, 1.0, 0.0]
+
+    root_IG_VIEW_ROOT_LAYER = "IG_LAYER_ROOT"
+    root_IG_VIEW_ROOT_VIEW = [0.0, 0.0, 1.0, 0.0]
+
+    root_IG_VIEWS = ["IG_VIEW_ROOT", "IG_VIEW_DESKTOP", "IG_VIEW_OVERLAY", "IG_VIEW_MENU"]
+
+    
     def load_shader(self, name):
         defines = ''.join(
             "#define %s %s\n" %(name[len("define_"):], getattr(self, name))
@@ -70,24 +86,6 @@ class ThemeBase(object):
             for PART in self.shader_parts:
                 self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader(self.get_shader(SHADER, PART))
         self.display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in self.shaders]
-
-    def setup_views(self):
-        self.display.root["IG_VIEW_SPLASH_LAYER"] = "IG_LAYER_SPLASH"
-        self.display.root["IG_VIEW_SPLASH_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-        self.display.root["IG_VIEW_SPLASH_BACKGROUND_LAYER"] = "IG_LAYER_SPLASH_BACKGROUND"
-        self.display.root["IG_VIEW_SPLASH_BACKGROUND_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-
-        self.display.root["IG_VIEW_MENU_LAYER"] = "IG_LAYER_MENU"
-        self.display.root["IG_VIEW_MENU_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-        self.display.root["IG_VIEW_OVERLAY_LAYER"] = "IG_LAYER_OVERLAY"
-        self.display.root["IG_VIEW_OVERLAY_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-        self.display.root["IG_VIEW_DESKTOP_LAYER"] = ["IG_LAYER_ISLAND", "IG_LAYER_DESKTOP"]
-        self.display.root["IG_VIEW_DESKTOP_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-
-        self.display.root["IG_VIEW_ROOT_LAYER"] = "IG_LAYER_ROOT"
-        self.display.root["IG_VIEW_ROOT_VIEW"] = [0.0, 0.0, 1.0, 0.0]
-
-        self.display.root["IG_VIEWS"] = self.views
 
     def setup_properties(self):
         for name in dir(self):

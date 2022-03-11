@@ -23,7 +23,7 @@ class Theme(glass_theme.base.ThemeBase):
 
     mode = "splash"
 
-    views = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
+    root_IG_VIEWS = ["IG_VIEW_SPLASH_BACKGROUND", "IG_VIEW_SPLASH"]
     shader_path = "resource://glass_theme/shaders"
     shader_ROOT = "root-fractal-julia"
     latlon = (70., 18.)
