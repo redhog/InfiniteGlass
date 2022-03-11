@@ -4,6 +4,7 @@ precision highp float;
 #include "resource://glass_theme/shaders/lib/fragment_svg.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_content.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_picking.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_color_transform.glsl"
 
 flat in ivec2 px_window_bottom_left;
 flat in ivec2 px_window_top_right;
@@ -61,12 +62,6 @@ void main() {
       fragColor.a *= 1. - (mouse_dist - DECORATION_MOUSEDIST_1) / (DECORATION_MOUSEDIST_2 - DECORATION_MOUSEDIST_1);
     }
 
-    if (IG_COLOR_TRANSFORM == 1) {
-      fragColor = COLOR_TRANSFORM_1 * fragColor;
-    } else if (IG_COLOR_TRANSFORM == 2) { 
-      fragColor = COLOR_TRANSFORM_2 * fragColor;
-    } else if (IG_COLOR_TRANSFORM == 3) { 
-      fragColor = COLOR_TRANSFORM_3 * fragColor;
-    }
+    fragColor = transform_color(fragColor, IG_COLOR_TRANSFORM, IG_COLOR_TRANSFORM_DEFAULT);
   }
 }

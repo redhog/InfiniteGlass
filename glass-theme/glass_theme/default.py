@@ -58,6 +58,9 @@ class Theme(glass_theme.base.ThemeBase):
     # 200 gives a much better picture, but is super slow in software...
     define_FRACTAL_PRECISION = 10
 
+    define_IG_COLOR_TRANSFORM_DEFAULT = 0;
+    define_IG_COLOR_TRANSFORM_BORDER_DEFAULT = 1;
+    
     define_COLOR_TRANSFORM_1 = ("transpose(mat4(" +
                                 "0.7, 0.0, 0.0, 0.3," +
                                 "0.0, 0.7, 0.0, 0.3," +

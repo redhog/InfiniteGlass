@@ -5,6 +5,8 @@ precision highp float;
    at https://www.shadertoy.com/view/sdXfzl
 */
 
+#include "resource://glass_theme/shaders/lib/fragment_color_transform.glsl"
+
 uniform ivec2 size;
 uniform vec4 root_IG_VIEW_DESKTOP_VIEW;
 uniform int IG_COLOR_TRANSFORM;
@@ -49,11 +51,5 @@ void main() {
   v = 2. * abs(v - 0.5);
   
   fragColor = vec4(v, v, v, 1.);
-  if (IG_COLOR_TRANSFORM == 1) {
-    fragColor = COLOR_TRANSFORM_1 * fragColor;
-  } else if (IG_COLOR_TRANSFORM == 2) { 
-    fragColor = COLOR_TRANSFORM_2 * fragColor;
-  } else if (IG_COLOR_TRANSFORM == 3) { 
-    fragColor = COLOR_TRANSFORM_3 * fragColor;
-  }
+  fragColor = transform_color(fragColor, IG_COLOR_TRANSFORM, IG_COLOR_TRANSFORM_DEFAULT);
 }

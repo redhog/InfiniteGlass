@@ -6,6 +6,7 @@ precision highp float;
 #include "resource://glass_theme/shaders/lib/fragment_icon.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_border.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_picking.glsl"
+#include "resource://glass_theme/shaders/lib/fragment_color_transform.glsl"
 
 flat in ivec2 px_window_bottom_left;
 flat in ivec2 px_window_top_right;
@@ -16,6 +17,7 @@ uniform ivec2 size;
 uniform int atom_IG_LAYER_DESKTOP;
 
 uniform int IG_COLOR_TRANSFORM;
+uniform int IG_COLOR_TRANSFORM_BORDER;
 
 out vec4 fragColor;
 
@@ -40,23 +42,21 @@ void main() {
     } else {
       if (scaled_window_coord.x < 0. || scaled_window_coord.x > 1. || scaled_window_coord.y < 0. || scaled_window_coord.y > 1.) {
         fragColor = get_border(window_id, window_coord, window_size);
-      } else if (!isnan(IG_CONTENT_transform[0])) {
-        fragColor = get_svg_content(scaled_window_coord);
-      } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_scale > ICON_CUTOFF_1) {
-        fragColor = get_pixmap(scaled_window_coord);
-      } else if (geometry_scale > ICON_CUTOFF_2) {
-        float scale = (geometry_scale - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
-        fragColor = scale * get_pixmap(scaled_window_coord) + (1 - scale) * get_icon(scaled_window_coord);
-      } else {
-        fragColor = get_icon(scaled_window_coord);
-      }
 
-      if (IG_COLOR_TRANSFORM == 1) {
-        fragColor = COLOR_TRANSFORM_1 * fragColor;
-      } else if (IG_COLOR_TRANSFORM == 2) { 
-        fragColor = COLOR_TRANSFORM_2 * fragColor;
-      } else if (IG_COLOR_TRANSFORM == 3) { 
-        fragColor = COLOR_TRANSFORM_3 * fragColor;
+        fragColor = transform_color(fragColor, IG_COLOR_TRANSFORM_BORDER, IG_COLOR_TRANSFORM_BORDER_DEFAULT);
+      } else {
+        if (!isnan(IG_CONTENT_transform[0])) {
+          fragColor = get_svg_content(scaled_window_coord);
+        } else if (IG_LAYER == atom_IG_LAYER_MENU || geometry_scale > ICON_CUTOFF_1) {
+          fragColor = get_pixmap(scaled_window_coord);
+        } else if (geometry_scale > ICON_CUTOFF_2) {
+          float scale = (geometry_scale - ICON_CUTOFF_2) / (ICON_CUTOFF_1 - ICON_CUTOFF_2);
+          fragColor = scale * get_pixmap(scaled_window_coord) + (1 - scale) * get_icon(scaled_window_coord);
+        } else {
+          fragColor = get_icon(scaled_window_coord);
+        }
+
+        fragColor = transform_color(fragColor, IG_COLOR_TRANSFORM, IG_COLOR_TRANSFORM_DEFAULT);
       }
     }
   }
