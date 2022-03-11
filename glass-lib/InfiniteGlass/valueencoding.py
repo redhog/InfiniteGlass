@@ -51,6 +51,9 @@ def parse_value(display, value, **context):
     if isinstance(value, tuple) or (isinstance(value, list) and len(value) == 2 and type(value[0]) != type(value[1])):
         itemtype, items, fmt = parse_value(display, value[1])
         return display.get_atom(value[0]), items, fmt
+    elif isinstance(value, dict) and len(value) == 2 and "type" in value and "value" in value:
+        itemtype, items, fmt = parse_value(display, value["value"])
+        return display.get_atom(value["type"]), items, fmt
     
     if isinstance(value, (list, array.array)):
         items = value
