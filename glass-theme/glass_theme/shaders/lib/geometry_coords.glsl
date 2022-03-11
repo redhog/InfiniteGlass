@@ -1,7 +1,7 @@
 uniform vec4 screen; // x,y,w,h in space
 uniform ivec2 size;
 
-vec2 pixelclipscreen(vec2 xy) {
+ivec2 pixelclipscreen(ivec2 xy) {
   if (xy.x < 0) xy.x = 0;
   if (xy.x >= size.x) xy.x = size.x -1;
   if (xy.y < 0) xy.y = 0;
@@ -9,7 +9,7 @@ vec2 pixelclipscreen(vec2 xy) {
   return xy;
 }
 
-vec4 pixel2glscreen(vec2 xy) {
+vec4 pixel2glscreen(ivec2 xy) {
   return transpose(mat4(
     2./size.x, 0., 0., -1.,
     0., 2./size.y, 0., -1.,

@@ -5,12 +5,12 @@ precision highp float;
 #include "resource://glass_theme/shaders/lib/fragment_content.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_picking.glsl"
 
-in vec2 px_window_bottom_left;
-in vec2 px_window_top_right;
+flat in ivec2 px_window_bottom_left;
+flat in ivec2 px_window_top_right;
 in vec2 px_coord;
 
-in vec2 px_parent_window_bottom_left;
-in vec2 px_parent_window_top_right;
+flat in ivec2 px_parent_window_bottom_left;
+flat in ivec2 px_parent_window_top_right;
 
 uniform ivec2 size;
 uniform ivec2 pointer;

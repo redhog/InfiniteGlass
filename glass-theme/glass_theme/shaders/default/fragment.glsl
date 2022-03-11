@@ -7,8 +7,8 @@ precision highp float;
 #include "resource://glass_theme/shaders/lib/fragment_border.glsl"
 #include "resource://glass_theme/shaders/lib/fragment_picking.glsl"
 
-in vec2 px_window_bottom_left;
-in vec2 px_window_top_right;
+flat in ivec2 px_window_bottom_left;
+flat in ivec2 px_window_top_right;
 in vec2 px_coord;
 in float is_edge_hint;
 
