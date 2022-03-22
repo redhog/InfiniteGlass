@@ -1,4 +1,4 @@
-#version 330 core
+#version 150 core
 precision highp float;
 
 /* This code is available as a stand-alone fractal demo

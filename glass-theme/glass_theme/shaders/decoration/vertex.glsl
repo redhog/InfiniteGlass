@@ -1,4 +1,4 @@
-#version 330 core
+#version 150 core
 
 in vec4 coords; // x,y,w,h in space 
 out vec4 window; // x,y,w,h in space

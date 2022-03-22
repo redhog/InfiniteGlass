@@ -1,4 +1,4 @@
-#version 330 core
+#version 150 core
 precision highp float;
 
 #include "resource://glass_theme/shaders/lib/fragment_svg.glsl"

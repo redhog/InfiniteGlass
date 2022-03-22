@@ -1,4 +1,4 @@
-#version 330 core
+#version 150 core
 precision highp float;
 
 uniform ivec2 size;

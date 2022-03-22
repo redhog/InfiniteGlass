@@ -1,4 +1,4 @@
-#version 330 core
+#version 150 core
 
 in vec2 IG_COASTLINE;
 out vec2 coastline;
