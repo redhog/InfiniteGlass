@@ -34,7 +34,7 @@ def is_inside_window(display, window):
             and pointer[1] >= coords[1] - coords[3]):
             return window
     except Xlib.error.BadWindow as e:
-        debug.DEBUG("get_active_window", "%s: %s" % (child.__window__(), e))
+        debug.DEBUG("is_inside_window", "%s: %s" % (window.__window__(), e))
     return False
 
 def get_active_window(display):
