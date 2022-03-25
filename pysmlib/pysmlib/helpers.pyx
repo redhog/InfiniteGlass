@@ -4,12 +4,19 @@ from pysmlib.helpers cimport *
 from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy, strlen
 
+cdef extern size_t strnlen(const char *s, size_t maxlen)
+
 cdef object smprops_to_dict(int numProps, SmProp **props):
+    cdef size_t len;
+    cdef char *s;
     propdict = {}
     for idx in range(numProps):
         values = []
         for valueidx in range(props[idx].num_vals):
-            values.append(PyBytes_FromStringAndSize(<char *> props[idx].vals[valueidx].value, props[idx].vals[valueidx].length).decode("utf-8"))
+            value = <char *> props[idx].vals[valueidx].value
+            len = props[idx].vals[valueidx].length
+            len = strnlen(value, len);
+            values.append(PyBytes_FromStringAndSize(value, len).decode("utf-8"))
         name = bytes(props[idx].name).decode("utf-8")
         type = bytes(props[idx].type).decode("utf-8")
         propdict[name] = (type, values)
