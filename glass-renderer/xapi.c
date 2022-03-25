@@ -2,6 +2,7 @@
 #include "item.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "error.h"
 #include "debug.h"
 #include <X11/extensions/XInput2.h>
@@ -100,13 +101,17 @@ int xinit() {
     return 0;
   }
 
-  on_xephyr = True; 
+  glx_rebind_pixmap = True; 
   for (int i = 0; i < nxextensions; i++) {
     if (strcmp(xextensions[i], "XFree86-VidModeExtension") == 0) {
-      on_xephyr = False;
+      glx_rebind_pixmap = False;
     }
   }
-  DEBUG("init", on_xephyr ? "Running under Xephyr / Xnest\n" : "Running on a physical display\n");
+  DEBUG("init", glx_rebind_pixmap ? "Running under Xephyr / Xnest" : "Running on a physical display\n");
+  char *res = getenv("GLASS_GLX_REBIND_PIXMAP");
+  if (res && res[0] == '1') glx_rebind_pixmap=True;
+  if (res && res[0] == '0') glx_rebind_pixmap=False;
+  DEBUG("init", glx_rebind_pixmap ? "Rebind GLX pixmap for each window modification" : "Rebind GLX pixmaps only for window resize\n");
   
   overlay = XCompositeGetOverlayWindow(display, root);
   XGetWindowAttributes(display, overlay, &overlay_attr);

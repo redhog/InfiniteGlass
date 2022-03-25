@@ -55,7 +55,7 @@ t_glx_release glXReleaseTexImageEXT;
 int damage_event, damage_error;
 int shape_event, shape_error;
 
-Bool on_xephyr;
+Bool glx_rebind_pixmap;
 
 extern void x_push_error_handler(XErrorHandler handler);
 extern void x_pop_error_handler();

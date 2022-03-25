@@ -290,7 +290,7 @@ void item_draw(Rendering *rendering) {
     
     if (!rendering->view->picking) {
       if (item->draw_cycles_left > 0) {
-        if (on_xephyr || !item->window_texture.texture_id) {
+        if (glx_rebind_pixmap || !item->window_texture.texture_id) {
           texture_from_pixmap(&item->window_texture, item->window_pixmap);
         }
         item->draw_cycles_left--;
