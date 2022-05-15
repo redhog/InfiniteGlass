@@ -42,8 +42,8 @@ void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
   glBindSampler(rendering->texture_unit, 0);
   rendering->texture_unit++;
 }
-void property_net_wm_icon_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%ld.%s=<_NET_WM_ICON icon>\n", prop->window, prop->name_str);
+void property_net_wm_icon_print(Property *prop, int indent, FILE *fp) {
+  fprintf(fp, "%s%s: !_NET_WM_ICON null\n", get_indent(indent), prop->name_str);
 }
 void property_net_wm_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];

@@ -23,13 +23,13 @@ void property_int_to_gl(Property *prop, Rendering *rendering) {
   } else {
   }
 }
-void property_int_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%ld.%s=<int>", prop->window, prop->name_str);
+void property_int_print(Property *prop, int indent, FILE *fp) {
+  fprintf(fp, "%s%s: !int [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
-    if (i > 0) fprintf(fp, ",");
+    if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%i", prop->values.dwords[i]);
   }
-  fprintf(fp, "\n");
+  fprintf(fp, "]\n");
 }
 void property_int_load_program_none(Property *prop, Rendering *rendering) {}
 void property_int_load_program_print(Property *prop, Rendering *rendering) {

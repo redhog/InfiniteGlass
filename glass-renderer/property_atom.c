@@ -22,19 +22,19 @@ void property_atom_to_gl(Property *prop, Rendering *rendering) {
   } else {
   }
 }
-void property_atom_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%ld.%s=<atom>", prop->window, prop->name_str);
+void property_atom_print(Property *prop, int indent, FILE *fp) {
+  fprintf(fp, "%s%s: !atom [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
-    if (i > 0) fprintf(fp, ",");
+    if (i > 0) fprintf(fp, ", ");
     char *name = XGetAtomName(display, (Atom) prop->values.dwords[i]);
     if (name) {
       fprintf(fp, "%s", name);
       XFree(name);
     } else {
-      fprintf(fp, "[INVALID]");
+      fprintf(fp, "INVALID: %d", prop->values.dwords[i]);
     }
   }
-  fprintf(fp, "\n");
+  fprintf(fp, "]\n");
 }
 void property_atom_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];

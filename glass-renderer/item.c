@@ -420,7 +420,10 @@ Shader *item_get_shader(Item *item) {
   if (item->prop_shader) shader = item->prop_shader->values.dwords[0];
   return shader_find(shaders, shader);
 }
-void item_print(Item *item) {
+
+
+void item_print(Item *item, int indent) {
+  char *indentstr = get_indent(indent);
   XTextProperty name_ret;
   char **names;
   int name_nr;
@@ -428,34 +431,38 @@ void item_print(Item *item) {
       & (name_ret.format == 8)
       & (XmbTextPropertyToTextList(display, &name_ret, &names, &name_nr) == Success)
       & (name_nr > 0)) {
-    printf("item(%ld / %s):%s ",
-           item->window,
+    printf("%s\"%s\":\n%s  id: %ld\n%s  mapped: %s\n",
+           indentstr,
            names[0],
-           item->is_mapped ? "" : " invisible");
+           indentstr,
+           item->window,
+           indentstr,
+           item->is_mapped ? "true" : "false");
     XFreeStringList(names);
   } else {
-    printf("item(%ld):%s ",
+    printf("%s%ld:\n%s  id: %ld\n%s  mapped: %s\n",
+           indentstr,
            item->window,
-           item->is_mapped ? "" : " invisible");
+           indentstr,
+           item->window,
+           indentstr,
+           item->is_mapped ? "true" : "false");
   }
   if (item->prop_size) {
     long width = item->prop_size->values.dwords[0];
     long height = item->prop_size->values.dwords[1];
-    printf("[%ld,%ld] @ ", width, height);
-  } else {
-    printf("[<unknown>] @ ");
+    printf("%s  size: [%ld, %ld]\n", indentstr, width, height);
   }
   if (item->prop_coords) {
     PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
-    printf("%f,%f[%f,%f]\n",
+    printf("%s  coords: [%f, %f %f,%f]\n",
+           indentstr,
            data->ccoords[0],
            data->ccoords[1],
            data->ccoords[2],
            data->ccoords[3]);
-  } else {
-    printf("<unknown>\n");
   }
-  properties_print(item->properties, stdout);
+  properties_print(item->properties, indent+2, stdout);
 }
 
 Item *item_create(Window window) {

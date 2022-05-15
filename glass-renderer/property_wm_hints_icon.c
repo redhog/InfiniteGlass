@@ -69,8 +69,8 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
     rendering->texture_unit++;
   }
 }
-void property_wm_hints_icon_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%ld.%s=<WM_HINTS icon>\n", prop->window, prop->name_str);
+void property_wm_hints_icon_print(Property *prop, int indent, FILE *fp) {
+  fprintf(fp, "%s%s: !WM_HINTS null\n", get_indent(indent), prop->name_str);
 }
 void property_wm_hints_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];

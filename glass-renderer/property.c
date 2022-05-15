@@ -62,7 +62,7 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
   
   if (DEBUG_ENABLED(prop->name_str)) {
     DEBUG(prop->name_str, "[%d]", prop->nitems);
-    property_print(prop, stderr);
+    property_print(prop, 0, stderr);
   }
 }
 
@@ -137,13 +137,17 @@ void property_draw(Property *prop, Rendering *rendering) {
   type->draw(prop, rendering);
 }
 
-void property_print(Property *prop, FILE *fp) {
+void property_print(Property *prop, int indent, FILE *fp) {
   PropertyTypeHandler *type = prop->type_handler;
   if (type && type->print) {
-    type->print(prop, fp);
+    type->print(prop, indent, fp);
   } else {
     char *type_name = XGetAtomName(display, prop->type);
-    fprintf(fp, "%ld.%s=<%s>\n", prop->window, prop->name_str, type_name);
+    if (type_name) {
+      fprintf(fp, "%s%s: !%s null\n", get_indent(indent), prop->name_str, type_name);
+    } else {
+      fprintf(fp, "%s%s: null\n", get_indent(indent), prop->name_str);
+    }
     XFree(type_name);
   }
 }
@@ -238,11 +242,11 @@ void properties_draw(Properties *properties, Rendering *rendering) {
   }
 }
 
-void properties_print(Properties *properties, FILE *fp) {
+void properties_print(Properties *properties, int indent, FILE *fp) {
   if (!properties) return;
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
-    property_print(prop, fp);
+    property_print(prop, indent, fp);
   }
 }
 

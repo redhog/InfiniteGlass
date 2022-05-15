@@ -9,13 +9,13 @@ void property_item_init(PropertyTypeHandler *prop) { prop->type = ATOM("IG_ITEM"
 void property_item_load(Property *prop) {}
 void property_item_free(Property *prop) {}
 void property_item_to_gl(Property *prop, Rendering *rendering) {}
-void property_item_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%ld.%s=<item>", prop->window, prop->name_str);
+void property_item_print(Property *prop, int indent, FILE *fp) {
+  fprintf(fp, "%s%s: !item [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
-    if (i > 0) fprintf(fp, ",");
+    if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%d", prop->values.dwords[i]);
   }
-  fprintf(fp, "\n");
+  fprintf(fp, "]\n");
 }
 void property_item_load_program(Property *prop, Rendering *rendering) {
   DEBUG("prop", "%ld[%ld].%s (item) [enabled]\n",

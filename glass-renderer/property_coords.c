@@ -154,14 +154,14 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
         data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
 }
 
-void property_coords_print(Property *prop, FILE *fp) {
+void property_coords_print(Property *prop, int indent, FILE *fp) {
   float *values = (float *) prop->data;
-  fprintf(fp, "%ld.%s=<coords>", prop->window, prop->name_str);
+  fprintf(fp, "%s%s: !coords [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
-    if (i > 0) fprintf(fp, ",");
+    if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%f", values[i]);
   }
-  fprintf(fp, "\n");
+  fprintf(fp, "]\n");
 }
 void property_coords_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];

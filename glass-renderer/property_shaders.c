@@ -30,11 +30,11 @@ void property_shaders_free(Property *prop) {
   }
 }
 
-void property_shaders_print(Property *prop, FILE *fp) {
+void property_shaders_print(Property *prop, int indent, FILE *fp) {
   if (prop->type == XA_ATOM) {
-    property_atom_print(prop, fp);
+    property_atom_print(prop, indent, fp);
   } else if (prop->type == XA_STRING) {
-    fprintf(fp, "%ld.%s=<shader program>\n", prop->window, prop->name_str);
+    fprintf(fp, "%s%s: !shader_program null\n", get_indent(indent), prop->name_str);
   }
 }
 

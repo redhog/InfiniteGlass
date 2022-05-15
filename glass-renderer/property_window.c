@@ -20,13 +20,13 @@ void property_window_to_gl(Property *prop, Rendering *rendering) {
   } else {
   }
 }
-void property_window_print(Property *prop, FILE *fp) {
-  fprintf(fp, "%ld.%s=<window>", prop->window, prop->name_str);
+void property_window_print(Property *prop, int indent, FILE *fp) {
+  fprintf(fp, "%s%s: !window [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
-    if (i > 0) fprintf(fp, ",");
+    if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%d", prop->values.dwords[i]);
   }
-  fprintf(fp, "\n");
+  fprintf(fp, "]\n");
 }
 void property_window_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];

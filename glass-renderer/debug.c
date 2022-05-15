@@ -80,4 +80,10 @@ void debug_print(FILE *fd, int dfl, const char *prefix, const char *file, const 
   fflush(fd);
 }
 
-
+char INDENT_STR[] = "                                                                ";
+char *get_indent(int chars) {
+  if (chars > sizeof(INDENT_STR) - 1) {
+    chars = sizeof(INDENT_STR) - 1;
+  }
+  return INDENT_STR + (sizeof(INDENT_STR) - 1 - chars);
+}
