@@ -8,6 +8,27 @@ import time
 import math
 import tempfile
 import Xlib.X
+import yaml
+
+class DataType(object):
+    def __init__(self, name, data):
+        self.name, self.data = name, data
+    def __repr__(self):
+        return "%s %s" % (self.name, repr(self.data))
+
+yaml.add_constructor("!atom", lambda l, n: DataType("!atom", l.construct_sequence(n)))
+yaml.add_constructor("!coords", lambda l, n: DataType("!coords", l.construct_sequence(n)))
+yaml.add_constructor("!float", lambda l, n: DataType("!float", l.construct_sequence(n)))
+yaml.add_constructor("!int", lambda l, n: DataType("!int", l.construct_sequence(n)))
+yaml.add_constructor("!_NET_WM_ICON", lambda l, n: DataType("!_NET_WM_ICON", l.construct_scalar(n)))
+yaml.add_constructor("!shader_program", lambda l, n: DataType("!shader_program", l.construct_scalar(n)))
+yaml.add_constructor("!STRING", lambda l, n: DataType("!STRING", l.construct_scalar(n)))
+yaml.add_constructor("!svg", lambda l, n: DataType("!svg", l.construct_scalar(n)))
+yaml.add_constructor("!UTF8_STRING", lambda l, n: DataType("!UTF8_STRING", l.construct_scalar(n)))
+yaml.add_constructor("!window", lambda l, n: DataType("!window", l.construct_sequence(n)))
+yaml.add_constructor("!WM_SIZE_HINTS", lambda l, n: DataType("!WM_SIZE_HINTS", l.construct_scalar(n)))
+
+
 
 class Theme(glass_theme.default.Theme):
     mode = "no_splash"
@@ -169,5 +190,6 @@ class RendererTest(unittest.TestCase):
             self.test_done = True
             with open(self.stdout_file.name) as f:
                 output = f.read()
-                assert "shaders:" in output
+                output = yaml.load(output, Loader=yaml.Loader)
+                assert "shaders" in output
                 
