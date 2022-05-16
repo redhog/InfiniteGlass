@@ -299,11 +299,14 @@ void view_print(View *v, int indent, FILE *fp) {
     fprintf(fp, "%s%s", idx == 0 ? "" : ",", XGetAtomName(display, v->layers[idx]));
   }
   fprintf(fp, "\n"); 
-  printf(" screen=%f,%f,%f,%f size=%d,%d\n",
+  fprintf(fp, "%s  screen: [%f,%f,%f,%f]\n",
+         indentstr,
          v->screen[0],
          v->screen[1],
          v->screen[2],
-         v->screen[3],
+         v->screen[3]);
+  fprintf(fp, "%s  size: [%d,%d]\n",
+         indentstr,
          v->width,
          v->height);
 }
