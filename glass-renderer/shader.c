@@ -205,7 +205,7 @@ List *shader_load_all(void) {
   if (DEBUG_ENABLED("shaders")) {
     DEBUG("shaders", "Shaders:\n");
     for (size_t idx = 0; idx < res->count; idx++) {
-      shader_print((Shader *) res->entries[idx]);
+      shader_print((Shader *) res->entries[idx], 0, stderr);
     }
   }
   
@@ -243,13 +243,15 @@ Shader *shader_find(List *shaders, Atom name) {
   return NULL;
 }
 
-void shader_print(Shader *shader) {
-  fprintf(stderr,
-          "%s:\nGeometry\n%s\n\nVertex:\n%s\n\nFragment:\n%s\n\n",
-          XGetAtomName(display, shader->name),
-          shader->geometry_src,
-          shader->vertex_src,
-          shader->fragment_src);
+void shader_print(Shader *shader, int indent, FILE *fp) {
+  char *indentstr = get_indent(indent);
+  fprintf(fp, "%s%s:\n", indentstr, XGetAtomName(display, shader->name));
+  fprintf(fp, "%s  geometry: |\n", indentstr);
+  indent_print(shader->geometry_src, indent + 4, fp);
+  fprintf(fp, "%s  vertex: |\n", indentstr);
+  indent_print(shader->vertex_src, indent + 4, fp);
+  fprintf(fp, "%s  fragment: |\n", indentstr);
+  indent_print(shader->fragment_src, indent + 4, fp);
 }
 
 void shader_reset_uniforms(Shader *shader) {

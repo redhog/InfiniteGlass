@@ -243,14 +243,15 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     printf("DEBUG LIST VIEWS END\n");
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_SHADERS")) {
-    printf("DEBUG LIST SHADERS\n");
+    printf("---\n");
+    printf("shaders:\n");
     if (views) {
       for (size_t idx = 0; idx < shaders->count; idx++) {
         Shader *shader = (Shader *) shaders->entries[idx];
-        shader_print(shader);
+        shader_print(shader, 2, stdout);
       }
     }
-    printf("DEBUG LIST SHADERS END\n");
+    printf("...\n");
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_ITEMS")) {
     printf("---\n");

@@ -10,6 +10,7 @@ extern void debug_backtrace_print(int skip, FILE *fd);
 extern int debug_enabled(const int dfl, const char * prefix, const char *file, const char *func, const char *entry);
 extern void debug_print(FILE *fd, const int dfl, const char *prefix, const char *file, const char *func, const char *entry, const char * format, ...);
 extern char *get_indent(int chars);
+extern void indent_print(char *str, int indent, FILE *fp);
 
 #define BACKTRACE(entry) { \
   if (BACKTRACE_ENABLED(entry)) { \

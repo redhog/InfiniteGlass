@@ -87,3 +87,19 @@ char *get_indent(int chars) {
   }
   return INDENT_STR + (sizeof(INDENT_STR) - 1 - chars);
 }
+
+void indent_print(char *str, int indent, FILE *fp) {
+  char *indentstr = get_indent(indent);
+  size_t linelen;
+
+  while (*str) {
+    linelen = strcspn(str, "\n");
+    if (linelen) {
+      fwrite(indentstr, indent, 1, fp); 
+      fwrite(str, linelen, 1, fp);
+    }
+    fputc('\n', fp);
+    str += linelen;
+    if (*str) str++; // skip past \n
+  }
+}
