@@ -291,11 +291,14 @@ View *view_find(List *views, Atom name) {
   return NULL;
 }
 
-void view_print(View *v) {
-  printf("%s: layers=", XGetAtomName(display, v->name));
+void view_print(View *v, int indent, FILE *fp) {
+  char *indentstr = get_indent(indent);
+  fprintf(fp, "%s%s:\n", indentstr, XGetAtomName(display, v->name));
+  fprintf(fp, "%s  layers: ", indentstr);
   for (size_t idx = 0; idx < v->nr_layers; idx++) {
-    printf("%s%s", idx == 0 ? "" : ",", XGetAtomName(display, v->layers[idx]));
-  }  
+    fprintf(fp, "%s%s", idx == 0 ? "" : ",", XGetAtomName(display, v->layers[idx]));
+  }
+  fprintf(fp, "\n"); 
   printf(" screen=%f,%f,%f,%f size=%d,%d\n",
          v->screen[0],
          v->screen[1],

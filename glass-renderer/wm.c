@@ -233,14 +233,15 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     XMapWindow(display, overlay);
     trigger_draw();
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_VIEWS")) {
-    printf("DEBUG LIST VIEWS\n");
+    printf("---\n");
+    printf("views:\n");
     if (views) {
       for (size_t idx = 0; idx < views->count; idx++) {
         View *view = (View *) views->entries[idx];
-        view_print(view);
+        view_print(view, 2, stdout);
       }
     }
-    printf("DEBUG LIST VIEWS END\n");
+    printf("...\n");
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_SHADERS")) {
     printf("---\n");

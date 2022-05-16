@@ -28,7 +28,7 @@ extern void view_free(View *view);
 extern void view_free_all(List *views);
 extern void view_update(View *view);
 extern View *view_find(List *views, Atom name);
-extern void view_print(View *view);
+extern void view_print(View *view, int indent, FILE *fp);
 
 #endif
 
