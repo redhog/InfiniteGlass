@@ -258,7 +258,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     printf("items:\n");
     for (size_t idx = 0; idx < items_all->count; idx++) {
       Item *item = (Item *) items_all->entries[idx];
-      item_print(item, 2);
+      item_print(item, 2, stdout);
     }
     printf("...\n");
     fflush(stdout);

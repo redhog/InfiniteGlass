@@ -422,7 +422,7 @@ Shader *item_get_shader(Item *item) {
 }
 
 
-void item_print(Item *item, int indent) {
+void item_print(Item *item, int indent, FILE *fp) {
   char *indentstr = get_indent(indent);
   XTextProperty name_ret;
   char **names;
@@ -431,38 +431,38 @@ void item_print(Item *item, int indent) {
       & (name_ret.format == 8)
       & (XmbTextPropertyToTextList(display, &name_ret, &names, &name_nr) == Success)
       & (name_nr > 0)) {
-    printf("%s\"%s\":\n%s  id: %ld\n%s  mapped: %s\n",
-           indentstr,
-           names[0],
-           indentstr,
-           item->window,
-           indentstr,
-           item->is_mapped ? "true" : "false");
+    fprintf(fp, "%s\"%s\":\n%s  id: %ld\n%s  mapped: %s\n",
+            indentstr,
+            names[0],
+            indentstr,
+            item->window,
+            indentstr,
+            item->is_mapped ? "true" : "false");
     XFreeStringList(names);
   } else {
-    printf("%s%ld:\n%s  id: %ld\n%s  mapped: %s\n",
-           indentstr,
-           item->window,
-           indentstr,
-           item->window,
-           indentstr,
-           item->is_mapped ? "true" : "false");
+   fprintf(fp, "%s%ld:\n%s  id: %ld\n%s  mapped: %s\n",
+            indentstr,
+            item->window,
+            indentstr,
+            item->window,
+            indentstr,
+            item->is_mapped ? "true" : "false");
   }
   if (item->prop_size) {
     long width = item->prop_size->values.dwords[0];
     long height = item->prop_size->values.dwords[1];
-    printf("%s  size: [%ld, %ld]\n", indentstr, width, height);
+    fprintf(fp, "%s  size: [%ld, %ld]\n", indentstr, width, height);
   }
   if (item->prop_coords) {
     PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
-    printf("%s  coords: [%f, %f %f,%f]\n",
-           indentstr,
-           data->ccoords[0],
-           data->ccoords[1],
-           data->ccoords[2],
-           data->ccoords[3]);
+    fprintf(fp, "%s  coords: [%f, %f %f,%f]\n",
+            indentstr,
+            data->ccoords[0],
+            data->ccoords[1],
+            data->ccoords[2],
+            data->ccoords[3]);
   }
-  properties_print(item->properties, indent+2, stdout);
+  properties_print(item->properties, indent+2, fp);
 }
 
 Item *item_create(Window window) {
