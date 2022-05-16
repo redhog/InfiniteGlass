@@ -6,6 +6,8 @@ import InfiniteGlass
 import glass_theme.default
 import time
 import math
+import tempfile
+import Xlib.X
 
 class Theme(glass_theme.default.Theme):
     mode = "no_splash"
@@ -24,7 +26,9 @@ class RendererTest(unittest.TestCase):
         cls.xserver.wait()
 
     def setUp(self):
-        self.renderer = subprocess.Popen(["build/glass-renderer"])
+        self.stdout_file = tempfile.NamedTemporaryFile(buffering=0)
+        self.stderr_file = tempfile.NamedTemporaryFile(buffering=0)
+        self.renderer = subprocess.Popen(["build/glass-renderer"], stdout=self.stdout_file, stderr=self.stderr_file)
         while True:
             try:
                 self.display = InfiniteGlass.Display()
@@ -39,6 +43,8 @@ class RendererTest(unittest.TestCase):
         self.display.flush()
         while not self.test_done:
             self.display.mainloop.do()
+        self.stdout_file.close()
+        self.stderr_file.close()
         os.kill(self.renderer.pid, signal.SIGUSR1)
         self.renderer.wait()
 
@@ -155,3 +161,13 @@ class RendererTest(unittest.TestCase):
         @self.display.mainloop.add_timeout(time.time() + 60)
         def done(timestamp):
             self.test_done = True
+
+    def test_list_shaders(self):
+        self.display.root.send(self.display.root, "IG_DEBUG_LIST_SHADERS", event_mask=Xlib.X.SubstructureNotifyMask)
+        @self.display.mainloop.add_timeout(time.time() + 1)
+        def done(timestamp):
+            self.test_done = True
+            with open(self.stdout_file.name) as f:
+                output = f.read()
+                assert "shaders:" in output
+                
