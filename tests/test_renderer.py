@@ -32,6 +32,7 @@ yaml.add_constructor("!WM_SIZE_HINTS", lambda l, n: DataType("!WM_SIZE_HINTS", l
 
 class Theme(glass_theme.default.Theme):
     mode = "no_splash"
+    root_IG_SHADER = "IG_SHADER_DEFAULT"
 
 
 class RendererTest(unittest.TestCase):

@@ -19,6 +19,8 @@ class ThemeBase(object):
     shaders = ("DEFAULT", "DECORATION", "ROOT", "SPLASH", "SPLASH_BACKGROUND")
     shader_parts = ("GEOMETRY", "VERTEX", "FRAGMENT")
 
+    root_IG_SHADER = "IG_SHADER_ROOT"
+    
     root_IG_VIEW_SPLASH_LAYER = "IG_LAYER_SPLASH"
     root_IG_VIEW_SPLASH_VIEW = [0.0, 0.0, 1.0, 0.0]
     root_IG_VIEW_SPLASH_BACKGROUND_LAYER = "IG_LAYER_SPLASH_BACKGROUND"
@@ -81,7 +83,6 @@ class ThemeBase(object):
         return part
     
     def setup_shaders(self):
-        self.display.root["IG_SHADER"] = "IG_SHADER_ROOT"
         for SHADER in self.shaders:
             for PART in self.shader_parts:
                 self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader(self.get_shader(SHADER, PART))
