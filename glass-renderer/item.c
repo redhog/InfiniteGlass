@@ -288,7 +288,7 @@ void item_draw(Rendering *rendering) {
     Shader *shader = rendering->shader;
 
     
-    if (!rendering->view->picking) {
+    if (!rendering->picking) {
       if (item->draw_cycles_left > 0) {
         if (glx_rebind_pixmap || !item->window_texture.texture_id) {
           texture_from_pixmap(&item->window_texture, item->window_pixmap);
@@ -315,7 +315,7 @@ void item_draw(Rendering *rendering) {
     properties_to_gl(rendering->item->properties, "", rendering);
     GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
     
-    glUniform1i(shader->picking_mode_attr, rendering->view->picking);
+    glUniform1i(shader->picking_mode_attr, rendering->picking);
     glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
     glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
     if (rendering->item->geom) {
@@ -357,7 +357,7 @@ void item_draw(Rendering *rendering) {
                    item->window, rendering->shader->name_str,
                    XGetAtomName(display, prop_draw_type), rendering->array_length);
 
-    if (!rendering->view->picking) {
+    if (!rendering->picking) {
       XErrorEvent error;
       x_try();
       XDamageSubtract(display, item->damage, None, None);

@@ -178,7 +178,7 @@ void property_svg_free(Property *prop) {
 }
 
 void property_svg_to_gl(Property *prop, Rendering *rendering) {
-  if (rendering->view->picking) return;
+  if (rendering->picking) return;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   SvgPropertyProgramData *program_data = (SvgPropertyProgramData *) prop_cache->data;

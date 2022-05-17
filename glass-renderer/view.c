@@ -58,11 +58,10 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
   *screeny = outvec[1];
 }
 
-void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
-  Rendering rendering;
-  rendering.shader = NULL;
-  rendering.view = view;
-  rendering.array_length = 1;
+void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
+  View *view = rendering->view;
+  rendering->shader = NULL;
+  rendering->array_length = 1;
   
   List *to_delete = NULL;
   if (!items) return;
@@ -80,9 +79,9 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
    }
     
     try();
-    rendering.parent_item = NULL;
-    rendering.item = item;
-    item_draw(&rendering);
+    rendering->parent_item = NULL;
+    rendering->item = item;
+    item_draw(rendering);
     XErrorEvent e;
     if (!catch(&e)) {
       if (   (   e.error_code == BadWindow
@@ -103,27 +102,29 @@ void view_abstract_draw(View *view, List *items, ItemFilter *filter) {
   }
 }
 
-void view_draw(GLint fb, View *view, List *items, ItemFilter *filter) {
+void view_draw(Rendering *rendering, GLint fb, List *items, ItemFilter *filter) {
+  View *view = rendering->view;
   GL_CHECK_ERROR("draw0", "%s", XGetAtomName(display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glEnablei(GL_BLEND, 0);
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
   GL_CHECK_ERROR("draw1", "%s", XGetAtomName(display, view->name));
-  view->picking = debug_picking;
-  view_abstract_draw(view, items, filter);
+  rendering->picking = debug_picking;
+  view_abstract_draw(rendering, items, filter);
   GL_CHECK_ERROR("draw2", "%s", XGetAtomName(display, view->name));
 }
 
-void view_draw_picking(GLint fb, View *view, List *items, ItemFilter *filter) {
+void view_draw_picking(Rendering *rendering, GLint fb, List *items, ItemFilter *filter) {
+  View *view = rendering->view;
   GL_CHECK_ERROR("view_draw_picking1", "%s", XGetAtomName(display, view->name));
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
 
   glEnablei(GL_BLEND, 0);
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
-  view->picking = 1;
-  view_abstract_draw(view, items, filter);
+  rendering->picking = 1;
+  view_abstract_draw(rendering, items, filter);
   GL_CHECK_ERROR("view_draw_picking2", "%s", XGetAtomName(display, view->name));
 }
   
@@ -218,8 +219,7 @@ View *view_load(Atom name) {
   view->attr_size = atom_append(display, name, "_SIZE");
   view_load_size(view);
   view_load_layer(view);
-  view_load_screen(view);
-  
+  view_load_screen(view);  
   return view;
 }
 

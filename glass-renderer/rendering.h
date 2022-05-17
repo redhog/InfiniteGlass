@@ -27,6 +27,12 @@ typedef struct {
  size_t program_cache_idx;
  GLuint texture_unit;
  size_t array_length;
+
+ // FIXME: These better fit in Rendering, but that would require
+ // rewriting the view_draw api...
+ int picking;
+ Bool print;
+ int indent;
 } Rendering;
 
 #endif

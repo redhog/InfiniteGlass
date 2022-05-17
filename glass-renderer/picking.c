@@ -42,6 +42,9 @@ int init_picking() {
 }
 
 void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
+  Rendering rendering;
+  rendering.picking = True;
+  rendering.print = False;
   if (!views || !views->entries) {
     *winy = *winx = 0;
     *item = NULL;
@@ -58,7 +61,8 @@ void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
     View *v = (View *) views->entries[idx];
     for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
       current_layer = v->layers[layer_idx];
-      view_draw_picking(picking_fb, v, items_all, &filter_by_layer);
+      rendering.view = v;
+      view_draw_picking(&rendering, picking_fb, items_all, &filter_by_layer);
     }
   }
   glFlush();

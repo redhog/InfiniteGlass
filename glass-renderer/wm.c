@@ -52,6 +52,10 @@ Bool filter_by_layer(Item *item) {
 }
 
 void draw() {
+  Rendering rendering;
+  rendering.picking = False;
+  rendering.print = False;
+  
   draw_fps_start();
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDisable(GL_SCISSOR_TEST);
@@ -62,7 +66,8 @@ void draw() {
       View *v = (View *) views->entries[idx];
       for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
         current_layer = v->layers[layer_idx];
-        view_draw(0, v, items_all, &filter_by_layer);
+        rendering.view = v;
+        view_draw(&rendering, 0, items_all, &filter_by_layer);
       }
     }
   }

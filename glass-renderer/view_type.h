@@ -16,7 +16,6 @@ typedef struct {
   float _screen[4];
   int width;
   int height;
-  int picking;
 } View;
 
 #endif

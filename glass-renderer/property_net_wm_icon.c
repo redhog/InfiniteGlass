@@ -28,7 +28,7 @@ void property_net_wm_icon_free(Property *prop) {
   free(prop->data);
 }
 void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
-  if (rendering->view->picking) return;
+  if (rendering->picking) return;
 
   NetWmIconPropertyData *data = (NetWmIconPropertyData *) prop->data;
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
