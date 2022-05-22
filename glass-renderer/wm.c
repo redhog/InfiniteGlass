@@ -51,11 +51,11 @@ Bool filter_by_layer(Item *item) {
   return item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == current_layer;
 }
 
-void draw() {
+void draw(Bool print) {
   Rendering rendering;
-  rendering.picking = False;
-  rendering.print = False;
-  
+  rendering.picking = debug_picking;
+  rendering.print = print;
+
   draw_fps_start();
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDisable(GL_SCISSOR_TEST);
@@ -67,6 +67,7 @@ void draw() {
       for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
         current_layer = v->layers[layer_idx];
         rendering.view = v;
+        rendering.indent = 2;
         view_draw(&rendering, 0, items_all, &filter_by_layer);
       }
     }
@@ -84,7 +85,7 @@ void cycle_draw() {
     drawn_this_cycle = False;
     return;
   }
-  draw();
+  draw(False);
   drawn_this_cycle = True;
   draw_cycles_left--;
 }
@@ -92,7 +93,7 @@ void cycle_draw() {
 void trigger_draw() {
   draw_cycles_left = AUTOMATIC_REDRAWS;
   if (!drawn_this_cycle) {
-    draw();
+    draw(False);
     drawn_this_cycle = True;
   }
 }
@@ -237,6 +238,12 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_SHOW_OVERLAY")) {
     XMapWindow(display, overlay);
     trigger_draw();
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_RENDER")) {
+    printf("---\n");
+    printf("rendering-views:\n");
+    draw(True);
+    printf("...\n");
+    fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_VIEWS")) {
     printf("---\n");
     printf("views:\n");

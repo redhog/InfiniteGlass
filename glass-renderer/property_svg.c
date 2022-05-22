@@ -202,6 +202,10 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   glBindTexture(GL_TEXTURE_2D, data->texture.texture_id);
   glBindSampler(rendering->texture_unit, 0);
   rendering->texture_unit++;
+
+  if (rendering->print) {
+    printf("%s%s: !svg [%f, %f, %f, %f]\n", get_indent(rendering->indent), prop->name_str, transform[0], transform[1], transform[2], transform[3]);
+  }
   
   GL_CHECK_ERROR("property_svg_to_gl2", "%ld", prop->window);
 }

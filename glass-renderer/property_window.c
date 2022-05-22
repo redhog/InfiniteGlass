@@ -11,11 +11,22 @@ void property_window_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
   if (prop_cache->is_uniform) {
+    #define D(idx) prop->values.dwords[idx]
+   
+    if (rendering->print) {
+      switch (prop->nitems) {
+        case 1: printf("%s%s: %d\n", get_indent(rendering->indent), prop->name_str, D(0)); break;
+        case 2: printf("%s%s: [%d, %d]\n", get_indent(rendering->indent), prop->name_str, D(0), D(1)); break;
+        case 3: printf("%s%s: [%d, %d, %d]\n", get_indent(rendering->indent), prop->name_str, D(0), D(1), D(2)); break;
+        case 4: printf("%s%s: [%d, %d, %d, %d]\n", get_indent(rendering->indent), prop->name_str, D(0), D(1), D(2), D(3)); break;
+      }
+    }
+   
     switch (prop->nitems) {
-      case 1: glUniform1i(prop_cache->location, prop->values.dwords[0]); break;
-      case 2: glUniform2i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1]); break;
-      case 3: glUniform3i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1], prop->values.dwords[2]); break;
-      case 4: glUniform4i(prop_cache->location, prop->values.dwords[0], prop->values.dwords[1], prop->values.dwords[2], prop->values.dwords[3]); break;
+      case 1: glUniform1i(prop_cache->location, D(0)); break;
+      case 2: glUniform2i(prop_cache->location, D(0), D(1)); break;
+      case 3: glUniform3i(prop_cache->location, D(0), D(1), D(2)); break;
+      case 4: glUniform4i(prop_cache->location, D(0), D(1), D(2), D(3)); break;
     }
   } else {
   }

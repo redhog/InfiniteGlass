@@ -31,8 +31,10 @@ void property_item_draw(Property *prop, Rendering *rendering) {
   if (!rendering->parent_item->prop_layer) return;
   if (!rendering->parent_item->prop_layer->values.dwords) return;
   if (rendering->item->prop_item_layer->values.dwords[0] != rendering->parent_item->prop_layer->values.dwords[0]) return;
-  
+
+  int indent = rendering->indent;
   item_draw(rendering);
+  rendering->indent = indent;
 }
 
 PropertyTypeHandler property_item = {

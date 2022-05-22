@@ -213,6 +213,7 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   rendering->properties = properties;
   rendering->properties_prefix = prefix;
   properties_set_program_cache_idx(rendering);
+  int indent = rendering->indent;
   
   GL_CHECK_ERROR("properties_to_gl", "%ld", properties->window);
   Property **entries = (Property **) properties->properties->entries;
@@ -224,6 +225,7 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
     Property *prop = entries[i];
     property_to_gl(prop, rendering);
     GL_CHECK_ERROR(prop->name_str, "%ld", prop->window);
+    rendering->indent = indent;
   }
 }
 

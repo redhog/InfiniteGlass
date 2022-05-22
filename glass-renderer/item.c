@@ -17,11 +17,12 @@
 
 List *items_all = NULL;
 Item *root_item = NULL;
- 
+
+void item_print_meta(Item *item, int indent, FILE *fp);
+
 Bool init_items() {
   return True;
 }
-
 
 void item_constructor(Item *item) {
   item->window = None;
@@ -270,15 +271,37 @@ void item_draw_subs(Rendering *rendering) {
   rendering->parent_item = item;
 
   rendering->widget_id = 0; // widget_id = 0 is already used for "this is no widget"
+
+  if (rendering->print) {
+    printf("%ssubs:\n", get_indent(rendering->indent));
+  }
+
+  int indent = rendering->indent;
+  rendering->indent += 2;
+  
   properties_draw(item->properties, rendering);
   if (item != root_item) properties_draw(root_item->properties, rendering);
 
   rendering->parent_item = parent_item;
   rendering->item = item;
+  rendering->indent = indent;
 }
+
 void item_draw(Rendering *rendering) {
+  if (rendering->print) {
+    item_print_meta(rendering->item, rendering->indent, stdout);
+    rendering->indent += 2;
+    /*
+    if (rendering->parent_item) {
+      printf("%sparent: %s\n", get_indent(rendering->indent));
+      item_print_meta(rendering->item, rendering->indent+2, stdout);
+    }
+    */
+  }
+  
   rendering->texture_unit = 0;
   rendering->shader = item_get_shader(rendering->item);
+  if (rendering->print) printf("%sshader: %s\n", get_indent(rendering->indent), rendering->shader ? rendering->shader->name_str : "null");
   if (!rendering->shader) return;
   glUseProgram(rendering->shader->program);
   shader_reset_uniforms(rendering->shader);
@@ -422,7 +445,7 @@ Shader *item_get_shader(Item *item) {
 }
 
 
-void item_print(Item *item, int indent, FILE *fp) {
+void item_print_meta(Item *item, int indent, FILE *fp) {
   char *indentstr = get_indent(indent);
   XTextProperty name_ret;
   char **names;
@@ -462,6 +485,10 @@ void item_print(Item *item, int indent, FILE *fp) {
             data->ccoords[2],
             data->ccoords[3]);
   }
+}
+
+void item_print(Item *item, int indent, FILE *fp) {
+  item_print_meta(item, indent, fp);
   properties_print(item->properties, indent+2, fp);
 }
 

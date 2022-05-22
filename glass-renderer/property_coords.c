@@ -148,6 +148,12 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
 void property_coords_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   PropertyCoords *data = (PropertyCoords *) prop->data;
+
+  if (rendering->print) {
+    printf("%s%s: [%f, %f, %f, %f]\n",
+           get_indent(rendering->indent), prop->name_str, data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
+  }
+  
   glUniform4f(prop_cache->location, data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
   DEBUG("prop", "%ld[%s@%ld].%s (coords) = %f,%f,%f,%f\n",
         prop->window, prop_cache->shader->name_str, prop_cache->program, prop_cache->name_str,

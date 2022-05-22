@@ -62,6 +62,9 @@ void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
   View *view = rendering->view;
   rendering->shader = NULL;
   rendering->array_length = 1;
+  int indent = rendering->indent;
+  
+  if (rendering->print) view_print(rendering->view, indent, stdout);
   
   List *to_delete = NULL;
   if (!items) return;
@@ -81,6 +84,7 @@ void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
     try();
     rendering->parent_item = NULL;
     rendering->item = item;
+    rendering->indent = indent + 2;
     item_draw(rendering);
     XErrorEvent e;
     if (!catch(&e)) {
@@ -110,7 +114,6 @@ void view_draw(Rendering *rendering, GLint fb, List *items, ItemFilter *filter) 
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
   GL_CHECK_ERROR("draw1", "%s", XGetAtomName(display, view->name));
-  rendering->picking = debug_picking;
   view_abstract_draw(rendering, items, filter);
   GL_CHECK_ERROR("draw2", "%s", XGetAtomName(display, view->name));
 }

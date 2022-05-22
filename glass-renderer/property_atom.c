@@ -13,6 +13,16 @@ void property_atom_to_gl(Property *prop, Rendering *rendering) {
   if (prop_cache->is_uniform) {
     uint32_t *data = prop->values.dwords;
     #define D(idx) ((idx < prop->nitems) ? data[idx] : -1)
+
+    if (rendering->print) {
+      switch (prop_cache->type) {
+        case GL_INT: printf("%s%s: %d\n", get_indent(rendering->indent), prop->name_str, D(0)); break;
+        case GL_INT_VEC2: printf("%s%s: [%d, %d]\n", get_indent(rendering->indent), prop->name_str, D(0), D(1)); break;
+        case GL_INT_VEC3: printf("%s%s: [%d, %d, %d]\n", get_indent(rendering->indent), prop->name_str, D(0), D(1), D(2)); break;
+        case GL_INT_VEC4: printf("%s%s: [%d, %d, %d, %d]\n", get_indent(rendering->indent), prop->name_str, D(0), D(1), D(2), D(3)); break;
+      }
+    }
+    
     switch (prop_cache->type) {
       case GL_INT: glUniform1i(prop_cache->location, D(0)); break;
       case GL_INT_VEC2: glUniform2i(prop_cache->location, D(0), D(1)); break;
