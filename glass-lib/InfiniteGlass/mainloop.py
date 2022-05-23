@@ -54,7 +54,7 @@ class MainLoop(object):
         if fd not in self.handlers: return
         del self.handlers[fd]
 
-    def do(self):
+    def do(self, catch_errors=True):
         keys = self.handlers.keys()
         rlist, wlist, xlist = select.select(keys, [], [], 0.01)
         timestamp = time.time()
@@ -63,6 +63,8 @@ class MainLoop(object):
                 try:
                     self.timeouts.pop(timeout)(timestamp)
                 except Exception as e:
+                    if not catch_errors:
+                        raise
                     sys.stderr.write("%s\n" % e)
                     traceback.print_exc(file=sys.stderr)
                     sys.stderr.flush()
@@ -70,6 +72,8 @@ class MainLoop(object):
             try:
                 self.handlers[fd](fd)
             except Exception as e:
+                if not catch_errors:
+                    raise
                 sys.stderr.write("%s\n" % e)
                 traceback.print_exc(file=sys.stderr)
                 sys.stderr.flush()
@@ -77,6 +81,8 @@ class MainLoop(object):
             try:
                 handler()
             except Exception as e:
+                if not catch_errors:
+                    raise
                 sys.stderr.write("%s\n" % e)
                 traceback.print_exc(file=sys.stderr)
                 sys.stderr.flush()

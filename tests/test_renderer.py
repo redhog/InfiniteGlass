@@ -23,7 +23,7 @@ yaml.add_constructor("!int", lambda l, n: DataType("!int", l.construct_sequence(
 yaml.add_constructor("!_NET_WM_ICON", lambda l, n: DataType("!_NET_WM_ICON", l.construct_scalar(n)))
 yaml.add_constructor("!shader_program", lambda l, n: DataType("!shader_program", l.construct_scalar(n)))
 yaml.add_constructor("!STRING", lambda l, n: DataType("!STRING", l.construct_scalar(n)))
-yaml.add_constructor("!svg", lambda l, n: DataType("!svg", l.construct_scalar(n)))
+yaml.add_constructor("!svg", lambda l, n: DataType("!svg", l.construct_sequence(n)))
 yaml.add_constructor("!UTF8_STRING", lambda l, n: DataType("!UTF8_STRING", l.construct_scalar(n)))
 yaml.add_constructor("!window", lambda l, n: DataType("!window", l.construct_sequence(n)))
 yaml.add_constructor("!WM_SIZE_HINTS", lambda l, n: DataType("!WM_SIZE_HINTS", l.construct_scalar(n)))
@@ -64,7 +64,7 @@ class RendererTest(unittest.TestCase):
     def tearDown(self):
         self.display.flush()
         while not self.test_done:
-            self.display.mainloop.do()
+            self.display.mainloop.do(False)
         self.stdout_file.close()
         self.stderr_file.close()
         os.kill(self.renderer.pid, signal.SIGUSR1)
@@ -162,27 +162,43 @@ class RendererTest(unittest.TestCase):
             self.display.root["IG_VIEW_DESKTOP_VIEW"] = [math.cos(v), math.sin(v), 4.0, 0.0]
             self.display.flush()
 
+
     def test_subwindow(self):
         self.subwindow = self.display.root.create_window(map=False, width=1024, height=1024)
-        self.subwindow["IG_LAYER"] = "IG_NONE"
+        self.subwindow["IG_LAYER"] = "IG_LAYER_NONE"
+        self.subwindow["IG_ITEM_LAYER"] = "IG_LAYER_DESKTOP"
+        self.subwindow["IG_SHADER"] = "IG_SHADER_DECORATION"
         self.subwindow["IG_CONTENT"] = ("IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-dollar.svg")
         self.subwindow["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
         self.subwindow["IG_COORDS"] = [1.0, -1.0, 0.0, 0.0,
                                        0.01, 0.03, 0.03, 0.03]
         self.subwindow["IG_COORD_TYPES"] = ["IG_COORD_PARENT_BASE", "IG_COORD_SCREEN_X"]
+        self.subwindow["WM_NAME"] = b"Subwindow"
         self.subwindow.map()
+        self.display.root["IG_WINDOW_DECORATION_TEST1"] = ("IG_ITEM", self.subwindow)
         
         self.window = self.display.root.create_window(map=False, width=1024, height=1024)
         self.window["IG_COORDS"] = [0.25, 0.5, 0.5, 0.4]
         self.window["IG_CONTENT"] = ("IG_SVG", "@resource://glass_widgets/fontawesome-free-5.9.0-desktop/svgs/solid/search-minus.svg")
+        self.window["WM_NAME"] = b"Main"
         self.window.map()
 
-        self.display.root["IG_SUB1"] = ("IG_ITEM", self.subwindow)
         self.display.flush()
         
-        @self.display.mainloop.add_timeout(time.time() + 60)
+        @self.display.mainloop.add_timeout(time.time() + 5)
         def done(timestamp):
-            self.test_done = True
+            self.display.root.send(self.display.root, "IG_DEBUG_RENDER", event_mask=Xlib.X.SubstructureNotifyMask)
+            @self.display.mainloop.add_timeout(time.time() + 1)
+            def done(timestamp):
+                self.test_done = True
+                with open(self.stdout_file.name) as f:
+                    output = f.read()
+                    output = yaml.load(output, Loader=yaml.Loader)
+
+                    self.assertEqual(output["rendering-views"]["IG_VIEW_DESKTOP"]["Main"]["coords"],
+                                     [0.250000, 0.500000, 0.500000, 0.400000])
+                    self.assertEqual(output["rendering-views"]["IG_VIEW_DESKTOP"]["Main"]["subs"]["Subwindow"]["coords"],
+                                     [0.760000, 0.130000, 0.030000, 0.030000])
 
     def test_list_shaders(self):
         self.display.root.send(self.display.root, "IG_DEBUG_LIST_SHADERS", event_mask=Xlib.X.SubstructureNotifyMask)
@@ -193,4 +209,3 @@ class RendererTest(unittest.TestCase):
                 output = f.read()
                 output = yaml.load(output, Loader=yaml.Loader)
                 assert "shaders" in output
-                
