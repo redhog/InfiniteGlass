@@ -478,7 +478,7 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
   }
   if (item->prop_coords) {
     PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
-    fprintf(fp, "%s  coords: [%f, %f %f,%f]\n",
+    fprintf(fp, "%s  coords: [%f, %f, %f, %f]\n",
             indentstr,
             data->ccoords[0],
             data->ccoords[1],
