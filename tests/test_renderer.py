@@ -38,7 +38,10 @@ class Theme(glass_theme.default.Theme):
 class RendererTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.xserver = subprocess.Popen(["Xephyr", ":100", "-ac", "-screen", "1280x768", "-host-cursor"])
+        if os.environ.get("IG_HEADLESS", "1") == "1":
+            cls.xserver = subprocess.Popen(["Xvfb", ":100", "-ac", "-screen", "0", "1280x768x24"])
+        else:
+            cls.xserver = subprocess.Popen(["Xephyr", ":100", "-ac", "-screen", "1280x768", "-host-cursor"])
         os.environ["DISPLAY"] = ":100"
         os.environ["GLASS_EVENTLOG_renderer"] = "1"
     
