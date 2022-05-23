@@ -1,0 +1,13 @@
+# Rendering bugs
+
+## Window updates
+
+Some graphics drivers require rebinding a window pixmap (manually
+update) for each change of window content, while other drivers don't.
+While InfiniteGlass tries to auto-detect this, it sometimes fails. To
+override the auto-detection, you can set the following environment
+variable.
+
+`GLASS_GLX_REBIND_PIXMAP=1`
+
+
