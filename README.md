@@ -1,5 +1,6 @@
 # About
 
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/redhog/InfiniteGlass/Build%20&%20test?style=plastic)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/redhog/InfiniteGlass?style=plastic)](https://github.com/redhog/InfiniteGlass/releases/latest)
 ![GitHub All Releases](https://img.shields.io/github/downloads/redhog/InfiniteGlass/total?style=plastic)
 [![GitHub license](https://img.shields.io/github/license/redhog/InfiniteGlass?style=plastic)](https://github.com/redhog/InfiniteGlass/blob/master/LICENSE)
