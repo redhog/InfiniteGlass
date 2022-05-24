@@ -23,7 +23,6 @@ libxcb-ewmh-dev
 libxcb-glx0-dev
 libxcb-icccm4-dev
 libxcb-image0-dev
-libxcb-imdkit-dev
 libxcb-keysyms1-dev
 libxcb-present-dev
 libxcb-randr0-dev
