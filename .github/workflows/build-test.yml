@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: dependencies
-      run: apt install $(cat dependencies.txt)
+      run: sudo apt install -y $(cat dependencies.txt)
     - name: make
       run: make all
     - name: nose
