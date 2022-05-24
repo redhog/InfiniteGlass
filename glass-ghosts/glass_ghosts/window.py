@@ -34,7 +34,9 @@ class Window(object):
             except:
                 pass
             else:
-                self.match()
+                # Make sure we don't match on a ghost before the renderer has had 
+                if "WM_STATE" in self.properties:
+                    self.match()
             InfiniteGlass.DEBUG("setprop", "%s.%s=%s\n" % (self.id, name, self.properties.get(name)))
         self.PropertyNotify = PropertyNotify
 

@@ -96,6 +96,10 @@ void item_menu_update_space_pos_from_window(Item *item, int x, int y, int width,
 
   long arr[2] = {width, height};
   XChangeProperty(display, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+
+  int value = 1;
+  xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("WM_STATE"), XA_INTEGER, 32, 1, (void *) &value);    
+  
   item_update((Item *) item);
   trigger_draw();
 }
@@ -232,8 +236,6 @@ void item_initialize_attr_load(Item *item, xcb_get_window_attributes_reply_t *re
     item->is_mapped = True;
     item_initialize_draw_type(item);
   } else {
-    int value = 1;
-    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("WM_STATE"), XA_INTEGER, 32, 1, (void *) &value);    
     item_initialize_layer(item);
   }
 }
