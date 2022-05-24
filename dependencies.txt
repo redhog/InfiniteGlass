@@ -1,8 +1,6 @@
 build-essential
-chromium-browser
 curl
 dbus-x11
-emacs
 git
 gobject-introspection
 libcairo2
@@ -71,3 +69,4 @@ xinit
 xserver-xephyr
 xterm
 zsh
+xfonts-base

@@ -1,0 +1,24 @@
+name: Build & test
+
+on:
+  push:
+    branches: [ master ]
+  
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: dependencies
+      run: sudo apt install -y $(cat dependencies.txt)
+    - name: make
+      run: make all
+    - name: nose
+      run: source build/env/bin/activate; pip install nose2
+    - name: make check
+      run: source build/env/bin/activate; nose2 -s tests -v
