@@ -21,6 +21,31 @@ def window(ctx, **kw):
     pass
 
 @window.command()
+@click.pass_context
+def list(ctx):
+    with InfiniteGlass.Display() as display:
+        for window in display.root.query_tree().children:
+            if window.get_attributes().map_state != Xlib.X.IsViewable: continue
+            child = window.find_client_window()
+            if child is None: continue
+
+            coords = child.get("IG_COORDS", None)
+            size = child.get("IG_SIZE", None)
+            name = child.get("WM_NAME", None)
+            cls = child.get("WM_CLASS", None)
+            layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
+
+            name = name and name.decode("utf-8"),
+            cls = cls and [c.decode("utf-8") for c in cls]
+
+            print("%s:%s%s%s in %s" % (
+                child,
+                (" (%s)" % ",".join(cls)) if cls else "",
+                (" @ %f,%f,%f,%f" % coords if coords else ""),
+                (" [%d,%d]" % size if size else ""),
+                layer))
+
+@window.command()
 @click.option('--window', default="click")
 @click.option('--mask', default="StructureNotifyMask")
 @click.argument("event", nargs=-1)
