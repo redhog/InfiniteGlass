@@ -15,6 +15,7 @@ desktop, infinite zoom and infinite virtual window pixel resolution.
 [![Screenshot](docs/images/InfiniteGlass-2019-11-09-2.gif)](https://www.youtube.com/watch?v=E8f2KwgvxK4)
 
 Videos:
+* [2022 05 25 1](https://www.youtube.com/watch?v=qf6ZVaHSHyI)
 * [2020 02 18 1](https://www.youtube.com/watch?v=r5XskSML7Ag)
 * [2020 01 27 1](https://www.youtube.com/watch?v=vbt7qtwiLiM)
 * [2020 01 21 1](https://www.youtube.com/watch?v=d6oQAOMXReU)
@@ -51,7 +52,9 @@ Features:
 
 Tested on: Ubuntu-MATE 18.04 LTS Bionic Beaver.
 
-Requires OpenGL version 3.0 or higher with support for GLSL 3.30, and pretty much all modern X extensions, including their development headers.
+Requires OpenGL version 3.0 or higher with support for GLSL 3.30, and pretty much all modern X extensions, including their development headers. To install all dependencies:
+
+    sudo apt install -y $(cat /dependencies.txt)
 
 To install InfiniteGlass on your machine
 
@@ -83,7 +86,7 @@ Whichever method for running it you use, the first time you run the window manag
 
     make all
     pip install nose2
-    nose2 -s tests
+    nose2 -s tests -v
 
 # License
 
