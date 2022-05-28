@@ -5,8 +5,6 @@
 #include "xapi.h"
 
 void property_atom_init(PropertyTypeHandler *prop) { prop->type = XA_ATOM; prop->name = AnyPropertyType; }
-void property_atom_load(Property *prop) {}
-void property_atom_free(Property *prop) {}
 void property_atom_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
@@ -56,8 +54,6 @@ void property_atom_free_program(Property *prop, size_t index) {
 }
 PropertyTypeHandler property_atom = {
   .init=&property_atom_init,
-  .load=&property_atom_load,
-  .free=&property_atom_free,
   .to_gl=&property_atom_to_gl,
   .print=&property_atom_print,
   .load_program=&property_atom_load_program,
