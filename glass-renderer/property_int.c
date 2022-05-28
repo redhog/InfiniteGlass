@@ -5,8 +5,6 @@
 #include "glapi.h"
 
 void property_int_init(PropertyTypeHandler *prop) { prop->type = XA_INTEGER; prop->name = AnyPropertyType; }
-void property_int_load(Property *prop) {}
-void property_int_free(Property *prop) {}
 void property_int_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   if (prop_cache->location == -1) return;
@@ -60,8 +58,6 @@ void property_int_free_program(Property *prop, size_t index) {
 }
 PropertyTypeHandler property_int = {
   .init=&property_int_init,
-  .load=&property_int_load,
-  .free=&property_int_free,
   .to_gl=&property_int_to_gl,
   .print=&property_int_print,
   .load_program=&property_int_load_program,

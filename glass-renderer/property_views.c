@@ -14,13 +14,6 @@ int property_views_match(Property *prop) {
 }
  
 void property_views_load(Property *prop) {
-  if (prop->type == XA_ATOM) {
-    property_atom_load(prop);
-  } else if (prop->type == XA_FLOAT) {
-  } else if (prop->type == XA_INTEGER) {
-    property_int_load(prop);
-  }
-
   if (prop->window != root) return; // This shouldn't happen, right?
   if (prop->name == ATOM("IG_VIEWS")) {
     view_free_all(views);
@@ -40,12 +33,6 @@ void property_views_load(Property *prop) {
 }
 
 void property_views_free(Property *prop) {
-  if (prop->type == XA_ATOM) {
-    property_atom_free(prop);
-  } else if (prop->type == XA_FLOAT) {
-  } else if (prop->type == XA_INTEGER) {
-    property_int_free(prop);
-  }
 }
 
 void property_views_print(Property *prop, int indent, FILE *fp) {

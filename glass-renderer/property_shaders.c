@@ -12,9 +12,6 @@ int property_shaders_match(Property *prop) {
 }
  
 void property_shaders_load(Property *prop) {
-  if (prop->type == XA_ATOM) {
-    property_atom_load(prop);
-  }
   if (prop->window != root) return; // This shouldn't happen, right?
 
   // This could potentially be optimized to only load changed shaders...
@@ -25,9 +22,6 @@ void property_shaders_load(Property *prop) {
 }
 
 void property_shaders_free(Property *prop) {
-  if (prop->type == XA_ATOM) {
-    property_atom_free(prop);
-  }
 }
 
 void property_shaders_print(Property *prop, int indent, FILE *fp) {

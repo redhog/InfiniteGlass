@@ -44,8 +44,6 @@ void property_size_load(Property *prop) {
 
 PropertyTypeHandler property_size = {
   .init=&property_size_init,
-  .load=&property_size_load,
-  .free=&property_int_free,
   .to_gl=&property_int_to_gl,
   .print=&property_int_print,
   .load_program=&property_int_load_program,
