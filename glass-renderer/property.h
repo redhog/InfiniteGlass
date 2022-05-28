@@ -76,7 +76,7 @@ struct PropertiesStruct {
 };
 
 extern Properties *properties_load(Window window);
-extern void properties_update(Properties *properties, Atom name);
+extern Property *properties_update(Properties *properties, Atom name);
 extern void properties_free(Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_draw(Properties *properties, Rendering *rendering);

@@ -113,7 +113,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
   int height                = item->geom->height;
   DEBUG("window.spacepos", "Spacepos for %ld is %d,%d [%d,%d]\n", item->window, item->x, item->y, width, height);
 
-  Property *existing = properties_find(item->properties, ATOM("IG_SIZE"));
+  Property *existing = item->prop_size;
   if (existing && (existing->type == XA_INTEGER)) {
     DEBUG("set_geometry", "%ld.Setting geometry = %d,%d from IG_SIZE\n", item->window,existing->values.dwords[0], existing->values.dwords[1]);
     xcb_configure_window(xcb_display, item->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, existing->values.dwords);
@@ -430,14 +430,15 @@ void item_update(Item *item) {
 }
 
 void item_properties_update(Item *item, Atom name) {
-  properties_update(item->properties, name);
-  if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = properties_find(item->properties, ATOM("IG_LAYER"));
-  if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = properties_find(item->properties, ATOM("IG_ITEM_LAYER"));
-  if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = properties_find(item->properties, ATOM("IG_SHADER"));
-  if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = properties_find(item->properties, ATOM("IG_SIZE"));
-  if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = properties_find(item->properties, ATOM("IG_COORDS"));
-  if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = properties_find(item->properties, ATOM("IG_COORD_TYPES"));
-  if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = properties_find(item->properties, ATOM("IG_DRAW_TYPE"));
+  Property *prop = properties_update(item->properties, name);
+  if (!prop) return;
+  if (name == ATOM("IG_LAYER") && !item->prop_layer) item->prop_layer = prop;
+  else if (name == ATOM("IG_ITEM_LAYER") && !item->prop_item_layer) item->prop_item_layer = prop;
+  else if (name == ATOM("IG_SHADER") && !item->prop_shader) item->prop_shader = prop;
+  else if (name == ATOM("IG_SIZE") && !item->prop_size) item->prop_size = prop;
+  else if (name == ATOM("IG_COORDS") && !item->prop_coords) item->prop_coords = prop;
+  else if (name == ATOM("IG_COORD_TYPES") && !item->prop_coord_types) item->prop_coord_types = prop;
+  else if (name == ATOM("IG_DRAW_TYPE") && !item->prop_draw_type) item->prop_draw_type = prop;
 }
 
 Shader *item_get_shader(Item *item) {

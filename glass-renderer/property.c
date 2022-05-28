@@ -168,14 +168,15 @@ Properties *properties_load(Window window) {
   return properties;
 }
 
-void properties_update(Properties *properties, Atom name) {
-  if (!properties) return;
+Property *properties_update(Properties *properties, Atom name) {
+  if (!properties) return NULL;
   Property *prop = properties_find(properties, name);
   if (!prop) {
     prop = property_allocate(properties, name);
     list_append(properties->properties, (void *) prop);
   }
   property_load(prop);
+  return prop;
 }
 
 void properties_free(Properties *properties) {
