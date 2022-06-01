@@ -63,7 +63,8 @@ install-binaries: $(BINARIES)
 	mkdir -p /usr/share/xsessions
 	mkdir -p /usr/share/applications
 	mkdir -p /etc/emacs/site-start.d
-	cp $(BUILD)/glass-renderer $(PREFIX)/bin/glass-renderer
+	cp $(BINDIR)/glass-renderer $(PREFIX)/bin/glass-renderer
+	cp $(BINDIR)/glass-annotator $(PREFIX)/bin/glass-annotator
 	cp scripts/glass-startup.sh $(PREFIX)/bin/glass-startup.sh
 	cp scripts/glass.desktop /usr/share/xsessions/glass.desktop
 	cp scripts/glass-chromium-browser.desktop /usr/share/applications/glass-chromium-browser.desktop
@@ -71,6 +72,7 @@ install-binaries: $(BINARIES)
 
 uninstall-binaries:
 	rm $(PREFIX)/bin/glass-renderer
+	rm $(PREFIX)/bin/glass-annotator
 	rm -rf $(PREFIX)/share/glass
 	rm $(PREFIX)/bin/glass-startup.sh
 	rm /usr/share/xsessions/glass.desktop
