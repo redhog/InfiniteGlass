@@ -16,18 +16,19 @@ endif
 XSERVERPATH=$(shell whereis -b $(XSERVER) | cut -f2 -d' ')
 
 BUILD=build
+BINDIR=build/env/bin
 PREFIX=/usr/local
 
 BINARIES_SUBDIRS := $(patsubst %/Makefile,%,$(wildcard */Makefile))
-BINARIES := $(patsubst %,$(BUILD)/%,$(BINARIES_SUBDIRS))
+BINARIES := $(patsubst %,$(BINDIR)/%,$(BINARIES_SUBDIRS))
 
 PYTHONAPPS_SUBDIRS := $(patsubst %/setup.py,%,$(wildcard */setup.py))
 PYTHONAPPS := $(patsubst %,$(BUILD)/env/bin/%,$(PYTHONAPPS_SUBDIRS))
 
-$(BINARIES): $(BUILD)
+$(BINARIES): $(BINDIR)
 
-$(BUILD):
-	mkdir -p $(BUILD)
+$(BINDIR):
+	mkdir -p $(BINDIR)
 
 .PHONY: $(BINARIES)
 $(BINARIES):

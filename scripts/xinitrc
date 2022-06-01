@@ -9,8 +9,6 @@ fi
   
 . ./build/env/bin/activate
 
-export PATH=$(pwd)/build:$PATH
-
 ulimit -c unlimited
 
 if [ -e ~/.config/glass/session.sh ]; then

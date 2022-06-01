@@ -22,14 +22,15 @@ else
 endif
 
 BUILD=../build
+BINDIR=../build/env/bin
 
-all: $(BUILD)/glass-renderer
+all: $(BINDIR)/glass-renderer
 
 $(BUILD)/%.o: %.c *.h
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/glass-renderer: $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c))
+$(BINDIR)/glass-renderer: $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c))
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c)) $(LIBS)
 
