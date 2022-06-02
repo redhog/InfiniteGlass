@@ -9,12 +9,11 @@
 #include <X11/Xlib.h>
 #include <sys/random.h>
 
-#define TYPE_APP 0
-#define TYPE_GROUP 1
-
 extern char **environ;
-static char **props;
-static size_t propslen;
+static char **app_props;
+static size_t app_propslen;
+static char **group_props;
+static size_t group_propslen;
 static char *args;
 static size_t argslen;
 
@@ -35,36 +34,58 @@ Window (*XCreateWindow_orig)(Display *display, Window parent, int x, int y, unsi
                              int depth, unsigned int class, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes) = NULL;
 pid_t (*fork_orig)(void);
 
+static Atom XA_STRING = None;
+
 void set_props() {
-  propslen = 0;
-  for (char **e = environ; *e; e++) {
-   if (   (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0)
-       || (strncmp("IG_GROUP_", *e, strlen("IG_GROUP_")) == 0)) {
-      propslen++;
-    }
-  }
-  props = malloc(sizeof(char *) * (propslen + 1));
-  char **p = props;
+  app_propslen = 0;
+  group_propslen = 0;
   for (char **e = environ; *e; e++) {
     if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
-      *p = malloc(1 + strlen(*e) - strlen("IG_APP_") + 1);
-      **p = TYPE_APP;
-      strcpy(*p + 1, *e + strlen("IG_APP_"));
-      char *sep = strchr(*p, '=');
-      if (sep) *sep = '\0';
-      p++;
+      app_propslen++;
     } else if (strncmp("IG_GROUP_", *e, strlen("IG_GROUP_")) == 0) {
-      *p = malloc(1 + strlen(*e) - strlen("IG_GROUP_") + 1);
-      **p = TYPE_GROUP;
-      strcpy(*p + 1, *e + strlen("IG_GROUP_"));
-      char *sep = strchr(*p, '=');
+      group_propslen++;
+    }
+  }
+  app_props = malloc(sizeof(char *) * (app_propslen + 1));
+  group_props = malloc(sizeof(char *) * (group_propslen + 1));
+  char **ap = app_props;
+  char **gp = group_props;
+  for (char **e = environ; *e; e++) {
+    if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
+      *ap = malloc(strlen(*e) - strlen("IG_APP_") + 1);
+      strcpy(*ap, *e + strlen("IG_APP_"));
+      char *sep = strchr(*ap, '=');
       if (sep) *sep = '\0';
-      p++;
+      ap++;
+    } else if (strncmp("IG_GROUP_", *e, strlen("IG_GROUP_")) == 0) {
+      *gp = malloc(strlen(*e) - strlen("IG_GROUP_") + 1);
+      strcpy(*gp, *e + strlen("IG_GROUP_"));
+      char *sep = strchr(*gp, '=');
+      if (sep) *sep = '\0';
+      gp++;
     } else if (strncmp("IG_APPID=", *e, strlen("IG_APPID=")) == 0) {
       strncpy(app_id, *e + strlen("IG_APPID="), sizeof(app_id) - 1); 
     }
   }
-  *p = NULL;
+  *ap = NULL;
+  *gp = NULL;
+}
+
+char *copy_prop_to_arg(char *out, char *prop, char *flag) {
+  char *name = prop;
+  int namelen = strlen(name);
+  char *value = prop + namelen + 1;
+  int valuelen = strlen(value);
+
+  strcpy(out, flag);
+  out += strlen(flag) + 1;
+  strcpy(out, name);
+  out+= namelen;
+  *out = '=';
+  out++;
+  strcpy(out, value);
+  out += valuelen + 1;
+  return out;
 }
 
 void set_args(char **argv) {
@@ -74,7 +95,13 @@ void set_args(char **argv) {
   argslen += sizeof("-i");
   argslen += sizeof(app_id);
 
-  for (char **p = props; *p; p++) {
+  for (char **p = group_props; *p; p++) {
+    int namelen = strlen(*p);
+    char * value = *p + namelen + 1;
+    int valuelen = strlen(value);
+    argslen += 3 + namelen + 1 + valuelen + 1;
+  }
+  for (char **p = app_props; *p; p++) {
     int namelen = strlen(*p);
     char * value = *p + namelen + 1;
     int valuelen = strlen(value);
@@ -94,24 +121,11 @@ void set_args(char **argv) {
   b += 3;
   strcpy(b, app_id);
   b += sizeof(app_id);
-  for (char **p = props; *p; p++) {
-    char *name = *p + 1;
-    int namelen = strlen(name);
-    char *value = *p + 1 + namelen + 1;
-    int valuelen = strlen(value);
-
-    if (**p == TYPE_APP) {
-      strcpy(b, "-a");
-    } if (**p == TYPE_GROUP) {
-      strcpy(b, "-g");
-    }
-    b += 3;
-    strcpy(b, name);
-    b+= namelen;
-    *b = '=';
-    b++;
-    strcpy(b, value);
-    b += valuelen + 1;
+  for (char **p = group_props; *p; p++) {
+    b = copy_prop_to_arg(b, *p, "-g");
+  }
+  for (char **p = app_props; *p; p++) {
+    b = copy_prop_to_arg(b, *p, "-a");
   }
   
   for (char **a = argv; *a; a++) {
@@ -132,6 +146,21 @@ int xlib_wrapper_start(int argc, char **argv, char **env) {
 }
 __attribute__((section(".init_array"))) void *xlib_wrapper_start_constructor = &xlib_wrapper_start;
 
+void apply_prop(Display *display, Window window, char *prop) {
+  char *name = prop;
+  char *value = prop + strlen(name) + 1;
+  int valuelen = strlen(value);
+  if (strcmp(value, "__WM_COMMAND__") == 0) {
+    value = args;
+    valuelen = argslen;
+  } else if (strcmp(value, "__APPID__") == 0) {
+    value = app_id;
+    valuelen = sizeof(app_id) - 1;
+  }
+  Atom prop_name = XInternAtom(display, name, False);
+  XChangeProperty(display, window, prop_name, XA_STRING, 8, PropModeReplace, (const unsigned char *) value, valuelen);
+}
+
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width,
                      int depth, unsigned int class, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes) {
   Window window;
@@ -139,20 +168,12 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   window = XCreateWindow_orig(display, parent, x, y, width, height, border_width,
                               depth, class, visual, valuemask, attributes);
 
-  Atom prop_type = XInternAtom(display, "STRING", False);
-  for (char **p = props; *p; p++) {
-    char *name = *p + 1;
-    char *value = name + strlen(name) + 1;
-    int valuelen = strlen(value);
-    if (strcmp(value, "__WM_COMMAND__") == 0) {
-      value = args;
-      valuelen = argslen;
-    } else if (strcmp(value, "__APPID__") == 0) {
-      value = app_id;
-      valuelen = sizeof(app_id) - 1;
-    }
-    Atom prop_name = XInternAtom(display, name, False);
-    XChangeProperty(display, window, prop_name, prop_type, 8, PropModeReplace, (const unsigned char *) value, valuelen);
+  if (XA_STRING == None) XA_STRING = XInternAtom(display, "STRING", False);
+  for (char **p = group_props; *p; p++) {
+    apply_prop(display, window, *p);
+  }
+  for (char **p = app_props; *p; p++) {
+    apply_prop(display, window, *p);
   }
   
   return window;
