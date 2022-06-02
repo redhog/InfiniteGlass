@@ -7,10 +7,11 @@ import distutils
 @click.option('--id', '-i', help="Set the application id for this instance of the app")
 @click.option('--app', '-a', multiple=True, help="PROPNAME=value - set a property on the windows of an app")
 @click.option('--group', '-g', multiple=True, help="PROPNAME=value - set a property on the windows of an app and all its children")
+@click.option('--tag', '-t', is_flag=True, help="Set IG_APPID")
 @click.option('--restartable', '-r', is_flag=True, help="Set WM_COMMAND")
 @click.argument('arguments', nargs=-1)
 @click.pass_context
-def run(ctx, id=None, app=[], group=[], restartable=False, arguments=[]):
+def run(ctx, id=None, app=[], group=[], tag=False, restartable=False, arguments=[]):
     """Run an X application and annotate all its windows with extra properties.
 Optionally sets WM_COMMAND for the application with a unique application ID.
 Can set some properties on windows of all child processes too.
@@ -32,6 +33,9 @@ ARGUMENTS is the command to run, prefixed by --
     for pair in group:
         name, value = pair.split("=")
         env["IG_GROUP_" + name] = value
+    if tag:
+        env["IG_GROUP_IG_APPID"] = "__APPID__"
     if restartable:
         env["IG_APP_WM_COMMAND"] = "__WM_COMMAND__"
+        env["IG_APP_IG_COMMAND"] = "__WM_COMMAND__"
     os.execvpe(arguments[0], arguments, env)
