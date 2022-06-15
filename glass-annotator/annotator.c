@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <sys/random.h>
 
 extern char **environ;
@@ -18,6 +19,18 @@ static char *args;
 static size_t argslen;
 
 static char app_id[17];
+
+Window (*XCreateWindow_orig)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width,
+                             int depth, unsigned int class, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes) = NULL;
+pid_t (*fork_orig)(void);
+
+#define ATOM(name) ({ \
+  static Atom res = None; \
+  if (res == None) res = XInternAtom(display, name, False); \
+  res; \
+})
+
+
 static void generate_app_id() {
   unsigned int seed;
   getrandom((void *) &seed, sizeof(seed), 0);
@@ -30,17 +43,12 @@ static void generate_app_id() {
   app_id[16] = '\0';
 }
 
-Window (*XCreateWindow_orig)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width,
-                             int depth, unsigned int class, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes) = NULL;
-pid_t (*fork_orig)(void);
-
-static Atom XA_STRING = None;
-
-void set_props() {
+void parse_environ() {
   app_propslen = 0;
   group_propslen = 0;
   for (char **e = environ; *e; e++) {
-    if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
+    if (strncmp("IG_APP_ID=", *e, strlen("IG_APP_ID=")) == 0) {
+    } else if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
       app_propslen++;
     } else if (strncmp("IG_GROUP_", *e, strlen("IG_GROUP_")) == 0) {
       group_propslen++;
@@ -51,7 +59,9 @@ void set_props() {
   char **ap = app_props;
   char **gp = group_props;
   for (char **e = environ; *e; e++) {
-    if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
+    if (strncmp("IG_APP_ID=", *e, strlen("IG_APP_ID=")) == 0) {
+      strncpy(app_id, *e + strlen("IG_APP_ID="), sizeof(app_id) - 1);
+    } else if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
       *ap = malloc(strlen(*e) - strlen("IG_APP_") + 1);
       strcpy(*ap, *e + strlen("IG_APP_"));
       char *sep = strchr(*ap, '=');
@@ -63,103 +73,75 @@ void set_props() {
       char *sep = strchr(*gp, '=');
       if (sep) *sep = '\0';
       gp++;
-    } else if (strncmp("IG_APPID=", *e, strlen("IG_APPID=")) == 0) {
-      strncpy(app_id, *e + strlen("IG_APPID="), sizeof(app_id) - 1); 
     }
   }
   *ap = NULL;
   *gp = NULL;
 }
 
-char *copy_prop_to_arg(char *out, char *prop, char *flag) {
-  char *name = prop;
-  int namelen = strlen(name);
-  char *value = prop + namelen + 1;
-  int valuelen = strlen(value);
-
-  strcpy(out, flag);
-  out += strlen(flag) + 1;
-  strcpy(out, name);
-  out+= namelen;
-  *out = '=';
-  out++;
-  strcpy(out, value);
-  out += valuelen + 1;
-  return out;
-}
-
-void set_args(char **argv) {
+void parse_argv(char **argv) {
   argslen = 0;
-  argslen += sizeof("glass-action");
-  argslen += sizeof("run");
-  argslen += sizeof("-i");
-  argslen += sizeof(app_id);
-
-  for (char **p = group_props; *p; p++) {
-    int namelen = strlen(*p);
-    char * value = *p + namelen + 1;
-    int valuelen = strlen(value);
-    argslen += 3 + namelen + 1 + valuelen + 1;
-  }
-  for (char **p = app_props; *p; p++) {
-    int namelen = strlen(*p);
-    char * value = *p + namelen + 1;
-    int valuelen = strlen(value);
-    argslen += 3 + namelen + 1 + valuelen + 1;
-  }
   for (char **a = argv; *a; a++) {
     argslen += strlen(*a) + 1;
   }
   
   args = malloc(argslen);
   char *b = args;
-  strcpy(b, "glass-action");
-  b += sizeof("glass-action");
-  strcpy(b, "run");
-  b += sizeof("run");
-  strcpy(b, "-i");
-  b += 3;
-  strcpy(b, app_id);
-  b += sizeof(app_id);
-  for (char **p = group_props; *p; p++) {
-    b = copy_prop_to_arg(b, *p, "-g");
-  }
-  for (char **p = app_props; *p; p++) {
-    b = copy_prop_to_arg(b, *p, "-a");
-  }
-  
   for (char **a = argv; *a; a++) {
     strcpy(b, *a);
     b += strlen(*a) + 1;
   }
 }
 
-int xlib_wrapper_start(int argc, char **argv, char **env) {
-  XCreateWindow_orig = dlsym(RTLD_NEXT, "XCreateWindow");
-  fork_orig = dlsym(RTLD_NEXT, "fork");
-
-  generate_app_id();
-  set_props();
-  set_args(argv);
-  
-  return 0;
-}
-__attribute__((section(".init_array"))) void *xlib_wrapper_start_constructor = &xlib_wrapper_start;
 
 void apply_prop(Display *display, Window window, char *prop) {
   char *name = prop;
   char *value = prop + strlen(name) + 1;
   int valuelen = strlen(value);
-  if (strcmp(value, "__WM_COMMAND__") == 0) {
-    value = args;
-    valuelen = argslen;
-  } else if (strcmp(value, "__APPID__") == 0) {
-    value = app_id;
-    valuelen = sizeof(app_id) - 1;
-  }
   Atom prop_name = XInternAtom(display, name, False);
   XChangeProperty(display, window, prop_name, XA_STRING, 8, PropModeReplace, (const unsigned char *) value, valuelen);
 }
+
+void apply_props(Display *display, Window window, char **props, Atom group) {
+  int count = 0;
+  for (char **p = props; *p; p++) {
+    apply_prop(display, window, *p);
+    count++;
+  }
+  Atom atoms[count];
+  char **p;
+  Atom *a;
+  for (p = props, a = atoms; *p; p++, a++) {
+    *a = XInternAtom(display, *p, False);
+  }
+  XChangeProperty(display, window, group, XA_ATOM, 32, PropModeReplace, (const unsigned char *) atoms, count);
+}
+
+void apply_window(Display *display, Window window) {
+  apply_props(display, window, group_props, ATOM("IG_ANNOTATE_GROUP"));
+  apply_props(display, window, app_props, ATOM("IG_ANNOTATE_APP"));
+
+  XChangeProperty(display, window, ATOM("IG_APP_ID"),
+                  XA_STRING, 8, PropModeReplace, (const unsigned char *) app_id, sizeof(app_id) - 1);
+  XChangeProperty(display, window, XA_WM_COMMAND,
+                  XA_STRING, 8, PropModeReplace, (const unsigned char *) args, argslen);
+}
+
+
+/* Library overrides and entry points */
+
+int xlib_wrapper_start(int argc, char **argv, char **env) {
+  XCreateWindow_orig = dlsym(RTLD_NEXT, "XCreateWindow");
+  fork_orig = dlsym(RTLD_NEXT, "fork");
+
+  generate_app_id();
+  parse_environ();
+  parse_argv(argv);
+  
+  return 0;
+}
+__attribute__((section(".init_array"))) void *xlib_wrapper_start_constructor = &xlib_wrapper_start;
+
 
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width,
                      int depth, unsigned int class, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes) {
@@ -167,15 +149,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
   window = XCreateWindow_orig(display, parent, x, y, width, height, border_width,
                               depth, class, visual, valuemask, attributes);
-
-  if (XA_STRING == None) XA_STRING = XInternAtom(display, "STRING", False);
-  for (char **p = group_props; *p; p++) {
-    apply_prop(display, window, *p);
-  }
-  for (char **p = app_props; *p; p++) {
-    apply_prop(display, window, *p);
-  }
-  
+  apply_window(display, window);
   return window;
 }
 
@@ -185,8 +159,7 @@ pid_t fork(void) {
     char **e_out = environ;
     for (char **e_in = environ; *e_in; e_in++) {
       *e_out = *e_in;
-      if (   (strncmp("IG_APP_", *e_in, strlen("IG_APP_")) != 0)
-          && (strcmp("IG_APPID", *e_in) != 0)) {
+      if (strncmp("IG_APP_", *e_in, strlen("IG_APP_")) != 0) {
         e_out++;
       }
     }
