@@ -122,18 +122,27 @@ def key(ctx, window):
 
 @inspect.command()
 @click.option('--window', default="click")
+@click.option('--name')
 @click.option('--limit', default=0)
 @click.pass_context
-def props(ctx, window, limit):
+def props(ctx, window, name, limit):
     with InfiniteGlass.Display() as display:
         @glass_action.window_tools.str_to_win(display, window)
         def inspect(win):
-            for key, value in win.items():
-                value = str(value)
-                if limit > 0:
-                    value = value[:limit]
-                print("%s=%s" % (key, value))
-            sys.exit(0)
+            try:
+                if name is not None:
+                    items = [(name, win[name])]
+                else:
+                    items = win.items()
+                for key, value in items:
+                    value = str(value)
+                    if limit > 0:
+                        value = value[:limit]
+                    print("%s=%s" % (key, value))
+            except Exception as e:
+                print(e)
+            finally:
+                sys.exit(0)
             
 
 @window.command()

@@ -118,8 +118,8 @@ void apply_props(Display *display, Window window, char **props, Atom group) {
 }
 
 void apply_window(Display *display, Window window) {
-  apply_props(display, window, group_props, ATOM("IG_ANNOTATE_GROUP"));
-  apply_props(display, window, app_props, ATOM("IG_ANNOTATE_APP"));
+  apply_props(display, window, group_props, ATOM("IG_GROUP"));
+  apply_props(display, window, app_props, ATOM("IG_APP"));
 
   XChangeProperty(display, window, ATOM("IG_APP_ID"),
                   XA_STRING, 8, PropModeReplace, (const unsigned char *) app_id, sizeof(app_id) - 1);

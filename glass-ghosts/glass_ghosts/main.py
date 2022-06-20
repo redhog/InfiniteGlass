@@ -1,6 +1,7 @@
 import InfiniteGlass
 import glass_ghosts.manager
 import glass_ghosts.session
+import distutils.spawn
 import sys
 import traceback
 import signal
@@ -12,8 +13,23 @@ if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
     rpdb.handle_trap()
     rpdb.handle_trap()
 
+def substring_in_list(s, lst):
+    for item in lst:
+        if s in item:
+            return True
+    return False
+
+def setup_annotator():
+    preloads = []
+    if "LD_PRELOAD" in os.environ:
+        preloads = os.environ["LD_PRELOAD"].split(" ")
+    if not substring_in_list('glass-annotator', preloads):
+        preloads.append(distutils.spawn.find_executable('glass-annotator'))
+        os.environ["LD_PRELOAD"] = " ".join(preloads)
+    
 @InfiniteGlass.profilable
 def main():
+    setup_annotator()
     manager = None
     try:
         with InfiniteGlass.Display() as display:

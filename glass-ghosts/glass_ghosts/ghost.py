@@ -223,16 +223,27 @@ class Shadow(object):
         self.window.map()
         self.redraw()
 
+    def _setup_environ(self):
+        env = dict(os.environ)
+        for name in self.properties.get("IG_APP", []):
+            env["IG_APP_%s" % name] = self.properties[name]
+        for name in self.properties.get("IG_GROUP", []):
+            env["IG_GROUP_%s" % name] = self.properties[name]
+        if "IG_APP_ID" in self.properties:
+            env["IG_APP_ID"] = self.properties["IG_APP_ID"]
+        return env
+        
     def restart(self):
         InfiniteGlass.DEBUG("ghost", "GHOST RESTART %s\n" % (self,)); sys.stderr.flush()
         if "SM_CLIENT_ID" in self.properties:
-            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart()
+            self.manager.clients[self.properties["SM_CLIENT_ID"]].restart(self._setup_environ)
         elif "WM_COMMAND" in self.properties:
            if os.fork() == 0:
                cmd = self.properties["WM_COMMAND"]
                if not isinstance(cmd, list): cmd = [cmd]
                cmd = [name.decode("utf-8") for name in cmd]
-               os.execlp(cmd[0], *cmd)
+               cmd.append(self._setup_environ())
+               os.execlpe(cmd[0], *cmd)
             
     def redraw(self):
         gcbg = self.manager.display.root.create_gc(foreground=self.manager.display.screen(0).white_pixel,
