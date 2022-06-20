@@ -148,9 +148,9 @@ def unpack_values(display, value_type, values):
     elif value_type == "FLOAT":
         values = list(struct.unpack("<" + "f" * len(values), values.tobytes()))
     elif value_type == "INTEGER":
-        values = array.array('i', values) # Needed because actual type returned can be I
+        values = array.array('l', values) # Needed because actual type returned can be I
     elif value_type == "CARDINAL":
-        values = array.array('I', values) # Needed because actual type returned could potentially be i...
+        values = array.array('L', values) # Needed because actual type returned could potentially be i...
     elif value_type == "WINDOW":
         values = [display.real_display.create_resource_object("window", item) for item in values]
     elif value_type == "STRING":
