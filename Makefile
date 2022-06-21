@@ -35,9 +35,9 @@ $(BINARIES):
 	$(MAKE) GLASS_DMALLOC="$(GLASS_DMALLOC)" -C $(notdir $@)
 
 $(BUILD)/env/bin/activate: 
-	virtualenv --python=$(PYTHON) $@
-	. $@/bin/activate; pip install setuptools
-	. $@/bin/activate; cd glass-lib; pip install -e .
+	virtualenv --python=$(PYTHON) $(BUILD)/env
+	. $(BUILD)/env/bin/activate; pip install setuptools
+	. $(BUILD)/env/bin/activate; cd glass-lib; pip install -e .
 
 $(PYTHONAPPS): $(BUILD)/env/bin/activate
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); pip install -e .
