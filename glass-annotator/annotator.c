@@ -30,6 +30,8 @@ pid_t (*fork_orig)(void);
   res; \
 })
 
+#define ISPREFIX(prefix, s) (strncmp(prefix, s, sizeof(prefix) - 1) == 0)
+
 
 static void generate_app_id() {
   unsigned int seed;
@@ -47,10 +49,10 @@ void parse_environ() {
   app_propslen = 0;
   group_propslen = 0;
   for (char **e = environ; *e; e++) {
-    if (strncmp("IG_APP_ID=", *e, strlen("IG_APP_ID=")) == 0) {
-    } else if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
+    if (ISPREFIX("IG_APP_ID=", *e)) {
+    } else if (ISPREFIX("IG_APP_", *e)) {
       app_propslen++;
-    } else if (strncmp("IG_GROUP_", *e, strlen("IG_GROUP_")) == 0) {
+    } else if (ISPREFIX("IG_GROUP_", *e)) {
       group_propslen++;
     }
   }
@@ -59,17 +61,17 @@ void parse_environ() {
   char **ap = app_props;
   char **gp = group_props;
   for (char **e = environ; *e; e++) {
-    if (strncmp("IG_APP_ID=", *e, strlen("IG_APP_ID=")) == 0) {
-      strncpy(app_id, *e + strlen("IG_APP_ID="), sizeof(app_id) - 1);
-    } else if (strncmp("IG_APP_", *e, strlen("IG_APP_")) == 0) {
-      *ap = malloc(strlen(*e) - strlen("IG_APP_") + 1);
-      strcpy(*ap, *e + strlen("IG_APP_"));
+    if (ISPREFIX("IG_APP_ID=", *e)) {
+      strncpy(app_id, *e + sizeof("IG_APP_ID=") - 1, sizeof(app_id) - 1);
+    } else if (ISPREFIX("IG_APP_", *e)) {
+      *ap = malloc(strlen(*e) - sizeof("IG_APP_"));
+      strcpy(*ap, *e + sizeof("IG_APP_") - 1);
       char *sep = strchr(*ap, '=');
       if (sep) *sep = '\0';
       ap++;
-    } else if (strncmp("IG_GROUP_", *e, strlen("IG_GROUP_")) == 0) {
-      *gp = malloc(strlen(*e) - strlen("IG_GROUP_") + 1);
-      strcpy(*gp, *e + strlen("IG_GROUP_"));
+    } else if (ISPREFIX("IG_GROUP_", *e)) {
+      *gp = malloc(strlen(*e) - sizeof("IG_GROUP_"));
+      strcpy(*gp, *e + sizeof("IG_GROUP_") - 1);
       char *sep = strchr(*gp, '=');
       if (sep) *sep = '\0';
       gp++;
@@ -128,6 +130,17 @@ void apply_window(Display *display, Window window) {
 }
 
 
+void filter_environ(void) {
+  char **e_out = environ;
+  for (char **e_in = environ; *e_in; e_in++) {
+    *e_out = *e_in;
+    if (!ISPREFIX("IG_APP_", *e_in)) {
+      e_out++;
+    }
+  }
+  *e_out = NULL;
+}
+
 /* Library overrides and entry points */
 
 int xlib_wrapper_start(int argc, char **argv, char **env) {
@@ -137,6 +150,7 @@ int xlib_wrapper_start(int argc, char **argv, char **env) {
   generate_app_id();
   parse_environ();
   parse_argv(argv);
+  filter_environ();
   
   return 0;
 }
@@ -153,17 +167,22 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   return window;
 }
 
+/*
+
 pid_t fork(void) {
   pid_t res = fork_orig();
   if (res == 0) {
     char **e_out = environ;
+    printf("XXXX %d: fork start\n", getpid()); fflush(stdout);
     for (char **e_in = environ; *e_in; e_in++) {
       *e_out = *e_in;
-      if (strncmp("IG_APP_", *e_in, strlen("IG_APP_")) != 0) {
+      if (!ISPREFIX("IG_APP_", *e_in)) {
         e_out++;
       }
     }
     *e_out = NULL;
+    printf("XXXX %d: fork end\n", getpid()); fflush(stdout);
   }
   return res;
 }
+*/
