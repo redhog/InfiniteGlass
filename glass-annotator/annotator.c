@@ -22,7 +22,6 @@ static char app_id[17];
 
 Window (*XCreateWindow_orig)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width,
                              int depth, unsigned int class, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes) = NULL;
-pid_t (*fork_orig)(void);
 
 #define ATOM(name) ({ \
   static Atom res = None; \
@@ -145,7 +144,6 @@ void filter_environ(void) {
 
 int xlib_wrapper_start(int argc, char **argv, char **env) {
   XCreateWindow_orig = dlsym(RTLD_NEXT, "XCreateWindow");
-  fork_orig = dlsym(RTLD_NEXT, "fork");
 
   generate_app_id();
   parse_environ();
@@ -166,23 +164,3 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   apply_window(display, window);
   return window;
 }
-
-/*
-
-pid_t fork(void) {
-  pid_t res = fork_orig();
-  if (res == 0) {
-    char **e_out = environ;
-    printf("XXXX %d: fork start\n", getpid()); fflush(stdout);
-    for (char **e_in = environ; *e_in; e_in++) {
-      *e_out = *e_in;
-      if (!ISPREFIX("IG_APP_", *e_in)) {
-        e_out++;
-      }
-    }
-    *e_out = NULL;
-    printf("XXXX %d: fork end\n", getpid()); fflush(stdout);
-  }
-  return res;
-}
-*/
