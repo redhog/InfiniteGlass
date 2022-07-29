@@ -53,7 +53,7 @@ class RendererTest(unittest.TestCase):
     def setUp(self):
         self.stdout_file = tempfile.NamedTemporaryFile(buffering=0)
         self.stderr_file = tempfile.NamedTemporaryFile(buffering=0)
-        self.renderer = subprocess.Popen(["build/glass-renderer"], stdout=self.stdout_file, stderr=self.stderr_file)
+        self.renderer = subprocess.Popen(["build/env/bin/glass-renderer"], stdout=self.stdout_file, stderr=self.stderr_file)
         while True:
             try:
                 self.display = InfiniteGlass.Display()

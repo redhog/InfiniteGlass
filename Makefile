@@ -34,12 +34,12 @@ $(BINDIR):
 $(BINARIES):
 	$(MAKE) GLASS_DMALLOC="$(GLASS_DMALLOC)" -C $(notdir $@)
 
-$(BUILD)/env:
-	virtualenv --python=$(PYTHON) $@
-	. $@/bin/activate; pip install setuptools
-	. $@/bin/activate; cd glass-lib; pip install -e .
+$(BUILD)/env/bin/activate: 
+	virtualenv --python=$(PYTHON) $(BUILD)/env
+	. $(BUILD)/env/bin/activate; pip install setuptools
+	. $(BUILD)/env/bin/activate; cd glass-lib; pip install -e .
 
-$(PYTHONAPPS): $(BUILD)/env
+$(PYTHONAPPS): $(BUILD)/env/bin/activate
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); pip install -e .
 
 .PHONY: all run run-in-docker install devinstall uninstall install-binaries uninstall-binaries
@@ -80,10 +80,10 @@ uninstall-binaries:
 	rm /etc/emacs/site-start.d/glass-emacs-xsession.el
 
 $(patsubst %,install-%,$(PYTHONAPPS_SUBDIRS)):
-	cd $(patsubst install-%,%,$@); pip install -e .
+	cd $(patsubst install-%,%,$@); pip3 install .
 
 $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS)):
-	cd $(patsubst devinstall-%,%,$@); python3 setup.py develop
+	cd $(patsubst devinstall-%,%,$@); pip3 install -e .
 
 $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS)):
 	pip3 uninstall $(patsubst uninstall-%,%,$@)
