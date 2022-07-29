@@ -16,6 +16,7 @@ match:
   - WM_CLASS
   - WM_NAME
   - WM_WINDOW_ROLE
+  - IG_APPID
 
 # Set these stored properties on a window that has been matched to a ghost
 set:
@@ -25,6 +26,7 @@ set:
   - _NET_WM_DESKTOP
   - _NET_WM_ICON_GEOMETRY
   - WM_COMMAND
+  - IG_COMMAND
   - __config__
 
 # Set these stored properties on a ghost
@@ -49,6 +51,8 @@ ghost_set:
   - _NET_WM_STRUT_PARTIAL
   - _NET_WM_ICON_GEOMETRY
   - _NET_WM_ICON
+  - IG_APPID
+  - IG_COMMAND
   - __config__
   
 # Update these stored properties from properties set on a ghost
