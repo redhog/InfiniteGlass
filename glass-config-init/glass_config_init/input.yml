@@ -74,6 +74,8 @@ modes:
       "KeyPress,XK_F": title_search_mode
       "KeyPress,XK_T,ShiftMask": tile_visible
       "KeyPress,XK_T,!ShiftMask": tile_visible_to_1_1
+      "KeyPress,XK_O,ShiftMask": {"tile_visible": {"packer": "glass_input.cloud_packer.CloudPacker"}}
+      "KeyPress,XK_O,!ShiftMask": {"tile_visible_to_1_1": {"packer": "glass_input.cloud_packer.CloudPacker"}}
       "KeyPress,XK_I": send_island_create
 
       "KeyPress,!Mod1Mask,XK_Home": zoom_home
@@ -133,6 +135,8 @@ modes:
       "ButtonRelease,4,ShiftMask": ["zoom_in", "pop"]
       "ButtonRelease,5,ShiftMask": ["zoom_out", "pop"]
 
+      "ButtonPress,4,ShiftMask": zoom_in
+      "ButtonPress,5,ShiftMask": zoom_out
       "ButtonPress,4,!ShiftMask": zoom_to_fewer_windows
       "ButtonPress,5,!ShiftMask": zoom_to_more_windows
 

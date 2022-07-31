@@ -55,7 +55,8 @@
 #       Draw(block.fit.x, block.fit.y, block.w, block.h)
 
 class GrowingPacker(object):
-  def fit(self, blocks, aspect_ratio = 1, sorting="area"):
+  def fit(self, blocks, view_width, view_height, sorting="area"):
+    aspect_ratio = view_width / view_height
     if sorting == "area":
       key = lambda b: b["w"] * b["h"]
     elif sorting == "circumference":
