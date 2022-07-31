@@ -14,6 +14,7 @@ class CloudPacker():
       return (block["w"] * block["h"])
 
    def fit(self, blocks, view_width, view_height, margin=0, sorting="organic"):
+      print("FIT", repr([blocks, view_width, view_height]))
       self.view_width = view_width
       self.view_height = view_height
       self.aspect_ratio = view_width / view_height
