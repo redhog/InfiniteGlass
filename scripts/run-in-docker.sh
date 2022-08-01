@@ -13,7 +13,7 @@ if [ "$(docker images -q $IMAGE)" == "" ]; then
 fi
 
 mkdir -p ~/.config/glass
-xauth nlist :0 | sed -e 's/^..../ffff/' > /tmp/.docker.xauth
+xauth nlist $DISPLAY | sed -e 's/^..../ffff/' > /tmp/.docker.$DISPLAY.xauth
 
 if [ ! "$(docker ps -a -q -f name=glass)" ]; then
   docker run \
@@ -28,8 +28,8 @@ if [ ! "$(docker ps -a -q -f name=glass)" ]; then
          -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
          -v /tmp/.ICE-unix:/tmp/.ICE-unix:rw \
          -v /tmp/.docker.xauth:/tmp/.docker.xauth \
-         -e XAUTHORITY=/tmp/.docker.xauth \
-         -e DISPLAY=:0 \
+         -e XAUTHORITY=/tmp/.docker.$DISPLAY.xauth \
+         -e DISPLAY \
          $IMAGE
 else
     docker start -a -i glass
