@@ -21,6 +21,10 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="gla
     packer.fit(blocks, view[2], view[3], sorting="diagonal")
     
     positions = np.array([(block["fit"]["x"], block["fit"]["y"], block["w"], block["h"]) for block in blocks])
+    
+    minpos = (positions[:,:2]).min(axis=0)
+    positions[:,0] -= minpos[0]
+    positions[:,1] -= minpos[1]
     maxpos = (positions[:,:2] + positions[:,2:]).max(axis=0)
 
     if maxpos[0] / maxpos[1] > view[2] / view[3]:
@@ -29,10 +33,11 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="gla
         scaling = view[3] / maxpos[1]
         
     positions = positions * scaling
-        
-    positions[:,0] += view[0]
-    positions[:,1] += view[1]
+
     positions[:,1] += positions[:,3]
+
+    positions[:,0] += view[0] + (view[2] - ((positions[:,0] + positions[:,2]).max() - positions[:,0].min())) / 2
+    positions[:,1] += view[1] + (view[3] - (positions[:,1].max() - (positions[:,1] - positions[:,3]).min())) / 2
 
     positions[:,2:] -= margins * view[2]
     positions[:,0] += margins * view[2] / 2
@@ -46,7 +51,7 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="gla
             window["IG_SIZE"] = item_zoom_to.item_zoom_1_1_to_sreen_calc(self, window, coords = new_coords)
         else:
             pxsize = window["IG_SIZE"]
-            pxsize[1] = int(pxsize[0] * size[1] / size[0])
+            pxsize[1] = int(pxsize[0] * new_coords[3] / new_coords[2])
             window["IG_SIZE"] = pxsize
 
         self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", window, "IG_COORDS", .5)
