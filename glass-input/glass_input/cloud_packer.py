@@ -46,20 +46,19 @@ class CloudPacker():
    def spiral_generator(self, step=10, radius=1.0):
       h = (self.view_width / 2)
       k = (self.view_height / 2)
-      theta = 0
-      r = 0
+
+      i = 0
 
       while True:
+         theta = (step * i) % 360
+         r = radius *i
+
          x = h + (r * self.aspect_ratio) * math.cos(theta)
          y = k + (r * 1 / self.aspect_ratio) * math.sin(theta)
 
          yield (round(x), round(y))
 
-         theta += step
-         r += radius
-
-         if (theta > 360):
-            theta = 0
+         i = i+1
 
    def is_window_intersect_view(self, window, windows):
       for w in windows:
