@@ -6,59 +6,128 @@
 # Returning a list of tuples (id, x, y)
 import math
 
+class DualBinarySearch(object):
+    """Generates a sequence that first grows exponentially, and then
+    grows or shrinks with logarithmically smaller and smaller steps."""
+    def __init__(self, start=0, step=1, factor=2, grow=True, grow_only=True):
+        self.pos = start
+        self.step = step
+        self.factor = factor
+        self.grow_only = grow_only
+        self.grow = grow
+    def __iter__(self):
+        return self
+    def direction(self, grow = True):
+        if grow == self.grow:
+            return
+        if self.grow_only:
+            self.step /= self.factor            
+        self.grow_only = False
+        self.grow = grow
+    def __next__(self):
+        
+        if self.grow:
+            self.pos += self.step
+        else:
+            self.pos -= self.step
+        if self.grow_only:
+            self.step *= self.factor
+        else:
+            self.step /= self.factor
+        return self.pos
+
 class CloudPacker():
    # TODO: assign a weight to each window according to their area, width, height.
    #       These will be used to determine the order in which the windows are placed,
    #       in accordance with the aspect ratio of the root window.
+   def __init__(self, step=1, radius=0.001):
+      self.step = float(step)
+      self.radius = float(radius)
+      
    def organic_sort(self, block):
       return (block["w"] * block["h"])
 
    def fit(self, blocks, view_width, view_height, margin=0, sorting="organic"):
-      print("FIT", repr([blocks, view_width, view_height]))
-      self.view_width = view_width
-      self.view_height = view_height
       self.aspect_ratio = view_width / view_height
-      self.margin = margin # TODO: implement margin
-
+      
+      self.iss = []
+      
       blocks.sort(key=self.organic_sort, reverse=True)
 
-      placements = []
-      spiral = self.spiral_generator(20, 1.5)
-
+      mind = min([math.sqrt(shape["w"]**2+shape["h"]**2) for shape in blocks])
+      self.adjusted_radius = self.radius * mind
+      
+      self.placements = []
       for position, block in enumerate(blocks):
-         window = block["window"]
-         w = block["w"]
-         h = block["h"]
-         px, py = next(spiral)
-         dx, dy = self.find_window_center_coordinates([window, px, py, w, h])
+          self.find_fit(block, position)
+          
+      return self.placements
 
-         block["fit"] = {"x": dx, "y": dy}
+   def find_fit(self, block, position):
+      s = DualBinarySearch(step=position)
+      si = iter(s)
+      for i in si:
+         self.iss.append(i)
+         self.set_fit(i, block)
+         overlapping = self.is_window_intersect_view(block, self.placements)
+         if not overlapping:
+            break
+      s.direction(overlapping)
+      best = block["fit"]
+      for c, i in enumerate(si):
+         self.iss.append(i)
+         if c > 20: break
+         self.set_fit(i, block)
+         overlapping = self.is_window_intersect_view(block, self.placements)
+         if not overlapping:
+            best = block["fit"]
+         s.direction(overlapping)
+      block["fit"] = best
 
-         while(position and self.is_window_intersect_view(block, placements)):
-            px, py = next(spiral)
-            dx, dy = self.find_window_center_coordinates([window, px, py, w, h])
-            block["fit"] = {"x": dx, "y": dy}
-
-         placements.append(block)
-
-      return placements
-
-   def spiral_generator(self, step=10, radius=1.0):
-      h = (self.view_width / 2)
-      k = (self.view_height / 2)
-
-      i = 0
-
-      while True:
-         theta = (step * i) % 360
-         r = radius *i
-
-         x = h + (r * self.aspect_ratio) * math.cos(theta)
-         y = k + (r * 1 / self.aspect_ratio) * math.sin(theta)
-
-         yield (round(x), round(y))
-
-         i = i+1
+      self.adjust_fit(block, "x")
+      self.adjust_fit(block, "y")
+      
+      self.placements.append(block)
+       
+   def adjust_fit(self, block, coord):
+      best = block["fit"][coord]
+      positive = block["fit"][coord] > 0
+      s = DualBinarySearch(start=block["fit"][coord], step=abs(block["fit"][coord] / 2), grow_only=False, grow=not positive)
+      si = iter(s)
+      for c, i in enumerate(si):
+         if c > 40: break
+         block["fit"][coord] = i
+         overlapping = self.is_window_intersect_view(block, self.placements)
+         if overlapping:
+            break
+      s.direction(positive)
+      for c, i in enumerate(si):
+         if c > 40: break
+         block["fit"][coord] = i
+         overlapping = self.is_window_intersect_view(block, self.placements)
+         #print(block["window"], "B", i, overlapping)
+         if not overlapping:
+            best = i
+         s.direction(overlapping if positive else not overlapping)
+      block["fit"][coord] = best
+      
+   def set_fit(self, i, block):
+      window = block["window"]
+      w = block["w"]
+      h = block["h"]
+      px, py = self.get_position(i)
+      dx, dy = self.find_window_center_coordinates([window, px, py, w, h])
+      block["fit"] = {"x": dx, "y": dy}
+      
+   def get_position(self, i):
+      thetafull = (self.step * i)
+      theta = thetafull % 360
+      r = self.adjusted_radius * math.floor(thetafull / 360)
+      
+      x = (r * self.aspect_ratio) * math.cos(theta)
+      y = (r * 1 / self.aspect_ratio) * math.sin(theta)
+      
+      return (round(x), round(y))
 
    def is_window_intersect_view(self, window, windows):
       for w in windows:
