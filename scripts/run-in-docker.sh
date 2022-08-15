@@ -12,8 +12,10 @@ if [ "$(docker images -q $IMAGE)" == "" ]; then
   docker build -t $IMAGE .
 fi
 
+XAUTH="/tmp/.docker.$(echo "$DISPLAY" | tr ":" "_").xauth"
+
 mkdir -p ~/.config/glass
-xauth nlist $DISPLAY | sed -e 's/^..../ffff/' > /tmp/.docker.$DISPLAY.xauth
+xauth nlist $DISPLAY | sed -e 's/^..../ffff/' > "$XAUTH"
 
 if [ ! "$(docker ps -a -q -f name=glass)" ]; then
   docker run \
@@ -27,8 +29,8 @@ if [ ! "$(docker ps -a -q -f name=glass)" ]; then
          -v ~/.config/glass:/home/glass/.config/glass \
          -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
          -v /tmp/.ICE-unix:/tmp/.ICE-unix:rw \
-         -v /tmp/.docker.xauth:/tmp/.docker.xauth \
-         -e XAUTHORITY=/tmp/.docker.$DISPLAY.xauth \
+         -v "$XAUTH:$XAUTH" \
+         -e "XAUTHORITY=$XAUTH" \
          -e DISPLAY \
          $IMAGE
 else
