@@ -1,0 +1,64 @@
+FROM archlinux:base
+
+RUN sed -Ee "/(locale|i18n)/d" /etc/pacman.conf -i
+
+RUN pacman -Syy
+
+RUN pacman --noconfirm -S linux linux-headers base-devel networkmanager \
+   glibc lib32-glibc gobject-introspection sudo git vim \
+   xorg-server xorg-server-xephyr xorg-xinit xorg-xrandr glew mesa dbus \ 
+   xorg-apps xcb-util-wm cairo pango libxcomposite libxtst librsvg
+
+# Dependencies from installed packages, should already be installed.
+RUN pacman --noconfirm -S libx11 libxcb libxext libxdamage libxrender \
+   libxfixes libxrandr libgl glu
+
+# Install all Xorg fonts
+RUN pacman --noconfirm -S $(pacman -Ssq xorg-fonts)
+
+# Userland applications
+RUN pacman --noconfirm -S pluma rofi xterm
+
+RUN sed -Ee "/en_US|en_CA|fr_CA|zh_CN/s/^#[[:blank:]]*//g" /etc/locale.gen -i
+
+RUN locale-gen
+
+RUN echo LANG=en_US.UTF-8 > /etc/locale.conf
+RUN LC_ALL=en_US.UTF-8
+RUN LANG=en_US.UTF-8
+
+# Should not run directly as root, use virtualenv instead
+RUN python -m ensurepip --upgrade
+RUN python -m pip install --upgrade pip
+RUN pip install virtualenv
+
+# Setting up Xorg
+
+RUN echo "allowed_users = anybody" > /etc/X11/Xwrapper.config
+
+# Should be /opt/InfiniteGlass
+ADD . /InfiniteGlass
+
+WORKDIR /InfiniteGlass
+
+# Fix for gcc 10+
+RUN find . -name "Makefile" | xargs -n 1 sed -Ee "s/(CFLAGS=.*)/\1 -fcommon/g" -i
+
+# Fix for Python 3.9+
+RUN sed -e "s/PYTHON=.*/PYTHON=python3/g" Makefile -i
+
+RUN sed -e '/PyGObject/d' glass-action/setup.py -i
+
+RUN make all
+RUN make devinstall
+
+RUN useradd glass
+RUN mkdir -p /home/glass
+RUN mkdir -p /home/glass/.config/session-state
+RUN mkdir -p /home/glass/.config/dconf
+RUN chown -R glass:users /home/glass
+RUN chmod -R ugo+rw /InfiniteGlass
+RUN sed -e "s+\(sudo:.*\)+\1glass+g" /etc/group -i
+RUN sed -e "s+ALL$+NOPASSWD: ALL+g" /etc/sudoers -i
+
+ENTRYPOINT /InfiniteGlass/scripts/docker-runner.sh

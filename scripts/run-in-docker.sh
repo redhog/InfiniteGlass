@@ -1,6 +1,7 @@
 #! /bin/bash
 
-IMAGE=redhogorg/glass:0.0.2
+[ "$DOCKEROS" != "" ] || DOCKEROS=ubuntu
+IMAGE=redhogorg/glass-$DOCKEROS:0.0.2
 
 if [ "$1" == "clean" ]; then
   docker rm glass
@@ -9,7 +10,7 @@ if [ "$1" == "clean" ]; then
 fi
 
 if [ "$(docker images -q $IMAGE)" == "" ]; then
-  docker build -t $IMAGE .
+  docker build -t $IMAGE -f Dockerfile.$DOCKEROS .
 fi
 
 XAUTH="/tmp/.docker.$(echo "$DISPLAY" | tr ":" "_").xauth"
@@ -17,22 +18,22 @@ XAUTH="/tmp/.docker.$(echo "$DISPLAY" | tr ":" "_").xauth"
 mkdir -p ~/.config/glass
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' > "$XAUTH"
 
-if [ ! "$(docker ps -a -q -f name=glass)" ]; then
-  docker run \
-         --name glass \
-         --memory 2gb \
-         -ti \
-         --net=host \
-         --ipc=host \
-         --user id -u root \
-         --cap-add=ALL \
-         -v ~/.config/glass:/home/glass/.config/glass \
-         -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-         -v /tmp/.ICE-unix:/tmp/.ICE-unix:rw \
-         -v "$XAUTH:$XAUTH" \
-         -e "XAUTHORITY=$XAUTH" \
-         -e DISPLAY \
-         $IMAGE
-else
-    docker start -a -i glass
+if [ "$(docker ps -a -q -f name=glass)" != "" ]; then
+  docker rm glass
 fi
+
+docker run \
+       --name glass \
+       --memory 2gb \
+       -ti \
+       --net=host \
+       --ipc=host \
+       --user id -u root \
+       --cap-add=ALL \
+       -v ~/.config/glass:/home/glass/.config/glass \
+       -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+       -v /tmp/.ICE-unix:/tmp/.ICE-unix:rw \
+       -v "$XAUTH:$XAUTH" \
+       -e "XAUTHORITY=$XAUTH" \
+       -e DISPLAY \
+       $IMAGE
