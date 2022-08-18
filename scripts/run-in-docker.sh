@@ -16,7 +16,7 @@ fi
 XAUTH="/tmp/.docker.$(echo "$DISPLAY" | tr ":" "_").xauth"
 
 mkdir -p ~/.config/glass
-xauth nlist $DISPLAY | sed -e 's/^..../ffff/' > "$XAUTH"
+xauth nextract - $DISPLAY | XAUTHORITY=$XAUTH xauth nmerge -
 
 if [ "$(docker ps -a -q -f name=glass)" != "" ]; then
   docker rm glass
@@ -36,4 +36,4 @@ docker run \
        -v "$XAUTH:$XAUTH" \
        -e "XAUTHORITY=$XAUTH" \
        -e DISPLAY \
-       $IMAGE
+       $IMAGE $DOCKERCOMMAND
