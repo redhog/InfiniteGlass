@@ -1,6 +1,7 @@
 base-devel
 cairo
 dbus
+gdb
 git
 glew
 glibc
