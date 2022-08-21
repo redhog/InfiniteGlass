@@ -7,7 +7,7 @@ import sys
 import os
 
 class Server(pysmlib.server.Server):
-    def __init__(self, manager, display):
+    def __init__(self, manager, display, **kw):
         self.display = display
         self.manager = manager
         pysmlib.server.Server.__init__(self)

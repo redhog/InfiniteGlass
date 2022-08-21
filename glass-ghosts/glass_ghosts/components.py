@@ -9,11 +9,12 @@ import traceback
 import time
 
 class Components(object):
-    def __init__(self, manager, display):
+    def __init__(self, manager, display, restart_components=True, **kw):
         self.manager = manager
         self.display = display
         self.components = {}
         self.components_by_pid = {}
+        self.restart_components = restart_components
         
         self.old_sigchld = signal.signal(signal.SIGCHLD, self.sigchild)
         
@@ -62,7 +63,7 @@ class Components(object):
                             and (   not os.WIFSIGNALED(exitcode)
                                  or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
                             # This is a component, and it wasn't killed intentionally... restart it
-                            if name in self.components:
+                            if name in self.components and self.restart_components:
                                 spec = self.components[name]["component"]
                                 self.start_component(spec)
                     InfiniteGlass.debug.DEBUG("SIGCHLD", "Checking for more children in the same batch...\n")

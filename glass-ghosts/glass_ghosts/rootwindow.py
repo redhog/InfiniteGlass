@@ -5,7 +5,7 @@ import sys
 import traceback
 
 class RootWindow(object):
-    def __init__(self, manager, display):
+    def __init__(self, manager, display, **kw):
         self.manager = manager
         self.display = display
 

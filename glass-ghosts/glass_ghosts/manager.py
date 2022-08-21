@@ -14,7 +14,7 @@ import pkg_resources
 import sys
 
 class GhostManager(object):
-    def __init__(self, display):
+    def __init__(self, display, **kw):
 
         self.display = display
 
@@ -42,9 +42,9 @@ class GhostManager(object):
         self.restore_config_ghosts()
         self.restore_ghosts()
 
-        self.session = glass_ghosts.session.Server(self, display)
-        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display)
-        self.components = glass_ghosts.components.Components(self, display)
+        self.session = glass_ghosts.session.Server(self, display, **kw)
+        self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display, **kw)
+        self.components = glass_ghosts.components.Components(self, display, **kw)
 
         display.mainloop.add_interval(0.5)(self.save_ghosts)
                 
