@@ -1,8 +1,7 @@
 #! /bin/bash
 
 if [ "$GLASS_DEBUGGER" = gdb ]; then
-  xinit ./scripts/xinitrc -- "$XSERVERPATH" $XSERVEROPTS &
-  gdb -ex "target remote localhost:2048" -ex "continue" ./$BUILD/env/bin/glass-renderer
+  setsid xinit ./scripts/xinitrc -- "$XSERVERPATH" $XSERVEROPTS 3<&0 4>&1 5>&2 </dev/null
 else
   if [ "$GLASS_DEBUGGER" = valgrind ]; then
     xinit ./scripts/xinitrc -- "$XSERVERPATH" $XSERVEROPTS &

@@ -25,6 +25,8 @@ BINARIES := $(patsubst %,$(BINDIR)/%,$(BINARIES_SUBDIRS))
 PYTHONAPPS_SUBDIRS := $(patsubst %/setup.py,%,$(wildcard */setup.py))
 PYTHONAPPS := $(patsubst %,$(BUILD)/env/bin/%,$(PYTHONAPPS_SUBDIRS))
 
+SCRIPTS := $(patsubst scripts/%,$(BINDIR)/%,$(wildcard scripts/*))
+
 $(BINARIES): $(BINDIR)
 
 $(BINDIR):
@@ -39,11 +41,14 @@ $(BUILD)/env/bin/activate:
 	. $(BUILD)/env/bin/activate; pip install setuptools
 	. $(BUILD)/env/bin/activate; cd glass-lib; pip install -e .
 
+$(SCRIPTS):
+	cp scripts/* $(BINDIR)
+
 $(PYTHONAPPS): $(BUILD)/env/bin/activate
 	. $(BUILD)/env/bin/activate; cd $(notdir $@); pip install -e .
 
 .PHONY: all run run-in-docker install devinstall uninstall install-binaries uninstall-binaries
-all: $(BINARIES) $(PYTHONAPPS)
+all: $(BINARIES) $(SCRIPTS) $(PYTHONAPPS)
 
 run: all
 	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
