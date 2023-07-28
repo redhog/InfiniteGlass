@@ -16,6 +16,15 @@ imports:
   - glass_input.actions.modeswitch
   - glass_input.actions.islands
 
+# Event filter macros whose names can be used insead of an actual
+# event filter in a key in a keymap (see any mode below). Values have
+# the same semantics as keymap keys.
+eventfilters:
+  MainKey: Mod4Mask
+  ItemKey: Mod1Mask
+  ResizeKey: ControlMask
+  SmallerActionKey: ShiftMask
+
 # Input modes represent different states glass-input can be in,
 # and defines what actions are bound to which keys in that mode,
 # as well as how to transition to other modes.
@@ -40,8 +49,8 @@ modes:
       # WIN+ALT+CTRL+RightClick to focus, and navigate focus
       # with the keyboard with WIN+ALT+CTRL+ArrowKey
       "GenericEventCode": focus_follows_mouse
-      "ButtonPress,Mod4Mask": grabbed_mode
-      "KeyPress,Mod4Mask": grabbed_mode
+      "ButtonPress,MainKey": grabbed_mode
+      "KeyPress,MainKey": grabbed_mode
       "KeyPress,XK_Super_L": grabbed_mode
 
   # Grabbed mode is entered once the main trigger key has been
@@ -54,58 +63,58 @@ modes:
       "KeyRelease": pop
       "ButtonRelease": pop
 
-      # "ButtonPress,Mod1Mask,Mod4Mask,3": focus_mode
-      # "KeyPress,Mod1Mask,Mod4Mask,XK_Up": focus_mode
-      # "KeyPress,Mod1Mask,Mod4Mask,XK_Down": focus_mode
-      # "KeyPress,Mod1Mask,Mod4Mask,XK_Left": focus_mode
-      # "KeyPress,Mod1Mask,Mod4Mask,XK_Right": focus_mode
+      # "ButtonPress,ItemKey,MainKey,3": focus_mode
+      # "KeyPress,ItemKey,MainKey,XK_Up": focus_mode
+      # "KeyPress,ItemKey,MainKey,XK_Down": focus_mode
+      # "KeyPress,ItemKey,MainKey,XK_Left": focus_mode
+      # "KeyPress,ItemKey,MainKey,XK_Right": focus_mode
 
       "KeyPress,XK_R": reload
 
       "KeyPress,XK_space": rofi_mode
       "KeyPress,XK_Escape": toggle_overlay
-      "Mod4Mask,KeyPress,XK_F1": send_debug
-      "Mod4Mask,KeyPress,XK_F4": send_close
-      "Mod4Mask,KeyPress,XK_F5": send_sleep
+      "MainKey,KeyPress,XK_F1": send_debug
+      "MainKey,KeyPress,XK_F4": send_close
+      "MainKey,KeyPress,XK_F5": send_sleep
       "KeyPress,XK_E": send_exit
       "KeyPress,XK_D": send_debug
       "KeyPress,XK_C": send_close
       "KeyPress,XK_S": send_sleep
       "KeyPress,XK_F": title_search_mode
-      "KeyPress,XK_T,ShiftMask": tile_visible
-      "KeyPress,XK_T,!ShiftMask": tile_visible_to_1_1
-      "KeyPress,XK_O,ShiftMask": {"tile_visible": {"packer": "glass_input.cloud_packer.CloudPacker"}}
-      "KeyPress,XK_O,!ShiftMask": {"tile_visible_to_1_1": {"packer": "glass_input.cloud_packer.CloudPacker"}}
+      "KeyPress,XK_T,SmallerActionKey": tile_visible
+      "KeyPress,XK_T,!SmallerActionKey": tile_visible_to_1_1
+      "KeyPress,XK_O,SmallerActionKey": {"tile_visible": {"packer": "glass_input.cloud_packer.CloudPacker"}}
+      "KeyPress,XK_O,!SmallerActionKey": {"tile_visible_to_1_1": {"packer": "glass_input.cloud_packer.CloudPacker"}}
       "KeyPress,XK_I": send_island_create
 
-      "KeyPress,!Mod1Mask,XK_Home": zoom_home
-      "ButtonPress,!Mod1Mask,4": zoom_mode
-      "ButtonPress,!Mod1Mask,5": zoom_mode
-      "KeyPress,!Mod1Mask,XK_Next": zoom_mode
-      "KeyPress,!Mod1Mask,XK_Prior": zoom_mode
-      "ButtonPress,!Mod1Mask,2": pan_mode
-      "ButtonPress,!Mod1Mask,1": pan_mode
-      "KeyPress,!Mod1Mask,XK_Up": pan_mode
-      "KeyPress,!Mod1Mask,XK_Down": pan_mode
-      "KeyPress,!Mod1Mask,XK_Left": pan_mode
-      "KeyPress,!Mod1Mask,XK_Right": pan_mode
+      "KeyPress,!ItemKey,XK_Home": zoom_home
+      "ButtonPress,!ItemKey,4": zoom_mode
+      "ButtonPress,!ItemKey,5": zoom_mode
+      "KeyPress,!ItemKey,XK_Next": zoom_mode
+      "KeyPress,!ItemKey,XK_Prior": zoom_mode
+      "ButtonPress,!ItemKey,2": pan_mode
+      "ButtonPress,!ItemKey,1": pan_mode
+      "KeyPress,!ItemKey,XK_Up": pan_mode
+      "KeyPress,!ItemKey,XK_Down": pan_mode
+      "KeyPress,!ItemKey,XK_Left": pan_mode
+      "KeyPress,!ItemKey,XK_Right": pan_mode
 
-      "KeyPress,Mod1Mask,!ShiftMask,XK_Home": zoom_1_1_1
-      "KeyPress,Mod1Mask,ShiftMask,XK_Home": item_zoom_1_1_to_window
-      "ButtonPress,Mod1Mask,4": item_zoom_mode
-      "ButtonPress,Mod1Mask,5": item_zoom_mode
-      "KeyPress,Mod1Mask,XK_Next": item_zoom_mode
-      "KeyPress,Mod1Mask,XK_Prior": item_zoom_mode
-      "ButtonPress,Mod1Mask,1,!ControlMask": item_pan_mode
-      "KeyPress,Mod1Mask,XK_Up,!ControlMask": item_pan_mode
-      "KeyPress,Mod1Mask,XK_Down,!ControlMask": item_pan_mode
-      "KeyPress,Mod1Mask,XK_Left,!ControlMask": item_pan_mode
-      "KeyPress,Mod1Mask,XK_Right,!ControlMask": item_pan_mode
-      "ButtonPress,Mod1Mask,1,ControlMask": item_resize_mode
-      "KeyPress,Mod1Mask,XK_Up,ControlMask": item_resize_mode
-      "KeyPress,Mod1Mask,XK_Down,ControlMask": item_resize_mode
-      "KeyPress,Mod1Mask,XK_Left,ControlMask": item_resize_mode
-      "KeyPress,Mod1Mask,XK_Right,ControlMask": item_resize_mode
+      "KeyPress,ItemKey,!SmallerActionKey,XK_Home": zoom_1_1_1
+      "KeyPress,ItemKey,SmallerActionKey,XK_Home": item_zoom_1_1_to_window
+      "ButtonPress,ItemKey,4": item_zoom_mode
+      "ButtonPress,ItemKey,5": item_zoom_mode
+      "KeyPress,ItemKey,XK_Next": item_zoom_mode
+      "KeyPress,ItemKey,XK_Prior": item_zoom_mode
+      "ButtonPress,ItemKey,1,!ResizeKey": item_pan_mode
+      "KeyPress,ItemKey,XK_Up,!ResizeKey": item_pan_mode
+      "KeyPress,ItemKey,XK_Down,!ResizeKey": item_pan_mode
+      "KeyPress,ItemKey,XK_Left,!ResizeKey": item_pan_mode
+      "KeyPress,ItemKey,XK_Right,!ResizeKey": item_pan_mode
+      "ButtonPress,ItemKey,1,ResizeKey": item_resize_mode
+      "KeyPress,ItemKey,XK_Up,ResizeKey": item_resize_mode
+      "KeyPress,ItemKey,XK_Down,ResizeKey": item_resize_mode
+      "KeyPress,ItemKey,XK_Left,ResizeKey": item_resize_mode
+      "KeyPress,ItemKey,XK_Right,ResizeKey": item_resize_mode
 
   title_search_mode:
     class: glass_input.title_search.TitleSearchMode
@@ -120,11 +129,11 @@ modes:
       "KeyRelease,!AutoRepeat": pop
       "ButtonRelease": pop
 
-      "ButtonPress,Mod1Mask,Mod4Mask": focus_follows_mouse
-      "KeyPress,XK_Left,Mod1Mask,Mod4Mask": focus_to_window_to_the_left
-      "KeyPress,XK_Right,Mod1Mask,Mod4Mask": focus_to_window_to_the_right
-      "KeyPress,XK_Up,Mod1Mask,Mod4Mask": focus_to_window_above
-      "KeyPress,XK_Down,Mod1Mask,Mod4Mask": focus_to_window_below
+      "ButtonPress,ItemKey,MainKey": focus_follows_mouse
+      "KeyPress,XK_Left,ItemKey,MainKey": focus_to_window_to_the_left
+      "KeyPress,XK_Right,ItemKey,MainKey": focus_to_window_to_the_right
+      "KeyPress,XK_Up,ItemKey,MainKey": focus_to_window_above
+      "KeyPress,XK_Down,ItemKey,MainKey": focus_to_window_below
 
   zoom_mode:
     class: glass_input.mode.Mode
@@ -132,39 +141,39 @@ modes:
       "KeyRelease,!AutoRepeat": pop
       "ButtonRelease": pop
 
-      "ButtonRelease,4,ShiftMask": ["zoom_in", "pop"]
-      "ButtonRelease,5,ShiftMask": ["zoom_out", "pop"]
+      "ButtonRelease,4,SmallerActionKey": ["zoom_in", "pop"]
+      "ButtonRelease,5,SmallerActionKey": ["zoom_out", "pop"]
 
-      "ButtonPress,4,ShiftMask": zoom_in
-      "ButtonPress,5,ShiftMask": zoom_out
-      "ButtonPress,4,!ShiftMask": zoom_to_fewer_windows
-      "ButtonPress,5,!ShiftMask": zoom_to_more_windows
+      "ButtonPress,4,SmallerActionKey": zoom_in
+      "ButtonPress,5,SmallerActionKey": zoom_out
+      "ButtonPress,4,!SmallerActionKey": zoom_to_fewer_windows
+      "ButtonPress,5,!SmallerActionKey": zoom_to_more_windows
 
-      "KeyPress,XK_Prior,!ShiftMask": zoom_to_fewer_windows
-      "KeyPress,XK_Next,!ShiftMask": zoom_to_more_windows
+      "KeyPress,XK_Prior,!SmallerActionKey": zoom_to_fewer_windows
+      "KeyPress,XK_Next,!SmallerActionKey": zoom_to_more_windows
 
-      "KeyPress,XK_Prior,ShiftMask": zoom_in
-      "KeyPress,XK_Next,ShiftMask": zoom_out
+      "KeyPress,XK_Prior,SmallerActionKey": zoom_in
+      "KeyPress,XK_Next,SmallerActionKey": zoom_out
 
   pan_mode:
     class: glass_input.mode.Mode
     keymap:
       "KeyRelease": pop
       "ButtonRelease": pop
-      "KeyPress,XK_Left,ShiftMask,!AutoRepeat": {"pan":{"x": 1, "y": 0}}
-      "KeyPress,XK_Right,ShiftMask,!AutoRepeat": {"pan":{"x": -1, "y": 0}}
-      "KeyPress,XK_Up,ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": 1}}
-      "KeyPress,XK_Down,ShiftMask,!AutoRepeat": {"pan":{"x": 0, "y": -1}}
+      "KeyPress,XK_Left,SmallerActionKey,!AutoRepeat": {"pan":{"x": 1, "y": 0}}
+      "KeyPress,XK_Right,SmallerActionKey,!AutoRepeat": {"pan":{"x": -1, "y": 0}}
+      "KeyPress,XK_Up,SmallerActionKey,!AutoRepeat": {"pan":{"x": 0, "y": 1}}
+      "KeyPress,XK_Down,SmallerActionKey,!AutoRepeat": {"pan":{"x": 0, "y": -1}}
 
-      "KeyPress,XK_Left,ShiftMask,AutoRepeat": {"pan":{"x": 10, "y": 0}}
-      "KeyPress,XK_Right,ShiftMask,AutoRepeat": {"pan":{"x": -10, "y": 0}}
-      "KeyPress,XK_Up,ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": 10}}
-      "KeyPress,XK_Down,ShiftMask,AutoRepeat": {"pan":{"x": 0, "y": -10}}
+      "KeyPress,XK_Left,SmallerActionKey,AutoRepeat": {"pan":{"x": 10, "y": 0}}
+      "KeyPress,XK_Right,SmallerActionKey,AutoRepeat": {"pan":{"x": -10, "y": 0}}
+      "KeyPress,XK_Up,SmallerActionKey,AutoRepeat": {"pan":{"x": 0, "y": 10}}
+      "KeyPress,XK_Down,SmallerActionKey,AutoRepeat": {"pan":{"x": 0, "y": -10}}
 
-      "KeyPress,XK_Left,!ShiftMask": zoom_to_window_to_the_left
-      "KeyPress,XK_Right,!ShiftMask": zoom_to_window_to_the_right
-      "KeyPress,XK_Up,!ShiftMask": zoom_to_window_above
-      "KeyPress,XK_Down,!ShiftMask": zoom_to_window_below
+      "KeyPress,XK_Left,!SmallerActionKey": zoom_to_window_to_the_left
+      "KeyPress,XK_Right,!SmallerActionKey": zoom_to_window_to_the_right
+      "KeyPress,XK_Up,!SmallerActionKey": zoom_to_window_above
+      "KeyPress,XK_Down,!SmallerActionKey": zoom_to_window_below
       "ButtonPress": pan_mouse
       "MotionNotify": pan_mouse
 
@@ -173,14 +182,14 @@ modes:
     load: {"ifnowin": {}}
     keymap:
       "KeyRelease": pop                
-      "Mod1Mask,ButtonRelease,ShiftMask,4": item_zoom_in
-      "Mod1Mask,KeyPress,ShiftMask,XK_Prior": item_zoom_in
-      "Mod1Mask,ButtonRelease,ShiftMask,5": item_zoom_out
-      "Mod1Mask,KeyPress,ShiftMask,XK_Next": item_zoom_out
-      "Mod1Mask,ButtonRelease,4": item_zoom_in_or_1_1
-      "Mod1Mask,KeyPress,XK_Prior": item_zoom_in_or_1_1
-      "Mod1Mask,ButtonRelease,5": item_zoom_out_or_1_1
-      "Mod1Mask,KeyPress,XK_Next": item_zoom_out_or_1_1
+      "ItemKey,ButtonRelease,SmallerActionKey,4": item_zoom_in
+      "ItemKey,KeyPress,SmallerActionKey,XK_Prior": item_zoom_in
+      "ItemKey,ButtonRelease,SmallerActionKey,5": item_zoom_out
+      "ItemKey,KeyPress,SmallerActionKey,XK_Next": item_zoom_out
+      "ItemKey,ButtonRelease,4": item_zoom_in_or_1_1
+      "ItemKey,KeyPress,XK_Prior": item_zoom_in_or_1_1
+      "ItemKey,ButtonRelease,5": item_zoom_out_or_1_1
+      "ItemKey,KeyPress,XK_Next": item_zoom_out_or_1_1
 
   item_pan_mode:
     class: glass_input.mode.Mode

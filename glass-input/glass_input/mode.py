@@ -25,7 +25,7 @@ def load_config():
 def set_config(cfg):
     global config
     config = cfg    
-    for module_name in config["imports"]:
+    for module_name in config.get("imports", []):
         module = importlib.import_module(module_name)
         importlib.reload(module)
         functions.update({
@@ -118,29 +118,41 @@ class Mode(object):
         pass
 
     def handle_state_filter(self, eventfilter):
+        eventfilter = eventfilter.split(",")
         filters = []
         statefilters = []
-        for item in eventfilter:
-            if '==' in item:
-                name, value = item.split('==')
-                statefilters.append((name, operator.eq, float(value)))
-            elif '%' in item:
-                name, value = item.split('%')
-                statefilters.append((name, modulo, int(value)))
-            elif '>=' in item:
-                name, value = item.split('>=')
-                statefilters.append((name, operator.ge, float(value)))
-            elif '<=' in item:
-                name, value = item.split('<=')
-                statefilters.append((name, operator.le, float(value)))
-            elif '>' in item:
-                name, value = item.split('>')
-                statefilters.append((name, operator.gt, float(value)))
-            elif '<' in item:
-                name, value = item.split('<')
-                statefilters.append((name, operator.lt, float(value)))
-            else:
-                filters.append(item)
+        def parse(items, negate=False):
+            for item in items:
+                if '==' in item:
+                    name, value = item.split('==')
+                    statefilters.append((name, operator.ne if negate else operator.eq, float(value)))
+                elif '%' in item:
+                    name, value = item.split('%')
+                    statefilters.append((name, modulo, int(value)))
+                elif '>=' in item:
+                    name, value = item.split('>=')
+                    statefilters.append((name, operator.lt if negate else operator.ge, float(value)))
+                elif '<=' in item:
+                    name, value = item.split('<=')
+                    statefilters.append((name, operator.gt if negate else operator.le, float(value)))
+                elif '>' in item:
+                    name, value = item.split('>')
+                    statefilters.append((name, operator.le if negate else operator.gt, float(value)))
+                elif '<' in item:
+                    name, value = item.split('<')
+                    statefilters.append((name, operator.ge if negate else operator.lt, float(value)))
+                elif item in config.get("eventfilters", {}):
+                    parse(config["eventfilters"][item].split(","), negate)
+                elif item.startswith("!") and item[1:] in config.get("eventfilters", {}):
+                    parse(config["eventfilters"][item[1:]].split(","), not negate)
+                else:
+                    if negate:
+                        if item.startswith("!"):
+                            item = item[1:]
+                        else:
+                            item = "!" + item
+                    filters.append(item)
+        parse(eventfilter)
         now = datetime.datetime.now()
         for name, op, value in statefilters:
             cvalue = self.state.get(name, 0)
@@ -157,9 +169,14 @@ class Mode(object):
         if keymap is None:
             keymap = self.keymap
         for eventfilter, action in keymap.items():
-            filters = self.handle_state_filter(eventfilter.split(","))
-            if filters is None or filters and not event[filters]:
-                continue
+            filters = self.handle_state_filter(eventfilter)
+            try:
+                if filters is None or filters and not event[filters]:
+                    continue
+            except Exception as e:
+                print(eventfilter, "=>", filters)
+                print(e)
+                raise
             try:
                 self.action(eventfilter, action, event)
             except Exception as e:
