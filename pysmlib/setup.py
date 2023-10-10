@@ -1,7 +1,7 @@
 import setuptools
 import setuptools.dist
 
-setuptools.dist.Distribution().fetch_build_eggs(['Cython>=0.15.1'])
+#setuptools.dist.Distribution().fetch_build_eggs(['Cython>=0.15.1'])
 
 from Cython.Build import cythonize
 

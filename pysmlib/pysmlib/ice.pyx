@@ -34,8 +34,8 @@ cdef class PyIceConn(object):
     cdef PyIceConn init(self, IceConn conn):
         global error_handler_installed
         if not error_handler_installed:
-            IceSetErrorHandler(&ice_error_handler_wrapper)
-            IceSetIOErrorHandler(&ice_io_error_handler_wrapper)
+            IceSetErrorHandler(<IceErrorHandler> ice_error_handler_wrapper)
+            IceSetIOErrorHandler(<IceIOErrorHandler> ice_io_error_handler_wrapper)
             error_handler_installed = True
         self.conn = conn
         self.refs = {}
@@ -71,7 +71,7 @@ cdef class PyIceConn(object):
     def IcePing(self, ice_ping_reply):
         data = (self, ice_ping_reply)
         self.refs[id(data)] = data
-        IcePing(self.conn, &ice_ping_reply_wrapper, <IcePointer> data)
+        IcePing(self.conn, <IcePingReplyProc> ice_ping_reply_wrapper, <IcePointer> data)
 
 class _PyIceConn(PyIceConn): pass
 

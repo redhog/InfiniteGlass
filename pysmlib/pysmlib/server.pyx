@@ -120,16 +120,16 @@ cdef Bool new_client(
 
     mask_ret[0] = SmsRegisterClientProcMask | SmsInteractRequestProcMask | SmsInteractDoneProcMask | SmsSaveYourselfRequestProcMask | SmsSaveYourselfP2RequestProcMask | SmsSaveYourselfDoneProcMask | SmsCloseConnectionProcMask | SmsSetPropertiesProcMask | SmsDeletePropertiesProcMask | SmsGetPropertiesProcMask
     
-    callbacks_ret.register_client.callback = register_client_wrapper
-    callbacks_ret.interact_request.callback = interact_request_wrapper
-    callbacks_ret.interact_done.callback = interact_done_wrapper
-    callbacks_ret.save_yourself_request.callback = save_yourself_request_wrapper
-    callbacks_ret.save_yourself_phase2_request.callback = save_yourself_phase2_request_wrapper
-    callbacks_ret.save_yourself_done.callback = save_yourself_done_wrapper
-    callbacks_ret.close_connection.callback = close_connection_wrapper
-    callbacks_ret.set_properties.callback = set_properties_wrapper
-    callbacks_ret.delete_properties.callback = delete_properties_wrapper
-    callbacks_ret.get_properties.callback = get_properties_wrapper
+    callbacks_ret.register_client.callback = <SmsRegisterClientProc> register_client_wrapper
+    callbacks_ret.interact_request.callback = <SmsInteractRequestProc> interact_request_wrapper
+    callbacks_ret.interact_done.callback = <SmsInteractDoneProc> interact_done_wrapper
+    callbacks_ret.save_yourself_request.callback = <SmsSaveYourselfRequestProc> save_yourself_request_wrapper
+    callbacks_ret.save_yourself_phase2_request.callback = <SmsSaveYourselfPhase2RequestProc> save_yourself_phase2_request_wrapper
+    callbacks_ret.save_yourself_done.callback = <SmsSaveYourselfDoneProc> save_yourself_done_wrapper
+    callbacks_ret.close_connection.callback = <SmsCloseConnectionProc> close_connection_wrapper
+    callbacks_ret.set_properties.callback = <SmsSetPropertiesProc> set_properties_wrapper
+    callbacks_ret.delete_properties.callback = <SmsDeletePropertiesProc> delete_properties_wrapper
+    callbacks_ret.get_properties.callback = <SmsGetPropertiesProc> get_properties_wrapper
 
     callbacks_ret.register_client.manager_data = <SmPointer>conn
     callbacks_ret.interact_request.manager_data = <SmPointer>conn
@@ -222,9 +222,9 @@ cdef class Server(object):
         
         if not SmsInitialize(
                 self.vendor, self.release,
-                &new_client,
+                <SmsNewClientProc> new_client,
                 <SmPointer> self,
-                &auth_failed_proc,
+                <IceHostBasedAuthProc> auth_failed_proc,
                 1024,
                 error_string_ret):
             raise Exception("SmsInitialize failed: %s" % error_string_ret)

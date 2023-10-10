@@ -65,10 +65,10 @@ cdef class PySmcConn(object):
 
         cdef unsigned long mask = 0
                 
-        self.callbacks.save_yourself.callback = save_yourself_wrapper
-        self.callbacks.die.callback = die_wrapper
-        self.callbacks.save_complete.callback = save_complete_wrapper
-        self.callbacks.shutdown_cancelled.callback = shutdown_cancelled_wrapper
+        self.callbacks.save_yourself.callback = <SmcSaveYourselfProc> save_yourself_wrapper
+        self.callbacks.die.callback = <SmcDieProc> die_wrapper
+        self.callbacks.save_complete.callback = <SmcSaveCompleteProc> save_complete_wrapper
+        self.callbacks.shutdown_cancelled.callback = <SmcShutdownCancelledProc> shutdown_cancelled_wrapper
 
         self.callbacks.save_yourself.client_data = <SmPointer> self
         self.callbacks.die.client_data = <SmPointer> self
@@ -139,14 +139,14 @@ cdef class PySmcConn(object):
     def SmcRequestSaveYourselfPhase2(self, save_yourself_phase2):
         data = (self, save_yourself_phase2)
         self.refs[id(data)] = data
-        if not SmcRequestSaveYourselfPhase2(self.conn, &save_yourself_phase2_wrapper, <SmPointer> data):
+        if not SmcRequestSaveYourselfPhase2(self.conn, <SmcSaveYourselfPhase2Proc>save_yourself_phase2_wrapper, <SmPointer> data):
             raise Exception("Error calling SmcRequestSaveYourselfPhase2")
 
     def SmcGetProperties(self, prop_reply_proc):
         data = (self, prop_reply_proc)
         self.refs[id(data)] = data
         
-        if not SmcGetProperties(self.conn, &prop_reply_proc_wrapper, <SmPointer> data):
+        if not SmcGetProperties(self.conn, <SmcPropReplyProc> prop_reply_proc_wrapper, <SmPointer> data):
             raise Exception("Error in SmcGetProperties")
 
     def __setitem__(self, name, value):
