@@ -7,7 +7,7 @@ else
   PROFILE_CFLAGS:=
 endif
 
-CFLAGS=-rdynamic -g -ggdb $(shell pkg-config --cflags $(PACKAGES)) -O0 -Wall $(PROFILE_CFLAGS) $(EXTRA_CFLAGS) -fcommon
+CFLAGS=-rdynamic -g -ggdb $(shell pkg-config --cflags $(PACKAGES)) -O0 -Wall $(PROFILE_CFLAGS) $(EXTRA_CFLAGS) -fcommon -Werror=implicit-function-declaration -Werror=implicit-int
 LIBS:=-ldl $(shell pkg-config --libs $(PACKAGES))
 
 ifeq ($(GLASS_DMALLOC),)

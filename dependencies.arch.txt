@@ -21,6 +21,7 @@ libxrandr
 libxrender
 libxtst
 linux-headers
+lsp-plugins
 mesa
 networkmanager
 pango

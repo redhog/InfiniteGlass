@@ -2,7 +2,7 @@
 
 if [ "$GLASS_DEBUGGER" = "valgrind" ]; then
   echo "Debugging using Valgrind..."
-  exec valgrind --vgdb=yes ./build/glass-renderer
+  exec valgrind --vgdb=yes ./build/env/bin/glass-renderer
 else
   if [ "$GLASS_DEBUGGER" = "gdb" ]; then
     echo "Debugging using GDB..."
