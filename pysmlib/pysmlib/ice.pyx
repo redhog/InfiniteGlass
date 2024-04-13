@@ -1,14 +1,18 @@
+import traceback
 from libc.stdlib cimport *
 from libc.string cimport *
 from pysmlib.SMlib cimport *
 from pysmlib.ice cimport *
 import sys
 
-cdef void ice_ping_reply_wrapper(IceConn ice_conn, IcePointer client_data):
-    data = <tuple> client_data
-    self, method = data
-    method()
-    del self.refs[id(data)]
+cdef void ice_ping_reply_wrapper(IceConn ice_conn, IcePointer client_data) noexcept:
+    try:
+        data = <tuple> client_data
+        self, method = data
+        method()
+        del self.refs[id(data)]
+    except Exception as e:
+        traceback.print_exc()
 
 open_connections = {}
 error_handler_installed = False
@@ -20,15 +24,21 @@ cdef void ice_error_handler_wrapper(IceConn             ice_conn,
                                     unsigned long       offendingSequence,
                                     int                 errorClass,
                                     int                 severity,
-                                    IcePointer          values):
-    open_connections[<long>ice_conn].error_handler(swap,
-                                                   offendingMinorOpcode,
-                                                   offendingSequence,
-                                                   errorClass,
-                                                   severity)
+                                    IcePointer          values) noexcept:
+    try:                                    
+        open_connections[<long>ice_conn].error_handler(swap,
+                                                       offendingMinorOpcode,
+                                                       offendingSequence,
+                                                       errorClass,
+                                                       severity)
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void ice_io_error_handler_wrapper(IceConn ice_conn):
-    open_connections[<long>ice_conn].io_error_handler()
+cdef void ice_io_error_handler_wrapper(IceConn ice_conn) noexcept:
+    try:
+        open_connections[<long>ice_conn].io_error_handler()
+    except Exception as e:
+        traceback.print_exc()
 
 cdef class PyIceConn(object):
     cdef PyIceConn init(self, IceConn conn):

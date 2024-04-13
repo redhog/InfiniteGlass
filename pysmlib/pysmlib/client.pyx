@@ -1,3 +1,4 @@
+import traceback
 from libc.stdlib cimport malloc, free
 import os
 from pysmlib.SMlib cimport *
@@ -9,36 +10,54 @@ SmcDieProcMask               = (1L << 1)
 SmcSaveCompleteProcMask      = (1L << 2)
 SmcShutdownCancelledProcMask = (1L << 3)
 
-cdef void save_yourself_wrapper(SmcConn smc_conn, SmPointer client_data, int save_type, Bool shutdown, int interact_style, Bool fast):
-    print("save_yourself_wrapper")
-    self = <PySmcConn> client_data
-    self.signal_save_yourself(save_type, shutdown, interact_style, fast)
+cdef void save_yourself_wrapper(SmcConn smc_conn, SmPointer client_data, int save_type, Bool shutdown, int interact_style, Bool fast) noexcept:
+    try:
+        print("save_yourself_wrapper")
+        self = <PySmcConn> client_data
+        self.signal_save_yourself(save_type, shutdown, interact_style, fast)
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void die_wrapper(SmcConn smcConn, SmPointer client_data):
-    print("die_wrapper")
-    self = <PySmcConn> client_data
-    self.signal_die()
-     
-cdef void shutdown_cancelled_wrapper(SmcConn smcConn, SmPointer client_data):
-    print("shutdown_cancelled_wrapper")
-    self = <PySmcConn> client_data
-    self.signal_shutdown_cancelled()
-     
-cdef void save_complete_wrapper(SmcConn smcConn, SmPointer client_data):
-    self = <PySmcConn> client_data
-    self.signal_save_complete()
+cdef void die_wrapper(SmcConn smcConn, SmPointer client_data) noexcept:
+    try:
+        print("die_wrapper")
+        self = <PySmcConn> client_data
+        self.signal_die()
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void save_yourself_phase2_wrapper(SmcConn smcConn, SmPointer client_data):
-    data = <PySmcConn> client_data
-    (self, proc) = data
-    proc()
-    del self.refs[id(data)]
-        
-cdef void prop_reply_proc_wrapper(SmcConn smcConn, SmPointer client_data, int numProps, SmProp **props):
-    data = <PySmcConn> client_data
-    (self, proc) = data
-    proc(smprops_to_dict(numProps, props))
-    del self.refs[id(data)]
+cdef void shutdown_cancelled_wrapper(SmcConn smcConn, SmPointer client_data) noexcept:
+    try:
+        print("shutdown_cancelled_wrapper")
+        self = <PySmcConn> client_data
+        self.signal_shutdown_cancelled()
+    except Exception as e:
+        traceback.print_exc()
+
+cdef void save_complete_wrapper(SmcConn smcConn, SmPointer client_data) noexcept:
+    try:
+        self = <PySmcConn> client_data
+        self.signal_save_complete()
+    except Exception as e:
+        traceback.print_exc()
+
+cdef void save_yourself_phase2_wrapper(SmcConn smcConn, SmPointer client_data) noexcept:
+    try:
+        data = <PySmcConn> client_data
+        (self, proc) = data
+        proc()
+        del self.refs[id(data)]
+    except Exception as e:
+        traceback.print_exc()
+
+cdef void prop_reply_proc_wrapper(SmcConn smcConn, SmPointer client_data, int numProps, SmProp **props) noexcept:
+    try:
+        data = <PySmcConn> client_data
+        (self, proc) = data
+        proc(smprops_to_dict(numProps, props))
+        del self.refs[id(data)]
+    except Exception as e:
+        traceback.print_exc()
 
 cdef class PySmcConn(object):
     cdef SmcConn conn

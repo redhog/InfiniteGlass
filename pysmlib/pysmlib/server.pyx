@@ -1,3 +1,4 @@
+import traceback
 from libc.stdlib cimport *
 from libc.string cimport *
 import os
@@ -29,122 +30,157 @@ SmSaveLocal  = 1
 SmSaveBoth   = 2
 
 
-cdef Status register_client_wrapper(SmsConn sms_conn, SmPointer manager_data, char *previous_id):
-    self = <PySmsConn>manager_data;
-    if self.register_client:
-        return self.register_client(previous_id if previous_id != NULL else None)
+cdef Status register_client_wrapper(SmsConn sms_conn, SmPointer manager_data, char *previous_id) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.register_client:
+            return self.register_client(previous_id if previous_id != NULL else None)
+    except Exception as e:
+        traceback.print_exc()
     return 0
     
-cdef void interact_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int dialog_type):
-    sys.stdout.flush()
-    self = <PySmsConn>manager_data;
-    if self.interact_request:
-        self.interact_request(dialog_type)
+cdef void interact_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int dialog_type) noexcept:
+    try:
+        sys.stdout.flush()
+        self = <PySmsConn>manager_data;
+        if self.interact_request:
+            self.interact_request(dialog_type)
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void interact_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool cancel_shutdown):
-    self = <PySmsConn>manager_data;
-    sys.stdout.flush()
-    if self.interact_done:
-        self.interact_done(cancel_shutdown)
 
-cdef void save_yourself_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int save_type, Bool shutdown, int interact_style, Bool fast, Bool glb):
-    self = <PySmsConn>manager_data;
-    if self.save_yourself_request:
-        self.save_yourself_request(save_type, shutdown, interact_style, fast, glb)
+cdef void interact_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool cancel_shutdown) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        sys.stdout.flush()
+        if self.interact_done:
+            self.interact_done(cancel_shutdown)
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void save_yourself_phase2_request_wrapper(SmsConn sms_conn, SmPointer manager_data):
-    self = <PySmsConn>manager_data;
-    if self.save_yourself_phase2_request:
-        self.save_yourself_phase2_request()
+cdef void save_yourself_request_wrapper(SmsConn sms_conn, SmPointer manager_data, int save_type, Bool shutdown, int interact_style, Bool fast, Bool glb) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.save_yourself_request:
+            self.save_yourself_request(save_type, shutdown, interact_style, fast, glb)
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void save_yourself_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool success):
-    self = <PySmsConn>manager_data;
-    if self.save_yourself_done:
-        self.save_yourself_done(success)
+cdef void save_yourself_phase2_request_wrapper(SmsConn sms_conn, SmPointer manager_data) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.save_yourself_phase2_request:
+            self.save_yourself_phase2_request()
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void close_connection_wrapper(SmsConn sms_conn, SmPointer manager_data, int count, char **reason_msgs):
-    self = <PySmsConn>manager_data;
-    if self.close_connection:
-        self.close_connection([bytes(reason_msgs[idx]).decode("utf-8") for idx in range(count)])
+cdef void save_yourself_done_wrapper(SmsConn sms_conn, SmPointer manager_data, Bool success) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.save_yourself_done:
+            self.save_yourself_done(success)
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void set_properties_wrapper(SmsConn sms_conn, SmPointer manager_data, int num_props, SmProp **props):
-    self = <PySmsConn>manager_data;
-    if self.set_properties:
-        self.set_properties(smprops_to_dict(num_props, props))
+cdef void close_connection_wrapper(SmsConn sms_conn, SmPointer manager_data, int count, char **reason_msgs) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.close_connection:
+            self.close_connection([bytes(reason_msgs[idx]).decode("utf-8") for idx in range(count)])
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void delete_properties_wrapper(SmsConn sms_conn, SmPointer manager_data, int num_props, char **prop_names):
-    self = <PySmsConn>manager_data;
-    if self.delete_properties:
-        self.delete_properties([bytes(prop_names[idx]).decode("utf-8") for idx in range(num_props)])
+cdef void set_properties_wrapper(SmsConn sms_conn, SmPointer manager_data, int num_props, SmProp **props) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.set_properties:
+            self.set_properties(smprops_to_dict(num_props, props))
+    except Exception as e:
+        traceback.print_exc()
 
-cdef void get_properties_wrapper(SmsConn sms_conn, SmPointer manager_data):
+cdef void delete_properties_wrapper(SmsConn sms_conn, SmPointer manager_data, int num_props, char **prop_names) noexcept:
+    try:
+        self = <PySmsConn>manager_data;
+        if self.delete_properties:
+            self.delete_properties([bytes(prop_names[idx]).decode("utf-8") for idx in range(num_props)])
+    except Exception as e:
+        traceback.print_exc()
+
+cdef void get_properties_wrapper(SmsConn sms_conn, SmPointer manager_data) noexcept:
     cdef int numProps
     cdef SmProp **props
-    self = <PySmsConn>manager_data;
-    if self.get_properties:
-        dict_to_smprops(self.get_properties(), &numProps, &props)
-        SmsReturnProperties(sms_conn, numProps, props);
-        free_smprops(numProps, props)
+    try:
+        self = <PySmsConn>manager_data;
+        if self.get_properties:
+            dict_to_smprops(self.get_properties(), &numProps, &props)
+            SmsReturnProperties(sms_conn, numProps, props);
+            free_smprops(numProps, props)
+    except Exception as e:
+        traceback.print_exc()
     
 cdef Bool new_client(
     SmsConn sms_conn,
     SmPointer manager_data,
     unsigned long *mask_ret,
     SmsCallbacks *callbacks_ret,
-    char **failure_reason_ret):
-    self = <Server>manager_data
+    char **failure_reason_ret) noexcept:
 
-    if not self.Connection:
-        failure_reason_ret[0] = <char *> malloc(1024)
-        strcpy(failure_reason_ret[0], "Manager does not define new_client()")
-        return 0
-
-    print("NEW CONN", self)
-    sys.stdout.flush()
     try:
-        # Split up object construction so that PySmsConn.conn is available in __init__()
-        conn = self.Connection.__new__(self.Connection, self)
-        (<PySmsConn?> conn).init(sms_conn)
-        conn.__init__(self)
+        self = <Server>manager_data
+
+        if not self.Connection:
+            failure_reason_ret[0] = <char *> malloc(1024)
+            strcpy(failure_reason_ret[0], "Manager does not define new_client()")
+            return 0
+
+        print("NEW CONN", self)
+        sys.stdout.flush()
+        try:
+            # Split up object construction so that PySmsConn.conn is available in __init__()
+            conn = self.Connection.__new__(self.Connection, self)
+            (<PySmsConn?> conn).init(sms_conn)
+            conn.__init__(self)
+        except Exception as e:
+            print("NEW CONN ERR", e)
+            traceback.print_exc()
+            failure_reason_ret[0] = <char *> malloc(1024)
+            strcpy(failure_reason_ret[0], str(e).encode("utf-8"))
+            return 0
+        self.connections[id(conn)] = conn
+
+        print("NEW CONN DONE", self, id(conn), self.connections, <long>sms_conn, <long><SmPointer>conn)
+        sys.stdout.flush()
+
+        mask_ret[0] = SmsRegisterClientProcMask | SmsInteractRequestProcMask | SmsInteractDoneProcMask | SmsSaveYourselfRequestProcMask | SmsSaveYourselfP2RequestProcMask | SmsSaveYourselfDoneProcMask | SmsCloseConnectionProcMask | SmsSetPropertiesProcMask | SmsDeletePropertiesProcMask | SmsGetPropertiesProcMask
+
+        callbacks_ret.register_client.callback = register_client_wrapper
+        callbacks_ret.interact_request.callback = interact_request_wrapper
+        callbacks_ret.interact_done.callback = interact_done_wrapper
+        callbacks_ret.save_yourself_request.callback = save_yourself_request_wrapper
+        callbacks_ret.save_yourself_phase2_request.callback = save_yourself_phase2_request_wrapper
+        callbacks_ret.save_yourself_done.callback = save_yourself_done_wrapper
+        callbacks_ret.close_connection.callback = close_connection_wrapper
+        callbacks_ret.set_properties.callback = set_properties_wrapper
+        callbacks_ret.delete_properties.callback = delete_properties_wrapper
+        callbacks_ret.get_properties.callback = get_properties_wrapper
+
+        callbacks_ret.register_client.manager_data = <SmPointer>conn
+        callbacks_ret.interact_request.manager_data = <SmPointer>conn
+        callbacks_ret.interact_done.manager_data = <SmPointer>conn
+        callbacks_ret.save_yourself_request.manager_data = <SmPointer>conn
+        callbacks_ret.save_yourself_phase2_request.manager_data = <SmPointer>conn
+        callbacks_ret.save_yourself_done.manager_data = <SmPointer>conn
+        callbacks_ret.close_connection.manager_data = <SmPointer>conn
+        callbacks_ret.set_properties.manager_data = <SmPointer>conn
+        callbacks_ret.delete_properties.manager_data = <SmPointer>conn
+        callbacks_ret.get_properties.manager_data = <SmPointer>conn
+
+        return 1
+
     except Exception as e:
-        print("NEW CONN ERR", e)
         traceback.print_exc()
-        failure_reason_ret[0] = <char *> malloc(1024)
-        strcpy(failure_reason_ret[0], str(e).encode("utf-8"))
-        return 0
-    self.connections[id(conn)] = conn
-
-    print("NEW CONN DONE", self, id(conn), self.connections, <long>sms_conn, <long><SmPointer>conn)
-    sys.stdout.flush()
-
-
-    mask_ret[0] = SmsRegisterClientProcMask | SmsInteractRequestProcMask | SmsInteractDoneProcMask | SmsSaveYourselfRequestProcMask | SmsSaveYourselfP2RequestProcMask | SmsSaveYourselfDoneProcMask | SmsCloseConnectionProcMask | SmsSetPropertiesProcMask | SmsDeletePropertiesProcMask | SmsGetPropertiesProcMask
-    
-    callbacks_ret.register_client.callback = register_client_wrapper
-    callbacks_ret.interact_request.callback = interact_request_wrapper
-    callbacks_ret.interact_done.callback = interact_done_wrapper
-    callbacks_ret.save_yourself_request.callback = save_yourself_request_wrapper
-    callbacks_ret.save_yourself_phase2_request.callback = save_yourself_phase2_request_wrapper
-    callbacks_ret.save_yourself_done.callback = save_yourself_done_wrapper
-    callbacks_ret.close_connection.callback = close_connection_wrapper
-    callbacks_ret.set_properties.callback = set_properties_wrapper
-    callbacks_ret.delete_properties.callback = delete_properties_wrapper
-    callbacks_ret.get_properties.callback = get_properties_wrapper
-
-    callbacks_ret.register_client.manager_data = <SmPointer>conn
-    callbacks_ret.interact_request.manager_data = <SmPointer>conn
-    callbacks_ret.interact_done.manager_data = <SmPointer>conn
-    callbacks_ret.save_yourself_request.manager_data = <SmPointer>conn
-    callbacks_ret.save_yourself_phase2_request.manager_data = <SmPointer>conn
-    callbacks_ret.save_yourself_done.manager_data = <SmPointer>conn
-    callbacks_ret.close_connection.manager_data = <SmPointer>conn
-    callbacks_ret.set_properties.manager_data = <SmPointer>conn
-    callbacks_ret.delete_properties.manager_data = <SmPointer>conn
-    callbacks_ret.get_properties.manager_data = <SmPointer>conn
- 
-    return 1
-
-
+        
+    return 0
 
 cdef class PySmsConn(object):
     cdef SmsConn _conn
@@ -206,7 +242,7 @@ cdef class PySmsConn(object):
         return bytes(SmsClientHostName(self.conn())).decode("utf-8")
 
 
-cdef Bool auth_failed_proc(char *hostname):
+cdef Bool auth_failed_proc(char *hostname) noexcept:
     return 1
 
 cdef class Server(object):
