@@ -26,6 +26,7 @@
 
 * [Rofi main menu](https://github.com/davatorium/rofi)
   * [Various rofi menus](https://gitlab.com/vahnrr/rofi-menus)
+* [Kando](https://github.com/kando-menu/kando) pie menu
 * Tiling
   * [bin-packing](https://codeincomplete.com/posts/bin-packing/)
   * [rectangle-packer](https://github.com/Penlect/rectangle-packer)
