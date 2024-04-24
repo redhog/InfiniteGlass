@@ -12,9 +12,12 @@ import importlib
 @InfiniteGlass.profilable
 def main(*arg, **kw):
     with InfiniteGlass.Display() as display:
-        configpath = os.path.expanduser(os.environ.get("GLASS_THEME_CONFIG", "~/.config/glass/theme.yml"))
-        with open(configpath) as f:
-            config = yaml.load(f, Loader=yaml.SafeLoader)
+        if sys.argv[1:]:
+            config = json.loads(sys.argv[1])
+        else:
+            configpath = os.path.expanduser(os.environ.get("GLASS_THEME_CONFIG", "~/.config/glass/theme.yml"))
+            with open(configpath) as f:
+                config = yaml.load(f, Loader=yaml.SafeLoader)
 
         module_name, cls_name = config["name"].rsplit(".", 1)
         module = importlib.import_module(module_name)
