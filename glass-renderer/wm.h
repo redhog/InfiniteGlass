@@ -6,7 +6,7 @@
 #include "item.h"
 #include "list.h"
 
-FILE *eventlog;
+extern FILE *eventlog;
 
 
 typedef struct {

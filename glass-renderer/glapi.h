@@ -10,7 +10,7 @@
 #include <GL/glx.h>
 #include "debug.h"
 
-GLXFBConfig *configs;
+extern GLXFBConfig *configs;
 
 
 #define GL_CHECK_ERROR(entry, ...) ({ \

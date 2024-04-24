@@ -7,8 +7,26 @@
 #include "debug.h"
 #include <X11/extensions/XInput2.h>
 
+Atom XA_FLOAT;
+
+
+Display* display;
+xcb_connection_t *xcb_display;
+Window root;
+Window overlay;
+XWindowAttributes overlay_attr;
+int nxextensions;
+char **xextensions;
+const char *extensions;
+typedef void (*t_glx_bind)(Display *, GLXDrawable, int , const int *);
+typedef void (*t_glx_release)(Display *, GLXDrawable, int);
 t_glx_bind glXBindTexImageEXT = 0;
 t_glx_release glXReleaseTexImageEXT = 0;
+
+int damage_event, damage_error;
+int shape_event, shape_error;
+
+Bool glx_rebind_pixmap;
 
 void x_push_error_context(char *name) {
   XSync(display, False);

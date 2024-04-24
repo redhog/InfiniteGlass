@@ -62,5 +62,6 @@ extern void item_print(Item *item, int indent, FILE *fp);
 extern Item *item_get_from_window(Window window, int create);
 extern Item *item_get_from_widget(Item *parent, int widget);
 extern void items_get_from_toplevel_windows();
+extern void item_menu_update_space_pos_from_window(Item *item, int x, int y, int width, int height);
 
 #endif

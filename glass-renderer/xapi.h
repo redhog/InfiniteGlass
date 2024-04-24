@@ -36,26 +36,26 @@
 #include <stdlib.h>
 #include "glapi.h"
 
-Atom XA_FLOAT;
+extern Atom XA_FLOAT;
 
 
-Display* display;
-xcb_connection_t *xcb_display;
-Window root;
-Window overlay;
-XWindowAttributes overlay_attr;
-int nxextensions;
-char **xextensions;
-const char *extensions;
+extern Display* display;
+extern xcb_connection_t *xcb_display;
+extern Window root;
+extern Window overlay;
+extern XWindowAttributes overlay_attr;
+extern int nxextensions;
+extern char **xextensions;
+extern const char *extensions;
 typedef void (*t_glx_bind)(Display *, GLXDrawable, int , const int *);
 typedef void (*t_glx_release)(Display *, GLXDrawable, int);
-t_glx_bind glXBindTexImageEXT;
-t_glx_release glXReleaseTexImageEXT;
+extern t_glx_bind glXBindTexImageEXT;
+extern t_glx_release glXReleaseTexImageEXT;
 
-int damage_event, damage_error;
-int shape_event, shape_error;
+extern int damage_event, damage_error;
+extern int shape_event, shape_error;
 
-Bool glx_rebind_pixmap;
+extern Bool glx_rebind_pixmap;
 
 extern void x_push_error_handler(XErrorHandler handler);
 extern void x_pop_error_handler();
