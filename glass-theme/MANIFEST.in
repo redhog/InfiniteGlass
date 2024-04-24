@@ -1,1 +1,3 @@
 recursive-include glass_theme *.glsl
+recursive-include glass_theme *.geojson
+
