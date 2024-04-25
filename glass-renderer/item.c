@@ -26,8 +26,12 @@ Bool init_items() {
 
 void item_constructor(Item *item) {
   item->window = None;
+  item->attr = NULL;
+  item->geom = NULL;
   item->is_mapped = False;
   item->_is_mapped = False;
+  item->x = 0;
+  item->y = 0;
   item->properties = NULL;
   item->prop_layer = NULL;
   item->prop_item_layer = NULL;
@@ -36,11 +40,11 @@ void item_constructor(Item *item) {
   item->prop_coords = NULL;
   item->prop_coord_types = NULL;
   item->prop_draw_type = NULL;
+  item->damage = 0;
+  item->window_pixmap = None;
+  texture_initialize(&item->window_texture);
   item->draw_cycles_left = 0;
   item->parent_item = NULL;
-  item->attr = NULL;
-  item->geom = NULL;
-  texture_initialize(&item->window_texture);
 }
 
 void item_menu_update_space_pos_from_window(Item *item, int x, int y, int width, int height) {

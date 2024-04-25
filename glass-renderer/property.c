@@ -11,6 +11,7 @@ Property *property_allocate(Properties *properties, Atom name) {
   prop->name = name;
   prop->name_str = XGetAtomName(display, prop->name);
   prop->type = None;
+  prop->format = 0;
   prop->values.bytes = NULL;
   for (size_t i = 0; i < PROGRAM_CACHE_SIZE; i++) {
     prop->programs[i].program = -1;
