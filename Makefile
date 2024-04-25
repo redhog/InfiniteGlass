@@ -3,7 +3,7 @@ default: run
 
 XSERVER=Xephyr
 GLASS_DEBUGGER=
-PYTHON=python3.11
+PYTHON=python3
 
 ifeq ($(XSERVEROPTS),)
   ifeq ($(XSERVER),Xephyr)
