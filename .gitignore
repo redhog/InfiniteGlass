@@ -18,3 +18,5 @@ chrome-sessions/
 eventlog.log
 gmon.*
 *.prof
+.ipynb_checkpoints/
+experiments
