@@ -10,6 +10,7 @@
   * [glX](https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/#glX)
   * [OpenGL 2.1](https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/)
   * [GLSL 3.30](https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.3.30.pdf)
+  * [RSVG-2](https://gnome.pages.gitlab.gnome.org/librsvg/Rsvg-2.0/index.html)
 * Event handling
   * [Cursor tracking using XInput2](https://keithp.com/blogs/Cursor_tracking/)
 * Window manager protocols
@@ -26,6 +27,7 @@
 
 * [Rofi main menu](https://github.com/davatorium/rofi)
   * [Various rofi menus](https://gitlab.com/vahnrr/rofi-menus)
+* [Kando](https://github.com/kando-menu/kando) pie menu
 * Tiling
   * [bin-packing](https://codeincomplete.com/posts/bin-packing/)
   * [rectangle-packer](https://github.com/Penlect/rectangle-packer)
