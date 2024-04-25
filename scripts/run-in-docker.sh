@@ -22,6 +22,8 @@ if [ "$(docker ps -a -q -f name=glass)" != "" ]; then
   docker rm glass
 fi
 
+ENVS="$(export | grep GLASS_ | sed -e "s+declare -x \([^=]*\)=.*+-e \1+g")"
+
 docker run \
        --name glass \
        --memory 2gb \
@@ -36,4 +38,5 @@ docker run \
        -v "$XAUTH:$XAUTH" \
        -e "XAUTHORITY=$XAUTH" \
        -e DISPLAY \
+       $ENVS \
        $IMAGE $DOCKERCOMMAND
