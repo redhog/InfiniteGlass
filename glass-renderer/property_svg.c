@@ -9,6 +9,9 @@
 #include "debug.h"
 #include <librsvg/rsvg.h>
 
+#include <unistd.h>
+#include <fcntl.h>
+
 typedef struct {
   int x;
   int y;
@@ -152,11 +155,9 @@ void property_svg_load(Property *prop) {
   }
     
   GError *error = NULL;
-  unsigned char *src = (unsigned char *) prop->values.bytes;
-  src[prop->nitems] = '\0';
-  data->rsvg = rsvg_handle_new_from_data(src, strlen((char *) src), &error);
+  data->rsvg = rsvg_handle_new_from_data((unsigned char *) prop->values.bytes, prop->nitems, &error);
   if (!data->rsvg) {
-    DEBUG("window.svg.error", "Unable to load svg: %s: %s, len=%ld\n",  error->message, src, prop->nitems);
+    DEBUG("window.svg.error", "Unable to load svg: %s: %.*s, len=%ld\n",  error->message, prop->nitems, (unsigned char *) prop->values.bytes, prop->nitems);
     fflush(stdout);
     return;
   }
