@@ -192,3 +192,22 @@ item must be reinterpreted separately:
     for (int i = 0; i < nr_items; i++) {
      items[i] = *(float *) (i + (long *) prop_return);
     }
+
+# Application ID:s
+
+Implemented by: [`glass-annotator`](../glass-annotator)
+
+The `glass-annotator` modifies the behavior of all applications.
+
+At startup of an application any environment variables prefixed by
+either `IG_APP_` or `IG_GROUP_` are read and stored. Then environment
+of the application is modified, removing any `IG_APP_` prefixed
+environment variables, so that they are not inherited by child
+applications. `IG_GROUP_` ones are left unchanged. If an environment
+variable `IG_APP_ID` does not exist, a random value will be generated
+and used in its stead.
+
+When ever the application opens a new window, all environment
+variables read at startup as per above, will be set as properties on
+the window. Additionally, the property WM_COMMAND will be set to the
+argv of the application.
