@@ -46,6 +46,7 @@ Features:
   * [Themes](docs/THEMES.md)
   * [Debugging](docs/DEBUGGING.md)
 * [Protocols](docs/PROTOCOLS.md)
+* [Python library](docs/LIBRARY.md)
 * [References](docs/REFERENCES.md)
 
 # Installation
