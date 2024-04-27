@@ -110,4 +110,6 @@ def handler(self, value):
 Call an event handler once when a property with a particular name is
 first set on a window.
 
-`window.send()` send a client message to a window.
+`window.send(destination_window, client_type, *values)` send a client
+message to a window. client_type should be an atom name as a string,
+values will be converted the same way as for window properties.
