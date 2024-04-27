@@ -72,7 +72,7 @@ class GhostManager(object):
     def restore_config_ghosts(self):
         self.restoring_ghosts = True
         ghosts = self.config.get("ghosts", {})
-        for key, properties in ghosts.items():
+        for properties in ghosts:
             glass_ghosts.ghost.Shadow(self, properties, from_config=True).activate()
         self.restoring_ghosts = False
         

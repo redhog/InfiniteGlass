@@ -93,8 +93,11 @@ class Components(object):
         InfiniteGlass.debug.DEBUG("component", "Starting %s: %s\n" % (name, " ".join(spec["command"])))
         pid = os.fork()
         if pid == 0:
+            env = dict(os.environ)
+            if "environment" in spec:
+                env.update(spec["environment"])
             try:
-                os.execlp(spec["command"][0], *spec["command"])
+                os.execvpe(spec["command"][0], spec["command"], env)
             except Exception as e:
                 raise Exception("%s (%s): %s" % (name, " ".join(spec["command"]), e))
         else:
