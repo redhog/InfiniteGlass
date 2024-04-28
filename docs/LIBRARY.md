@@ -73,25 +73,42 @@ syntaxes:
 `"MY_PROPERTY" in window` check if perty is set on window.
 
 `window["MY_PROPERTY"]` or `window.get("MY_PROPERTY", default=None)`
-retrieves a property value. Window values will be returned as
+retrieves a property value.
+
+`window.items()` retrievs al properties, as a list of tuples of names
+and values.
+
+`window["MY_PROPERTY"] = value` sets a property to a value.
+
+Window values will be returned as
 `Xlib.xobject.drawable.Window` objects, ATOMs will be returned as
 string values. STRING values are returned as byte sequences.
 
-`window.items()` retrievs al properties, as a list of tuples of names
-and values (as per `keys()` and `get()` above).
+`del window["MY_PROPERTY"]` unsets a property.
 
-`window["MY_PROPERTY"] = value` sets a property to a value. The type
-conversions used are:
+Type conversions when getting and setting values:
 
-  * byte sequence: STRING
-  * string: ATOM, unless the keycode name, in which case KEYCODE, or X constant, in which case XCONST
+  * array: depending on typecode
+    * b, B: STRING
+    * h, i, l: INTEGER
+    * H, I, L: CARDINAL
+    * f: FLOAT
+  * `Xlib.xobject.drawable.Window`: WINDOW
   * int: INTEGER
   * float: FLOAT
-  * array: INTEGER, CARDINAL or FLOAT depending on the typecode
-  * `Xlib.xobject.drawable.Window`: WINDOW
+  * bytes: STRING
   * dict: JSON
-
-`del window["MY_PROPERTY"]` unsets a property.
+  * tuple (TYPE_NAME, value): TYPE_NAME
+  * string:
+    * If a keycode name: KEYCODE
+    * If an X constant name: XCONST
+    * If it starts with @: Read STRING value from file path
+    * If URL:
+      * file:///path: Read STRING value from file path
+      * resource://package/path: Read STRING value from python package resource
+      * data://value: STRING, value is encoded to UTF-8
+      * eq://jsonpath: Evaluate a JSON-path on `{"window": window}` and set value to return value.
+    * Otherwise: ATOM
 
 ```
 @window.on_event(event=None, mask=None)
@@ -110,6 +127,7 @@ def handler(self, value):
 Call an event handler once when a property with a particular name is
 first set on a window.
 
-`window.send(destination_window, client_type, *values)` send a client
-message to a window. client_type should be an atom name as a string,
-values will be converted the same way as for window properties.
+`window.send(destination_window, client_type, *values)` send a
+`ClientMessage` to a window. `client_type` should be an atom name as a
+string, values will be converted the same way as for window
+properties.
