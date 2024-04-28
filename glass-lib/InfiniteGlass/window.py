@@ -82,9 +82,11 @@ def window_on_event(self, event=None, mask=None, **kw):
         e = event
         m = mask
         if fn.__name__.endswith("Mask"):
-            m = fn.__name__
+            if m is None:
+                m = fn.__name__
         else:
-            e = fn.__name__
+            if e is None:
+                e = fn.__name__
         if m is None:
             m = eventmask.event_mask_map[e]
         self.change_attributes(event_mask=self.get_attributes().your_event_mask | getattr(Xlib.X, m))
