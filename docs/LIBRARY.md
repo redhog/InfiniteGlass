@@ -45,12 +45,16 @@ manipulation.
 returned event from the event queue.
 
 ```
-@display.on(event, mask)
+@display.on(event="PropertyNotify", mask=None)
 def handler(display, event):
     pass
 ```
 
-Register a andler for an event.
+Register a andler for an event. Additional filter rules can be added
+as keyword arguments. If e.g. a keyword named `button` with value 1 is
+supplied, only event objects with a property named `button` with a
+value of 1 will trigger the event handler.
+
 
 `with display:` at the exit of the block, process events and call
 event handlers until there are no registered event handlers any more.
@@ -111,12 +115,22 @@ Type conversions when getting and setting values:
     * Otherwise: ATOM
 
 ```
-@window.on_event(event=None, mask=None)
+@window.on(event="ButtonPress", mask=None, **filter)
 def handler(window, event):
    pass
 ```
+or
+```
+@window.on(mask=None, **filter)
+def ButtonPress(window, event):
+   pass
+```
 
-Register an event handler for an event, with some event mask on the window.
+Register an event handler for an event, with some event mask on the
+window. Additional filter rules can be added as keyword arguments. If
+e.g. a keyword named `button` with value 1 is supplied, only event
+objects with a property named `button` with a value of 1 will trigger
+the event handler.
 
 ```
 @window.require("MY_PROPERTY")
