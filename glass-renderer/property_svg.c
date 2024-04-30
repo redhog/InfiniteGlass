@@ -127,9 +127,12 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   cairo_translate(data->cairo_ctx,
                   -data->x,
                   -data->y);
-  cairo_scale(data->cairo_ctx,
-              (float) data->itemwidth / (float) dimension.em,
-              (float) data->itemheight / (float) dimension.ex);
+
+  float xscale = data->itemwidth / (float) dimension.em;
+  float yscale = (float) data->itemheight / (float) dimension.ex;
+  float scale = xscale < yscale ? xscale : yscale;
+
+  cairo_scale(data->cairo_ctx, scale, scale);
   
   rsvg_handle_render_cairo(data->rsvg, data->cairo_ctx);
   cairo_surface_flush(data->surface);  
