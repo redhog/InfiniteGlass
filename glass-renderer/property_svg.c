@@ -133,10 +133,17 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   float scale = xscale < yscale ? xscale : yscale;
 
   cairo_scale(data->cairo_ctx, scale, scale);
-  
-  rsvg_handle_render_cairo(data->rsvg, data->cairo_ctx);
-  cairo_surface_flush(data->surface);  
-  texture_from_cairo_surface(&data->texture, data->surface);
+
+  if (cairo_status(data->cairo_ctx) == CAIRO_STATUS_SUCCESS) {  
+    rsvg_handle_render_cairo(data->rsvg, data->cairo_ctx);
+    cairo_surface_flush(data->surface);  
+    texture_from_cairo_surface(&data->texture, data->surface);
+  } else {
+    cairo_destroy(data->cairo_ctx);
+    cairo_surface_destroy(data->surface);
+    data->cairo_ctx = NULL;
+    data->surface = NULL;
+  }
 }
 
 

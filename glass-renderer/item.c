@@ -110,7 +110,8 @@ void item_menu_update_space_pos_from_window(Item *item, int x, int y, int width,
 
 void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
   if (!reply) DEBUG("no_reply", "%d.item_update_space_pos_from_window: No reply\n", item->window);
- 
+  if (!item->geom) return;
+  
   item->x                   = item->geom->x;
   item->y                   = item->geom->y;
   int width                 = item->geom->width;
@@ -230,7 +231,10 @@ void item_initialize_layer(Item *item) {
 }
 
 void item_initialize_attr_load(Item *item, xcb_get_window_attributes_reply_t *reply, xcb_generic_error_t *error) {
-  if (!reply) DEBUG("no_reply", "%d.item_initialize_attr: No reply\n", item->window);
+  if (!reply) {
+    DEBUG("no_reply", "%d.item_initialize_attr: No reply\n", item->window);
+    return;
+  }
   item->attr = reply;
   if (item->window == root) {
     Atom layer = ATOM("IG_LAYER_ROOT");
@@ -249,6 +253,7 @@ void item_initialize_attr(Item *item) {
 }
 
 void item_initialize_geom_load(Item *item, xcb_get_geometry_reply_t *reply, xcb_generic_error_t *error) {
+  if (!reply) DEBUG("no_replygeom", "Unable to initialize window geometry\n");
   item->geom = reply;
   item_initialize_attr(item);
 }

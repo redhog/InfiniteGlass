@@ -10,6 +10,8 @@
 void property_size_init(PropertyTypeHandler *prop) { prop->type = XA_INTEGER; prop->name = ATOM("IG_SIZE"); }
 
 void property_size_load_geom(Property *prop, xcb_get_geometry_reply_t *reply, xcb_generic_error_t *error) {
+ if (!reply) return;
+ 
   int width = prop->values.dwords[0];
   int height = prop->values.dwords[1];
 
