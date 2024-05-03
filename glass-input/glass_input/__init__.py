@@ -47,8 +47,12 @@ def main(*arg, **kw):
             
         @display.root.on(mask="SubstructureNotifyMask", client_type="IG_INPUT_ACTION")
         def ClientMessage(win, event):
-            win, atom = event.parse("WINDOW", "ATOM")
-            action = json.loads(win[atom])
+            try:
+                win, atom = event.parse("WINDOW", "ATOM")
+                action = json.loads(win[atom])
+            except Xlib.error.BadWindow as e:
+                InfiniteGlass.DEBUG("message", "Input action lost: %s[%s]" % (win, atom)); sys.stderr.flush()
+                return
             InfiniteGlass.DEBUG("message", "RECEIVED INPUT ACTION %s" % (action,)); sys.stderr.flush()
             event.window = win
             display.input_stack[-1].last_event = event
