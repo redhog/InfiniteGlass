@@ -30,7 +30,7 @@ Property *property_allocate(Properties *properties, Atom name) {
 void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generic_error_t *error) {
   Property *prop = (Property *) data;
   if (!reply) {
-    ERROR("load", "Property loading failed");
+    ERROR("no_reply", "%ld: xcb_get_property failed", prop->window);
     return;
   }
 
