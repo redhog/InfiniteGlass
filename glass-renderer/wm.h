@@ -23,6 +23,10 @@ extern List *shaders;
 extern Atom current_layer;
 extern Bool filter_by_layer(Item *item);
 
+extern void print_views(void);
+extern void print_shaders(void);
+extern void print_items(void);
+
 extern void draw(Bool print);
 extern void trigger_draw();
 extern void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item);

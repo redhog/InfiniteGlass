@@ -51,6 +51,34 @@ Bool filter_by_layer(Item *item) {
   return item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == current_layer;
 }
 
+void print_views(void) {
+  printf("views:\n");
+  if (views) {
+    for (size_t idx = 0; idx < views->count; idx++) {
+      View *view = (View *) views->entries[idx];
+      view_print(view, 2, stdout);
+    }
+  }
+}
+
+void print_shaders(void) {
+  printf("shaders:\n");
+  if (views) {
+    for (size_t idx = 0; idx < shaders->count; idx++) {
+      Shader *shader = (Shader *) shaders->entries[idx];
+      shader_print(shader, 2, stdout);
+    }
+  }
+}
+
+void print_items(void) {
+  printf("items:\n");
+  for (size_t idx = 0; idx < items_all->count; idx++) {
+    Item *item = (Item *) items_all->entries[idx];
+    item_print(item, 2, stdout);
+  }
+}
+
 void draw(Bool print) {
   Rendering rendering;
   rendering.picking = debug_picking;
@@ -246,33 +274,17 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_VIEWS")) {
     printf("---\n");
-    printf("views:\n");
-    if (views) {
-      for (size_t idx = 0; idx < views->count; idx++) {
-        View *view = (View *) views->entries[idx];
-        view_print(view, 2, stdout);
-      }
-    }
+    print_views();
     printf("...\n");
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_SHADERS")) {
     printf("---\n");
-    printf("shaders:\n");
-    if (views) {
-      for (size_t idx = 0; idx < shaders->count; idx++) {
-        Shader *shader = (Shader *) shaders->entries[idx];
-        shader_print(shader, 2, stdout);
-      }
-    }
+    print_shaders();
     printf("...\n");
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_ITEMS")) {
     printf("---\n");
-    printf("items:\n");
-    for (size_t idx = 0; idx < items_all->count; idx++) {
-      Item *item = (Item *) items_all->entries[idx];
-      item_print(item, 2, stdout);
-    }
+    print_items();
     printf("...\n");
     fflush(stdout);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {
