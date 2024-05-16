@@ -35,13 +35,13 @@ void property_views_load(Property *prop) {
 void property_views_free(Property *prop) {
 }
 
-void property_views_print(Property *prop, int indent, FILE *fp) {
+void property_views_print(Property *prop, int indent, FILE *fp, int detail) {
   if (prop->type == XA_ATOM) {
-    property_atom_print(prop, indent, fp);
+    property_atom_print(prop, indent, fp, detail);
   } else if (prop->type == XA_FLOAT) {
-    property_float_print(prop, indent, fp);
+    property_float_print(prop, indent, fp, detail);
   } else if (prop->type == XA_INTEGER) {
-    property_int_print(prop, indent, fp);
+    property_int_print(prop, indent, fp, detail);
   }
 }
 

@@ -1,3 +1,4 @@
+#include <limits.h>
 #include "property.h"
 #include "shader.h"
 #include "rendering.h"
@@ -63,7 +64,7 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
   
   if (DEBUG_ENABLED(prop->name_str)) {
     DEBUG(prop->name_str, "[%d]", prop->nitems);
-    property_print(prop, 0, stderr);
+    property_print(prop, 0, stderr, INT_MAX);
   }
 }
 
@@ -138,10 +139,10 @@ void property_draw(Property *prop, Rendering *rendering) {
   type->draw(prop, rendering);
 }
 
-void property_print(Property *prop, int indent, FILE *fp) {
+void property_print(Property *prop, int indent, FILE *fp, int detail) {
   PropertyTypeHandler *type = prop->type_handler;
-  if (type && type->print) {
-    type->print(prop, indent, fp);
+  if (detail > 0 && type && type->print) {
+    type->print(prop, indent, fp, detail - 1);
   } else {
     char *type_name = XGetAtomName(display, prop->type);
     if (type_name) {
@@ -246,11 +247,11 @@ void properties_draw(Properties *properties, Rendering *rendering) {
   }
 }
 
-void properties_print(Properties *properties, int indent, FILE *fp) {
+void properties_print(Properties *properties, int indent, FILE *fp, int detail) {
   if (!properties) return;
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = (Property *) properties->properties->entries[i];
-    property_print(prop, indent, fp);
+    property_print(prop, indent, fp, detail);
   }
 }
 

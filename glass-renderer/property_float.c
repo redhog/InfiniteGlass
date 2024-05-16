@@ -56,7 +56,7 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
     }
   }
 }
-void property_float_print(Property *prop, int indent, FILE *fp) {
+void property_float_print(Property *prop, int indent, FILE *fp, int detail) {
   float *values = (float *) prop->values.dwords;
   fprintf(fp, "%s%s: !float [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {

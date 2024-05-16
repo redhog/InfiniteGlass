@@ -71,11 +71,11 @@ void print_shaders(void) {
   }
 }
 
-void print_items(void) {
+void print_items(int detail) {
   printf("items:\n");
   for (size_t idx = 0; idx < items_all->count; idx++) {
     Item *item = (Item *) items_all->entries[idx];
-    item_print(item, 2, stdout);
+    item_print(item, 2, stdout, detail);
   }
 }
 
@@ -284,7 +284,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_ITEMS")) {
     printf("---\n");
-    print_items();
+    print_items(INT_MAX);
     printf("...\n");
     fflush(stdout);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {

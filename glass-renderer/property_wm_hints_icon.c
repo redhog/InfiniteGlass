@@ -69,7 +69,7 @@ void property_wm_hints_icon_to_gl(Property *prop, Rendering *rendering) {
     rendering->texture_unit++;
   }
 }
-void property_wm_hints_icon_print(Property *prop, int indent, FILE *fp) {
+void property_wm_hints_icon_print(Property *prop, int indent, FILE *fp, int detail) {
   fprintf(fp, "%s%s: !WM_HINTS null\n", get_indent(indent), prop->name_str);
 }
 void property_wm_hints_load_program(Property *prop, Rendering *rendering) {

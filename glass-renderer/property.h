@@ -61,7 +61,7 @@ extern void property_load(Property *prop);
 extern void property_free(Property *prop);
 extern void property_to_gl(Property *prop, Rendering *rendering);
 extern void property_draw(Property *prop, Rendering *rendering);
-extern void property_print(Property *prop, int indent, FILE *fp);
+extern void property_print(Property *prop, int indent, FILE *fp, int detail);
 
 struct ProgramCacheStruct {
   GLint program;
@@ -80,7 +80,7 @@ extern Property *properties_update(Properties *properties, Atom name);
 extern void properties_free(Properties *properties);
 extern void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering);
 extern void properties_draw(Properties *properties, Rendering *rendering);
-extern void properties_print(Properties *properties, int indent, FILE *fp);
+extern void properties_print(Properties *properties, int indent, FILE *fp, int detail);
 extern Property *properties_find(Properties *properties, Atom name);
 
 typedef void PropertyInit(PropertyTypeHandler *prop);
@@ -92,7 +92,7 @@ typedef void PropertyFreeProgram(Property *prop, size_t index);
 typedef void PropertyToGl(Property *prop, Rendering *rendering);
 typedef void PropertyCalculate(Property *prop, Rendering *rendering);
 typedef void PropertyDraw(Property *prop, Rendering *rendering);
-typedef void PropertyPrint(Property *prop, int indent, FILE *fp);
+typedef void PropertyPrint(Property *prop, int indent, FILE *fp, int detail);
 
 struct PropertyTypeHandlerT {
   PropertyInit *init;

@@ -15,7 +15,7 @@ ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 
-RUN python -m pip install --upgrade pip
+RUN python -m pip install --break-system-packages --upgrade pip
 
 ADD . /InfiniteGlass
 WORKDIR /InfiniteGlass

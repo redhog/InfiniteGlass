@@ -25,7 +25,7 @@ extern Bool filter_by_layer(Item *item);
 
 extern void print_views(void);
 extern void print_shaders(void);
-extern void print_items(void);
+extern void print_items(int detail);
 
 extern void draw(Bool print);
 extern void trigger_draw();

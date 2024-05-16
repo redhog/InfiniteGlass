@@ -24,9 +24,9 @@ void property_shaders_load(Property *prop) {
 void property_shaders_free(Property *prop) {
 }
 
-void property_shaders_print(Property *prop, int indent, FILE *fp) {
+void property_shaders_print(Property *prop, int indent, FILE *fp, int detail) {
   if (prop->type == XA_ATOM) {
-    property_atom_print(prop, indent, fp);
+   property_atom_print(prop, indent, fp, detail);
   } else if (prop->type == XA_STRING) {
     fprintf(fp, "%s%s: !shader_program null\n", get_indent(indent), prop->name_str);
   }

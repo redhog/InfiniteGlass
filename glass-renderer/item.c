@@ -483,6 +483,14 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
             indentstr,
             item->is_mapped ? "true" : "false");
   }
+  fprintf(fp, "%s  attrs: %s, geom: %s, glxpixmap: %s, texture: %s\n",
+          indentstr,
+          item->attr ? "Y" : "-",
+          item->geom ? "Y" : "-",
+          item->window_pixmap != None ? "Y" : "-",
+          item->window_texture.glxpixmap != 0 ? "Y" : "-",
+          item->window_texture.texture_id != 0 ? "Y" : "-"
+          );
   if (item->prop_size) {
     long width = item->prop_size->values.dwords[0];
     long height = item->prop_size->values.dwords[1];
@@ -499,9 +507,11 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
   }
 }
 
-void item_print(Item *item, int indent, FILE *fp) {
+void item_print(Item *item, int indent, FILE *fp, int detail) {
   item_print_meta(item, indent, fp);
-  properties_print(item->properties, indent+2, fp);
+  if (detail > 0) {
+    properties_print(item->properties, indent+2, fp, detail - 1);
+  }
 }
 
 Item *item_create(Window window) {

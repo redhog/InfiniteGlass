@@ -160,7 +160,7 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
         data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
 }
 
-void property_coords_print(Property *prop, int indent, FILE *fp) {
+void property_coords_print(Property *prop, int indent, FILE *fp, int detail) {
   float *values = (float *) prop->data;
   fprintf(fp, "%s%s: !coords [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {

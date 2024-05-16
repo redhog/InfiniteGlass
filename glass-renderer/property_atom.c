@@ -30,7 +30,7 @@ void property_atom_to_gl(Property *prop, Rendering *rendering) {
   } else {
   }
 }
-void property_atom_print(Property *prop, int indent, FILE *fp) {
+void property_atom_print(Property *prop, int indent, FILE *fp, int detail) {
   fprintf(fp, "%s%s: !atom [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ", ");

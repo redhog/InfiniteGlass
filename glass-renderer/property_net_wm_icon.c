@@ -42,7 +42,7 @@ void property_net_wm_icon_to_gl(Property *prop, Rendering *rendering) {
   glBindSampler(rendering->texture_unit, 0);
   rendering->texture_unit++;
 }
-void property_net_wm_icon_print(Property *prop, int indent, FILE *fp) {
+void property_net_wm_icon_print(Property *prop, int indent, FILE *fp, int detail) {
   fprintf(fp, "%s%s: !_NET_WM_ICON null\n", get_indent(indent), prop->name_str);
 }
 void property_net_wm_load_program(Property *prop, Rendering *rendering) {
