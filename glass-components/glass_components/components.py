@@ -3,29 +3,34 @@ import Xlib.X
 import glass_ghosts.ghost
 import glass_ghosts.window
 import json
+import yaml
 import os
 import signal
 import traceback
 import time
 
 class Components(object):
-    def __init__(self, manager, display, restart_components=True, **kw):
-        self.manager = manager
+    def __init__(self, display, **kw):
         self.display = display
+
+        configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/components.yml"))
+        with open(configpath) as f:
+            self.config = json.loads(json.dumps(yaml.load(f, Loader=yaml.SafeLoader)), object_hook=InfiniteGlass.fromjson(self.display))
+
         self.components = {}
         self.components_by_pid = {}
-        self.restart_components = restart_components
+        self.restart_components = self.config.get("restart_components", True)
         
         self.old_sigchld = signal.signal(signal.SIGCHLD, self.sigchild)
         
         @display.root.on()
         def PropertyNotify(win, event):
-            name = self.manager.display.get_atom_name(event.atom)
+            name = self.display.get_atom_name(event.atom)
             if name.startswith("IG_COMPONENT_"):
                 spec = json.loads(display.root[name].decode("utf-8"))
                 self.start_component(spec)
 
-        for name, spec in self.manager.config.get("components", {}).items():
+        for name, spec in self.config.get("components", {}).items():
             spec["name"] = name
             display.root["IG_COMPONENT_" + name] = json.dumps(spec).encode("utf-8")
 

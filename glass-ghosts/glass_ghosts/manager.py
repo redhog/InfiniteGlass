@@ -8,7 +8,6 @@ import base64
 import glass_ghosts.ghost
 import glass_ghosts.window
 import glass_ghosts.rootwindow
-import glass_ghosts.components
 import glass_ghosts.session
 import pkg_resources
 import sys
@@ -44,7 +43,6 @@ class GhostManager(object):
 
         self.session = glass_ghosts.session.Server(self, display, **kw)
         self.rootwindow = glass_ghosts.rootwindow.RootWindow(self, display, **kw)
-        self.components = glass_ghosts.components.Components(self, display, **kw)
 
         display.mainloop.add_interval(0.5)(self.save_ghosts)
                 
