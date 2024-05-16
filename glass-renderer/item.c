@@ -483,13 +483,13 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
             indentstr,
             item->is_mapped ? "true" : "false");
   }
-  fprintf(fp, "%s  attrs: %s, geom: %s, glxpixmap: %s, texture: %s\n",
+  fprintf(fp, "%s  loaded: {attrs: %s, geom: %s, glxpixmap: %s, texture: %s}\n",
           indentstr,
-          item->attr ? "Y" : "-",
-          item->geom ? "Y" : "-",
-          item->window_pixmap != None ? "Y" : "-",
-          item->window_texture.glxpixmap != 0 ? "Y" : "-",
-          item->window_texture.texture_id != 0 ? "Y" : "-"
+          item->attr ? "Y" : "N",
+          item->geom ? "Y" : "N",
+          item->window_pixmap != None ? "Y" : "N",
+          item->window_texture.glxpixmap != 0 ? "Y" : "N",
+          item->window_texture.texture_id != 0 ? "Y" : "N"
           );
   if (item->prop_size) {
     long width = item->prop_size->values.dwords[0];

@@ -32,7 +32,7 @@ void property_window_to_gl(Property *prop, Rendering *rendering) {
   }
 }
 void property_window_print(Property *prop, int indent, FILE *fp, int detail) {
-  fprintf(fp, "%s%s: !window [", get_indent(indent), prop->name_str);
+  fprintf(fp, "%s%s: !WINDOW [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%d", prop->values.dwords[i]);

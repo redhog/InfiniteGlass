@@ -10,7 +10,7 @@ void property_item_load(Property *prop) {}
 void property_item_free(Property *prop) {}
 void property_item_to_gl(Property *prop, Rendering *rendering) {}
 void property_item_print(Property *prop, int indent, FILE *fp, int detail) {
-  fprintf(fp, "%s%s: !item [", get_indent(indent), prop->name_str);
+  fprintf(fp, "%s%s: !ITEM [", get_indent(indent), prop->name_str);
   for (int i = 0; i <prop->nitems; i++) {
     if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%d", prop->values.dwords[i]);

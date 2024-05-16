@@ -284,7 +284,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     fflush(stdout);    
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_LIST_ITEMS")) {
     printf("---\n");
-    print_items(INT_MAX);
+    print_items(2);
     printf("...\n");
     fflush(stdout);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_EXIT")) {

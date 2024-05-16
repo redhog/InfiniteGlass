@@ -146,9 +146,9 @@ void property_print(Property *prop, int indent, FILE *fp, int detail) {
   } else {
     char *type_name = XGetAtomName(display, prop->type);
     if (type_name) {
-      fprintf(fp, "%s%s: !%s null\n", get_indent(indent), prop->name_str, type_name);
+      fprintf(fp, "%s%s: !%s\n", get_indent(indent), prop->name_str, type_name);
     } else {
-      fprintf(fp, "%s%s: null\n", get_indent(indent), prop->name_str);
+      fprintf(fp, "%s%s:\n", get_indent(indent), prop->name_str);
     }
     XFree(type_name);
   }

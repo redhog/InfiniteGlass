@@ -32,12 +32,17 @@ void property_int_to_gl(Property *prop, Rendering *rendering) {
   }
 }
 void property_int_print(Property *prop, int indent, FILE *fp, int detail) {
-  fprintf(fp, "%s%s: !int [", get_indent(indent), prop->name_str);
-  for (int i = 0; i <prop->nitems; i++) {
+  int limit = (detail == 0 && prop->nitems > 10) ? 10 : prop->nitems;
+  fprintf(fp, "%s%s: !INTEGER [", get_indent(indent), prop->name_str);
+  for (int i = 0; i < limit; i++) {
     if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%i", prop->values.dwords[i]);
   }
-  fprintf(fp, "]\n");
+  if (limit < prop->nitems) {
+    fprintf(fp, "] # Truncated\n");
+  } else {
+    fprintf(fp, "]\n");
+  }
 }
 void property_int_load_program_none(Property *prop, Rendering *rendering) {}
 void property_int_load_program_print(Property *prop, Rendering *rendering) {

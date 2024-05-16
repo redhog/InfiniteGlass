@@ -231,7 +231,7 @@ void property_svg_to_gl(Property *prop, Rendering *rendering) {
   GL_CHECK_ERROR("property_svg_to_gl2", "%ld", prop->window);
 }
 void property_svg_print(Property *prop, int indent, FILE *fp, int detail) {
-  fprintf(fp, "%s%s: !svg null\n", get_indent(indent), prop->name_str);
+  fprintf(fp, "%s%s: !SVG\n", get_indent(indent), prop->name_str);
 }
 void property_svg_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];

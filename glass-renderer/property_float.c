@@ -58,12 +58,17 @@ void property_float_to_gl(Property *prop, Rendering *rendering) {
 }
 void property_float_print(Property *prop, int indent, FILE *fp, int detail) {
   float *values = (float *) prop->values.dwords;
-  fprintf(fp, "%s%s: !float [", get_indent(indent), prop->name_str);
-  for (int i = 0; i <prop->nitems; i++) {
+  int limit = (detail == 0 && prop->nitems > 10) ? 10 : prop->nitems;
+  fprintf(fp, "%s%s: !FLOAT [", get_indent(indent), prop->name_str);
+  for (int i = 0; i < limit; i++) {
     if (i > 0) fprintf(fp, ", ");
     fprintf(fp, "%f", values[i]);
   }
-  fprintf(fp, "]\n");
+  if (limit < prop->nitems) {
+    fprintf(fp, "] # Truncated\n");
+  } else {
+    fprintf(fp, "]\n");
+  }
 }
 void property_float_load_program(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
