@@ -53,6 +53,11 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   
   itempixelwidth = coords[2] * view->width / view->screen[2];
   itempixelheight = coords[3] * view->height / view->screen[3];
+
+  if (itempixelwidth <= 0 || itempixelheight <= 0) {
+    DEBUG("window.svg.error", "Property coords width/height zero\n");
+    return;
+  }
   
   // x and y are ]0,1[, from top left to bottom right of window.
   x1 = (view->screen[0] - coords[0]) / coords[2];
@@ -81,6 +86,11 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
 
   pixelwidth = px2 - px1;
   pixelheight = py2 - py1;
+
+  if (pixelwidth <= 0 || pixelheight <= 0) {
+    DEBUG("window.svg.error", "Selected plot area is zero\n");
+    return;
+  }
 
   if (   (data->width == pixelwidth)
       && (data->height == pixelheight)
