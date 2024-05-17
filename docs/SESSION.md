@@ -39,16 +39,3 @@ pre-define some ghosts in the configuration file. This is
 particularly useful for windows of components (see above). To generate the correct json for such a ghost, the following command can be used
 
     glass-action ghost export
-
-# Components
-
-Components are applications to run during your session or at startup
-that provide some part of the desktop environment. As opposed to
-normal applications used by the user, they are not normally started
-and stopped by the user and do not provide windows managed by the
-user. In particular, they are not SMlib clients and do not store a
-RestartCommand with glass-ghosts.
-
-However, each component is given a name, and can be restarted or
-replaced using the 'glass-action component' subcommands with that
-name.

@@ -31,7 +31,7 @@ def setup_annotator():
 @InfiniteGlass.profilable
 def main(**kw):
     setup_annotator()
-    manager = None
+    components = None
     try:
         with InfiniteGlass.Display() as display:
             overlay = display.root.composite_get_overlay_window().overlay_window
@@ -44,13 +44,13 @@ def main(**kw):
 
             components = glass_components.components.Components(display, **kw)
 
-        manager.components.shutdown()
+        components.shutdown()
     except Exception as e:
         print("Components manager systemic failure, restarting: %s" % (e,))
         traceback.print_exc()
         try:
-            if manager is not None and hasattr(manager, "components") and hasattr(manager.components, "components_by_pid"):
-                for pid in manager.components.components_by_pid.keys():
+            if components is not None and hasattr(components, "components_by_pid"):
+                for pid in components.components_by_pid.keys():
                     os.kill(pid, signal.SIGINT)
         except Exception as e:
             print(e)

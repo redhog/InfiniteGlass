@@ -64,13 +64,30 @@ class Components(object):
                     if pid in self.components_by_pid:
                         name = self.components_by_pid.pop(pid)
                         del self.display.root["IG_COMPONENTPID_" + name]
-                        if (    not exitcode == 0
-                            and (   not os.WIFSIGNALED(exitcode)
-                                 or os.WTERMSIG(exitcode) not in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL))):
-                            # This is a component, and it wasn't killed intentionally... restart it
-                            if name in self.components and self.restart_components:
-                                spec = self.components[name]["component"]
+                        
+                        if name in self.components:
+                            spec = self.components[name]["component"]
+                            spec_actions = spec.get("exit_actions", {})
+                            default_actions = self.config.get("defaults", {}).get("exit_actions", {})
+
+                            exit_action = spec_actions.get("exited", default_actions.get("exited", "nothing"))
+                            killed_action = spec_actions.get("killed", default_actions.get("killed", "nothing"))
+                            fail_action = spec_actions.get("failed", default_actions.get("failed", "restart"))
+
+                            if exitcode == 0:
+                                action = exit_action
+                            elif (os.WIFSIGNALED(exitcode)
+                                  and os.WTERMSIG(exitcode) in (signal.SIGHUP, signal.SIGINT, signal.SIGQUIT, signal.SIGKILL)):
+                                action = killed_action
+                            else:
+                                action = fail_action
+                            
+                            if action == "restart":
                                 self.start_component(spec)
+                            elif action == "exit":
+                                self.display.exit()
+                                return
+
                     InfiniteGlass.debug.DEBUG("SIGCHLD", "Checking for more children in the same batch...\n")
                     try:
                         pid, exitcode, ru_child = os.wait4(-1, os.WNOHANG)

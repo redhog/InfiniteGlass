@@ -1,14 +1,23 @@
-restart_components: true
+defaults:
+  exit_actions:
+    exited: nothing
+    failed: restart
+    killed: nothing
 
 components:
-  glass-input: {"command": ["glass-input"]}
-  glass-theme: {"command": ["glass-theme"]}
-  glass-widgets: {"command": ["glass-widgets"]}
+  glass-ghosts:
+    command: ["glass-ghosts"]
+    exit_actions:
+      exited: exit
+      failed: exit
+  glass-input:    {"command": ["glass-input"]}
+  glass-theme:    {"command": ["glass-theme"]}
+  glass-widgets:  {"command": ["glass-widgets"]}
   glass-animator: {"command": ["glass-animator"]}
   glass-renderer: {"command": ["glass-renderer-wrapper.sh"]}
-  glass-islands: {"command": ["glass-islands"]}
-  xkb: {"command": ["setxkbmap", "-model", "pc101", "-layout", "us"]}
-  root-cursor: {"command": ["xsetroot", "-cursor_name", "arrow"]}
+  glass-islands:  {"command": ["glass-islands"]}
+  xkb:            {"command": ["setxkbmap", "-model", "pc101", "-layout", "us"]}
+  root-cursor:    {"command": ["xsetroot", "-cursor_name", "arrow"]}
   panelterm:
     command: ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]
     environment: { "IG_APP_ID": "panelterm" }
