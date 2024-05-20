@@ -7,7 +7,7 @@ import sys
 import re
 import os.path
 import yaml
-import importlib
+from .utils import instantiate_config
 
 @InfiniteGlass.profilable
 def main(*arg, **kw):
@@ -19,12 +19,8 @@ def main(*arg, **kw):
             with open(configpath) as f:
                 config = yaml.load(f, Loader=yaml.SafeLoader)
 
-        module_name, cls_name = config["name"].rsplit(".", 1)
-        module = importlib.import_module(module_name)
-        importlib.reload(module)
-        cls = getattr(module, cls_name)
-        
-        cls(display, **config.get("args", {}))
+        theme = instantiate_config(display, None, config)
+        theme.activate()
         display.flush()
         
-        InfiniteGlass.DEBUG("init", "Theme started: %s\n" % config["name"])
+        InfiniteGlass.DEBUG("init", "Theme started: %s\n" % theme)
