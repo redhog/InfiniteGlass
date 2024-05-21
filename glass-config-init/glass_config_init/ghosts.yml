@@ -9,7 +9,7 @@ ignore:
   - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_MENU"]
   - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"]
   - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"]
-  - ["WM_WINDOW_ROLE", {"__jsonclass__": ["string", "GtkFileChooserDialog"]}]
+  - ["WM_WINDOW_ROLE", !string "GtkFileChooserDialog"]
 
 # Use these properties to match a window to an existing ghost
 match:
@@ -68,17 +68,20 @@ ghost_update:
 # might match the same template (by design).
 templates:
   .*-gimp-gimp-.*:
-    WM_COMMAND: [{"__jsonclass__": ["string", "gimp"]}]
+    WM_COMMAND: !string gimp
 
   .*-gimp-2-8-.*:
-    WM_COMMAND: [{"__jsonclass__": ["string", "gimp-2.8"]}]
+    WM_COMMAND: !string gimp-2.8
     
 # Predefine ghosts. Useful for configuring windows created by the
 # applications started as components.
 ghosts:
-  - IG_APP_ID: {"__jsonclass__": ["string", "panelterm"]}
-    WM_CLASS: [{"__jsonclass__": ["string", "xterm"]}, {"__jsonclass__": ["string", "XTerm"]}, {"__jsonclass__": ["string", ""]}]
-    WM_NAME: {"__jsonclass__": ["string", "panelterm"]}
+  - IG_APP_ID: !string panelterm
+    WM_CLASS:
+      - !string xterm
+      - !string XTerm
+      - !string ""
+    WM_NAME: !string panelterm
     IG_COORDS: [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875]
     IG_SIZE: ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"]
     IG_LAYER: IG_LAYER_OVERLAY

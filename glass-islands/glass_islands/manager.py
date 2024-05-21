@@ -16,7 +16,7 @@ class IslandManager(object):
 
         configpath = os.path.expanduser(os.environ.get("GLASS_ISLANDS_CONFIG", "~/.config/glass/islands.yml"))
         with open(configpath) as f:
-            self.config = json.loads(json.dumps(yaml.load(f, Loader=yaml.SafeLoader)), object_hook=InfiniteGlass.fromjson(self.display))
+            self.config = InfiniteGlass.load_yaml(f, self.display)
 
         self.changes = False
         self.islands = {}

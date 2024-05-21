@@ -19,7 +19,7 @@ class GhostManager(object):
 
         configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.yml"))
         with open(configpath) as f:
-            self.config = json.loads(json.dumps(yaml.load(f, Loader=yaml.SafeLoader)), object_hook=InfiniteGlass.fromjson(self.display))
+            self.config = InfiniteGlass.load_yaml(f, self.display)
 
         self.changes = False
         self.windows = {}

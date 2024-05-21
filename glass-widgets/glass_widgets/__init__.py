@@ -23,11 +23,11 @@ def redraw(display, win):
     
 @InfiniteGlass.profilable
 def main(*arg, **kw):
-    configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.yml"))
-    with open(configpath) as f:
-        config = yaml.load(f, Loader=yaml.SafeLoader)
-            
     with InfiniteGlass.Display() as display:
+        configpath = os.path.expanduser(os.environ.get("GLASS_WIDGET_CONFIG", "~/.config/glass/widgets.yml"))
+        with open(configpath) as f:
+            config = InfiniteGlass.load_yaml(f, display)
+
         for widget_type, widgets in config.items():
             for name, widget in widgets.items():
                 w = display.root.create_window()

@@ -6,6 +6,8 @@ import pkg_resources
 import json
 from . import keymap
 import sakstig
+import yaml
+import base64
 
 class apply(sakstig.Function):
     def call(self, global_qs, local_qs, args):
@@ -196,3 +198,34 @@ def fromjson(display):
                 return tuple(cls[1:])
         return obj
     return fromjson
+
+class YamlLoader(yaml.SafeLoader):
+    pass
+
+def _yaml_constructor(loader, tag_suffix, node):
+    if isinstance(node, yaml.nodes.ScalarNode):
+        value = loader.construct_scalar(node)
+    elif isinstance(node, yaml.nodes.MappingNode):
+        value = loader.construct_mapping(node)
+    elif isinstance(node, yaml.nodes.SequenceNode):
+        value = loader.construct_sequence(node)
+    else:
+        assert False, "Unknown node type: %s" % node
+    if tag_suffix.startswith("!array_"):
+        return array.array(tag_suffix[len("!array_"):], value)
+    elif tag_suffix == "!string":
+        return value.encode("utf-8")
+    elif tag_suffix == "!base64":
+        return base64.b64decode(value)
+    elif tag_suffix == "!WINDOW":
+        return loader.display.create_resource_object("window", value)
+    elif tag_suffix == "!tuple":
+        return tuple(value)
+    return {"type": tag_suffix[1:], "value": value}
+YamlLoader.add_multi_constructor("", _yaml_constructor)
+
+def load_yaml(f, display=None):
+    d = display
+    class Loader(YamlLoader):
+        display = d
+    return yaml.load(f, Loader=Loader)
