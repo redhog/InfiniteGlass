@@ -56,7 +56,7 @@ Tested on: Ubuntu-MATE 18.04 LTS Bionic Beaver.
 
 Requires OpenGL version 3.0 or higher with support for GLSL 3.30, and pretty much all modern X extensions, including their development headers. To install all dependencies:
 
-    sudo apt install -y $(cat /dependencies.txt)
+    sudo apt install -y $(cat ./dependencies.txt)
 
 To install InfiniteGlass on your machine
 
