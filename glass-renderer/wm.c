@@ -221,6 +221,23 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
           event->xconfigure.height);
     Item *item = item_get_from_window(event->xconfigure.window, False);
     item_menu_update_space_pos_from_window(item, event->xconfigure.x,  event->xconfigure.y,  event->xconfigure.width,  event->xconfigure.height);
+    if (event->xconfigure.window == overlay) {
+      // Screen resize / new monitor plugged in
+      overlay_attr.width = event->xconfigure.width;
+      overlay_attr.height = event->xconfigure.height;
+      glViewport(0, 0, overlay_attr.width, overlay_attr.height);
+      for (size_t idx = 0; idx < views->count; idx++) {
+        View *view = (View *) views->entries[idx];
+        view->width = overlay_attr.width;
+        view->height = overlay_attr.height;
+        long arr[2];
+        arr[0] = view->width;
+        arr[1] = view->height;
+        XChangeProperty(display, root, view->attr_size, XA_INTEGER, 32, PropModeReplace, (void *) arr, 2);
+        view->screen[3] = view->screen[2] * (float) view->height / (float) view->width;
+        view_update(view);
+      }
+    }
     // FIXME: Update width/height regardless of window type...
   } else if (event->type == DestroyNotify) {
     DEBUG("unmap", "%d.DestroyNotify\n", event->xunmap.window);
