@@ -147,8 +147,7 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (cookie->type == GenericEvent) {
     if (XGetEventData(display, cookie)) {
       if (cookie->evtype == XI_RawMotion) {
-        xcb_query_pointer_cookie_t query_pointer_cookie = xcb_query_pointer(xcb_display, root);
-        MAINLOOP_XCB_DEFER(query_pointer_cookie, &raw_motion_detected, NULL);
+        raw_motion_detected();
       } else {
         DEBUG("event", "Unknown XGenericEventCookie\n");
       }

@@ -1,5 +1,6 @@
 #include "picking.h"
 #include "wm.h"
+#include "mainloop.h"
 
 GLuint picking_fb;
 
@@ -69,7 +70,8 @@ void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item) {
   view_pick(picking_fb, view, x, y, winx, winy, item, parent_item);
 }
 
-void raw_motion_detected(void *data, xcb_query_pointer_reply_t *reply, xcb_generic_error_t *error) {
+static Bool processing_raw_motion_detected = False;
+void raw_motion_detected_load(void *data, xcb_query_pointer_reply_t *reply, xcb_generic_error_t *error) {
   mouse.root = reply->root;
   mouse.win = reply->child;
   mouse.root_x = reply->root_x;
@@ -108,4 +110,12 @@ void raw_motion_detected(void *data, xcb_query_pointer_reply_t *reply, xcb_gener
     DEBUG("position", "Point %d,%d -> NONE\n", mouse.root_x, mouse.root_y);
   }
   trigger_draw();
+  processing_raw_motion_detected = False;
+}
+
+void raw_motion_detected(void) {
+  if (processing_raw_motion_detected) return;
+  processing_raw_motion_detected = True;
+  xcb_query_pointer_cookie_t query_pointer_cookie = xcb_query_pointer(xcb_display, root);
+  MAINLOOP_XCB_DEFER(query_pointer_cookie, &raw_motion_detected_load, NULL);
 }
