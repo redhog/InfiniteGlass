@@ -66,8 +66,8 @@ def main(*arg, **kw):
 
         mode.push_by_name(display, "base_mode")
 
-        display.root.xinput_select_events([
-            (Xlib.ext.xinput.AllDevices, Xlib.ext.xinput.RawMotionMask),
-        ])
+#        display.root.xinput_select_events([
+#            (Xlib.ext.xinput.AllDevices, Xlib.ext.xinput.RawMotionMask),
+#        ])
 
         InfiniteGlass.DEBUG("init", "Input handler started\n")

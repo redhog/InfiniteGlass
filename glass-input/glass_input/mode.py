@@ -13,6 +13,7 @@ import operator
 import types
 import pkg_resources
 import yaml
+from .event_state import EventStatePattern
 
 config = {}
 functions = {}
@@ -83,6 +84,7 @@ class Formatter(object):
             return res.__window__()
         return res
 
+
 class Mode(object):
     def __init__(self, **kw):
         self.first_event = None
@@ -91,6 +93,22 @@ class Mode(object):
         for key, value in kw.items():
             setattr(self, key, value)
 
+        self.keymap_compiled = self.compile_keymap(self.keymap)
+
+    def compile_action_keymap(self, action):
+        if isinstance(action, dict) and "keymap" in action:
+            action = dict(action)
+            action["keymap"] = self.compile_keymap(action.pop("keymap"))
+        return action
+            
+    def compile_keymap(self, keymap):
+        return [(EventStatePattern(eventfilter,
+                                   self.display,
+                                   self.state,
+                                   config),
+                 self.compile_action_keymap(action))
+                for eventfilter, action in keymap.items()]
+            
     def enter(self):
         self.window = self.get_event_window(self.first_event)
         self.x = 0
@@ -117,64 +135,18 @@ class Mode(object):
     def exit(self):
         pass
 
-    def handle_state_filter(self, eventfilter):
-        eventfilter = eventfilter.split(",")
-        filters = []
-        statefilters = []
-        def parse(items, negate=False):
-            for item in items:
-                if '==' in item:
-                    name, value = item.split('==')
-                    statefilters.append((name, operator.ne if negate else operator.eq, float(value)))
-                elif '%' in item:
-                    name, value = item.split('%')
-                    statefilters.append((name, modulo, int(value)))
-                elif '>=' in item:
-                    name, value = item.split('>=')
-                    statefilters.append((name, operator.lt if negate else operator.ge, float(value)))
-                elif '<=' in item:
-                    name, value = item.split('<=')
-                    statefilters.append((name, operator.gt if negate else operator.le, float(value)))
-                elif '>' in item:
-                    name, value = item.split('>')
-                    statefilters.append((name, operator.le if negate else operator.gt, float(value)))
-                elif '<' in item:
-                    name, value = item.split('<')
-                    statefilters.append((name, operator.ge if negate else operator.lt, float(value)))
-                elif item in config.get("eventfilters", {}):
-                    parse(config["eventfilters"][item].split(","), negate)
-                elif item.startswith("!") and item[1:] in config.get("eventfilters", {}):
-                    parse(config["eventfilters"][item[1:]].split(","), not negate)
-                else:
-                    if negate:
-                        if item.startswith("!"):
-                            item = item[1:]
-                        else:
-                            item = "!" + item
-                    filters.append(item)
-        parse(eventfilter)
-        now = datetime.datetime.now()
-        for name, op, value in statefilters:
-            cvalue = self.state.get(name, 0)
-            if isinstance(cvalue, datetime.datetime):
-                cvalue = (now - cvalue).total_seconds()
-            # print("%s %s %s == %s" % (cvalue, op, value, op(cvalue, value)))
-            if not op(cvalue, value):
-                return None
-        return filters
 
     def handle(self, event, keymap=None):
         self.last_event = event
         
         if keymap is None:
-            keymap = self.keymap
-        for eventfilter, action in keymap.items():
-            filters = self.handle_state_filter(eventfilter)
+            keymap = self.keymap_compiled
+        for eventfilter, action in keymap:
             try:
-                if filters is None or filters and not event[filters]:
+                if not event[eventfilter]:
                     continue
             except Exception as e:
-                print(eventfilter, "=>", filters)
+                print(eventfilter, "=>", eventfilter)
                 print(e)
                 raise
             try:
