@@ -140,7 +140,7 @@ class Mode(object):
         self.last_event = event
 
         if not event["PropertyNotify"]:
-            print("Handle", self, event)
+            InfiniteGlass.DEBUG("handle", "Handle %s %s" % (self, event))
         if keymap is None:
             keymap = self.keymap_compiled
         for eventfilter, action in keymap:
@@ -148,14 +148,12 @@ class Mode(object):
                 if not event[eventfilter]:
                     continue
             except Exception as e:
-                print(eventfilter, "=>", eventfilter)
-                print(e)
+                InfiniteGlass.ERROR("eventfilter", "%s => %s\n%s" % (eventfilter, eventfilter, e))
                 raise
             try:
                 self.action(eventfilter, action, event)
             except Exception as e:
-                print(e)
-                traceback.print_exc()
+                InfiniteGlass.ERROR("action", "%s\n%s" % (e, traceback.format_exc()))
             return True
         return False
 
