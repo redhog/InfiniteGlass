@@ -138,7 +138,9 @@ class Mode(object):
 
     def handle(self, event, keymap=None):
         self.last_event = event
-        
+
+        if not event["PropertyNotify"]:
+            print("Handle", self, event)
         if keymap is None:
             keymap = self.keymap_compiled
         for eventfilter, action in keymap:
@@ -158,7 +160,7 @@ class Mode(object):
         return False
 
     def action(self, eventfilter, action, event, **kw):
-        InfiniteGlass.DEBUG("action", "Action %s(%s) [%s]\n" % (action, kw, eventfilter))
+        InfiniteGlass.DEBUG("action", "Action %s.%s(%s) [%s]\n" % (self, action, kw, eventfilter))
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)
@@ -187,7 +189,7 @@ class Mode(object):
             else:
                 InfiniteGlass.DEBUG("error", "Unknown action parameters: %s\n" % (action,))
         elif isinstance(action, str) and action in config["modes"]:
-            self.action(eventfilter, config["modes"][action], event, **kw)
+            self.action(eventfilter, config["modes"][action], event, name=action, **kw)
         elif isinstance(action, str) and hasattr(self, action):
             getattr(self, action)(event, **kw)
         elif isinstance(action, str) and action in functions:
@@ -209,3 +211,8 @@ class Mode(object):
     @property
     def last_event_window(self):
         return self.get_event_window(self.last_event)
+
+    def __repr__(self):
+        if hasattr(self, "name"):            
+            return "%s/%s" % (type(self).__name__, self.name)
+        return type(self).__name__

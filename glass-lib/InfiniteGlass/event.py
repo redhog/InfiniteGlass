@@ -4,7 +4,7 @@ import Xlib.protocol.event
 import Xlib.protocol.rq
 
 class EventPattern(object):
-    def __init__(self, pattern, display):
+    def __init__(self, pattern, display = None):
         if isinstance(pattern, str):
             pattern = pattern.split(",")
         if not isinstance(pattern, (list, tuple)):
@@ -99,7 +99,7 @@ orig_event_eq = Xlib.protocol.rq.Event.__eq__
 def event_eq(self, other):
     if not isinstance(other, EventPattern):
         try:
-            other = EventPattern(other, self.window.display.real_display)
+            other = EventPattern(other, self.window.display.real_display if hasattr(self, "window") else None)
         except ValueError:
             return orig_event_eq(self, other)
     return other.equal(self)
@@ -107,6 +107,6 @@ Xlib.protocol.rq.Event.__eq__ = event_eq
 
 def event_getitem(self, item):
     if not isinstance(item, EventPattern):
-        item = EventPattern(item, self.window.display.real_display)
+        item = EventPattern(item, self.window.display.real_display if hasattr(self, "window") else None)
     return item.contained_by(self)
 Xlib.protocol.rq.Event.__getitem__ = event_getitem
