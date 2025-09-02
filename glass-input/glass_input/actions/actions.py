@@ -1,7 +1,37 @@
 import Xlib.X
 import InfiniteGlass
+import os
+import datetime
 from .. import mode
 
+def keymap(self, event, value):
+    self.handle(event, keymap=value)
+
+class Formatter(object):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __getitem__(self, name):
+        res = self.obj[name]
+        if isinstance(res, Xlib.display.drawable.Window):
+            return res.__window__()
+        return res
+    
+def shell(self, event, value):
+    cmd = value % Formatter(self)
+    InfiniteGlass.DEBUG("final_action", "Shell command %s\n" % (cmd,))
+    os.system(cmd)
+
+def timer(self, event, value):
+    self.state[value] = datetime.datetime.now()
+
+def counter(self, event, value):
+    self.state[value] = 0
+
+def inc(self, event, value):
+    self.state[value] = self.state.get(value, 0) + 1
+
+    
 def toggle_ghosts_enabled(self, event):
     win = self.get_event_window(event)
     if win and win != self.display.root:

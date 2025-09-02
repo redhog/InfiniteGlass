@@ -41,20 +41,21 @@ def push(display, Mode, **kw):
         display.input_stack = []
     mode = Mode(display=display, **kw)
     display.input_stack.append(mode)
-    if not mode.enter():
+    try:
+        mode.enter()
+    except:
         pop(display)
-        return False
-    return True
+        raise
 
 def push_config(display, config, **kw):
     cfg = dict(config)
     cfg.update(kw)
     mod, cls = cfg.pop("class").rsplit(".", 1)
     cls = getattr(importlib.import_module(mod), cls)
-    return push(display, cls, **cfg)
+    push(display, cls, **cfg)
 
 def push_by_name(display, name, **kw):
-    return push_config(display, config["modes"][name], **kw)
+    push_config(display, config["modes"][name], **kw)
 
 def pop(display):
     res = display.input_stack.pop()
@@ -73,17 +74,6 @@ def handle_event(display, event):
 
 def modulo(a, b):
     return a % b == 0
-
-class Formatter(object):
-    def __init__(self, obj):
-        self.obj = obj
-
-    def __getitem__(self, name):
-        res = self.obj[name]
-        if isinstance(res, Xlib.display.drawable.Window):
-            return res.__window__()
-        return res
-
 
 class Mode(object):
     def __init__(self, **kw):
@@ -124,7 +114,6 @@ class Mode(object):
         self.state['start'] = datetime.datetime.now()
         if hasattr(self, "load"):
             self.action("load", self.load, None)
-        return True
 
     def get_event_window(self, event=None):
         event = event or self.last_event
@@ -164,26 +153,14 @@ class Mode(object):
                 self.action(eventfilter, item, event)
         elif isinstance(action, dict):
             if "class" in action:
-                if push_config(self.display, action, first_event=event, last_event=event, **kw):
-                    handle_event(self.display, event)
-            elif "keymap" in action:
-                self.handle(event, keymap=action["keymap"])
-            elif "shell" in action:
-                cmd = action["shell"] % Formatter(self)
-                InfiniteGlass.DEBUG("final_action", "Shell command %s\n" % (cmd,))
-                os.system(cmd)
-            elif "timer" in action:
-                name = action['timer']
-                self.state[name] = datetime.datetime.now()
-            elif "counter" in action:
-                name = action['counter']
-                self.state[name] = 0
-            elif "inc" in action:
-                name = action['inc']
-                self.state[name] = self.state.get(name, 0) + 1
+                push_config(self.display, action, first_event=event, last_event=event, **kw)
+                handle_event(self.display, event)
             elif len(action.keys()) == 1:
                 name = next(iter(action.keys()))
-                self.action(eventfilter, name, event, **action[name])
+                value = action[name]
+                if not isinstance(value, dict):
+                    value = {"value": value}
+                self.action(eventfilter, name, event, **value)
             else:
                 InfiniteGlass.DEBUG("error", "Unknown action parameters: %s\n" % (action,))
         elif isinstance(action, str) and action in config["modes"]:
