@@ -36,7 +36,7 @@ def set_config(cfg):
         })
 
 def push(display, Mode, **kw):
-    InfiniteGlass.DEBUG("modes.push", "PUSH %s: %s\n" % (Mode, kw))
+    InfiniteGlass.DEBUG("modes.push", "PUSH %s.%s: %s\n" % (Mode.__module__, Mode.__name__, kw.get("name", kw)))
     if not hasattr(display, "input_stack"):
         display.input_stack = []
     mode = Mode(display=display, **kw)
