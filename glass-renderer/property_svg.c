@@ -104,8 +104,15 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   
   RsvgDimensionData dimension;
 
-  rsvg_handle_get_dimensions(data->rsvg, &dimension);
-
+  // Shortcut if we're just rerendering the same stuff...
+  if (data->surface
+      && data->width == pixelwidth
+      && data->height == pixelheight
+      && data->x == px1
+      && data->y == py1
+      && data->itemwidth == itempixelwidth
+      && data->itemheight == itempixelheight) return;
+  
   // Check if current surface size is wrong before recreating...
   if (!data->surface || pixelwidth != data->width || pixelheight != data->height) {
     if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
@@ -125,6 +132,8 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   data->y = py1;
   data->itemwidth = itempixelwidth;
   data->itemheight = itempixelheight;
+
+  rsvg_handle_get_dimensions(data->rsvg, &dimension);
   
   DEBUG("window.svg", "RENDER %d,%d[%f,%f] = [%d,%d]\n",
         -data->x,
