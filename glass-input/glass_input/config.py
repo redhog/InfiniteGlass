@@ -58,6 +58,7 @@ class Config(object):
         self.display.input_stack.append(mode)
         try:
             mode.enter()
+            return mode
         except:
             self.pop()
             raise

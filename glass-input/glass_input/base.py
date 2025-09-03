@@ -6,8 +6,8 @@ from .actions import actions
 from . import mode
 
 class BaseMode(mode.Mode):
-    def __init__(self, **kw):
-        mode.Mode.__init__(self, **kw)
+    def enter(self):
+        mode.Mode.enter(self)
         for mod in range(0, 2**8):
             self.display.root.grab_key(self.display.keycode("XK_Super_L"),
                                        mod, False, Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync)

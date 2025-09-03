@@ -73,7 +73,7 @@ class Mode(object):
         self.last_event = event
 
         if not event["PropertyNotify"]:
-            InfiniteGlass.DEBUG("handle", "Handle %s %s" % (self, event))
+            InfiniteGlass.DEBUG("handle", "Handle %s %s\n" % (self, event))
         if keymap is None:
             keymap = self.keymap_compiled
         for eventfilter, action in keymap:
@@ -81,38 +81,39 @@ class Mode(object):
                 if not event[eventfilter]:
                     continue
             except Exception as e:
-                InfiniteGlass.ERROR("eventfilter", "%s => %s\n%s" % (eventfilter, eventfilter, e))
+                InfiniteGlass.ERROR("eventfilter", "%s => %s\n%s\n" % (eventfilter, eventfilter, e))
                 raise
             try:
                 self.action(eventfilter, action, event)
             except Exception as e:
-                InfiniteGlass.ERROR("action", "%s\n%s" % (e, traceback.format_exc()))
+                InfiniteGlass.ERROR("action", "%s\n%s\n" % (e, traceback.format_exc()))
             return True
         return False
 
-    def action(self, eventfilter, action, event, **kw):
-        InfiniteGlass.DEBUG("action", "Action %s.%s [%s]\n" % (self, action, eventfilter))
+    def action(self, eventfilter, action, event, name=None):
+        InfiniteGlass.DEBUG("action", "Action %s.%s [%s]\n" % (self, name if name else action, eventfilter))
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)
         else:
+            args = {}
             if isinstance(action, dict):
                 args = next(iter(action.values()))
                 action = next(iter(action.keys()))
                 if not isinstance(args, dict):
                     args = {"value": args}
-                kw.update(args)
                 
             if not isinstance(action, str):
                 raise Exception("Unknown action type for %s: %s\n" % (eventfilter, action))
 
             if action in self.config.config["modes"]:
-                self.action(eventfilter, self.config.config["modes"][action], event, name=action, **kw)
+                self.action(eventfilter, self.config.config["modes"][action], event, name=action)
             elif action in self.config.modes:
-                self.config.push(self.config.modes[action], first_event=event, last_event=event, **kw)
+                mode = self.config.push(self.config.modes[action], first_event=event, last_event=event, name=name, **args)
+                mode.handle(event)
             elif action in self.config.functions:
-                InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, kw))
-                self.config.functions[action](self, event, **kw)
+                InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, args))
+                self.config.functions[action](self, event, **args)
             else:
                 raise Exception("Unknown action for %s: %s\n" % (eventfilter, action))
 
