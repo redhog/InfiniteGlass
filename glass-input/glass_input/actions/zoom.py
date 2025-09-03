@@ -1,6 +1,5 @@
 import InfiniteGlass
 import math
-from .. import mode
 
 def zoom(self, factor, around_aspect=(0.5, 0.5), around_pos=None, view="IG_VIEW_DESKTOP_VIEW"):
     "Zoom the screen in or out"

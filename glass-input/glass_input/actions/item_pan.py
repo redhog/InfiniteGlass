@@ -1,4 +1,3 @@
-from .. import mode
 from . import islands
 import InfiniteGlass
 

@@ -1,4 +1,3 @@
-from .. import mode
 import InfiniteGlass
 
 def item_resize(self, event, x=None, y=None):

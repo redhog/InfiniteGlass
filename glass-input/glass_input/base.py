@@ -18,4 +18,7 @@ class BaseMode(mode.Mode):
 
         @self.display.root.require("IG_VIEW_OVERLAY_SIZE")
         def overlay_size(root, value):
-            actions.toggle_overlay(self, None, False)
+            @self.display.root.require("IG_ANIMATE")
+            def animate_window(root, win):
+                self.display.animate_window = win
+                actions.toggle_overlay(self, None, False)

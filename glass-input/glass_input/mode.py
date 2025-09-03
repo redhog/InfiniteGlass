@@ -15,70 +15,12 @@ import pkg_resources
 import yaml
 from .event_state import EventStatePattern
 
-config = {}
-functions = {}
-modes = {}
 
-def load_config():
-    configpath = os.path.expanduser(os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.yml"))
-    with open(configpath) as f:
-        set_config(yaml.load(f, Loader=yaml.SafeLoader))
-
-def set_config(cfg):
-    global config
-    for module_name in config.get("imports", []):
-        module = importlib.import_module(module_name)
-        importlib.reload(module)
-        functions.update({
-            name: getattr(module, name)
-            for name in dir(module)
-            if isinstance(getattr(module, name), types.FunctionType)
-        })
-        modes.update({
-            name: getattr(module, name)
-            for name in dir(module)
-            if isinstance(getattr(module, name), type) and issubclass(getattr(module, name), Mode)
-        })
-    config = cfg
-
-def push(display, Mode, **kw):
-    InfiniteGlass.DEBUG("modes.push", "PUSH %s.%s: %s\n" % (Mode.__module__, Mode.__name__, kw.get("name", kw)))
-    if not hasattr(display, "input_stack"):
-        display.input_stack = []
-    mode = Mode(display=display, **kw)
-    display.input_stack.append(mode)
-    try:
-        mode.enter()
-    except:
-        pop(display)
-        raise
-
-def push_by_name(display, name, **kw):
-    mode = config["modes"][name]
-    name = next(iter(mode.keys()))
-    args = next(iter(mode.values()))
-    push(display, modes[name], **args, **kw)
-
-def pop(display):
-    res = display.input_stack.pop()
-    InfiniteGlass.DEBUG("modes.pop", "POP %s\n" % res)
-    res.exit()
-    return res
-
-def handle_event(display, event):
-    InfiniteGlass.DEBUG("event", "HANDLE %s\n" % event)
-    mode = display.input_stack[-1]
-    if mode.handle(event):
-        InfiniteGlass.DEBUG("event", "        BY %s\n" % (mode,))
-        return True
-    InfiniteGlass.DEBUG("event", "        UNHANDLED\n")
-    return False
-
-def modulo(a, b):
-    return a % b == 0
 
 class Mode(object):
-    def __init__(self, **kw):
+    def __init__(self, config, **kw):
+        self.config = config
+        self.display = self.config.display
         self.first_event = None
         self.last_event = None
         self.state = {}
@@ -97,7 +39,7 @@ class Mode(object):
         return [(EventStatePattern(eventfilter,
                                    self.display,
                                    self.state,
-                                   config),
+                                   self.config.config),
                  self.compile_action_keymap(action))
                 for eventfilter, action in keymap.items()]
             
@@ -148,29 +90,29 @@ class Mode(object):
             return True
         return False
 
-    def action(self, eventfilter, action, event):
-        InfiniteGlass.DEBUG("action", "Action %s.%s(%s) [%s]\n" % (self, action, kw, eventfilter))
+    def action(self, eventfilter, action, event, **kw):
+        InfiniteGlass.DEBUG("action", "Action %s.%s [%s]\n" % (self, action, eventfilter))
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)
         else:
-            args = {}
             if isinstance(action, dict):
                 args = next(iter(action.values()))
                 action = next(iter(action.keys()))
                 if not isinstance(args, dict):
                     args = {"value": args}
-
+                kw.update(args)
+                
             if not isinstance(action, str):
                 raise Exception("Unknown action type for %s: %s\n" % (eventfilter, action))
 
-            if action in config["modes"]:
-                self.action(eventfilter, config["modes"][action], event, name=action, **args)
-            elif action in modes:
-                push(display, modes[action], **args)
-            elif action in functions:
+            if action in self.config.config["modes"]:
+                self.action(eventfilter, self.config.config["modes"][action], event, name=action, **kw)
+            elif action in self.config.modes:
+                self.config.push(self.config.modes[action], first_event=event, last_event=event, **kw)
+            elif action in self.config.functions:
                 InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, kw))
-                functions[action](self, event, **args)
+                self.config.functions[action](self, event, **kw)
             else:
                 raise Exception("Unknown action for %s: %s\n" % (eventfilter, action))
 

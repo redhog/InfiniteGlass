@@ -1,6 +1,5 @@
 import Xlib.X
 import InfiniteGlass
-from .. import mode
 
 def island_windows(display, island):
     coords = list(island["IG_COORDS"])

@@ -1,5 +1,4 @@
 import InfiniteGlass
-from .. import mode
 from .. import utils
 
 def item_zoom_1_1_to_sreen_calc(self, win, size = None, coords = None, view = None):

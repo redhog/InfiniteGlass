@@ -2,7 +2,6 @@ import Xlib.X
 import InfiniteGlass
 import os
 import datetime
-from .. import mode
 
 def keymap(self, event, value):
     self.handle(event, keymap=value)
@@ -32,7 +31,7 @@ def inc(self, event, value):
     self.state[value] = self.state.get(value, 0) + 1
 
 def pop(self, event):
-    mode.pop(self.display)
+    self.config.pop()
     
 def toggle_ghosts_enabled(self, event):
     win = self.get_event_window(event)
@@ -107,7 +106,7 @@ def toggle_sleep(self, event):
     
 def reload(self, event):
     "Reload your keybindings from the config file"
-    mode.load_config()
+    self.config.reload()
 
 def send_island_create(self, event):
     InfiniteGlass.DEBUG("island", "SENDING CREATE ISLAND\n")
