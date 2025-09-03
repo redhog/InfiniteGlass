@@ -31,6 +31,8 @@ def counter(self, event, value):
 def inc(self, event, value):
     self.state[value] = self.state.get(value, 0) + 1
 
+def pop(self, event):
+    mode.pop(self.display)
     
 def toggle_ghosts_enabled(self, event):
     win = self.get_event_window(event)

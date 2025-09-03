@@ -18,7 +18,7 @@ if os.environ.get("GLASS_DEBUGGER", "") == "rpdb":
 @InfiniteGlass.profilable
 def main(*arg, **kw):
     mode.load_config()
-
+    
     with InfiniteGlass.Display() as display:
 
         # extension_info = display.query_extension('XInputExtension')

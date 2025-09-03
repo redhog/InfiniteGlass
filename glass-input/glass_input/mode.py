@@ -17,6 +17,7 @@ from .event_state import EventStatePattern
 
 config = {}
 functions = {}
+modes = {}
 
 def load_config():
     configpath = os.path.expanduser(os.environ.get("GLASS_INPUT_CONFIG", "~/.config/glass/input.yml"))
@@ -25,7 +26,6 @@ def load_config():
 
 def set_config(cfg):
     global config
-    config = cfg    
     for module_name in config.get("imports", []):
         module = importlib.import_module(module_name)
         importlib.reload(module)
@@ -34,6 +34,12 @@ def set_config(cfg):
             for name in dir(module)
             if isinstance(getattr(module, name), types.FunctionType)
         })
+        modes.update({
+            name: getattr(module, name)
+            for name in dir(module)
+            if isinstance(getattr(module, name), type) and issubclass(getattr(module, name), Mode)
+        })
+    config = cfg
 
 def push(display, Mode, **kw):
     InfiniteGlass.DEBUG("modes.push", "PUSH %s.%s: %s\n" % (Mode.__module__, Mode.__name__, kw.get("name", kw)))
@@ -47,15 +53,11 @@ def push(display, Mode, **kw):
         pop(display)
         raise
 
-def push_config(display, config, **kw):
-    cfg = dict(config)
-    cfg.update(kw)
-    mod, cls = cfg.pop("class").rsplit(".", 1)
-    cls = getattr(importlib.import_module(mod), cls)
-    push(display, cls, **cfg)
-
 def push_by_name(display, name, **kw):
-    push_config(display, config["modes"][name], **kw)
+    mode = config["modes"][name]
+    name = next(iter(mode.keys()))
+    args = next(iter(mode.values()))
+    push(display, modes[name], **args, **kw)
 
 def pop(display):
     res = display.input_stack.pop()
@@ -146,35 +148,31 @@ class Mode(object):
             return True
         return False
 
-    def action(self, eventfilter, action, event, **kw):
+    def action(self, eventfilter, action, event):
         InfiniteGlass.DEBUG("action", "Action %s.%s(%s) [%s]\n" % (self, action, kw, eventfilter))
         if isinstance(action, (tuple, list)):
             for item in action:
                 self.action(eventfilter, item, event)
-        elif isinstance(action, dict):
-            if "class" in action:
-                push_config(self.display, action, first_event=event, last_event=event, **kw)
-                handle_event(self.display, event)
-            elif len(action.keys()) == 1:
-                name = next(iter(action.keys()))
-                value = action[name]
-                if not isinstance(value, dict):
-                    value = {"value": value}
-                self.action(eventfilter, name, event, **value)
-            else:
-                InfiniteGlass.DEBUG("error", "Unknown action parameters: %s\n" % (action,))
-        elif isinstance(action, str) and action in config["modes"]:
-            self.action(eventfilter, config["modes"][action], event, name=action, **kw)
-        elif isinstance(action, str) and hasattr(self, action):
-            getattr(self, action)(event, **kw)
-        elif isinstance(action, str) and action in functions:
-            InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, kw))
-            functions[action](self, event, **kw)
         else:
-            InfiniteGlass.DEBUG("error", "Unknown action for %s: %s\n" % (eventfilter, action))
+            args = {}
+            if isinstance(action, dict):
+                args = next(iter(action.values()))
+                action = next(iter(action.keys()))
+                if not isinstance(args, dict):
+                    args = {"value": args}
 
-    def pop(self, event):
-        pop(self.display)
+            if not isinstance(action, str):
+                raise Exception("Unknown action type for %s: %s\n" % (eventfilter, action))
+
+            if action in config["modes"]:
+                self.action(eventfilter, config["modes"][action], event, name=action, **args)
+            elif action in modes:
+                push(display, modes[action], **args)
+            elif action in functions:
+                InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, kw))
+                functions[action](self, event, **args)
+            else:
+                raise Exception("Unknown action for %s: %s\n" % (eventfilter, action))
 
     def __getitem__(self, name):
         if name in self.state:
