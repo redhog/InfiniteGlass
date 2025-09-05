@@ -3,13 +3,12 @@ import Xlib.xobject.drawable
 import Xlib.protocol.event
 import Xlib.protocol.rq
 
-class EventPattern(object):
-    def __init__(self, pattern, display = None):
+class EventPatternAST(object):
+    def __init__(self, pattern):
         if isinstance(pattern, str):
             pattern = pattern.split(",")
         if not isinstance(pattern, (list, tuple)):
             raise ValueError(type(pattern))
-        self.display = display
         self.pattern = pattern
         self.buttons = []
         self.masks = []
@@ -28,23 +27,37 @@ class EventPattern(object):
             if isinstance(item, int):
                 self.buttons.append((include, item))
             elif item.endswith("Mask"):
-                self.masks.append((include, getattr(Xlib.X, item)))
+                self.masks.append((include, item))
             elif item.startswith("XK_"):
-                self.keys.append((include, self.display.keycode(item)))
+                self.keys.append((include, item))
             elif item == "AutoRepeat":
                 self.flags.append((include, item))
             else:
-                if hasattr(Xlib.X, item):
-                    item = getattr(Xlib.X, item)
-                elif hasattr(Xlib.ext.ge, item):
-                    item = getattr(Xlib.ext.ge, item)
-                else:
-                    raise Exception("Unknown event type specified in on(): %s" % item)
                 self.types.append((include, item))
+    def __str__(self):
+        return ",".join(self.pattern)
+
+
+class EventPattern(object):
+    def __init__(self, pattern, display = None):
+        self.display = display
+        self.parsed = EventPatternAST(pattern)
+        self.pattern = self.parsed.pattern
+        self.buttons = self.parsed.buttons
+        self.masks = [(include, getattr(Xlib.X, item)) for (include, item) in self.parsed.masks]
+        self.keys = [(include, self.display.keycode(item)) for (include, item) in self.parsed.keys]
+        def compile_type(item):
+            if hasattr(Xlib.X, item):
+                return getattr(Xlib.X, item)
+            elif hasattr(Xlib.ext.ge, item):
+                return getattr(Xlib.ext.ge, item)
+        self.types = [(include, compile_type(item)) for (include, item) in self.parsed.types]
+        self.flags = self.parsed.flags
         self.mask_sum = sum((item
                              for i, item in self.masks
                              if i),
                             0)
+
     def type_eq(self, event):
         for i, t in self.types:
             if i != (event.type == t):
