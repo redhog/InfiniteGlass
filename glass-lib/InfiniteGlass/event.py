@@ -79,19 +79,49 @@ class EventPattern(object):
         return True
     
     def equal(self, event):
-        return (self.type_eq(event)
-                and self.mask_eq(event)
-                and self.keys_eq(event)
-                and self.buttons_eq(event)
-                and self.flags_eq(event))
+        if isinstance(event, EventPattern):
+            return (not (set(event.types) - set(self.types))
+                    and (set(event.masks) == set(self.masks))
+                    and not (set(event.keys) - set(self.keys))
+                    and not (set(event.buttons) - set(self.buttons))
+                    and not (set(event.flags) - set(self.flags)))
+        else:
+            return (self.type_eq(event)
+                    and self.mask_eq(event)
+                    and self.keys_eq(event)
+                    and self.buttons_eq(event)
+                    and self.flags_eq(event))
         
     def contained_by(self, event):
-        return (self.type_eq(event)
-                and self.mask_contains(event)
-                and self.keys_eq(event)
-                and self.buttons_eq(event)
-                and self.flags_eq(event))
+        if isinstance(event, EventPattern):
+            return (not (set(event.types) - set(self.types))
+                    and not (set(event.masks) - set(self.masks))
+                    and not (set(event.keys) - set(self.keys))
+                    and not (set(event.buttons) - set(self.buttons))
+                    and not (set(event.flags) - set(self.flags)))
+        else:
+            return (self.type_eq(event)
+                    and self.mask_contains(event)
+                    and self.keys_eq(event)
+                    and self.buttons_eq(event)
+                    and self.flags_eq(event))
 
+    def __getitem__(self, other):
+        if isinstance(other, str):
+            other = EventPattern(other, self.display)
+        return self.contained_by(other)
+        
+    def __contains__(self, other):
+        if isinstance(other, str):
+            other = EventPattern(other, self.display)
+        # a in b means all flags set by a are also set by b
+        return self.contained_by(other)
+            
+    def __equal__(self, other):
+        if isinstance(other, str):
+            other = EventPattern(other, self.display)
+        return self.equal(other)
+    
     def __str__(self):
         return ",".join(self.pattern)
         
