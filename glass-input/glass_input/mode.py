@@ -72,8 +72,8 @@ class Mode(object):
     def handle(self, event, keymap=None):
         self.last_event = event
 
-        if not event["PropertyNotify"]:
-            InfiniteGlass.DEBUG("handle", "Handle %s %s\n" % (self, event))
+        name = "handle.property" if event["PropertyNotify"] else "handle"
+        InfiniteGlass.DEBUG(name, "Handle %s %s\n" % (self, event))
         if keymap is None:
             keymap = self.keymap_compiled
         for eventfilter, action in keymap:

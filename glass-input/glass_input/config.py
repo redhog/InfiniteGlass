@@ -76,10 +76,11 @@ class Config(object):
         return res
 
     def handle_event(self, event):
-        InfiniteGlass.DEBUG("event", "HANDLE %s\n" % event)
+        name = "event.property" if event["PropertyNotify"] else "event"
+        InfiniteGlass.DEBUG(name, "HANDLE %s\n" % event)
         mode = self.display.input_stack[-1]
         if mode.handle(event):
-            InfiniteGlass.DEBUG("event", "        BY %s\n" % (mode,))
+            InfiniteGlass.DEBUG(name, "        BY %s\n" % (mode,))
             return True
-        InfiniteGlass.DEBUG("event", "        UNHANDLED\n")
+        InfiniteGlass.DEBUG(name, "        UNHANDLED\n")
         return False
