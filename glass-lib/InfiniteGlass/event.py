@@ -39,7 +39,7 @@ class EventPattern(object):
                 elif hasattr(Xlib.ext.ge, item):
                     item = getattr(Xlib.ext.ge, item)
                 else:
-                    raise Exception("Unknown event type specified in on(): %s" % t)
+                    raise Exception("Unknown event type specified in on(): %s" % item)
                 self.types.append((include, item))
         self.mask_sum = sum((item
                              for i, item in self.masks
