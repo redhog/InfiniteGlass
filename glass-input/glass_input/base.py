@@ -1,4 +1,5 @@
 import InfiniteGlass
+import InfiniteGlass.eventmask
 import Xlib.X
 import Xlib.Xcursorfont
 import Xlib.keysymdef.miscellany
@@ -38,7 +39,18 @@ class BaseMode(mode.Mode):
                             button, keymap.mask_sum | mod, False, masks,
                             Xlib.X.GrabModeAsync, Xlib.X.GrabModeAsync,
                             self.display.root, self.display.input_cursor)
-
+                elif (   keymap['RawButtonPress']
+                      or keymap['RawButtonRelease']
+                      or keymap['RawKeyPress']
+                      or keymap['RawKeyRelease']
+                      or keymap['RawMotion']):
+                    self.display.root.xinput_select_events(
+                        [(Xlib.ext.xinput.AllDevices,
+                          getattr(Xlib.ext.xinput,
+                                  InfiniteGlass.eventmask.event_mask_map[t]))
+                         for i, t in keymap.parsed.types
+                         if i and t.startswith("Raw")])
+                                        
         @self.display.root.require("IG_VIEW_OVERLAY_SIZE")
         def overlay_size(root, value):
             @self.display.root.require("IG_ANIMATE")

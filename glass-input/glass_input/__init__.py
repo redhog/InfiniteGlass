@@ -65,8 +65,4 @@ def main(*arg, **kw):
                 return False
             return config.handle_event(event)
 
-#        display.root.xinput_select_events([
-#            (Xlib.ext.xinput.AllDevices, Xlib.ext.xinput.RawMotionMask),
-#        ])
-
         InfiniteGlass.DEBUG("init", "Input handler started\n")
