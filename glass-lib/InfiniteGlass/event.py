@@ -37,9 +37,13 @@ class EventPatternAST(object):
     def __str__(self):
         return ",".join(self.pattern)
 
+GenericEvent = 35
 
 class EventPattern(object):
     def __init__(self, pattern, display = None):
+
+        xinput_opcode = display.query_extension('XInputExtension').major_opcode
+
         self.display = display
         self.parsed = EventPatternAST(pattern)
         self.pattern = self.parsed.pattern
@@ -51,6 +55,8 @@ class EventPattern(object):
                 return getattr(Xlib.X, item)
             elif hasattr(Xlib.ext.ge, item):
                 return getattr(Xlib.ext.ge, item)
+            elif hasattr(Xlib.ext.xinput, item):
+                return (GenericEvent, xinput_opcode, getattr(Xlib.ext.xinput, item))
         self.types = [(include, compile_type(item)) for (include, item) in self.parsed.types]
         self.flags = self.parsed.flags
         self.mask_sum = sum((item
@@ -60,7 +66,13 @@ class EventPattern(object):
 
     def type_eq(self, event):
         for i, t in self.types:
-            if i != (event.type == t):
+            if isinstance(t, tuple):
+                r = (    event.type == t[0]
+                     and event.extension == t[1]
+                     and event.evtype == t[2])
+            else:
+                r = event.type == t
+            if i != r:
                 return False
         return True
 
