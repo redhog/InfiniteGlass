@@ -142,7 +142,8 @@ orig_event_eq = Xlib.protocol.rq.Event.__eq__
 def event_eq(self, other):
     if not isinstance(other, EventPattern):
         try:
-            other = EventPattern(other, self.window.display.real_display if hasattr(self, "window") else None)
+            # display = self.window.display.real_display if hasattr(self, "window") else None
+            other = EventPattern(other, self.display)
         except ValueError:
             return orig_event_eq(self, other)
     return other.equal(self)
@@ -150,6 +151,7 @@ Xlib.protocol.rq.Event.__eq__ = event_eq
 
 def event_getitem(self, item):
     if not isinstance(item, EventPattern):
-        item = EventPattern(item, self.window.display.real_display if hasattr(self, "window") else None)
+        # display = self.window.display.real_display if hasattr(self, "window") else None
+        item = EventPattern(item, self.display)
     return item.contained_by(self)
 Xlib.protocol.rq.Event.__getitem__ = event_getitem

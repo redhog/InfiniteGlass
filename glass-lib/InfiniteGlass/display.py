@@ -53,6 +53,7 @@ def next_event(self):
                 event.AutoRepeat = True
                 next_event.AutoRepeat = True
                 break
+    event.display = self
     return event
 Xlib.display.Display.next_event = next_event
 
@@ -60,7 +61,9 @@ def display_peek_event(self):
     # Fetch any pending events from the server
     if not self.pending_events():
         raise IndexError("No pending events")
-    return self.display.event_queue[0]
+    event = self.display.event_queue[0]
+    event.display = self
+    return event
 Xlib.display.Display.peek_event = display_peek_event
 
 def display_on_event(self, event=None, mask=None, **kw):
