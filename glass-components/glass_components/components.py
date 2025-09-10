@@ -9,6 +9,17 @@ import signal
 import traceback
 import time
 
+def merge_defaults(component, defaults):
+    if isinstance(component, dict):
+        return {name: (merge_defaults(component[name], defaults[name])
+                       if (name in component and name in defaults)
+                       else (component[name]
+                             if name in component
+                             else defaults[name]))
+                for name in set(component.keys()).union(set(defaults.keys()))}
+    else:
+        return component
+
 class Components(object):
     def __init__(self, display, **kw):
         self.display = display
@@ -29,11 +40,14 @@ class Components(object):
             if name.startswith("IG_COMPONENT_"):
                 spec = json.loads(display.root[name].decode("utf-8"))
                 self.start_component(spec)
-
-        for name, spec in self.config.get("components", {}).items():
+            
+        for name, component in self.config.get("components", {}).items():
+            spec = merge_defaults(component, self.config.get("defaults", {}))
             spec["name"] = name
             display.root["IG_COMPONENT_" + name] = json.dumps(spec).encode("utf-8")
 
+        display.flush()
+            
     def shutdown(self):
         InfiniteGlass.DEBUG("shutdown", "Shutting down components\n")
         for i in range(5):
@@ -101,6 +115,21 @@ class Components(object):
     def start_component(self, spec):
         name = spec["name"]
         InfiniteGlass.debug.DEBUG("component", "Updating %s\n" % (name,))
+
+        if spec.get("requires", []):
+            InfiniteGlass.debug.DEBUG("component", "Component update for %s waiting for %s\n" % (name, spec["requires"]))
+            @self.display.root.require(*spec["requires"], name=name)
+            def value_set(root, *values):
+                for name, value in zip(spec["requires"], values):
+                    os.environ[name] = value.decode("UTF-8")
+                self.start_component_immediate(spec)
+        else:
+            self.start_component_immediate(spec)
+
+    def start_component_immediate(self, spec):
+        name = spec["name"]
+        InfiniteGlass.debug.DEBUG("component", "Waiting done for %s\n" % (name,))
+
         if name in self.components:
             pid = self.components[name]["pid"]
             existing_name = self.components_by_pid.pop(pid, None)

@@ -16,7 +16,10 @@ class Server(pysmlib.server.Server):
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
         os.environ["SESSION_MANAGER"] = self.listen_address()
-        
+        self.display.root["SESSION_MANAGER"] = os.environ["SESSION_MANAGER"].encode("UTF-8")
+        self.display.flush()
+        InfiniteGlass.DEBUG("session", "SESSION MANAGER address: %s" % (os.environ["SESSION_MANAGER"],))
+
         def accepter(listener):
             InfiniteGlass.DEBUG("session", "LISTENING TO %s @ %s\n" % (listener, listener.IceGetListenConnectionNumber()))
             fd = listener.IceGetListenConnectionNumber()
