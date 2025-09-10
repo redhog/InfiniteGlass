@@ -14,6 +14,7 @@ from . import keymap
 orig_display_init = Xlib.display.Display.__init__
 def display_init(self, *arg, **kw):
     self.eventhandlers = []
+    self.remove_eventhandlers = []
     self.eventhandlerstack = []
     orig_display_init(self, *arg, **kw)
     self.display.real_display = self
@@ -33,6 +34,13 @@ def display_init(self, *arg, **kw):
                     sys.stderr.write("%s\n" % e)
                     traceback.print_exc(file=sys.stderr)
                     sys.stderr.flush()
+            if self.remove_eventhandlers:
+                for handler in self.remove_eventhandlers:
+                    try:
+                        self.eventhandlers.remove(handler)
+                    except Exception as e:
+                        print(e)
+                del self.remove_eventhandlers[:]
             self.flush()
 Xlib.display.Display.__init__ = display_init
 
@@ -106,6 +114,10 @@ def display_on_event(self, event=None, mask=None, **kw):
         return handler
     return wrapper
 Xlib.display.Display.on = display_on_event
+
+def display_off_event(self, handler):
+    self.remove_eventhandlers.append(handler)
+Xlib.display.Display.off = display_off_event
 
 def display_enter(self):
     self.eventhandlerstack.append(self.eventhandlers)
