@@ -89,23 +89,23 @@ class Shadow(object):
                     if InfiniteGlass.DEBUG_ENABLED("ghost.apply.properties"):
                         itemtype, items, fmt = InfiniteGlass.parse_value(self.manager.display, self.properties[key])
                         itemtype = self.manager.display.get_atom_name(itemtype)
-                        InfiniteGlass.DEBUG("ghost.properties", "%s=<%s/%s>%s\n" % (key, itemtype, fmt, str(items)[:100])); sys.stderr.flush()
+                        InfiniteGlass.DEBUG("ghost.properties", "%s=<%s/%s>%s\n" % (key, itemtype, fmt, str(items)[:400])); sys.stderr.flush()
                     #if key == "__attributes__":
                     #    window.change_attributes(**self.properties[key])
                     if key == "__config__":
                         try:
                             window.configure(**self.properties[key])
                         except Exception as e:
-                            InfiniteGlass.ERROR("ghost.properties", "Unable to configure %s[%s]\n" % (window, self.properties[key]))
+                            InfiniteGlass.ERROR("ghost.properties", "Unable to configure %s[%s]\n" % (window, str(self.properties[key])[:400]))
                         else:
-                            InfiniteGlass.DEBUG("ghost.properties", "    => %s[%s]\n" % (window.id, self.properties[key]))
+                            InfiniteGlass.DEBUG("ghost.properties", "    => %s[%s]\n" % (window.id, str(self.properties[key])[:400]))
                     else:
                         try:
                             window[key] = self.properties[key]
                         except Exception as e:
-                            InfiniteGlass.ERROR("ghost.properties", "Unable to set property %s.%s=%s\n" % (window, key, self.properties[key]))
+                            InfiniteGlass.ERROR("ghost.properties", "Unable to set property %s.%s=%s\n" % (window, key, str(self.properties[key])[:400]))
                         else:
-                            InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, window[key]))
+                            InfiniteGlass.DEBUG("ghost.properties", "    => %s=%s\n" % (key, str(window[key])[:400]))
         self.manager.display.flush()
         
     def format_pair(self, name, value, sep=b"/"):
