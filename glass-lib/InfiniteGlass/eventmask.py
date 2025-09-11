@@ -25,7 +25,12 @@ event_mask_map = {
     "CirculateRequest": "SubstructureRedirectMask",
     "ConfigureRequest": "SubstructureRedirectMask",
     "MapRequest": "SubstructureRedirectMask",
-    "VisibilityNotify": "VisibilityChangeMask"
+    "VisibilityNotify": "VisibilityChangeMask",
+    'RawButtonPress': 'RawButtonPressMask',
+    'RawButtonRelease': 'RawButtonReleaseMask',
+    'RawKeyPress': 'RawKeyPressMask',
+    'RawKeyRelease': 'RawKeyReleaseMask',
+    'RawMotion': 'RawMotionMask'    
 }
 event_mask_map_inv = {}
 for key, value in event_mask_map.items():

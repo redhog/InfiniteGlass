@@ -1,6 +1,5 @@
 import InfiniteGlass
 import numpy
-from .. import mode
 from .. import utils
 from . import item_zoom_to
 import sys

@@ -1,3 +1,13 @@
+# Session manager should communicate over these protocols
+# NOTE: If allowing inet or inet6, make sure your hostname resolves to
+# an ip number (A record for inet, AAAA record for inet6) or clients
+# WILL FAIL.
+protocols:
+  # - inet6
+  # - inet
+  - local
+  - unix
+
 # Do not make ghosts for windows with any of these properties or
 # property values (in the case of name-value pairs)
 ignore:

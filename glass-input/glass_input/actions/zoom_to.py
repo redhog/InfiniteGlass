@@ -1,6 +1,5 @@
 import InfiniteGlass
 import math
-from .. import mode
 from . import zoom
 from . import item_zoom_to
 

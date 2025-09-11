@@ -14,6 +14,20 @@ import yaml
 import glass_action.main
 import glass_action.window_tools
 
+def seq_representer(dumper, data):
+    # If all elements are ints/floats, use flow style (inline)
+    if all(isinstance(x, (int, float)) for x in data):
+        return dumper.represent_sequence("tag:yaml.org,2002:seq", data, flow_style=True)
+    return dumper.represent_sequence("tag:yaml.org,2002:seq", data)
+yaml.add_representer(list, seq_representer, Dumper=yaml.SafeDumper)
+
+def dict_representer(dumper, data):
+    # Special case: if this is a __jsonclass__ dict, use JSON-style inline dict
+    if set(data.keys()) == {"__jsonclass__"}:
+        return dumper.represent_mapping("tag:yaml.org,2002:map", data, flow_style=True)
+    return dumper.represent_mapping("tag:yaml.org,2002:map", data)
+yaml.add_representer(dict, dict_representer, Dumper=yaml.SafeDumper)
+
 @glass_action.main.main.group()
 @click.pass_context
 def ghost(ctx, **kw):
@@ -47,12 +61,12 @@ def export(ctx, key):
         for name, value in cur:
             properties[name] = json.loads(value)
         res[k] = properties
-    print(json.dumps(res))
-
+    print(yaml.dump(res, Dumper=yaml.SafeDumper))
+    
 @ghost.command(name="import")
 @click.pass_context
 def imp(ctx):
-    ghosts = json.load(sys.stdin)
+    ghosts = yaml.load(sys.stdin, Loader=yaml.SafeLoader)
     dbpath = os.path.expanduser("~/.config/glass/ghosts.sqlite3")
     dbconn = sqlite3.connect(dbpath)
     cur = dbconn.cursor()

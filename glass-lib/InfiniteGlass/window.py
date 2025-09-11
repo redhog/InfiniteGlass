@@ -101,19 +101,29 @@ def window_on_event(self, event=None, mask=None, **kw):
     return wrapper
 Xlib.xobject.drawable.Window.on = window_on_event
 
-def window_require(self, prop):
-    def wrapper(fn):
-        @self.on(atom=prop)
-        def PropertyNotify(win, event):
-            self.display.real_display.eventhandlers.remove(PropertyNotify)
-            fn(self, win[prop])
-        try:
-            value = self[prop]
-        except KeyError:
-            pass
+def window_require_wrapped(self, fn, prop, *props, **kw):    
+    @self.on(atom=prop)
+    def PropertyNotify(win, event):
+        self.display.real_display.off(PropertyNotify)
+        value = self[prop]
+        if props:
+            window_require_wrapped(self, lambda self, *values: fn(self, value, *values), *props, **kw)
         else:
-            self.display.real_display.eventhandlers.remove(PropertyNotify)
             fn(self, value)
+    try:
+        value = self[prop]
+    except KeyError:
+        pass
+    else:
+        self.display.real_display.off(PropertyNotify)
+        if props:
+            window_require_wrapped(self, lambda self, *values: fn(self, value, *values), *props, **kw)
+        else:
+            fn(self, value)
+
+def window_require(self, prop, *props, **kw):
+    def wrapper(fn):
+        window_require_wrapped(self, fn, prop, *props, **kw)
     return wrapper
 Xlib.xobject.drawable.Window.require = window_require
 

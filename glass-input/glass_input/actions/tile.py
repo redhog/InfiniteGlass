@@ -1,4 +1,3 @@
-from .. import mode
 import InfiniteGlass
 import numpy as np
 from . import item_zoom_to
