@@ -12,7 +12,13 @@ class Server(pysmlib.server.Server):
         self.manager = manager
         pysmlib.server.Server.__init__(self)
 
+        protocols = self.manager.config.get("protocols", None)
         self.listeners = self.IceListenForConnections()
+        if protocols is not None:
+            self.listeners = [listener
+                              for listener in self.listeners
+                              if listener.IceGetListenConnectionString().decode("utf-8").split("/")[0] in protocols]
+            
         pysmlib.iceauth.SetAuthentication(self.listeners)
 
         os.environ["SESSION_MANAGER"] = self.listen_address()
