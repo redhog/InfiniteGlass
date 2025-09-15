@@ -28,6 +28,7 @@ extern void print_shaders(void);
 extern void print_items(int detail);
 
 extern void draw(Bool print);
+extern Item *get_fullscreen();
 extern void trigger_draw();
 extern void pick(int x, int y, int *winx, int *winy, Item **item, Item **parent_item);
 

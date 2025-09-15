@@ -302,6 +302,10 @@ void item_draw(Rendering *rendering) {
   if (rendering->print) {
     item_print_meta(rendering->item, rendering->indent, stdout);
     rendering->indent += 2;
+    Bool is_visible; Bool is_fullscreen;
+    item_display(rendering->item, rendering->view, &is_visible, &is_fullscreen);
+    printf("%svisibility: %s\n", get_indent(rendering->indent), is_visible ? (is_fullscreen ? "fullscreen" : "visible") : "offscreen");
+    
     /*
     if (rendering->parent_item) {
       printf("%sparent: %s\n", get_indent(rendering->indent));
@@ -457,6 +461,43 @@ Shader *item_get_shader(Item *item) {
 }
 
 
+void item_display(Item *item, View *view, Bool *is_visible, Bool *is_fullscreen) {
+  if (   !item->prop_size
+      || !item->prop_coords
+      || !item->is_mapped) {
+    *is_fullscreen = *is_visible = False;
+    return;
+  }
+   
+  long item_pxwidth = item->prop_size->values.dwords[0];
+  long item_pxheight = item->prop_size->values.dwords[1];
+  PropertyCoords *coords_data = (PropertyCoords *) item->prop_coords->data;
+
+  float item_left = coords_data->ccoords[0];
+  float item_top = coords_data->ccoords[1];
+  float item_width = coords_data->ccoords[2];
+  float item_height = coords_data->ccoords[3];
+
+  float left = view->screen[0];
+  float bottom = view->screen[1];
+  float width = view->screen[2];
+  float height = view->screen[3];
+
+  *is_visible = (   (item_left <= left + width)
+                 && (item_left + item_width >= left)
+                 && (item_top - item_height <= bottom + height)
+                 && (item_top >= bottom));
+
+  // Note: This 10px margin corresponds to the marin in
+  // glass-theme/glass_theme/shaders/lib/geometry_window.glsl
+  *is_fullscreen = (   item_pxwidth == view->width
+                    && item_pxheight == view->height
+                    && fabsf(item_left - left) / width < 10 / (float) view->width
+                    && fabsf(item_top - (bottom + height)) / height < 10 / (float) view->height
+                    && fabsf(item_width - width) / width < 10 / (float) view->width
+                    && fabsf(item_height - height) / height < 10 / (float) view->height);  
+}
+
 void item_print_meta(Item *item, int indent, FILE *fp) {
   char *indentstr = get_indent(indent);
   XTextProperty name_ret;
@@ -506,7 +547,6 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
             data->ccoords[3]);
   }
 }
-
 void item_print(Item *item, int indent, FILE *fp, int detail) {
   item_print_meta(item, indent, fp);
   if (detail > 0) {

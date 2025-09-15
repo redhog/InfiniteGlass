@@ -57,6 +57,7 @@ extern void item_draw(Rendering *rendering);
 extern void item_update(Item *item);
 extern void item_properties_update(Item *item, Atom name);
 extern Shader *item_get_shader(Item *item);
+extern void item_display(Item *item, View *view, Bool *is_visible, Bool *is_fullscreen);
 extern void item_print(Item *item, int indent, FILE *fp, int detail);
 
 extern Item *item_get_from_window(Window window, int create);
