@@ -463,7 +463,9 @@ Shader *item_get_shader(Item *item) {
 
 void item_display(Item *item, View *view, Bool *is_visible, Bool *is_fullscreen) {
   if (   !item->prop_size
+      || !item->prop_size->values.dwords
       || !item->prop_coords
+      || !item->prop_coords->data
       || !item->is_mapped) {
     *is_fullscreen = *is_visible = False;
     return;
