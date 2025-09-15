@@ -85,6 +85,15 @@ void draw(Bool print) {
   rendering.print = print;
 
   draw_fps_start();
+/*
+  Item *fullscreen = get_fullscreen();
+  if (fullscreen) {
+    printf("FULLSCREEN:\n");
+    item_print(fullscreen, 2, stdout, 2);
+    printf("---\n");
+    fflush(stdout);
+  }
+*/  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDisable(GL_SCISSOR_TEST);
   glClearColor(0., 0., 0., 1.0);
@@ -103,6 +112,21 @@ void draw(Bool print) {
   glFlush();
   glXSwapBuffers(display, overlay);
   draw_fps();
+}
+
+Item *get_fullscreen() {
+  Item *res;
+  if (views) {
+    for (size_t idx = 0; idx < views->count; idx++) {
+      View *v = (View *) views->entries[idx];
+      for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
+        current_layer = v->layers[layer_idx];
+        res = view_get_fullscreen(v, items_all, &filter_by_layer);
+        if (res) return res;
+      }
+    }
+  }
+  return NULL;
 }
 
 Bool drawn_this_cycle = False;
