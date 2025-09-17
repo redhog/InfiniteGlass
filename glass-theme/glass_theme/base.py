@@ -74,7 +74,9 @@ class ThemeBase(object):
         for SHADER in shaders:
             for PART in self.shaders_parts:
                 self.display.root["IG_SHADER_%s_%s" % (SHADER, PART)] = self.load_shader(self.get_shader(SHADER, PART))
-        self.display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
+
+        if shaders:
+            self.display.root["IG_SHADERS"] = ["IG_SHADER_%s" % shader for shader in shaders]
 
     def activate_properties(self):
         for name in dir(self):
