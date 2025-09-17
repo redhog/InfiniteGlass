@@ -277,7 +277,7 @@ void item_draw_subs(Rendering *rendering) {
   Item *parent_item = rendering->parent_item;
   Item *item = rendering->item;
 
-  if (!item->prop_coords) return;
+  if (!item->prop_coords || !item->prop_coords->data) return;
     
   rendering->parent_item = item;
 
