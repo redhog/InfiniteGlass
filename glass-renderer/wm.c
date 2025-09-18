@@ -121,6 +121,8 @@ void draw(Bool print) {
         view_draw(&rendering, 0, items_all, &filter_by_layer);
       }
     }
+  } else if (print) {
+    printf("No views found\n");
   }
   glFlush();
   glXSwapBuffers(display, overlay);
@@ -352,6 +354,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     exit(1);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_PICKING")) {
     debug_picking = !debug_picking;
+    trigger_draw();
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_DRAW")) {
+    draw(False);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_TRIGGER_DRAW")) {
     trigger_draw();
   } else {
     return False;

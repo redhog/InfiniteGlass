@@ -198,6 +198,7 @@ void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply,
   texture_initialize(&item->window_texture);
 
   item_update(item);
+  trigger_draw();
 }
 void item_initialize_draw_type(Item *item) {
   xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 0, 1000000000);
@@ -302,20 +303,7 @@ void item_draw(Rendering *rendering) {
   Item *item = rendering->item;
   Shader *shader = NULL;
 
-  if (rendering->print) {
-    item_print_meta(item, rendering->indent, stdout);
-    rendering->indent += 2;
-    Bool is_visible; Bool is_fullscreen;
-    item_display(item, rendering->view, &is_visible, &is_fullscreen);
-    printf("%svisibility: %s\n", get_indent(rendering->indent), is_visible ? (is_fullscreen ? "fullscreen" : "visible") : "offscreen");
-    
-    /*
-    if (rendering->parent_item) {
-      printf("%sparent: %s\n", get_indent(rendering->indent));
-      item_print_meta(item, rendering->indent+2, stdout);
-    }
-    */
-  }
+  if (rendering->print) item_print_rendering(rendering, stdout, 0);
   
   rendering->texture_unit = 0;
   shader = rendering->shader = item_get_shader(item);
@@ -554,6 +542,25 @@ void item_print(Item *item, int indent, FILE *fp, int detail) {
     properties_print(item->properties, indent+2, fp, detail - 1);
   }
 }
+
+void item_print_rendering(Rendering *rendering, FILE *fp, int detail) {
+  item_print_meta(rendering->item, rendering->indent, fp);
+  rendering->indent += 2;
+  Bool is_visible; Bool is_fullscreen;
+  item_display(rendering->item, rendering->view, &is_visible, &is_fullscreen);
+  fprintf(fp, "%svisibility: %s\n", get_indent(rendering->indent), is_visible ? (is_fullscreen ? "fullscreen" : "visible") : "offscreen");
+
+  /*
+  if (rendering->parent_item) {
+    fprintf(fp, "%sparent: %s\n", get_indent(rendering->indent));
+    item_print_meta(item, rendering->indent+2, fp);
+  }
+  */
+  if (detail > 0) {
+    properties_print(rendering->item->properties, rendering->indent, fp, detail - 1);
+  } 
+}
+
 
 Item *item_create(Window window) {
   Item *item = (Item *) malloc(sizeof(Item));

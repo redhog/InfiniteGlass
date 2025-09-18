@@ -71,17 +71,22 @@ void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (filter && !filter(item)) continue;
+
+    rendering->parent_item = NULL;
+    rendering->item = item;
+    rendering->indent = indent + 2;
+    
     if (item->prop_coords && item->prop_coords->data) {
       Bool is_visible;
       Bool is_fullscreen;
       item_display(item, view, &is_visible, &is_fullscreen);
-      if (!is_visible) continue;
+      if (!is_visible) {
+        if (rendering->print) item_print_rendering(rendering, stdout, 0);
+        continue;
+      }
     }
     
     try();
-    rendering->parent_item = NULL;
-    rendering->item = item;
-    rendering->indent = indent + 2;
     item_draw(rendering);
     XErrorEvent e;
     if (!catch(&e)) {
