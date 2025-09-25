@@ -58,12 +58,6 @@ void coord_type_error(Rendering *rendering, Atom type, char *type_name, char *er
 }
 
 void property_coords_calculate(Property *prop, Rendering *rendering) {
-  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  if (prop_cache->location == -1) return;
-  if (!prop_cache->is_uniform) return;
-  if (prop->nitems < 4 || prop->nitems % 4 != 0) return;
-  if (prop_cache->type != GL_FLOAT_VEC4) return;
-  
   PropertyCoords *data = (PropertyCoords *) prop->data;
   float *ccoords = data->ccoords;
   float *coords = data->coords;
@@ -181,6 +175,10 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   PropertyCoords *data = (PropertyCoords *) prop->data;
 
+  if (prop_cache->location == -1) { DEBUG("invalid", "%ld.prop_cache->location == -1\n", prop->window); return; };
+  if (!prop_cache->is_uniform) { DEBUG("invalid", "%ld.!prop_cache->is_uniform\n", prop->window); return; };
+  if (prop_cache->type != GL_FLOAT_VEC4) { DEBUG("invalid", "%ld.prop_cache->type != GL_FLOAT_VEC4\n", prop->window); return; };
+  
   if (rendering->print) {
     printf("%s%s: [%f, %f, %f, %f]\n",
            get_indent(rendering->indent), prop->name_str, data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
