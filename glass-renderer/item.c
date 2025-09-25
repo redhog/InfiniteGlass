@@ -307,10 +307,8 @@ void item_draw(Rendering *rendering) {
   Item *item = rendering->item;
   Shader *shader = NULL;
 
-  /*
   rendering->source_item = root_item;
   properties_calculate(root_item->properties, "root_", rendering);
-  */
   
   rendering->source_item = item;
   properties_calculate(item->properties, "", rendering);

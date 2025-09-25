@@ -224,9 +224,8 @@ void properties_calculate(Properties *properties, char *prefix, Rendering *rende
 }
 
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
+  // Note: You MUST call properties_calculate() for the same properties before calling this!
   if (!properties) return;
-
-  properties_calculate(properties, prefix, rendering);
   
   rendering->properties = properties;
   rendering->properties_prefix = prefix;
