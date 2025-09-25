@@ -14,6 +14,7 @@
 #include "texture.h"
 #include <math.h>
 #include <X11/Xatom.h>
+#include <stdbool.h>
 
 List *items_all = NULL;
 Item *root_item = NULL;
@@ -159,6 +160,8 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
 
     DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords);
+  } else {
+    DEBUG("set_ig_coords", "%ld.IG_COORDS is already set\n");
   }
   if (reply) free(reply);
 
@@ -169,6 +172,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
                                          item->geom->height);
 }
 void item_update_space_pos_from_window(Item *item) {
+  DEBUG("get_coords", "%ld: Get IG_COORDS\n", item->window);
   xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_COORDS"), AnyPropertyType, 0, 1000000000);
   MAINLOOP_XCB_DEFER(cookie, &item_update_space_pos_from_window_load, (void *) item);
 }
@@ -308,7 +312,10 @@ void item_draw(Rendering *rendering) {
   rendering->texture_unit = 0;
   shader = rendering->shader = item_get_shader(item);
   if (rendering->print) printf("%sshader: %s\n", get_indent(rendering->indent), shader ? shader->name_str : "null");
-  if (!shader) return;
+  if (!shader) {
+    DEBUG("item_draw_failure", "%ld: No shader", item->window);
+    return;
+  }
   glUseProgram(shader->program);
   shader_reset_uniforms(shader);
 

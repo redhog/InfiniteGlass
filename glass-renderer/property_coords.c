@@ -17,10 +17,21 @@ void property_coords_load(Property *prop) {
     prop->data = malloc(sizeof(PropertyCoords));
     data = (PropertyCoords *) prop->data;
     data->coords = NULL;
+    data->ccoords[0] = 0.0;
+    data->ccoords[1] = 0.0;
+    // Set width/height to in invalid value
+    data->ccoords[2] = -1.0;
+    data->ccoords[3] = -1.0;
   }
   data->coords = realloc(data->coords, sizeof(float) * prop->nitems);
   for (int i = 0; i < prop->nitems; i++) {
     data->coords[i] = FL(prop->values.dwords[i]);
+  }
+  if (   data->coords[2] <= 0.0
+         || data->coords[3] <= 0.0) {
+    DEBUG("invalid_coords", "Invalid coords loaded in %ld: %f, %f, %f, %f\n", prop->window, data->coords[0], data->coords[1], data->coords[2], data->coords[3]);
+  } else {
+    DEBUG("valid_coords", "%ld.property_coords_load: %f,%f,%f,%f\n", prop->window, data->coords[0], data->coords[1], data->coords[2], data->coords[3]);
   }
 }
 
@@ -54,6 +65,21 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
   if (prop_cache->type != GL_FLOAT_VEC4) return;
   
   PropertyCoords *data = (PropertyCoords *) prop->data;
+  float *ccoords = data->ccoords;
+  float *coords = data->coords;
+  ccoords[0] = 0.0;
+  ccoords[1] = 0.0;
+  // Just an invalid value that's different from the one set for
+  // coords in load() so we can trace where this came from
+  ccoords[2] = -2.0;
+  ccoords[3] = -2.0;
+
+  if (prop->nitems < 4 || prop->nitems % 4 != 0) { DEBUG("invalid", "%ld.prop->nitems == %d\n", prop->window, prop->nitems); return; };
+
+  // Set these to 0 now, so we can add values below according to IG_COORD_TYPES
+  ccoords[2] = 0.0;
+  ccoords[3] = 0.0;
+
   PropertyCoords *parent_data = NULL;
   if (rendering->parent_item && rendering->parent_item->prop_coords) {
     parent_data = (PropertyCoords *) rendering->parent_item->prop_coords->data;
@@ -65,13 +91,6 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
     types_nitems = rendering->source_item->prop_coord_types->nitems;
     types = rendering->source_item->prop_coord_types->values.dwords;
   }
-
-  float *ccoords = data->ccoords;
-  float *coords = data->coords;
-  ccoords[0] = 0.0;
-  ccoords[1] = 0.0;
-  ccoords[2] = 0.0;
-  ccoords[3] = 0.0;
 
   for (int i = 0; i < prop->nitems; i += 4) {
     Atom type = ATOM("IG_COORD_DESKTOP");
@@ -151,11 +170,10 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
       coord_type_error(rendering, type, name, "but it is unsupported");
     }
   }
-  DEBUG("prop_calc", "%ld[%s@%ld].%s (coords) <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
-        prop->window, prop_cache->shader->name_str, prop_cache->program, prop_cache->name_str,
+  DEBUG("prop_calc", "%ld.coords <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
+        prop->window,
         ccoords[0], ccoords[1], ccoords[2], ccoords[3], prop->nitems, types_nitems,
         coords[0], coords[1], coords[2], coords[3]
-
         );
 }
 

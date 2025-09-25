@@ -84,7 +84,7 @@ void print_items(int detail) {
 void draw(Bool print) {
   Rendering rendering;
   rendering.picking = debug_picking;
-  rendering.print = print;
+  rendering.print = print || DEBUG_ENABLED("print");
 
   draw_fps_start();
   Item *fs_item = get_fullscreen();
