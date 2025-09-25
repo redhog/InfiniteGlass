@@ -319,7 +319,10 @@ void item_draw(Rendering *rendering) {
   glUseProgram(shader->program);
   shader_reset_uniforms(shader);
 
-  if (!item->is_mapped) return;
+  if (!item->is_mapped) {
+    DEBUG("item_draw_failure", "%ld: Not mapped", item->window);
+    return;
+  }
   
   if (!rendering->picking) {
     if (item->draw_cycles_left > 0) {
