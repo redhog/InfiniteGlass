@@ -47,13 +47,19 @@ class Theme(base.ThemeBase):
     define_DECORATION_MOUSEDIST_2 = 150.0
     define_DECORATION_MOUSEDIST_1 = 100.0
 
-    define_BORDER_COLOR_4 = "vec4(0., 0., 0., 1.)"
     define_BORDER_COLOR_1 = "vec4(0., 0., 0., 0.)"
+    define_BORDER_COLOR_2 = "vec4(0., 0., 0., 0.)"
+    define_BORDER_COLOR_3 = "vec4(0., 0., 0., 0.)"
+    define_BORDER_COLOR_4 = "vec4(0., 0., 0., 0.)"
+    define_BORDER_COLOR_5 = "vec4(0., 0., 0., 0.)"
+    define_BORDER_COLOR_6 = "vec4(0., 0., 0., 1.)"
 
     define_BORDER_ACTIVE_COLOR_1 = "vec4(0., 0., 0., 0.)"
-    define_BORDER_ACTIVE_COLOR_2 = "vec4(1., 1., 1., 1.)"
+    define_BORDER_ACTIVE_COLOR_2 = "vec4(0., 0., 0., 0.)"
     define_BORDER_ACTIVE_COLOR_3 = "vec4(0., 0., 0., 1.)"
-    define_BORDER_ACTIVE_COLOR_4 = "vec4(0., 0., 0., 1.)"
+    define_BORDER_ACTIVE_COLOR_4 = "vec4(1., 1., 1., 1.)"
+    define_BORDER_ACTIVE_COLOR_5 = "vec4(0., 0., 0., 1.)"
+    define_BORDER_ACTIVE_COLOR_6 = "vec4(0., 0., 0., 1.)"
 
     # See glass-theme/glass_theme/shaders/root/fragment.glsl for list of possible values
     define_BACKGROUND_TYPE = 1
@@ -61,7 +67,7 @@ class Theme(base.ThemeBase):
     define_FRACTAL_PRECISION = 10
 
     define_IG_COLOR_TRANSFORM_DEFAULT = 0;
-    define_IG_COLOR_TRANSFORM_BORDER_DEFAULT = 1;
+    define_IG_COLOR_TRANSFORM_BORDER_DEFAULT = 0;
     
     define_COLOR_TRANSFORM_1 = ("transpose(mat4(" +
                                 "0.7, 0.0, 0.0, 0.3," +
