@@ -307,6 +307,13 @@ void item_draw(Rendering *rendering) {
   Item *item = rendering->item;
   Shader *shader = NULL;
 
+  /*
+  rendering->source_item = root_item;
+  properties_calculate(root_item->properties, "root_", rendering);
+  */
+  
+  rendering->source_item = item;
+  properties_calculate(item->properties, "", rendering);
   if (rendering->print) item_print_rendering(rendering, stdout, 0);
   
   rendering->texture_unit = 0;
@@ -322,6 +329,41 @@ void item_draw(Rendering *rendering) {
   if (!item->is_mapped) {
     DEBUG("item_draw_failure", "%ld: Not mapped", item->window);
     return;
+  }
+
+  if (item->prop_size
+      && (   !item->prop_size->values.dwords
+          || item->prop_size->values.dwords[0] == 0
+          || item->prop_size->values.dwords[1] == 0)) {
+    if (item->prop_size->values.dwords) {
+      DEBUG("item_draw_failure", "%ld: IG_SIZE defined but invalid: %d,%d\n", item->window, item->prop_size->values.dwords[0], item->prop_size->values.dwords[1]);
+    } else {
+      DEBUG("item_draw_failure", "%ld: IG_SIZE defined but not yet loaded.\n", item->window);
+    }
+    return;
+  }
+  if (item->prop_coords
+      && (   !item->prop_coords->data
+          || !((PropertyCoords *) item->prop_coords->data)->coords
+          || ((PropertyCoords *) item->prop_coords->data)->coords[2] <= 0.0
+          || ((PropertyCoords *) item->prop_coords->data)->coords[3] <= 0.0)) {
+    if (item->prop_coords->data && ((PropertyCoords *) item->prop_coords->data)->coords) {
+      PropertyCoords *coords = (PropertyCoords *) item->prop_coords->data;
+      DEBUG("item_draw_failure", "%ld: IG_COORDS defined but invalid: %f,%f,%f,%f\n", item->window, coords[0], coords[1], coords[2], coords[3]);
+    } else {
+      DEBUG("item_draw_failure", "%ld: IG_COORDS defined but not yet loaded.\n", item->window);
+    }
+    return;
+  }  
+
+  if (item->prop_coords && item->prop_coords->data) {
+    Bool is_visible;
+    Bool is_fullscreen;
+    item_display(item, rendering->view, &is_visible, &is_fullscreen);
+    if (!is_visible) {
+      DEBUG("item_draw_failure", "%ld: Not visible", item->window);
+      return;
+    }
   }
   
   if (!rendering->picking) {

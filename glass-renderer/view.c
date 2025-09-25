@@ -76,16 +76,6 @@ void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
     rendering->item = item;
     rendering->indent = indent + 2;
     
-    if (item->prop_coords && item->prop_coords->data) {
-      Bool is_visible;
-      Bool is_fullscreen;
-      item_display(item, view, &is_visible, &is_fullscreen);
-      if (!is_visible) {
-        if (rendering->print) item_print_rendering(rendering, stdout, 0);
-        continue;
-      }
-    }
-    
     try();
     item_draw(rendering);
     XErrorEvent e;
