@@ -36,13 +36,13 @@ def list(ctx):
             layer = child.get("IG_LAYER", "IG_LAYER_DESKTOP")
 
             name = name and name.decode("utf-8"),
-            cls = cls and [c.decode("utf-8") for c in cls]
+            cls = cls and [c.decode("utf-8") if hasattr(c, "decode") else str(c) for c in cls]
 
             print("%s:%s%s%s in %s" % (
                 child,
                 (" (%s)" % ",".join(cls)) if cls else "",
-                (" @ %f,%f,%f,%f" % coords if coords else ""),
-                (" [%d,%d]" % size if size else ""),
+                (" @ %s" % ",".join("%f" % c for c in coords) if coords else ""),
+                (" [%d,%d]" % tuple(size) if size else ""),
                 layer))
 
 @window.command()

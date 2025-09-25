@@ -59,6 +59,7 @@ extern void item_properties_update(Item *item, Atom name);
 extern Shader *item_get_shader(Item *item);
 extern void item_display(Item *item, View *view, Bool *is_visible, Bool *is_fullscreen);
 extern void item_print(Item *item, int indent, FILE *fp, int detail);
+extern void item_print_rendering(Rendering *rendering, FILE *fp, int detail);
 
 extern Item *item_get_from_window(Window window, int create);
 extern Item *item_get_from_widget(Item *parent, int widget);

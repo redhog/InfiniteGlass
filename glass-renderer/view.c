@@ -71,23 +71,12 @@ void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
   for (size_t idx = 0; idx < items->count; idx++) {
     Item *item = (Item *) items->entries[idx];
     if (filter && !filter(item)) continue;
-    if (item->prop_coords && item->prop_coords->data) {
-     // FIXME: Shouldn't this use ccords
-     // FIXME: Use item_display()
 
-      PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
-      if (data->coords) {
-        if (data->coords[0] > view->screen[0] + view->screen[2]) continue;
-        if (data->coords[0] + data->coords[2] < view->screen[0]) continue;
-        if (data->coords[1] - data->coords[3] > view->screen[1] + view->screen[3]) continue;
-        if (data->coords[1] < view->screen[1]) continue;
-     }
-   }
-    
-    try();
     rendering->parent_item = NULL;
     rendering->item = item;
     rendering->indent = indent + 2;
+    
+    try();
     item_draw(rendering);
     XErrorEvent e;
     if (!catch(&e)) {
@@ -297,19 +286,20 @@ View *view_find(List *views, Atom name) {
   return NULL;
 }
 
-Item *view_get_fullscreen(View *view, List *items, ItemFilter *filter) {
+void view_get_fullscreen(View *view, List *items, ItemFilter *filter, size_t *visible, Item **fullscreen_item) {
   Bool is_visible;
   Bool is_fullscreen;
   Item *item;
+  *fullscreen_item = NULL;
+  *visible = 0;
   if (!items) return NULL;
   for (size_t idx = 0; idx < items->count; idx++) {
     item = (Item *) items->entries[idx];
     if (filter && !filter(item)) continue;
     item_display(item, view, &is_visible, &is_fullscreen);
-    // if (is_visible) return NULL;
-    if (is_fullscreen) return item;
+    if (is_visible) (*visible)++;
+    if (is_fullscreen) *fullscreen_item = item;
   }
-  return NULL;
 }
 
 void view_print(View *v, int indent, FILE *fp) {

@@ -17,10 +17,21 @@ void property_coords_load(Property *prop) {
     prop->data = malloc(sizeof(PropertyCoords));
     data = (PropertyCoords *) prop->data;
     data->coords = NULL;
+    data->ccoords[0] = 0.0;
+    data->ccoords[1] = 0.0;
+    // Set width/height to in invalid value
+    data->ccoords[2] = -1.0;
+    data->ccoords[3] = -1.0;
   }
   data->coords = realloc(data->coords, sizeof(float) * prop->nitems);
   for (int i = 0; i < prop->nitems; i++) {
     data->coords[i] = FL(prop->values.dwords[i]);
+  }
+  if (   data->coords[2] <= 0.0
+         || data->coords[3] <= 0.0) {
+    DEBUG("invalid_coords", "Invalid coords loaded in %ld: %f, %f, %f, %f\n", prop->window, data->coords[0], data->coords[1], data->coords[2], data->coords[3]);
+  } else {
+    DEBUG("valid_coords", "%ld.property_coords_load: %f,%f,%f,%f\n", prop->window, data->coords[0], data->coords[1], data->coords[2], data->coords[3]);
   }
 }
 
@@ -31,15 +42,38 @@ void property_coords_free(Property *prop) {
     free(data);
   }
 }
+void coord_type_error(Rendering *rendering, Atom type, char *type_name, char *error) {
+  char *source = rendering->source_item == root_item ? "root" : (rendering->source_item == rendering->parent_item ? "parent" : "window");
+  Window win = rendering->item->window;
+  if (rendering->parent_item) {
+    Window parent = rendering->parent_item->window;
+    ERROR("coord_type",
+          "%ld/%ld: Coord type %s[%d] used on %s %s\n",
+          parent, win, type_name, type, source, error);
+  } else {
+    ERROR("coord_type",
+          "%ld: Coord type %s[%d] used on %s %s\n",
+          win, type, source, error);
+  }
+}
 
 void property_coords_calculate(Property *prop, Rendering *rendering) {
-  PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
-  if (prop_cache->location == -1) return;
-  if (!prop_cache->is_uniform) return;
-  if (prop->nitems < 4 || prop->nitems % 4 != 0) return;
-  if (prop_cache->type != GL_FLOAT_VEC4) return;
-  
   PropertyCoords *data = (PropertyCoords *) prop->data;
+  float *ccoords = data->ccoords;
+  float *coords = data->coords;
+  ccoords[0] = 0.0;
+  ccoords[1] = 0.0;
+  // Just an invalid value that's different from the one set for
+  // coords in load() so we can trace where this came from
+  ccoords[2] = -2.0;
+  ccoords[3] = -2.0;
+
+  if (prop->nitems < 4 || prop->nitems % 4 != 0) { DEBUG("invalid", "%ld.prop->nitems == %d\n", prop->window, prop->nitems); return; };
+
+  // Set these to 0 now, so we can add values below according to IG_COORD_TYPES
+  ccoords[2] = 0.0;
+  ccoords[3] = 0.0;
+
   PropertyCoords *parent_data = NULL;
   if (rendering->parent_item && rendering->parent_item->prop_coords) {
     parent_data = (PropertyCoords *) rendering->parent_item->prop_coords->data;
@@ -51,13 +85,6 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
     types_nitems = rendering->source_item->prop_coord_types->nitems;
     types = rendering->source_item->prop_coord_types->values.dwords;
   }
-
-  float *ccoords = data->ccoords;
-  float *coords = data->coords;
-  ccoords[0] = 0.0;
-  ccoords[1] = 0.0;
-  ccoords[2] = 0.0;
-  ccoords[3] = 0.0;
 
   for (int i = 0; i < prop->nitems; i += 4) {
     Atom type = ATOM("IG_COORD_DESKTOP");
@@ -76,7 +103,7 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
         ccoords[2] += coords[i+2] * pccoords[2];
         ccoords[3] += coords[i+3] * pccoords[3];
       } else {
-        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT_BASE[%d] used without a parent window\n", rendering->source_item->window, type);
+        coord_type_error(rendering, type, "IG_COORD_PARENT_BASE", "without a parent window");
       }
     } else if (type == ATOM("IG_COORD_PARENT")) {
       if (parent_data) {
@@ -86,7 +113,7 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
         ccoords[2] += coords[i+2] * pccoords[2];
         ccoords[3] += coords[i+3] * pccoords[3];
       } else {
-        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT[%d] used without a parent window\n", rendering->source_item->window, type);
+        coord_type_error(rendering, type, "IG_COORD_PARENT", "without a parent window");
       }
     } else if (type == ATOM("IG_COORD_PARENT_X")) {
       if (parent_data) {
@@ -96,7 +123,7 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
         ccoords[2] += coords[i+2] * pccoords[2];
         ccoords[3] += coords[i+3] * pccoords[2];
       } else {
-        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT_X[%d] used without a parent window\n", rendering->source_item->window, type);
+        coord_type_error(rendering, type, "IG_COORD_PARENT_X", "without a parent window");
       }
     } else if (type == ATOM("IG_COORD_PARENT_Y")) {
       if (parent_data) {
@@ -106,7 +133,7 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
         ccoords[2] += coords[i+2] * pccoords[3];
         ccoords[3] += coords[i+3] * pccoords[3];
       } else {
-        ERROR("coord_type", "%d: Coord type IG_COORD_PARENT_Y[%d] used without a parent window\n", rendering->source_item->window, type);
+        coord_type_error(rendering, type, "IG_COORD_PARENT_Y", "without a parent window");
       }
     } else if (type == ATOM("IG_COORD_SCREEN_BASE")) {
       float *screen = rendering->view->screen;
@@ -134,14 +161,13 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
       ccoords[3] += coords[i+3] * screen[3];
     } else {
       char *name = XGetAtomName(display, type);
-      ERROR("coord_type", "%d: Unsupported coord type %s[%d]\n", rendering->source_item->window, name ? name : "<INVALID>", type);
+      coord_type_error(rendering, type, name, "but it is unsupported");
     }
   }
-  DEBUG("prop_calc", "%ld[%s@%ld].%s (coords) <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
-        prop->window, prop_cache->shader->name_str, prop_cache->program, prop_cache->name_str,
+  DEBUG("prop_calc", "%ld.coords <<= %f,%f,%f,%f (%d, %d) [%f,%f,%f,%f]\n",
+        prop->window,
         ccoords[0], ccoords[1], ccoords[2], ccoords[3], prop->nitems, types_nitems,
         coords[0], coords[1], coords[2], coords[3]
-
         );
 }
 
@@ -149,6 +175,10 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
   PropertyProgramCache *prop_cache = &prop->programs[rendering->program_cache_idx];
   PropertyCoords *data = (PropertyCoords *) prop->data;
 
+  if (prop_cache->location == -1) { DEBUG("invalid", "%ld.prop_cache->location == -1\n", prop->window); return; };
+  if (!prop_cache->is_uniform) { DEBUG("invalid", "%ld.!prop_cache->is_uniform\n", prop->window); return; };
+  if (prop_cache->type != GL_FLOAT_VEC4) { DEBUG("invalid", "%ld.prop_cache->type != GL_FLOAT_VEC4\n", prop->window); return; };
+  
   if (rendering->print) {
     printf("%s%s: [%f, %f, %f, %f]\n",
            get_indent(rendering->indent), prop->name_str, data->ccoords[0], data->ccoords[1], data->ccoords[2], data->ccoords[3]);
@@ -162,11 +192,11 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
 
 void property_coords_print(Property *prop, int indent, FILE *fp, int detail) {
   int limit = (detail == 0 && prop->nitems > 10) ? 10 : prop->nitems;
-  float *values = (float *) prop->data;
+  PropertyCoords *data = (PropertyCoords *) prop->data;
   fprintf(fp, "%s%s: !COORDS [", get_indent(indent), prop->name_str);
   for (int i = 0; i < limit; i++) {
     if (i > 0) fprintf(fp, ", ");
-    fprintf(fp, "%f", values[i]);
+    fprintf(fp, "%f", data->coords[i]);
   }
   if (limit < prop->nitems) {
     fprintf(fp, "] # Truncated\n");

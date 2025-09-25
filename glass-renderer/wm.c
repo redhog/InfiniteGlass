@@ -46,6 +46,8 @@ Pointer mouse = {0, 0, 0, 0, 0, 0};
 List *views = NULL;
 List *shaders = NULL;
 
+Item *fullscreen = NULL;
+
 Atom current_layer;
 Bool filter_by_layer(Item *item) {
   return item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == current_layer;
@@ -82,18 +84,29 @@ void print_items(int detail) {
 void draw(Bool print) {
   Rendering rendering;
   rendering.picking = debug_picking;
-  rendering.print = print;
+  rendering.print = print || DEBUG_ENABLED("print");
 
   draw_fps_start();
-/*
-  Item *fullscreen = get_fullscreen();
-  if (fullscreen) {
-    printf("FULLSCREEN:\n");
-    item_print(fullscreen, 2, stdout, 2);
-    printf("---\n");
-    fflush(stdout);
+  Item *fs_item = get_fullscreen();
+  if (fs_item && !fullscreen) {
+    uint16_t border = fs_item->geom ? fs_item->geom->border_width : 0;
+    XWindowChanges values;
+    values.x = -border;
+    values.y = -border;
+    values.stack_mode = Above;
+    XConfigureWindow(display, fs_item->window, CWX | CWY | CWStackMode, &values);    
+    XUnmapWindow(display, overlay);
+    DEBUG("fullscreen", "Fullscreen started for %ld\n", fs_item->window);
+  } else if (fs_item != fullscreen) {
+    XMapWindow(display, overlay);
+    DEBUG("fullscreen", "Fullscreen ended\n");
+  } else if (print) {
+    printf("%s\n", fs_item ? "Fullscreen window found" : "No fullscreen window found");
   }
-*/  
+  
+  fullscreen = fs_item;
+  if (fullscreen && !print) return;
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDisable(GL_SCISSOR_TEST);
   glClearColor(0., 0., 0., 1.0);
@@ -108,6 +121,8 @@ void draw(Bool print) {
         view_draw(&rendering, 0, items_all, &filter_by_layer);
       }
     }
+  } else if (print) {
+    printf("No views found\n");
   }
   glFlush();
   glXSwapBuffers(display, overlay);
@@ -115,18 +130,23 @@ void draw(Bool print) {
 }
 
 Item *get_fullscreen() {
-  Item *res;
+  size_t visible_total = 0;
+  Item *res = NULL;
   if (views) {
     for (size_t idx = 0; idx < views->count; idx++) {
       View *v = (View *) views->entries[idx];
       for (size_t layer_idx = 0; layer_idx < v->nr_layers; layer_idx++) {
         current_layer = v->layers[layer_idx];
-        res = view_get_fullscreen(v, items_all, &filter_by_layer);
-        if (res) return res;
+        size_t visible;
+        Item *fullscreen_item;
+        view_get_fullscreen(v, items_all, &filter_by_layer, &visible, &fullscreen_item);
+        if (fullscreen_item) res = fullscreen_item;
+        visible_total += visible;
       }
     }
   }
-  return NULL;
+  if (visible_total > 1) return NULL;
+  return res;
 }
 
 Bool drawn_this_cycle = False;
@@ -171,7 +191,9 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
   } else if (cookie->type == GenericEvent) {
     if (XGetEventData(display, cookie)) {
       if (cookie->evtype == XI_RawMotion) {
-        raw_motion_detected();
+        if (!fullscreen) {
+          raw_motion_detected();
+        }
       } else {
         DEBUG("event", "Unknown XGenericEventCookie\n");
       }
@@ -332,6 +354,10 @@ Bool main_event_handler_function(EventHandler *handler, XEvent *event) {
     exit(1);
   } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_PICKING")) {
     debug_picking = !debug_picking;
+    trigger_draw();
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_DRAW")) {
+    draw(False);
+  } else if (event->type == ClientMessage && event->xclient.message_type == ATOM("IG_DEBUG_TRIGGER_DRAW")) {
     trigger_draw();
   } else {
     return False;

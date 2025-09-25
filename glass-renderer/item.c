@@ -14,6 +14,7 @@
 #include "texture.h"
 #include <math.h>
 #include <X11/Xatom.h>
+#include <stdbool.h>
 
 List *items_all = NULL;
 Item *root_item = NULL;
@@ -159,6 +160,8 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
 
     DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords);
+  } else {
+    DEBUG("set_ig_coords", "%ld.IG_COORDS is already set\n");
   }
   if (reply) free(reply);
 
@@ -169,6 +172,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
                                          item->geom->height);
 }
 void item_update_space_pos_from_window(Item *item) {
+  DEBUG("get_coords", "%ld: Get IG_COORDS\n", item->window);
   xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_COORDS"), AnyPropertyType, 0, 1000000000);
   MAINLOOP_XCB_DEFER(cookie, &item_update_space_pos_from_window_load, (void *) item);
 }
@@ -198,6 +202,7 @@ void item_initialize_draw_type_load(Item *item, xcb_get_property_reply_t *reply,
   texture_initialize(&item->window_texture);
 
   item_update(item);
+  trigger_draw();
 }
 void item_initialize_draw_type(Item *item) {
   xcb_get_property_cookie_t cookie = xcb_get_property(xcb_display, 0, item->window, ATOM("IG_DRAW_TYPE"), XA_ATOM, 0, 1000000000);
@@ -277,7 +282,7 @@ void item_draw_subs(Rendering *rendering) {
   Item *parent_item = rendering->parent_item;
   Item *item = rendering->item;
 
-  if (!item->prop_coords) return;
+  if (!item->prop_coords || !item->prop_coords->data) return;
     
   rendering->parent_item = item;
 
@@ -299,110 +304,142 @@ void item_draw_subs(Rendering *rendering) {
 }
 
 void item_draw(Rendering *rendering) {
-  if (rendering->print) {
-    item_print_meta(rendering->item, rendering->indent, stdout);
-    rendering->indent += 2;
-    Bool is_visible; Bool is_fullscreen;
-    item_display(rendering->item, rendering->view, &is_visible, &is_fullscreen);
-    printf("%svisibility: %s\n", get_indent(rendering->indent), is_visible ? (is_fullscreen ? "fullscreen" : "visible") : "offscreen");
-    
-    /*
-    if (rendering->parent_item) {
-      printf("%sparent: %s\n", get_indent(rendering->indent));
-      item_print_meta(rendering->item, rendering->indent+2, stdout);
-    }
-    */
-  }
+  Item *item = rendering->item;
+  Shader *shader = NULL;
+
+  rendering->source_item = root_item;
+  properties_calculate(root_item->properties, "root_", rendering);
+  
+  rendering->source_item = item;
+  properties_calculate(item->properties, "", rendering);
+  if (rendering->print) item_print_rendering(rendering, stdout, 0);
   
   rendering->texture_unit = 0;
-  rendering->shader = item_get_shader(rendering->item);
-  if (rendering->print) printf("%sshader: %s\n", get_indent(rendering->indent), rendering->shader ? rendering->shader->name_str : "null");
-  if (!rendering->shader) return;
-  glUseProgram(rendering->shader->program);
-  shader_reset_uniforms(rendering->shader);
-
-  if (rendering->item->is_mapped) {
-    Item *item = rendering->item;
-    Shader *shader = rendering->shader;
-
-    
-    if (!rendering->picking) {
-      if (item->draw_cycles_left > 0) {
-        if (glx_rebind_pixmap || !item->window_texture.texture_id) {
-          texture_from_pixmap(&item->window_texture, item->window_pixmap);
-        }
-        item->draw_cycles_left--;
-      }
-     
-      glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
-      glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
-      glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
-      glBindSampler(rendering->texture_unit, 0);
-      rendering->texture_unit++;
-    }
-
-    rendering->source_item = root_item;
-    properties_to_gl(root_item->properties, "root_", rendering);
-    GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, rendering->shader->name_str);
-    if (rendering->parent_item) {
-      rendering->source_item = rendering->parent_item;
-      properties_to_gl(rendering->parent_item->properties, "parent_", rendering);
-      GL_CHECK_ERROR("item_draw_parent_properties", "%ld.%s", item->window, rendering->shader->name_str);
-    }
-    rendering->source_item = rendering->item;
-    properties_to_gl(rendering->item->properties, "", rendering);
-    GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, rendering->shader->name_str);
-    
-    glUniform1i(shader->picking_mode_attr, rendering->picking);
-    glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
-    glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
-    if (rendering->item->geom) {
-      glUniform1i(shader->border_width_attr, rendering->item->geom->border_width);
-    }
-    glUniform2i(shader->pointer_attr, mouse.root_x, rendering->view->height - mouse.root_y);
-
-    DEBUG("setwin", "%ld\n", rendering->item->window);
-    if (rendering->parent_item) {
-      glUniform1i(shader->window_id_attr, rendering->parent_item->window);
-      glUniform1i(shader->widget_id_attr, rendering->widget_id);
-    } else {
-      glUniform1i(shader->window_id_attr, rendering->item->window);
-      glUniform1i(shader->widget_id_attr, 0);
-    }
-    
-    GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, rendering->shader->name_str);
-    
-    DEBUG("draw_arrays", "%ld.draw(%ld items)\n", rendering->item->window, rendering->array_length);
-
-    Atom prop_draw_type = ATOM("IG_DRAW_TYPE_POINTS");
-    GLuint draw_type = GL_POINTS;
-    if (item->prop_draw_type) {
-      prop_draw_type = (Atom) item->prop_draw_type->values.dwords[0];
-      if (prop_draw_type == ATOM("IG_DRAW_TYPE_POINTS")) draw_type = GL_POINTS;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINES")) draw_type = GL_LINES;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINE_STRIP")) draw_type = GL_LINE_STRIP;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINES_ADJACENCY")) draw_type = GL_LINES_ADJACENCY;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINE_STRIP_ADJACENCY")) draw_type = GL_LINE_STRIP_ADJACENCY;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLES")) draw_type = GL_TRIANGLES;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_STRIP")) draw_type = GL_TRIANGLE_STRIP;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_FAN")) draw_type = GL_TRIANGLE_FAN;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLES_ADJACENCY")) draw_type = GL_TRIANGLES_ADJACENCY;
-      else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY")) draw_type = GL_TRIANGLE_STRIP_ADJACENCY;
-    }  
-    glDrawArrays(draw_type, 0, rendering->array_length);
-
-    GL_CHECK_ERROR("item_draw3", "%ld.%s: %s(%ld)",
-                   item->window, rendering->shader->name_str,
-                   XGetAtomName(display, prop_draw_type), rendering->array_length);
-
-    if (!rendering->picking) {
-      XErrorEvent error;
-      x_try();
-      XDamageSubtract(display, item->damage, None, None);
-      x_catch(&error);
-    }
-    item_draw_subs(rendering);
+  shader = rendering->shader = item_get_shader(item);
+  if (rendering->print) printf("%sshader: %s\n", get_indent(rendering->indent), shader ? shader->name_str : "null");
+  if (!shader) {
+    DEBUG("item_draw_failure", "%ld: No shader", item->window);
+    return;
   }
+  glUseProgram(shader->program);
+  shader_reset_uniforms(shader);
+
+  if (!item->is_mapped) {
+    DEBUG("item_draw_failure", "%ld: Not mapped", item->window);
+    return;
+  }
+
+  if (item->prop_size
+      && (   !item->prop_size->values.dwords
+          || item->prop_size->values.dwords[0] == 0
+          || item->prop_size->values.dwords[1] == 0)) {
+    if (item->prop_size->values.dwords) {
+      DEBUG("item_draw_failure", "%ld: IG_SIZE defined but invalid: %d,%d\n", item->window, item->prop_size->values.dwords[0], item->prop_size->values.dwords[1]);
+    } else {
+      DEBUG("item_draw_failure", "%ld: IG_SIZE defined but not yet loaded.\n", item->window);
+    }
+    return;
+  }
+  if (item->prop_coords
+      && (   !item->prop_coords->data
+          || !((PropertyCoords *) item->prop_coords->data)->coords
+          || ((PropertyCoords *) item->prop_coords->data)->coords[2] <= 0.0
+          || ((PropertyCoords *) item->prop_coords->data)->coords[3] <= 0.0)) {
+    if (item->prop_coords->data && ((PropertyCoords *) item->prop_coords->data)->coords) {
+      PropertyCoords *coords = (PropertyCoords *) item->prop_coords->data;
+      DEBUG("item_draw_failure", "%ld: IG_COORDS defined but invalid: %f,%f,%f,%f\n", item->window, coords[0], coords[1], coords[2], coords[3]);
+    } else {
+      DEBUG("item_draw_failure", "%ld: IG_COORDS defined but not yet loaded.\n", item->window);
+    }
+    return;
+  }  
+
+  if (item->prop_coords && item->prop_coords->data) {
+    Bool is_visible;
+    Bool is_fullscreen;
+    item_display(item, rendering->view, &is_visible, &is_fullscreen);
+    if (!is_visible) {
+      DEBUG("item_draw_failure", "%ld: Not visible", item->window);
+      return;
+    }
+  }
+  
+  if (!rendering->picking) {
+    if (item->draw_cycles_left > 0) {
+      if (glx_rebind_pixmap || !item->window_texture.texture_id) {
+        texture_from_pixmap(&item->window_texture, item->window_pixmap);
+      }
+      item->draw_cycles_left--;
+    }
+
+    glUniform1i(shader->window_sampler_attr, rendering->texture_unit);
+    glActiveTexture(GL_TEXTURE0 + rendering->texture_unit);
+    glBindTexture(GL_TEXTURE_2D, item->window_texture.texture_id);
+    glBindSampler(rendering->texture_unit, 0);
+    rendering->texture_unit++;
+  }
+
+  rendering->source_item = root_item;
+  properties_to_gl(root_item->properties, "root_", rendering);
+  GL_CHECK_ERROR("item_draw_root_properties", "%ld.%s", item->window, shader->name_str);
+  if (rendering->parent_item) {
+    rendering->source_item = rendering->parent_item;
+    properties_to_gl(rendering->parent_item->properties, "parent_", rendering);
+    GL_CHECK_ERROR("item_draw_parent_properties", "%ld.%s", item->window, shader->name_str);
+  }
+  rendering->source_item = item;
+  properties_to_gl(item->properties, "", rendering);
+  GL_CHECK_ERROR("item_draw_properties", "%ld.%s", item->window, shader->name_str);
+
+  glUniform1i(shader->picking_mode_attr, rendering->picking);
+  glUniform4fv(shader->screen_attr, 1, rendering->view->screen);
+  glUniform2i(shader->size_attr, rendering->view->width, rendering->view->height);
+  if (item->geom) {
+    glUniform1i(shader->border_width_attr, item->geom->border_width);
+  }
+  glUniform2i(shader->pointer_attr, mouse.root_x, rendering->view->height - mouse.root_y);
+
+  DEBUG("setwin", "%ld\n", item->window);
+  if (rendering->parent_item) {
+    glUniform1i(shader->window_id_attr, rendering->parent_item->window);
+    glUniform1i(shader->widget_id_attr, rendering->widget_id);
+  } else {
+    glUniform1i(shader->window_id_attr, item->window);
+    glUniform1i(shader->widget_id_attr, 0);
+  }
+
+  GL_CHECK_ERROR("item_draw2", "%ld.%s", item->window, shader->name_str);
+
+  DEBUG("draw_arrays", "%ld.draw(%ld items)\n", item->window, rendering->array_length);
+
+  Atom prop_draw_type = ATOM("IG_DRAW_TYPE_POINTS");
+  GLuint draw_type = GL_POINTS;
+  if (item->prop_draw_type) {
+    prop_draw_type = (Atom) item->prop_draw_type->values.dwords[0];
+    if (prop_draw_type == ATOM("IG_DRAW_TYPE_POINTS")) draw_type = GL_POINTS;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINES")) draw_type = GL_LINES;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINE_STRIP")) draw_type = GL_LINE_STRIP;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINES_ADJACENCY")) draw_type = GL_LINES_ADJACENCY;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_LINE_STRIP_ADJACENCY")) draw_type = GL_LINE_STRIP_ADJACENCY;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLES")) draw_type = GL_TRIANGLES;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_STRIP")) draw_type = GL_TRIANGLE_STRIP;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_FAN")) draw_type = GL_TRIANGLE_FAN;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLES_ADJACENCY")) draw_type = GL_TRIANGLES_ADJACENCY;
+    else if (prop_draw_type == ATOM("IG_DRAW_TYPE_TRIANGLE_STRIP_ADJACENCY")) draw_type = GL_TRIANGLE_STRIP_ADJACENCY;
+  }  
+  glDrawArrays(draw_type, 0, rendering->array_length);
+
+  GL_CHECK_ERROR("item_draw3", "%ld.%s: %s(%ld)",
+                 item->window, shader->name_str,
+                 XGetAtomName(display, prop_draw_type), rendering->array_length);
+
+  if (!rendering->picking) {
+    XErrorEvent error;
+    x_try();
+    XDamageSubtract(display, item->damage, None, None);
+    x_catch(&error);
+  }
+  item_draw_subs(rendering);
 }
 
 void item_update(Item *item) {
@@ -463,7 +500,9 @@ Shader *item_get_shader(Item *item) {
 
 void item_display(Item *item, View *view, Bool *is_visible, Bool *is_fullscreen) {
   if (   !item->prop_size
+      || !item->prop_size->values.dwords
       || !item->prop_coords
+      || !item->prop_coords->data
       || !item->is_mapped) {
     *is_fullscreen = *is_visible = False;
     return;
@@ -532,12 +571,12 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
           item->window_texture.glxpixmap != 0 ? "Y" : "N",
           item->window_texture.texture_id != 0 ? "Y" : "N"
           );
-  if (item->prop_size) {
+  if (item->prop_size && item->prop_size->values.dwords) {
     long width = item->prop_size->values.dwords[0];
     long height = item->prop_size->values.dwords[1];
     fprintf(fp, "%s  size: [%ld, %ld]\n", indentstr, width, height);
   }
-  if (item->prop_coords) {
+  if (item->prop_coords && item->prop_coords->data) {
     PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
     fprintf(fp, "%s  coords: [%f, %f, %f, %f]\n",
             indentstr,
@@ -553,6 +592,25 @@ void item_print(Item *item, int indent, FILE *fp, int detail) {
     properties_print(item->properties, indent+2, fp, detail - 1);
   }
 }
+
+void item_print_rendering(Rendering *rendering, FILE *fp, int detail) {
+  item_print_meta(rendering->item, rendering->indent, fp);
+  rendering->indent += 2;
+  Bool is_visible; Bool is_fullscreen;
+  item_display(rendering->item, rendering->view, &is_visible, &is_fullscreen);
+  fprintf(fp, "%svisibility: %s\n", get_indent(rendering->indent), is_visible ? (is_fullscreen ? "fullscreen" : "visible") : "offscreen");
+
+  /*
+  if (rendering->parent_item) {
+    fprintf(fp, "%sparent: %s\n", get_indent(rendering->indent));
+    item_print_meta(item, rendering->indent+2, fp);
+  }
+  */
+  if (detail > 0) {
+    properties_print(rendering->item->properties, rendering->indent, fp, detail - 1);
+  } 
+}
+
 
 Item *item_create(Window window) {
   Item *item = (Item *) malloc(sizeof(Item));
