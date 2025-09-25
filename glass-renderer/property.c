@@ -211,6 +211,18 @@ void properties_set_program_cache_idx(Rendering *rendering) {
   properties->programs[idx].prefix = rendering->properties_prefix;
 }
 
+void properties_calculate(Properties *properties, char *prefix, Rendering *rendering) {
+  if (!properties) return;
+  rendering->properties = properties;
+  rendering->properties_prefix = prefix;
+  
+  Property **entries = (Property **) properties->properties->entries;
+  for (size_t i = 0; i < properties->properties->count; i++) {
+    Property *prop = entries[i];
+    property_calculate(prop, rendering);   
+  }
+}
+
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
   if (!properties) return;
   rendering->properties = properties;
