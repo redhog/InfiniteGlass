@@ -225,6 +225,9 @@ void properties_calculate(Properties *properties, char *prefix, Rendering *rende
 
 void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering) {
   if (!properties) return;
+
+  properties_calculate(properties, prefix, rendering);
+  
   rendering->properties = properties;
   rendering->properties_prefix = prefix;
   properties_set_program_cache_idx(rendering);
@@ -232,10 +235,6 @@ void properties_to_gl(Properties *properties, char *prefix, Rendering *rendering
   
   GL_CHECK_ERROR("properties_to_gl", "%ld", properties->window);
   Property **entries = (Property **) properties->properties->entries;
-  for (size_t i = 0; i < properties->properties->count; i++) {
-    Property *prop = entries[i];
-    property_calculate(prop, rendering);   
-  }
   for (size_t i = 0; i < properties->properties->count; i++) {
     Property *prop = entries[i];
     property_to_gl(prop, rendering);
