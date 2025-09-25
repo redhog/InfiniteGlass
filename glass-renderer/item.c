@@ -528,12 +528,12 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
           item->window_texture.glxpixmap != 0 ? "Y" : "N",
           item->window_texture.texture_id != 0 ? "Y" : "N"
           );
-  if (item->prop_size) {
+  if (item->prop_size && item->prop_size->values.dwords) {
     long width = item->prop_size->values.dwords[0];
     long height = item->prop_size->values.dwords[1];
     fprintf(fp, "%s  size: [%ld, %ld]\n", indentstr, width, height);
   }
-  if (item->prop_coords) {
+  if (item->prop_coords && item->prop_coords->data) {
     PropertyCoords *data = (PropertyCoords *) item->prop_coords->data;
     fprintf(fp, "%s  coords: [%f, %f, %f, %f]\n",
             indentstr,
