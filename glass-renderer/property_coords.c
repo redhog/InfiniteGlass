@@ -194,11 +194,11 @@ void property_coords_to_gl(Property *prop, Rendering *rendering) {
 
 void property_coords_print(Property *prop, int indent, FILE *fp, int detail) {
   int limit = (detail == 0 && prop->nitems > 10) ? 10 : prop->nitems;
-  float *values = (float *) prop->data;
+  PropertyCoords *data = (PropertyCoords *) prop->data;
   fprintf(fp, "%s%s: !COORDS [", get_indent(indent), prop->name_str);
   for (int i = 0; i < limit; i++) {
     if (i > 0) fprintf(fp, ", ");
-    fprintf(fp, "%f", values[i]);
+    fprintf(fp, "%f", data->coords[i]);
   }
   if (limit < prop->nitems) {
     fprintf(fp, "] # Truncated\n");
