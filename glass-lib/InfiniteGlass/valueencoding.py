@@ -51,7 +51,10 @@ def parse_value(display, value, **context):
     fmt = 32
     
     if isinstance(value, tuple) or (isinstance(value, list) and len(value) == 2 and type(value[0]) != type(value[1])):
-        itemtype, items, fmt = parse_value(display, value[1])
+        if value[1]:
+            itemtype, items, fmt = parse_value(display, value[1])
+        else:
+            items = []
         return display.get_atom(value[0]), items, fmt
     elif isinstance(value, dict) and len(value) == 2 and "type" in value and "value" in value:
         itemtype, items, fmt = parse_value(display, value["value"])
@@ -122,7 +125,9 @@ def parse_value(display, value, **context):
 def format_value(window, value, **context):
     itemtype, items, fmt = parse_value(window.display.real_display, value, window=window, **context)
 
-    if itemtype == window.display.get_atom("CARDINAL"):
+    if not items:
+        items = b''
+    elif itemtype == window.display.get_atom("CARDINAL"):
         items = struct.pack("<" + "I" * len(items), *items)
     elif isinstance(items[0], int):
         items = struct.pack("<" + "i" * len(items), *items)
