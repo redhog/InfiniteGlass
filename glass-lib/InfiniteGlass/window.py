@@ -46,7 +46,7 @@ def window_delitem(self, key):
         keyatom = self.display.get_atom(key)
         self.delete_property(keyatom)
     except Exception as e:
-        raise Exception("Unable to delete %s.%s: %s" % (self, key, e))
+        raise Exception("Unable to delete %s.%s: %s" % (self, key, e)) from e
 Xlib.xobject.drawable.Window.__delitem__ = window_delitem
 
 def window_keys(self):
