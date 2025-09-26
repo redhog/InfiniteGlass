@@ -49,10 +49,11 @@ modes:
   base_mode:
     BaseMode:
       keymap:
-        # Comment out the next line to have
-        # WIN+ALT+CTRL+RightClick to focus, and navigate focus
-        # with the keyboard with WIN+ALT+CTRL+ArrowKey
-        "RawMotion": focus_follows_mouse
+        # Comment out one of these two lines to switch between focus
+        # follows mouse and click to focus
+        # "RawMotion": focus_follows_mouse
+        RawButtonPress: focus_follows_mouse
+
         "ButtonPress,MainKey": grabbed_mode
         "KeyPress,MainKey": grabbed_mode
         "KeyPress,XK_Super_L": grabbed_mode
@@ -66,12 +67,11 @@ modes:
       keymap:
         "KeyRelease": pop
         "ButtonRelease": pop
-
-        # "ButtonPress,ItemKey,MainKey,3": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Up": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Down": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Left": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Right": focus_mode
+        
+        "KeyPress,ItemKey,MainKey,XK_Up": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Down": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Left": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Right": focus_mode
 
         "KeyPress,XK_R": reload
 
@@ -131,9 +131,7 @@ modes:
     Mode:
       keymap:
         "KeyRelease,!AutoRepeat": pop
-        "ButtonRelease": pop
 
-        "ButtonPress,ItemKey,MainKey": focus_follows_mouse
         "KeyPress,XK_Left,ItemKey,MainKey": focus_to_window_to_the_left
         "KeyPress,XK_Right,ItemKey,MainKey": focus_to_window_to_the_right
         "KeyPress,XK_Up,ItemKey,MainKey": focus_to_window_above

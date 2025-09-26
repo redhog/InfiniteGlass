@@ -82,6 +82,12 @@ def focus_to_window_to_the(self, event, direction):
             windows.append((wdist * (1 + wdir), (x, y), coords, child))
             
     if not windows:
+        screeny = numpy.sin(direction)
+        screenx = numpy.cos(direction)
+        
+        view = [view[0] + screenx * view[2], view[1] + screeny * view[3]] + view[2:]
+        self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
+        self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
         return
 
     windows.sort(key=lambda a: a[0])
