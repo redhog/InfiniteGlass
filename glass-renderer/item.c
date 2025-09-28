@@ -124,7 +124,10 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
     DEBUG("set_geometry", "%ld.Setting geometry = %d,%d from IG_SIZE\n", item->window,existing->values.dwords[0], existing->values.dwords[1]);
     xcb_configure_window(xcb_display, item->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, existing->values.dwords);
     item_update(item);
-  } else {
+  }
+
+/*
+  else {
     int arr[2] = {width, height};
     DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d from geometry\n", item->window, width, height);
     xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);
@@ -150,7 +153,6 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
       coords[3] = ((float) (height)) / (float) overlay_attr.width;
       DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
     }
-
     if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
       DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
             item->window,
@@ -163,6 +165,7 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
   } else {
     DEBUG("set_ig_coords", "%ld.IG_COORDS is already set\n");
   }
+*/
   if (reply) free(reply);
 
   item_menu_update_space_pos_from_window(item,
