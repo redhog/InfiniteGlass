@@ -7,7 +7,8 @@ def load_fn(name):
     mod, fn = name.rsplit(".", 1)
     return getattr(importlib.import_module(mod), fn)
 
-def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="glass_input.binary_tree_bin_packer.GrowingPacker"):
+# packer="glass_input.binary_tree_bin_packer.pack"
+def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.ortools_bin_packer.pack", **kw):
     "Tile/pack all visible windows as tightly as possible"
 
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
@@ -15,9 +16,14 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="gla
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     windows = visible+overlap
     
-    packer = load_fn(packer)()
-    blocks = [{"w": coords[2] + margins * view[2], "h": coords[3] + margins * view[2], "window": window} for window, coords in windows]
-    packer.fit(blocks, view[2], view[3], sorting="diagonal")
+    blocks = [{
+        "x": coords[0],
+        "y": coords[1],
+        "w": coords[2] + margins * view[2],
+        "h": coords[3] + margins * view[2],
+        "window": window}
+              for window, coords in windows]
+    load_fn(packer)(blocks, view[2], view[3], **kw)
     
     positions = np.array([(block["fit"]["x"], block["fit"]["y"], block["w"], block["h"]) for block in blocks])
     

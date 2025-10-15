@@ -5,25 +5,25 @@ from fractions import Fraction
 from math import gcd
 from functools import reduce
 
-def place_windows_int(screen_w, screen_h,
-                      all_rects,
-                      move_weight=None, # 1
-                      zoom_weight=None, # 2
-                      resize_weight=None, # 5
-                      time_limit_seconds=1.0):
+def pack_int(windows, screen_w, screen_h,
+             move_weight=1, # None
+             zoom_weight=1, # None
+             resize_weight=None, # 5
+             time_limit_seconds=1.0):
     """
     Place windows on a screen with non-overlap, allowing movement/resizing of existing windows.
 
     screen_w, screen_h: screen size in pixels (ints)
     windows: list of windows, each a dict:
         {
-           'id': 'w1',
            'x': current_x, # optional current position
            'y': current_y, # optional current position
            'w': current_w,
            'h': current_h,
+           'move_weight': override_default,
+           'resize_weight': override_default,
         }
-    Updates all_rects to have new members "fit" with {x, y, w, h}
+    Updates windows to have new members "fit" with {x, y, w, h}
     Returns: True if success
     """
     model = cp_model.CpModel()
@@ -45,7 +45,6 @@ def place_windows_int(screen_w, screen_h,
         screen_h_min = 0
         screen_w_max *= 10
         screen_h_max *= 10
-        
     screen_w_var = model.NewIntVar(screen_w_min, screen_w_max, f"screen_w")
     screen_h_var = model.NewIntVar(screen_h_min, screen_h_max, f"screen_h")
     
@@ -53,8 +52,9 @@ def place_windows_int(screen_w, screen_h,
         model.Add(screen_h_var * screen_w == screen_w_var * screen_h)
         penalties.append((screen_w_var, zoom_weight))        
         
-    for win in all_rects:
-        wid = win['id']
+    for wid, win in enumerate(windows):
+        win_move_weight = win.get("move_weight", move_weight)
+        win_resize_weight = win.get("resize_weight", resize_weight)
 
         vars_w[wid] = w_var = model.NewIntVar(0, screen_w_max, f"w_{wid}")
         vars_h[wid] = h_var = model.NewIntVar(0, screen_h_max, f"h_{wid}")
@@ -71,7 +71,7 @@ def place_windows_int(screen_w, screen_h,
         x_intervals.append(x_interval)
         y_intervals.append(y_interval)
 
-        if move_weight is None:
+        if win_move_weight is None:
             if "x" in win:
                 model.Add(x_var == win["x"])
             if "y" in win:
@@ -82,15 +82,15 @@ def place_windows_int(screen_w, screen_h,
                 model.Add(dx == vars_x[wid] - win['x'])
                 abs_dx = model.NewIntVar(0, screen_w, f"abs_dx_{wid}")
                 model.AddAbsEquality(abs_dx, dx)
-                penalties.append((abs_dx, move_weight))
+                penalties.append((abs_dx, win_move_weight))
             if "y" in win:
                 dy = model.NewIntVar(-screen_h, screen_h, f"dy_{wid}")
                 model.Add(dy == vars_y[wid] - (win['y'] - win['h'])) # Top left vs bottom left
                 abs_dy = model.NewIntVar(0, screen_h, f"abs_dy_{wid}")
                 model.AddAbsEquality(abs_dy, dy)
-                penalties.append((abs_dy, move_weight))            
+                penalties.append((abs_dy, win_move_weight))            
         
-        if resize_weight is None:
+        if win_resize_weight is None:
             model.Add(w_var == win['w'])
             model.Add(h_var == win['h'])
         else:
@@ -106,7 +106,7 @@ def place_windows_int(screen_w, screen_h,
             
             resize_pen = model.NewIntVar(0, screen_w_max*2 + screen_h_max*2, f"resize_pen_{wid}")
             model.Add(resize_pen == abs_dw + abs_dh)
-            penalties.append((resize_pen, resize_weight))
+            penalties.append((resize_pen, win_resize_weight))
 
     model.AddNoOverlap2D(x_intervals, y_intervals)
     
@@ -119,77 +119,46 @@ def place_windows_int(screen_w, screen_h,
 
     result = solver.Solve(model)
 
-    if result == cp_model.OPTIMAL or result == cp_model.FEASIBLE:
-        out = {}
-        for win in all_rects:
-            wid = win['id']
-            win['fit'] = {"x": solver.Value(vars_x[wid]),
-                          "y": solver.Value(vars_y[wid]) + solver.Value(vars_h[wid]), # Top left vs bottom left
-                          "w": solver.Value(vars_w[wid]),
-                          "h": solver.Value(vars_h[wid])}
-        return True
-    else:
-        return False
+    if result != cp_model.OPTIMAL and result != cp_model.FEASIBLE:
+        raise Exception("Unable to tile")
+    
+    for wid, win in enumerate(windows):
+        win['fit'] = {"x": solver.Value(vars_x[wid]),
+                      "y": solver.Value(vars_y[wid]) + solver.Value(vars_h[wid]), # Top left vs bottom left
+                      "w": solver.Value(vars_w[wid]),
+                      "h": solver.Value(vars_h[wid])}
 
-def lcm(a, b): return a * b // gcd(a, b)
-
-def find_scale(values):
-    denominators = [Fraction(v).limit_denominator().denominator for v in values]
-    return reduce(lcm, denominators, 1)
-
-def place_windows(screen_w, screen_h, windows, **kw):
+def pack(windows, screen_w, screen_h, **kw):
     """
     Scale all floats to integers using the exact binary representation,
     run a bin-packing function, then scale back down. Uses numpy for speed.
     """
-    keys = ("x", "y", "w", "h")
-    values = [screen_w, screen_h]
-    for win in windows:
-        for k in keys:
-            if k in win:
-                values.append(win[k])
-                
-    if not values:
-        return place_windows_int(screen_w, screen_h, windows, **kw)
+    if not windows: return 
 
-    scale_factor = find_scale(values)                  
+    xoffset = min((win["x"] for win in windows if "x" in win), default=0)
+    yoffset = min((win["y"]-win["h"] for win in windows if "y" in win), default=0)
+    xscale = 4906 / max((win.get("x", 0)+win["w"] for win in windows)) - xoffset
+    yscale = 4096 / max((win["y"] if "y" in win else win["h"] for win in windows)) - yoffset
     
     int_windows = [
         {"orig": win,
-         "id": win["id"],
-         **{k: int(round(win[k] * scale_factor))
-            for k in keys if k in win}}
+         "w": int(round(win["w"] * xscale)),
+         "h": int(round(win["h"] * yscale)),
+         **({"x": int(round((win["x"]-xoffset) * xscale)),
+             "y": int(round((win["y"]-yoffset) * yscale))}
+            if ("x" in win and "y" in win) else {})}
         for win in windows]
 
-    int_screen_w = int(round(screen_w * scale_factor))
-    int_screen_h = int(round(screen_h * scale_factor))
+    int_screen_w = int(round(screen_w * xscale))
+    int_screen_h = int(round(screen_h * yscale))
 
-    res = place_windows_int(int_screen_w, int_screen_h, int_windows, **kw)
-    if res:
-        for win in int_windows:
-            win["orig"]["fit"] = {k: win["fit"][k] / scale_factor
-                                  for k in keys
-                                  if k in win["fit"]}
+    pack_int(int_windows, int_screen_w, int_screen_h, **kw)
 
-    return res
-
-class CpPacker(object):
-  def fit(self, blocks, view_width, view_height, **kw):
-      place_windows(view_width, view_height, blocks, **kw)
-    
-# Example usage:
-if __name__ == "__main__":
-    screen_w, screen_h = 1500, 1500
-    existing = [
-        {'id':'w1','x':0,'y':0,'w':800,'h':600},
-        {'id':'w2','x':810,'y':0,'w':400,'h':300},
-        {'id':'w3','x':0,'y':610,'w':500,'h':300},
-        {'id':'w4','x':510,'y':610,'w':600,'h':400},
-    ]
-    for w in existing:
-        w["min_w"] = w["max_w"] = w["w"]
-        w["min_h"] = w["max_h"] = w["h"]
-        
-    new_w = {'id':'new','min_w':200,'min_h':100,'max_w':200,'max_h':100}
-    layout = place_windows_int(screen_w, screen_h, existing, new_w, move_weight=1, resize_weight=10, time_limit_seconds=0.5)
-    print(layout)
+    for win in int_windows:
+        # Hack: If the packer didn't move the window, preserve the
+        # exact original coordinate, not the rounded one.
+        win["orig"]["fit"] = {
+            "x": (win["fit"]["x"] / xscale + xoffset) if win["fit"]["x"] != win.get("x") else win["orig"]["x"],
+            "y": (win["fit"]["y"] / yscale + yoffset) if win["fit"]["y"] != win.get("y") else win["orig"]["y"],
+            "w": (win["fit"]["w"] / xscale) if win["fit"]["w"] != win.get("w") else win["orig"]["w"],
+            "h": (win["fit"]["h"] / yscale) if win["fit"]["h"] != win.get("h") else win["orig"]["h"]}
