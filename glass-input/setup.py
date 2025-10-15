@@ -15,6 +15,7 @@ setuptools.setup(name='glass-input',
           "pyyaml",
           "rpdb",
           "numpy",
+          "ortools",
           "rectangle-packer"
       ],
       entry_points={
