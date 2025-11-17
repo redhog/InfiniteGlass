@@ -14,19 +14,13 @@ import types
 import pkg_resources
 import yaml
 from .event_state import EventStatePattern
+from .basemode import BaseMode
 
 
-
-class Mode(object):
+class Mode(BaseMode):
     def __init__(self, config, **kw):
         self.config = config
-        self.display = self.config.display
-        self.first_event = None
-        self.last_event = None
-        self.state = {}
-        for key, value in kw.items():
-            setattr(self, key, value)
-
+        BaseMode.__init__(self, config.display, **kw)
         self.keymap_compiled = self.compile_keymap(self.keymap)
 
     def compile_action_keymap(self, action):
@@ -59,15 +53,8 @@ class Mode(object):
         if hasattr(self, "load"):
             self.action("load", self.load, None)
 
-    def get_event_window(self, event=None):
-        event = event or self.last_event
-        if event == "ClientMessage":
-            return event.window
-        return InfiniteGlass.windows.get_event_window(self.display, event)
-    
     def exit(self):
         pass
-
 
     def handle(self, event, keymap=None):
         self.last_event = event
@@ -116,19 +103,3 @@ class Mode(object):
                 self.config.functions[action](self, event, **args)
             else:
                 raise Exception("Unknown action for %s: %s\n" % (eventfilter, action))
-
-    def __getitem__(self, name):
-        if name in self.state:
-            return self.state[name]
-        if hasattr(self, name):
-            return getattr(self, name)
-        raise KeyError
-
-    @property
-    def last_event_window(self):
-        return self.get_event_window(self.last_event)
-
-    def __repr__(self):
-        if hasattr(self, "name"):            
-            return "%s/%s" % (type(self).__name__, self.name)
-        return type(self).__name__
