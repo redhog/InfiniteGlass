@@ -2,6 +2,7 @@ import InfiniteGlass
 import Xlib.X
 import glass_ghosts.ghost
 import glass_ghosts.helpers
+import glass_input.actions.tile
 import sys
 import re
 
@@ -212,9 +213,15 @@ class Window(object):
             x = (view[2] - width) / 2
         if y == 0.0:
             y = (view[3] - height) / 2
+
+        glass_input.actions.tile.tile_visible(
+            glass_input.basemode.BaseMode(self.manager.display),
+            None,
+            move_weight=None, 
+            extra=[{"w": width, "h": height, "window":  self.window}])
         
-        self.window["IG_COORDS"] = [view[0] + x, view[1] + view[3] - y, width, height]
-        self.manager.display.flush()
+        #self.window["IG_COORDS"] = [view[0] + x, view[1] + view[3] - y, width, height]
+        #self.manager.display.flush()
 
     def __str__(self):
         res = str(self.window.__window__())

@@ -8,7 +8,7 @@ def load_fn(name):
     return getattr(importlib.import_module(mod), fn)
 
 # packer="glass_input.binary_tree_bin_packer.pack"
-def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.ortools_bin_packer.pack", **kw):
+def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.ortools_bin_packer.pack", extra=[], **kw):
     "Tile/pack all visible windows as tightly as possible"
 
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
@@ -22,7 +22,10 @@ def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.
         "w": coords[2] + margins * view[2],
         "h": coords[3] + margins * view[2],
         "window": window}
-              for window, coords in windows]
+              for window, coords in windows] + extra
+    if not blocks:
+        return
+    
     load_fn(packer)(blocks, view[2], view[3], **kw)
     
     positions = np.array([(block["fit"]["x"], block["fit"]["y"], block["w"], block["h"]) for block in blocks])
@@ -51,6 +54,14 @@ def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.
     for block, new_coords in zip(blocks, positions):
         window = block["window"]
         new_coords = list(new_coords)
+        if "IG_COORDS" not in window:
+            # If it's a new window, make it "pop" from its center
+            start_coords = list(new_coords)
+            start_coords[0] += start_coords[2] / 10
+            start_coords[1] -= start_coords[3] / 10
+            start_coords[2] *= 0.8
+            start_coords[3] *= 0.8
+            window["IG_COORDS"] = start_coords
         window["IG_COORDS_ANIMATE"] = new_coords
         if zoom_1_1:
             window["IG_SIZE"] = item_zoom_to.item_zoom_1_1_to_sreen_calc(self, window, coords = new_coords)
