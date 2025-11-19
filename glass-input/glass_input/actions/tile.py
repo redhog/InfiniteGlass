@@ -25,10 +25,13 @@ def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.
               for window, coords in windows] + extra
     if not blocks:
         return
-    
+
+    print("========{TILE}========")
+    print(blocks, view[2], view[3], kw)
     load_fn(packer)(blocks, view[2], view[3], **kw)
     
-    positions = np.array([(block["fit"]["x"], block["fit"]["y"], block["w"], block["h"]) for block in blocks])
+    positions = np.array([(block["fit"]["x"], block["fit"]["y"]-block["h"], block["w"], block["h"]) for block in blocks])
+    print("Tiled", blocks)
     
     minpos = (positions[:,:2]).min(axis=0)
     positions[:,0] -= minpos[0]
@@ -50,7 +53,7 @@ def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.
     positions[:,2:] -= margins * view[2]
     positions[:,0] += margins * view[2] / 2
     positions[:,1] -= margins * view[2] / 2
-    
+
     for block, new_coords in zip(blocks, positions):
         window = block["window"]
         new_coords = list(new_coords)

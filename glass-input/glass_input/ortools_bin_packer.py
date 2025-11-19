@@ -5,128 +5,179 @@ from fractions import Fraction
 from math import gcd
 from functools import reduce
 
-def pack_int(windows, screen_w, screen_h,
-             move_weight=1, # None
-             zoom_weight=1, # None
-             resize_weight=None, # 5
-             time_limit_seconds=1.0):
+def add_non_overlap_interval_vs_fixed(model,
+                                      xint, yint,
+                                      fx, fy, fw, fh,
+                                      name_prefix):
     """
-    Place windows on a screen with non-overlap, allowing movement/resizing of existing windows.
+    Enforce that a movable interval (xint, yint) does NOT overlap
+    a fixed rectangle (fx, fy, fw, fh).
 
-    screen_w, screen_h: screen size in pixels (ints)
-    windows: list of windows, each a dict:
-        {
-           'x': current_x, # optional current position
-           'y': current_y, # optional current position
-           'w': current_w,
-           'h': current_h,
-           'move_weight': override_default,
-           'resize_weight': override_default,
-        }
-    Updates windows to have new members "fit" with {x, y, w, h}
-    Returns: True if success
+    (fx,fy) = fixed top-left coordinate
+    fw,fh  = fixed width/height
     """
+
+    left  = model.NewBoolVar(name_prefix + "_left")
+    right = model.NewBoolVar(name_prefix + "_right")
+    above = model.NewBoolVar(name_prefix + "_above")
+    below = model.NewBoolVar(name_prefix + "_below")
+
+    model.Add(xint.StartExpr() + xint.SizeExpr() <= fx).OnlyEnforceIf(left)
+    model.Add(xint.StartExpr() + xint.SizeExpr() >  fx).OnlyEnforceIf(left.Not())
+
+    model.Add(xint.StartExpr() >= fx + fw).OnlyEnforceIf(right)
+    model.Add(xint.StartExpr() <  fx + fw).OnlyEnforceIf(right.Not())
+
+    model.Add(yint.StartExpr() + yint.SizeExpr() <= fy).OnlyEnforceIf(above)
+    model.Add(yint.StartExpr() + yint.SizeExpr() >  fy).OnlyEnforceIf(above.Not())
+
+    model.Add(yint.StartExpr() >= fy + fh).OnlyEnforceIf(below)
+    model.Add(yint.StartExpr() <  fy + fh).OnlyEnforceIf(below.Not())
+
+    model.AddBoolOr([left, right, above, below])
+
+def pack_int(windows, screen_w, screen_h,
+             move_weight=1,
+             zoom_weight=1,
+             resize_weight=None,
+             time_limit_seconds=1.0):
+
     model = cp_model.CpModel()
-    
-    vars_x = {}
-    vars_y = {}
-    vars_w = {}
-    vars_h = {}
-    x_intervals = []
-    y_intervals = []
+
+    vars_x, vars_y, vars_w, vars_h = {}, {}, {}, {}
+    movable_x_intervals = []
+    movable_y_intervals = []
+    movable_ids = []
+    fixed_windows = []
     penalties = []
 
-    screen_w_max = screen_w
-    screen_h_max = screen_h
-    screen_w_min = screen_w
-    screen_h_min = screen_h
-    if zoom_weight is not None:
-        screen_w_min = 0
-        screen_h_min = 0
-        screen_w_max *= 10
-        screen_h_max *= 10
-    screen_w_var = model.NewIntVar(screen_w_min, screen_w_max, f"screen_w")
-    screen_h_var = model.NewIntVar(screen_h_min, screen_h_max, f"screen_h")
-    
+    screen_w_min = screen_w if zoom_weight is None else 0
+    screen_h_min = screen_h if zoom_weight is None else 0
+    screen_w_max = screen_w if zoom_weight is None else screen_w * 10
+    screen_h_max = screen_h if zoom_weight is None else screen_h * 10
+
+    screen_w_var = model.NewIntVar(screen_w_min, screen_w_max, "screen_w")
+    screen_h_var = model.NewIntVar(screen_h_min, screen_h_max, "screen_h")
+
     if zoom_weight is not None:
         model.Add(screen_h_var * screen_w == screen_w_var * screen_h)
-        penalties.append((screen_w_var, zoom_weight))        
-        
+        penalties.append((screen_w_var, zoom_weight))
+
     for wid, win in enumerate(windows):
+
         win_move_weight = win.get("move_weight", move_weight)
         win_resize_weight = win.get("resize_weight", resize_weight)
 
-        vars_w[wid] = w_var = model.NewIntVar(0, screen_w_max, f"w_{wid}")
-        vars_h[wid] = h_var = model.NewIntVar(0, screen_h_max, f"h_{wid}")
-        vars_x[wid] = x_var = model.NewIntVar(0, screen_w_max, f"x_{wid}")
-        vars_y[wid] = y_var = model.NewIntVar(0, screen_h_max, f"y_{wid}")
-        x_end = model.NewIntVar(0, screen_w, f"xend_{wid}")
-        y_end = model.NewIntVar(0, screen_h, f"yend_{wid}")
-        
-        model.Add(x_var + w_var <= screen_w_var)
-        model.Add(y_var + h_var <= screen_h_var)
+        if win_move_weight is None and "x" in win and "y" in win:
+            vars_x[wid] = win["x"]
+            vars_y[wid] = win["y"] - win["h"]
+            vars_w[wid] = win["w"]
+            vars_h[wid] = win["h"]
 
-        x_interval = model.NewIntervalVar(x_var, w_var, x_end, f"xint_{wid}")
-        y_interval = model.NewIntervalVar(y_var, h_var, y_end, f"yint_{wid}")
-        x_intervals.append(x_interval)
-        y_intervals.append(y_interval)
-
-        if win_move_weight is None:
-            if "x" in win:
-                model.Add(x_var == win["x"])
-            if "y" in win:
-                model.Add(y_var == win["y"] - win["h"]) # Top left vs bottom left
+            fixed_windows.append((wid, win))
         else:
+            w_var = model.NewIntVar(0, screen_w_max, f"w_{wid}")
+            h_var = model.NewIntVar(0, screen_h_max, f"h_{wid}")
+            x_var = model.NewIntVar(0, screen_w_max, f"x_{wid}")
+            y_var = model.NewIntVar(0, screen_h_max, f"y_{wid}")
+
+            vars_w[wid] = w_var
+            vars_h[wid] = h_var
+            vars_x[wid] = x_var
+            vars_y[wid] = y_var
+
+            x_end = model.NewIntVar(0, screen_w_max, f"xend_{wid}")
+            y_end = model.NewIntVar(0, screen_h_max, f"yend_{wid}")
+
+            model.Add(x_var + w_var <= screen_w_var)
+            model.Add(y_var + h_var <= screen_h_var)
+
+            xint = model.NewIntervalVar(x_var, w_var, x_end, f"xint_{wid}")
+            yint = model.NewIntervalVar(y_var, h_var, y_end, f"yint_{wid}")
+
+            movable_x_intervals.append(xint)
+            movable_y_intervals.append(yint)
+            movable_ids.append(wid)
+
             if "x" in win:
-                dx = model.NewIntVar(-screen_w, screen_w, f"dx_{wid}")
-                model.Add(dx == vars_x[wid] - win['x'])
-                abs_dx = model.NewIntVar(0, screen_w, f"abs_dx_{wid}")
-                model.AddAbsEquality(abs_dx, dx)
-                penalties.append((abs_dx, win_move_weight))
+                dx = model.NewIntVar(-screen_w_max, screen_w_max, f"dx_{wid}")
+                model.Add(dx == x_var - win["x"])
+                adx = model.NewIntVar(0, screen_w_max, f"adx_{wid}")
+                model.AddAbsEquality(adx, dx)
+                penalties.append((adx, win_move_weight))
+
             if "y" in win:
-                dy = model.NewIntVar(-screen_h, screen_h, f"dy_{wid}")
-                model.Add(dy == vars_y[wid] - (win['y'] - win['h'])) # Top left vs bottom left
-                abs_dy = model.NewIntVar(0, screen_h, f"abs_dy_{wid}")
-                model.AddAbsEquality(abs_dy, dy)
-                penalties.append((abs_dy, win_move_weight))            
+                dy = model.NewIntVar(-screen_h_max, screen_h_max, f"dy_{wid}")
+                model.Add(dy == y_var - (win["y"] - win["h"]))
+                ady = model.NewIntVar(0, screen_h_max, f"ady_{wid}")
+                model.AddAbsEquality(ady, dy)
+                penalties.append((ady, win_move_weight))
+
+            if win_resize_weight is None:
+                model.Add(w_var == win["w"])
+                model.Add(h_var == win["h"])
+            else:
+                dw = model.NewIntVar(-screen_w_max, screen_w_max, f"dw_{wid}")
+                model.Add(dw == w_var - win["w"])
+                adw = model.NewIntVar(0, screen_w_max, f"adw_{wid}")
+                model.AddAbsEquality(adw, dw)
+
+                dh = model.NewIntVar(-screen_h_max, screen_h_max, f"dh_{wid}")
+                model.Add(dh == h_var - win["h"])
+                adh = model.NewIntVar(0, screen_h_max, f"adh_{wid}")
+                model.AddAbsEquality(adh, dh)
+
+                rp = model.NewIntVar(0, screen_w_max * 2 + screen_h_max * 2,
+                                      f"resize_{wid}")
+                model.Add(rp == adw + adh)
+                penalties.append((rp, win_resize_weight))
+
+    if len(movable_x_intervals) > 1:
+        model.AddNoOverlap2D(movable_x_intervals, movable_y_intervals)
+
+    for interval_index, wid in enumerate(movable_ids):
+        xint = movable_x_intervals[interval_index]
+        yint = movable_y_intervals[interval_index]
+
+        for fid, fwin in fixed_windows:
+            add_non_overlap_interval_vs_fixed(
+                model,
+                xint, yint,
+                vars_x[fid], vars_y[fid], vars_w[fid], vars_h[fid],
+                name_prefix=f"mov_{wid}_vs_fix_{fid}"
+            )
         
-        if win_resize_weight is None:
-            model.Add(w_var == win['w'])
-            model.Add(h_var == win['h'])
-        else:
-            dw = model.NewIntVar(-screen_w_max, screen_w_max, f"dw_{wid}")
-            model.Add(dw == w_var - win['w'])
-            abs_dw = model.NewIntVar(0, screen_w_max, f"abs_dw_{wid}")
-            model.AddAbsEquality(abs_dw, dw)
-
-            dh = model.NewIntVar(-screen_h_max, screen_h_max, f"dh_{wid}")
-            model.Add(dh == h_var - win['h'])
-            abs_dh = model.NewIntVar(0, screen_h_max, f"abs_dh_{wid}")
-            model.AddAbsEquality(abs_dh, dh)
-            
-            resize_pen = model.NewIntVar(0, screen_w_max*2 + screen_h_max*2, f"resize_pen_{wid}")
-            model.Add(resize_pen == abs_dw + abs_dh)
-            penalties.append((resize_pen, win_resize_weight))
-
-    model.AddNoOverlap2D(x_intervals, y_intervals)
-    
-    model.Minimize(sum((var * w for var, w in penalties)))
+    model.Minimize(sum(var * w for var, w in penalties))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_seconds
-    solver.parameters.num_search_workers = 8  # tune to your machine
-#    solver.parameters.maximize = False
+    solver.parameters.num_search_workers = 8
 
     result = solver.Solve(model)
-
-    if result != cp_model.OPTIMAL and result != cp_model.FEASIBLE:
+    if result not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise Exception("Unable to tile")
-    
+
     for wid, win in enumerate(windows):
-        win['fit'] = {"x": solver.Value(vars_x[wid]),
-                      "y": solver.Value(vars_y[wid]) + solver.Value(vars_h[wid]), # Top left vs bottom left
-                      "w": solver.Value(vars_w[wid]),
-                      "h": solver.Value(vars_h[wid])}
+        if isinstance(vars_x[wid], int):
+            # fixed window
+            win["fit"] = {
+                "x": vars_x[wid],
+                "y": vars_y[wid] + vars_h[wid],
+                "w": vars_w[wid],
+                "h": vars_h[wid]
+            }
+        else:
+            # movable window
+            x = solver.Value(vars_x[wid])
+            y = solver.Value(vars_y[wid])
+            wv = solver.Value(vars_w[wid])
+            hv = solver.Value(vars_h[wid])
+            win["fit"] = {
+                "x": x,
+                "y": y + hv,
+                "w": wv,
+                "h": hv
+            }
 
 def pack(windows, screen_w, screen_h, **kw):
     """
