@@ -17,12 +17,13 @@ from .event_state import EventStatePattern
 from .basemode import BaseMode
 
 
-class Mode(BaseMode):
+class Mode(BaseMode, InfiniteGlass.action.ActionRunner):
     def __init__(self, config, **kw):
         self.config = config
         BaseMode.__init__(self, config.display, **kw)
+        InfiniteGlass.action.ActionRunner.__init__(self)
         self.keymap_compiled = self.compile_keymap(self.keymap)
-
+        
     def compile_action_keymap(self, action):
         if isinstance(action, dict) and "keymap" in action:
             action = dict(action)
@@ -78,28 +79,22 @@ class Mode(BaseMode):
         return False
 
     def action(self, eventfilter, action, event, name=None):
-        InfiniteGlass.DEBUG("action", "Action %s.%s [%s]\n" % (self, name if name else action, eventfilter))
-        if isinstance(action, (tuple, list)):
-            for item in action:
-                self.action(eventfilter, item, event)
+        self.run(
+            action,
+            name="%s [%s]\n" % (name if name else action,
+                                eventfilter),
+            event=event)
+        
+    def call_action(self, action, args, event, name=None, **kw):
+        if action in self.config.config["modes"]:
+            self.run(self.config.config["modes"][action], event=event, name=action, **kw)
+        elif action in self.config.modes:
+            mode = self.config.push(
+                self.config.modes[action],
+                first_event=event,
+                last_event=event,
+                name=name,
+                **args)
+            mode.handle(event)
         else:
-            args = {}
-            if isinstance(action, dict):
-                args = next(iter(action.values()))
-                action = next(iter(action.keys()))
-                if not isinstance(args, dict):
-                    args = {"value": args}
-                
-            if not isinstance(action, str):
-                raise Exception("Unknown action type for %s: %s\n" % (eventfilter, action))
-
-            if action in self.config.config["modes"]:
-                self.action(eventfilter, self.config.config["modes"][action], event, name=action)
-            elif action in self.config.modes:
-                mode = self.config.push(self.config.modes[action], first_event=event, last_event=event, name=name, **args)
-                mode.handle(event)
-            elif action in self.config.functions:
-                InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, args))
-                self.config.functions[action](self, event, **args)
-            else:
-                raise Exception("Unknown action for %s: %s\n" % (eventfilter, action))
+            InfiniteGlass.action.ActionRunner.call_action(self, action, args, event=event, name=name, **kw)

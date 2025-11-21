@@ -165,8 +165,10 @@ def window_eq(self, other):
         try:
             other = WindowPattern(other, self.display.real_display)
         except ValueError:
-            return orig_window_eq(self, other)
-    return other.equal(self)
+            pass
+    if isinstance(other, WindowPattern):
+        return other.equal(self)
+    return orig_window_eq(self, other)
 Xlib.xobject.drawable.Window.__eq__ = window_eq
 
 window_attribute_names = [f.name for f in Xlib.protocol.request.GetWindowAttributes._reply.static_fields]

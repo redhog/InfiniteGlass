@@ -8,6 +8,7 @@ from . import window
 from . import eventmask
 from . import coords
 from . import windows
+from . import action
 from .keymap import *
 from .valueencoding import *
 from .debug import *
