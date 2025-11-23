@@ -3,10 +3,10 @@ import InfiniteGlass.action
 
 class BaseMode(InfiniteGlass.action.ActionRunner):
     def __init__(self, display, **kw):
-        InfiniteGlass.action.ActionRunner.__init__(self, display, **kw)
         self.first_event = None
         self.last_event = None
         self.state = {}
+        InfiniteGlass.action.ActionRunner.__init__(self, display, **kw)
 
     def get_window(self, event=None, **kw):
         event = event or self.last_event

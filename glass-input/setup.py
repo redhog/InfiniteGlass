@@ -36,6 +36,7 @@ setuptools.setup(name='glass-input',
               "focus_to_window_below = glass_input.actions.focus:focus_to_window_below",
 
               "pan = glass_input.actions.pan:pan",
+              "pan_mouse = glass_input.actions.pan:pan_mouse",
               "zoom_to_window_to_the_right = glass_input.actions.pan:zoom_to_window_to_the_right",
               "zoom_to_window_above = glass_input.actions.pan:zoom_to_window_above",
               "zoom_to_window_to_the_left = glass_input.actions.pan:zoom_to_window_to_the_left",
