@@ -201,27 +201,24 @@ class Window(object):
     def place_new(self):
         view = self.manager.display.root["IG_VIEW_DESKTOP_VIEW"]
         geom = self.window.get_geometry()
-        self.window["IG_SIZE"] = [geom.width, geom.height]
 
         root_geom = self.manager.display.root.get_geometry()
-        x = view[2] * geom.x / float(root_geom.width)
         width = view[2] * geom.width / float(root_geom.width)
-        y = view[3] * geom.y / float(root_geom.height)
         height = view[3] * geom.height / float(root_geom.height)
+                    
+        self.window["IG_SIZE"] = [geom.width, geom.height]
+        self.window["IG_INITIAL_DIMENSIONS"] = [width, height]
 
-        if x == 0.0:
-            x = (view[2] - width) / 2
-        if y == 0.0:
-            y = (view[3] - height) / 2
+        action_runner = InfiniteGlass.action.ActionRunner(
+            self.manager.display,
+            window=self.window)
+        for pattern, template in self.manager.config.get("new_windows", {}).items():
+            if self.window == InfiniteGlass.window.WindowPattern(pattern, self.manager.display, key_use=self.manager.config["match"]):
+                action_runner.run(template)
+                return
 
-        glass_input.actions.tile.tile_visible(
-            glass_input.basemode.BaseMode(self.manager.display),
-            None,
-            move_weight=None, 
-            extra=[{"w": width, "h": height, "window":  self.window}])
-        
-        #self.window["IG_COORDS"] = [view[0] + x, view[1] + view[3] - y, width, height]
-        #self.manager.display.flush()
+        print("NO MATCH")
+        action_runner.run({"place_new_center": {}})        
 
     def __str__(self):
         res = str(self.window.__window__())

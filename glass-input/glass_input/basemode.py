@@ -1,15 +1,14 @@
 import InfiniteGlass.windows
+import InfiniteGlass.action
 
-class BaseMode(object):
+class BaseMode(InfiniteGlass.action.ActionRunner):
     def __init__(self, display, **kw):
-        self.display = display
+        InfiniteGlass.action.ActionRunner.__init__(self, display, **kw)
         self.first_event = None
         self.last_event = None
         self.state = {}
-        for key, value in kw.items():
-            setattr(self, key, value)
 
-    def get_event_window(self, event=None):
+    def get_window(self, event=None, **kw):
         event = event or self.last_event
         if event == "ClientMessage":
             return event.window
@@ -24,7 +23,7 @@ class BaseMode(object):
 
     @property
     def last_event_window(self):
-        return self.get_event_window(self.last_event)
+        return self.get_window(self.last_event)
 
     def __repr__(self):
         if hasattr(self, "name"):            

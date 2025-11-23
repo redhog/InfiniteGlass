@@ -3,8 +3,8 @@ import InfiniteGlass
 import os
 import datetime
 
-def keymap(self, event, value):
-    self.handle(event, keymap=value)
+def keymap(self, event, value, **kw):
+    self.handle(event, keymap=value, **kw)
 
 class Formatter(object):
     def __init__(self, obj):
@@ -16,25 +16,25 @@ class Formatter(object):
             return res.__window__()
         return res
     
-def shell(self, event, value):
+def shell(self, value, **kw):
     cmd = value % Formatter(self)
     InfiniteGlass.DEBUG("final_action", "Shell command %s\n" % (cmd,))
     os.system(cmd)
 
-def timer(self, event, value):
+def timer(self, value, **kw):
     self.state[value] = datetime.datetime.now()
 
-def counter(self, event, value):
+def counter(self, value, **kw):
     self.state[value] = 0
 
-def inc(self, event, value):
+def inc(self, value, **kw):
     self.state[value] = self.state.get(value, 0) + 1
 
-def pop(self, event):
+def pop(self, **kw):
     self.config.pop()
     
-def toggle_ghosts_enabled(self, event):
-    win = self.get_event_window(event)
+def toggle_ghosts_enabled(self, **kw):
+    win = self.get_window(**kw)
     if win and win != self.display.root:
         old = win.get("IG_GHOSTS_DISABLED", 0)
         if old == 1:
@@ -45,7 +45,7 @@ def toggle_ghosts_enabled(self, event):
         win["IG_GHOSTS_DISABLED"] = value
         self.display.flush()
 
-def toggle_overlay(self, event, show=None):
+def toggle_overlay(self, show=None, **kw):
     "Slide your toolbars and widgets in/out of view"
     size = self.display.root["IG_VIEW_OVERLAY_SIZE"]
     if show is None: show = self.display.root["IG_VIEW_OVERLAY_VIEW"][0] != 0.
@@ -57,7 +57,7 @@ def toggle_overlay(self, event, show=None):
         self.display.root["IG_VIEW_OVERLAY_VIEW_ANIMATE"] = [.4, .4 * height, .2, .2 * height]
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_OVERLAY_VIEW", .5)
 
-def send_exit(self, event):
+def send_exit(self, **kw):
     "Ends your InfiniteGlass session"
     InfiniteGlass.DEBUG("debug", "SENDING EXIT\n")
     self.display.root.send(
@@ -66,7 +66,7 @@ def send_exit(self, event):
     self.display.flush()
     self.display.exit()
     
-def send_debug(self, event):
+def send_debug(self, **kw):
     "Make glass-renderer print its state to stdout"
     InfiniteGlass.DEBUG("debug", "SENDING DEBUG\n")
     self.display.root.send(
@@ -74,26 +74,26 @@ def send_debug(self, event):
         event_mask=Xlib.X.StructureNotifyMask|Xlib.X.SubstructureRedirectMask)
     self.display.flush()
 
-def send_close(self, event):
+def send_close(self, **kw):
     "Close the active window"
-    win = self.get_event_window(event)
+    win = self.get_window(**kw)
     InfiniteGlass.DEBUG("close", "Close %s %s\n" % (win, win.get("WM_NAME", None)))
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("close", "SENDING CLOSE %s\n" % win)
         win.send(win, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
         self.display.flush()
 
-def send_sleep(self, event):
+def send_sleep(self, **kw):
     "Make the active application store its state and exit"
-    win = self.get_event_window(event)
+    win = self.get_window(**kw)
     InfiniteGlass.DEBUG("sleep", "Sleep %s %s\n" % (win, win.get("WM_NAME", None)))
     if win and win != self.display.root:
         InfiniteGlass.DEBUG("sleep", "SENDING SLEEP %s\n" % win)
         win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
         self.display.flush()
 
-def toggle_sleep(self, event):
-    win = self.get_event_window(event)
+def toggle_sleep(self, **kw):
+    win = self.get_window(**kw)
     if win and win != self.display.root:
         if win.get("IG_GHOST", None):
             InfiniteGlass.DEBUG("restart", "SENDING RESTART %s\n" % win)
@@ -104,11 +104,18 @@ def toggle_sleep(self, event):
             win.send(win, "IG_SLEEP", event_mask=Xlib.X.StructureNotifyMask)
             self.display.flush()    
     
-def reload(self, event):
+def reload(self, **kw):
     "Reload your keybindings from the config file"
     self.config.reload()
 
-def send_island_create(self, event):
+def send_island_create(self, **kw):
     InfiniteGlass.DEBUG("island", "SENDING CREATE ISLAND\n")
     self.display.root.send(self.display.root, "IG_ISLAND_CREATE", event_mask=Xlib.X.StructureNotifyMask)
+    self.display.flush()
+
+def set_props(self, **kw):
+    win = self.get_window(**kw)
+    for k,v in kw.items():
+        if k.upper() == k:
+            win[k] = v
     self.display.flush()

@@ -7,22 +7,40 @@ def load_fn(name):
     mod, fn = name.rsplit(".", 1)
     return getattr(importlib.import_module(mod), fn)
 
+def get_window_block(window, margins):
+    if "IG_COORDS" in window:
+        coords = window["IG_COORDS"]
+        return {
+            "x": coords[0],
+            "y": coords[1],
+            "w": coords[2] + margins,
+            "h": coords[3] + margins,
+            "window": window}
+    elif "IG_INITIAL_DIMENSIONS" in window:
+        dims = window["IG_INITIAL_DIMENSIONS"]
+        return {"w": dims[0] + margins,
+                "h": dims[1] + margins,
+                "window":  window}
+
 # packer="glass_input.binary_tree_bin_packer.pack"
-def tile_visible(self, event, margins=0.02, zoom_1_1=False, packer="glass_input.ortools_bin_packer.pack", extra=[], **kw):
+def tile_visible(self, event=None, margins=0.02, zoom_1_1=False, packer="glass_input.ortools_bin_packer.pack", extra=[], include_current=False, **kw):
     "Tile/pack all visible windows as tightly as possible"
 
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
-    
+    abs_margins = margins * view[2]
+
+    if include_current:
+        window = self.get_window(**kw)
+        if window is not None and window != self.display.root:
+            extra = extra + [get_window_block(window, abs_margins)]
+            
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     windows = visible+overlap
-    
-    blocks = [{
-        "x": coords[0],
-        "y": coords[1],
-        "w": coords[2] + margins * view[2],
-        "h": coords[3] + margins * view[2],
-        "window": window}
-              for window, coords in windows] + extra
+
+    extrawins = [e["window"] for e in extra]
+    blocks = [get_window_block(window, abs_margins)
+              for window, coords in windows
+              if window not in extrawins] + extra
     if not blocks:
         return
 

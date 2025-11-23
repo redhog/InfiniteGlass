@@ -80,6 +80,7 @@ setuptools.setup(name='glass-input',
               "toggle_sleep = glass_input.actions.actions:toggle_sleep",
               "reload = glass_input.actions.actions:reload",
               "send_island_create = glass_input.actions.actions:send_island_create",
+              "set_props = glass_input.actions.actions:set_props",
 
               "tile_visible = glass_input.actions.tile:tile_visible",
               "tile_visible_to_1_1 = glass_input.actions.tile:tile_visible_to_1_1",
@@ -89,6 +90,8 @@ setuptools.setup(name='glass-input',
               "island_toggle_sleep = glass_input.actions.islands:island_toggle_sleep",
               "island_delete = glass_input.actions.islands:island_delete",
               "island_ungroup = glass_input.actions.islands:island_ungroup",
+
+              "place_new_center = glass_input.actions.place_new:place_new_center",
           ]
       },
       package_data={'glass_input': ['*.json']},

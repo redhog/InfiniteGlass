@@ -1,25 +1,3 @@
-# Python modules to import action functions from. Action functions
-# are functions taking (mode, event) parameters.
-imports:
-  - glass_input.title_search
-  - glass_input.mode
-  - glass_input.grabbed
-  - glass_input.base
-  - glass_input.actions.focus
-  - glass_input.actions.title_search
-  - glass_input.actions.pan
-  - glass_input.actions.zoom
-  - glass_input.actions.zoom_to
-  - glass_input.actions.item_pan
-  - glass_input.actions.item_zoom
-  - glass_input.actions.item_pan
-  - glass_input.actions.item_resize
-  - glass_input.actions.item_zoom_to
-  - glass_input.actions.actions
-  - glass_input.actions.tile
-  - glass_input.actions.modeswitch
-  - glass_input.actions.islands
-
 # Event filter macros whose names can be used insead of an actual
 # event filter in a key in a keymap (see any mode below). Values have
 # the same semantics as keymap keys.

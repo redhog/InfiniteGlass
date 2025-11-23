@@ -245,7 +245,7 @@ class WindowPattern(object):
         self.context = context
         self.parsed = WindowPatternAST(pattern)
         self.pattern = self.parsed.pattern
-        self.keys = [(include, lambda key: not not re.compile(key).match(key)) for include, key in self.parsed.keys]
+        self.keys = [(include, lambda key: not not re.compile(pattern).search(key)) for include, pattern in self.parsed.keys]
         def compile_property(name, op, value):
             if op == "re":
                 return lambda win: not not re.compile(value).match(to_str(win[name]))
@@ -308,6 +308,7 @@ class WindowPattern(object):
         else:
             key = window.generate_key(self.key_use) if self.keys else None
             attrs = window.get_attributes() if self.attributes else None
+            print("XXXXXXXXXXXX", key, self.pattern)
             return (self.keys_eq(key)
                     and self.properties_eq(window)
                     and self.attributes_eq(attrs))

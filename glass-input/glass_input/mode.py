@@ -17,11 +17,10 @@ from .event_state import EventStatePattern
 from .basemode import BaseMode
 
 
-class Mode(BaseMode, InfiniteGlass.action.ActionRunner):
+class Mode(BaseMode):
     def __init__(self, config, **kw):
         self.config = config
         BaseMode.__init__(self, config.display, **kw)
-        InfiniteGlass.action.ActionRunner.__init__(self)
         self.keymap_compiled = self.compile_keymap(self.keymap)
         
     def compile_action_keymap(self, action):
@@ -39,7 +38,7 @@ class Mode(BaseMode, InfiniteGlass.action.ActionRunner):
                 for eventfilter, action in keymap.items()]
             
     def enter(self):
-        self.window = self.get_event_window(self.first_event)
+        self.window = self.get_window(event=self.first_event)
         self.x = 0
         self.y = 0
         if self.window:

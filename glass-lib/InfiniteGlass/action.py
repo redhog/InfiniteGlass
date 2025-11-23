@@ -2,11 +2,17 @@ import importlib.metadata
 from . import debug
 
 class ActionRunner(object):
-    def __init__(self):
+    def __init__(self, display, **kw):
+        self.display = display
         self.actions = {entry_point.name: entry_point.load()
                         for entry_point
                         in importlib.metadata.entry_points(group="InfiniteGlass.actions")}
-        
+        for key, value in kw.items():
+            setattr(self, key, value)
+
+    def get_window(self, **kw):
+        return getattr(self, "window", None)
+            
     def call_action(self, action, args, name=None, **kw):
         if action in self.actions:
             debug.DEBUG("final_action", "Function call %s(%s)\n" % (action, args))
@@ -19,7 +25,7 @@ class ActionRunner(object):
         debug.DEBUG("action", "Action %s.%s\n" % (self, name))
         if isinstance(action, (tuple, list)):
             for item in action:
-                run(item, **kw)
+                self.run(item, **kw)
         else:
             args = {}
             if isinstance(action, dict):
