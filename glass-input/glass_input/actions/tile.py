@@ -7,19 +7,49 @@ def load_fn(name):
     mod, fn = name.rsplit(".", 1)
     return getattr(importlib.import_module(mod), fn)
 
-def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="glass_input.binary_tree_bin_packer.GrowingPacker"):
+def get_window_block(window, margins):
+    if "IG_COORDS" in window:
+        coords = window["IG_COORDS"]
+        return {
+            "x": coords[0],
+            "y": coords[1],
+            "w": coords[2] + margins,
+            "h": coords[3] + margins,
+            "window": window}
+    elif "IG_INITIAL_DIMENSIONS" in window:
+        dims = window["IG_INITIAL_DIMENSIONS"]
+        return {"w": dims[0] + margins,
+                "h": dims[1] + margins,
+                "window":  window}
+
+# packer="glass_input.binary_tree_bin_packer.pack"
+def tile_visible(self, event=None, margins=0.02, zoom_1_1=False, packer="glass_input.ortools_bin_packer.pack", extra=[], include_current=False, **kw):
     "Tile/pack all visible windows as tightly as possible"
 
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])
-    
+    abs_margins = margins * view[2]
+
+    if include_current:
+        window = self.get_window(**kw)
+        if window is not None and window != self.display.root:
+            extra = extra + [get_window_block(window, abs_margins)]
+            
     visible, overlap, invisible = InfiniteGlass.windows.get_windows(self.display, view)
     windows = visible+overlap
+
+    extrawins = [e["window"] for e in extra]
+    blocks = [get_window_block(window, abs_margins)
+              for window, coords in windows
+              if window not in extrawins] + extra
+    if not blocks:
+        return
+
+    print("========{TILE}========")
+    print(blocks, view[2], view[3], kw)
+    load_fn(packer)(blocks, view[2], view[3], **kw)
     
-    packer = load_fn(packer)()
-    blocks = [{"w": coords[2] + margins * view[2], "h": coords[3] + margins * view[2], "window": window} for window, coords in windows]
-    packer.fit(blocks, view[2], view[3], sorting="diagonal")
-    
-    positions = np.array([(block["fit"]["x"], block["fit"]["y"], block["w"], block["h"]) for block in blocks])
+    positions = np.array([(block["fit"]["x"], block["fit"]["y"]-block["h"], block["w"], block["h"]) for block in blocks])
+    print("Tiled", blocks)
     
     minpos = (positions[:,:2]).min(axis=0)
     positions[:,0] -= minpos[0]
@@ -41,10 +71,18 @@ def tile_visible(self, event, grain=2, margins=0.02, zoom_1_1=False, packer="gla
     positions[:,2:] -= margins * view[2]
     positions[:,0] += margins * view[2] / 2
     positions[:,1] -= margins * view[2] / 2
-    
+
     for block, new_coords in zip(blocks, positions):
         window = block["window"]
         new_coords = list(new_coords)
+        if "IG_COORDS" not in window:
+            # If it's a new window, make it "pop" from its center
+            start_coords = list(new_coords)
+            start_coords[0] += start_coords[2] / 10
+            start_coords[1] -= start_coords[3] / 10
+            start_coords[2] *= 0.8
+            start_coords[3] *= 0.8
+            window["IG_COORDS"] = start_coords
         window["IG_COORDS_ANIMATE"] = new_coords
         if zoom_1_1:
             window["IG_SIZE"] = item_zoom_to.item_zoom_1_1_to_sreen_calc(self, window, coords = new_coords)

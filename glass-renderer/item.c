@@ -124,44 +124,6 @@ void item_update_space_pos_from_window_load(Item *item, xcb_get_property_reply_t
     DEBUG("set_geometry", "%ld.Setting geometry = %d,%d from IG_SIZE\n", item->window,existing->values.dwords[0], existing->values.dwords[1]);
     xcb_configure_window(xcb_display, item->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, existing->values.dwords);
     item_update(item);
-  } else {
-    int arr[2] = {width, height};
-    DEBUG("set_ig_size", "%ld.Setting IG_SIZE = %d,%d from geometry\n", item->window, width, height);
-    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_SIZE"), XA_INTEGER, 32, 2, (void *) arr);
-  }
-
-  if (!reply || !reply->type) {
-    View *v = NULL;
-    if (views && item->prop_layer && item->prop_layer->values.dwords) {
-      v = view_find(views, (Atom) item->prop_layer->values.dwords[0]);
-    }
-    float coords[4];
-    if (v) {
-      coords[0] = v->screen[0] + (v->screen[2] * (float) item->x) / (float) v->width;
-      coords[1] = v->screen[1] + v->screen[3] - (v->screen[3] * (float) item->y) / (float) v->height;
-      coords[2] = (v->screen[2] * (float) width) / (float) v->width;
-      coords[3] = (v->screen[3] * (float) height) / (float) v->height;
-      DEBUG("position", "Setting item position from view for %ld (IG_COORDS missing).\n", item->window);
-      DEBUG("position", "XXX %f*%d/%d=%f, %f*%d/%d=%f\n", v->screen[2], width, v->width, coords[2], v->screen[3], height, v->height, coords[3]);
-    } else {
-      coords[0] = ((float) (item->x - overlay_attr.x)) / (float) overlay_attr.width;
-      coords[1] = ((float) (overlay_attr.height - item->y - overlay_attr.y)) / (float) overlay_attr.width;
-      coords[2] = ((float) (width)) / (float) overlay_attr.width;
-      coords[3] = ((float) (height)) / (float) overlay_attr.width;
-      DEBUG("position", "Setting item position to 0 for %ld (IG_COORDS & IG_LAYER missing).\n", item->window);
-    }
-
-    if (item->prop_layer && item->prop_layer->values.dwords && (Atom) item->prop_layer->values.dwords[0] == ATOM("IG_LAYER_MENU")) {
-      DEBUG("menu.setup", "%ld: %d,%d[%d,%d]   %f,%f,%f,%f\n",
-            item->window,
-            item->geom->x, item->geom->y, item->geom->width, item->geom->height,
-            coords[0],coords[1],coords[2],coords[3]);
-    }
-
-    DEBUG("set_ig_coords", "%ld.Setting IG_COORDS = %f,%f[%f,%f]\n", item->window, coords[0], coords[1], coords[2], coords[3]);
-    xcb_change_property(xcb_display, XCB_PROP_MODE_REPLACE, item->window, ATOM("IG_COORDS"), XA_FLOAT, 32, 4, (void *) coords);
-  } else {
-    DEBUG("set_ig_coords", "%ld.IG_COORDS is already set\n");
   }
   if (reply) free(reply);
 

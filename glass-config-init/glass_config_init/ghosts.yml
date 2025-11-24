@@ -70,19 +70,6 @@ ghost_update:
   - IG_COORDS
   - IG_SIZE
 
-# Match windows against these templates (using regexps against their
-# keys) and set the templated properties on them when they first
-# appear. This is particularly useful to set WM_COMMAND to be able to
-# restart apps that lack SMLib support and don't themselves set
-# WM_COMMAND. Do not use this to set IG_COORDS, as multiple windows
-# might match the same template (by design).
-templates:
-  .*-gimp-gimp-.*:
-    WM_COMMAND: !string gimp
-
-  .*-gimp-2-8-.*:
-    WM_COMMAND: !string gimp-2.8
-    
 # Predefine ghosts. Useful for configuring windows created by the
 # applications started as components.
 ghosts:
@@ -95,3 +82,31 @@ ghosts:
     IG_COORDS: [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875]
     IG_SIZE: ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"]
     IG_LAYER: IG_LAYER_OVERLAY
+
+
+# Match new windows when they first appear against these patterns and
+# run the corresponding actions on them.
+#
+# This is particularly useful to set WM_COMMAND to be able to
+# restart apps that lack SMLib support and don't themselves set
+# WM_COMMAND.
+#
+# Do not use this to set IG_COORDS to constant values, as multiple
+# windows might match the same template (by design). Instead, use an
+# action that places the new window relative to the current view or
+# some other dynamically selected position.
+#
+new_windows:
+  -gimp-gimp-:
+    set_props:
+      WM_COMMAND: !string gimp
+
+  -gimp-2-8-:
+    set_props:
+      WM_COMMAND: !string gimp-2.8
+
+  .*:
+    tile_visible:
+      move_weight: null 
+      include_current: true
+    

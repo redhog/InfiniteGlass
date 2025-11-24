@@ -2,6 +2,7 @@ import InfiniteGlass
 import Xlib.X
 import glass_ghosts.ghost
 import glass_ghosts.helpers
+import glass_input.actions.tile
 import sys
 import re
 
@@ -148,11 +149,14 @@ class Window(object):
             self.client.remove_window(self)
 
     def match(self):
-        self.match_ghost()
+        has_ghost = self.match_ghost()
         self.match_client()
-
+        if (    not has_ghost
+            and not self.override_redirect):
+            self.place_new()
+        
     def match_ghost(self):
-        if self.ghost: return
+        if self.ghost: return False
         key = self.key()
         ghost = None
         if key in self.manager.ghosts:
@@ -169,6 +173,7 @@ class Window(object):
             InfiniteGlass.DEBUG("window", "MATCHING SHADOW window=%s ghost=%s\n" % (self.id, key,))
             self.ghost.apply(self.window)
             self.ghost.deactivate()
+            return True
         else:
             InfiniteGlass.DEBUG("window", "FAILED MATCHING window=%s key=%s against SHADOWS %s\n" % (self.id, key, self.manager.ghosts.keys()))
             if "IG_TEMPLATE_APPLIED" not in self.window:
@@ -179,17 +184,41 @@ class Window(object):
                         for name, value in template.items():
                             self.window[name] = value
                         self.manager.display.flush()
-                        break
-            
+                        return True
+        return False
+    
     def match_client(self):
-        if self.client: return
-        if "SM_CLIENT_ID" not in self.properties: return
+        if self.client: return False
+        if "SM_CLIENT_ID" not in self.properties: return False
         client_id = self.properties["SM_CLIENT_ID"]
-        if client_id not in self.manager.clients: return
+        if client_id not in self.manager.clients: return False
         InfiniteGlass.DEBUG("window", "MATCH CLIENT window=%s client_id=%s\n" % (self.id, client_id))
         sys.stderr.flush()
         self.client = self.manager.clients[client_id]
         self.client.add_window(self)
+        return True
+
+    def place_new(self):
+        view = self.manager.display.root["IG_VIEW_DESKTOP_VIEW"]
+        geom = self.window.get_geometry()
+
+        root_geom = self.manager.display.root.get_geometry()
+        width = view[2] * geom.width / float(root_geom.width)
+        height = view[3] * geom.height / float(root_geom.height)
+                    
+        self.window["IG_SIZE"] = [geom.width, geom.height]
+        self.window["IG_INITIAL_DIMENSIONS"] = [width, height]
+
+        action_runner = InfiniteGlass.action.ActionRunner(
+            self.manager.display,
+            window=self.window)
+        for pattern, template in self.manager.config.get("new_windows", {}).items():
+            if self.window == InfiniteGlass.window.WindowPattern(pattern, self.manager.display, key_use=self.manager.config["match"]):
+                action_runner.run(template)
+                return
+
+        print("NO MATCH")
+        action_runner.run({"place_new_center": {}})        
 
     def __str__(self):
         res = str(self.window.__window__())

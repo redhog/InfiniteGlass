@@ -1,25 +1,3 @@
-# Python modules to import action functions from. Action functions
-# are functions taking (mode, event) parameters.
-imports:
-  - glass_input.title_search
-  - glass_input.mode
-  - glass_input.grabbed
-  - glass_input.base
-  - glass_input.actions.focus
-  - glass_input.actions.title_search
-  - glass_input.actions.pan
-  - glass_input.actions.zoom
-  - glass_input.actions.zoom_to
-  - glass_input.actions.item_pan
-  - glass_input.actions.item_zoom
-  - glass_input.actions.item_pan
-  - glass_input.actions.item_resize
-  - glass_input.actions.item_zoom_to
-  - glass_input.actions.actions
-  - glass_input.actions.tile
-  - glass_input.actions.modeswitch
-  - glass_input.actions.islands
-
 # Event filter macros whose names can be used insead of an actual
 # event filter in a key in a keymap (see any mode below). Values have
 # the same semantics as keymap keys.
@@ -49,11 +27,10 @@ modes:
   base_mode:
     BaseMode:
       keymap:
-        # Comment out one of these two lines to switch between focus
-        # follows mouse and click to focus
-        # "RawMotion": focus_follows_mouse
-        RawButtonPress: focus_follows_mouse
-
+        # Comment out the next line to have
+        # WIN+ALT+CTRL+RightClick to focus, and navigate focus
+        # with the keyboard with WIN+ALT+CTRL+ArrowKey
+        "RawMotion": focus_follows_mouse
         "ButtonPress,MainKey": grabbed_mode
         "KeyPress,MainKey": grabbed_mode
         "KeyPress,XK_Super_L": grabbed_mode
@@ -67,7 +44,8 @@ modes:
       keymap:
         "KeyRelease": pop
         "ButtonRelease": pop
-        
+
+        # "ButtonPress,ItemKey,MainKey,3": focus_mode
         "KeyPress,ItemKey,MainKey,XK_Up": focus_mode
         "KeyPress,ItemKey,MainKey,XK_Down": focus_mode
         "KeyPress,ItemKey,MainKey,XK_Left": focus_mode
@@ -131,7 +109,9 @@ modes:
     Mode:
       keymap:
         "KeyRelease,!AutoRepeat": pop
+        "ButtonRelease": pop
 
+        "ButtonPress,ItemKey,MainKey": focus_follows_mouse
         "KeyPress,XK_Left,ItemKey,MainKey": focus_to_window_to_the_left
         "KeyPress,XK_Right,ItemKey,MainKey": focus_to_window_to_the_right
         "KeyPress,XK_Up,ItemKey,MainKey": focus_to_window_above

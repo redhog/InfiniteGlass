@@ -55,7 +55,7 @@
 #       Draw(block.fit.x, block.fit.y, block.w, block.h)
 
 class GrowingPacker(object):
-  def fit(self, blocks, view_width, view_height, sorting="area"):
+  def fit(self, blocks, view_width, view_height, sorting="diagonal"):
     aspect_ratio = view_width / view_height
     if sorting == "area":
       key = lambda b: b["w"] * b["h"]
@@ -144,3 +144,5 @@ class GrowingPacker(object):
     else:
       return None
 
+def pack(blocks, view_width, view_height, **kw):
+  GrowingPacker().fit(blocks, view_width, view_height, **kw)

@@ -56,4 +56,4 @@ class BaseMode(mode.Mode):
             @self.display.root.require("IG_ANIMATE")
             def animate_window(root, win):
                 self.display.animate_window = win
-                actions.toggle_overlay(self, None, False)
+                actions.toggle_overlay(self, show=False)

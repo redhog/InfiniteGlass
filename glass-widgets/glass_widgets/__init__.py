@@ -35,7 +35,8 @@ def main(*arg, **kw):
                 properties = {
                     "WM_CLASS": "data://glass-widget",
                     "WM_NAME": "data://" + name,
-                    "_NET_WM_WINDOW_TYPE": "_NET_WM_WINDOW_TYPE_DESKTOP"
+                    "_NET_WM_WINDOW_TYPE": "_NET_WM_WINDOW_TYPE_DESKTOP",
+                    "IG_SIZE": [1, 1]
                 }
                 if widget_type == "widgets":
                     properties["IG_LAYER"] = "IG_LAYER_OVERLAY"

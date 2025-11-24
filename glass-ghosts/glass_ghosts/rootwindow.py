@@ -9,6 +9,10 @@ class RootWindow(object):
         self.manager = manager
         self.display = display
 
+        @display.root.require("IG_ANIMATE")
+        def animate_window(root, win):
+            display.animate_window = win
+        
         @display.root.on(mask="SubstructureNotifyMask")
         def MapNotify(win, event):
             self.map_window(event.window)

@@ -85,7 +85,9 @@ def get_windows(display, view, margin=0.01, layers=("IG_LAYER_DESKTOP", "IG_LAYE
         if not child: continue
         if child.get("IG_LAYER", "IG_LAYER_DESKTOP") not in layers:
             continue
-        coords = child["IG_COORDS"]
+        coords = child.get("IG_COORDS", None)
+        if coords is None:
+            continue
         
         # Margins to not get stuck due to rounding errors of
         # windows that sit right on the edge...

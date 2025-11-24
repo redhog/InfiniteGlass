@@ -14,21 +14,15 @@ import types
 import pkg_resources
 import yaml
 from .event_state import EventStatePattern
+from .basemode import BaseMode
 
 
-
-class Mode(object):
+class Mode(BaseMode):
     def __init__(self, config, **kw):
         self.config = config
-        self.display = self.config.display
-        self.first_event = None
-        self.last_event = None
-        self.state = {}
-        for key, value in kw.items():
-            setattr(self, key, value)
-
+        BaseMode.__init__(self, config.display, **kw)
         self.keymap_compiled = self.compile_keymap(self.keymap)
-
+        
     def compile_action_keymap(self, action):
         if isinstance(action, dict) and "keymap" in action:
             action = dict(action)
@@ -44,7 +38,7 @@ class Mode(object):
                 for eventfilter, action in keymap.items()]
             
     def enter(self):
-        self.window = self.get_event_window(self.first_event)
+        self.window = self.get_window(event=self.first_event)
         self.x = 0
         self.y = 0
         if self.window:
@@ -59,15 +53,8 @@ class Mode(object):
         if hasattr(self, "load"):
             self.action("load", self.load, None)
 
-    def get_event_window(self, event=None):
-        event = event or self.last_event
-        if event == "ClientMessage":
-            return event.window
-        return InfiniteGlass.windows.get_event_window(self.display, event)
-    
     def exit(self):
         pass
-
 
     def handle(self, event, keymap=None):
         self.last_event = event
@@ -91,44 +78,22 @@ class Mode(object):
         return False
 
     def action(self, eventfilter, action, event, name=None):
-        InfiniteGlass.DEBUG("action", "Action %s.%s [%s]\n" % (self, name if name else action, eventfilter))
-        if isinstance(action, (tuple, list)):
-            for item in action:
-                self.action(eventfilter, item, event)
+        self.run(
+            action,
+            name="%s [%s]\n" % (name if name else action,
+                                eventfilter),
+            event=event)
+        
+    def call_action(self, action, args, event, name=None, **kw):
+        if action in self.config.config["modes"]:
+            self.run(self.config.config["modes"][action], event=event, name=action, **kw)
+        elif action in self.config.modes:
+            mode = self.config.push(
+                self.config.modes[action],
+                first_event=event,
+                last_event=event,
+                name=name,
+                **args)
+            mode.handle(event)
         else:
-            args = {}
-            if isinstance(action, dict):
-                args = next(iter(action.values()))
-                action = next(iter(action.keys()))
-                if not isinstance(args, dict):
-                    args = {"value": args}
-                
-            if not isinstance(action, str):
-                raise Exception("Unknown action type for %s: %s\n" % (eventfilter, action))
-
-            if action in self.config.config["modes"]:
-                self.action(eventfilter, self.config.config["modes"][action], event, name=action)
-            elif action in self.config.modes:
-                mode = self.config.push(self.config.modes[action], first_event=event, last_event=event, name=name, **args)
-                mode.handle(event)
-            elif action in self.config.functions:
-                InfiniteGlass.DEBUG("final_action", "Function call %s(%s)\n" % (action, args))
-                self.config.functions[action](self, event, **args)
-            else:
-                raise Exception("Unknown action for %s: %s\n" % (eventfilter, action))
-
-    def __getitem__(self, name):
-        if name in self.state:
-            return self.state[name]
-        if hasattr(self, name):
-            return getattr(self, name)
-        raise KeyError
-
-    @property
-    def last_event_window(self):
-        return self.get_event_window(self.last_event)
-
-    def __repr__(self):
-        if hasattr(self, "name"):            
-            return "%s/%s" % (type(self).__name__, self.name)
-        return type(self).__name__
+            InfiniteGlass.action.ActionRunner.call_action(self, action, args, event=event, name=name, **kw)

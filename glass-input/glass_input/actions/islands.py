@@ -10,8 +10,8 @@ def island_windows(display, island):
     return visible + overlap
     
 
-def island_toggle_sleep(self, event):
-    island = self.get_event_window(event)
+def island_toggle_sleep(self, **kw):
+    island = self.get_window(**kw)
     if island and island != self.display.root:
         old = island.get("IG_ISLAND_PAUSED", 0)
         if old == 1:
@@ -38,14 +38,14 @@ def island_toggle_sleep(self, event):
                     clients_done.add(win["SM_CLIENT_ID"])
         self.display.flush()
 
-def island_delete(self, event):
-    island = self.get_event_window(event)
+def island_delete(self, **kw):
+    island = self.get_window(**kw)
     if island and island != self.display.root:
         for win, coords in island_windows(self.display, island):
             win.send(win, "IG_DELETE", event_mask=Xlib.X.StructureNotifyMask)
         island.send(island, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)
 
-def island_ungroup(self, event):
-    island = self.get_event_window(event)
+def island_ungroup(self, **kw):
+    island = self.get_window(**kw)
     if island and island != self.display.root:
         island.send(island, "IG_CLOSE", event_mask=Xlib.X.StructureNotifyMask)

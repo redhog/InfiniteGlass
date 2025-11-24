@@ -3,9 +3,9 @@ import math
 from . import zoom
 from . import item_zoom_to
 
-def zoom_to_window(self, event):
+def zoom_to_window(self, **kw):
     "Zoom the screen so that the current window is full-screen"
-    win = self.get_event_window(event)
+    win = self.get_window(**kw)
     old_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
     view = list(win["IG_COORDS"])
     view[3] = view[2] * old_view[3] / old_view[2]
@@ -13,8 +13,8 @@ def zoom_to_window(self, event):
     self.display.root["IG_VIEW_DESKTOP_VIEW_ANIMATE"] = view
     self.display.animate_window.send(self.display.animate_window, "IG_ANIMATE", self.display.root, "IG_VIEW_DESKTOP_VIEW", .5)
 
-def zoom_to_fewer_windows(self, event, margin=0.01):
-    focus_win = self.get_event_window(event)
+def zoom_to_fewer_windows(self, event, margin=0.01, **kw):
+    focus_win = self.get_window(event=event, **kw)
     
     "Zoom in the screen so that one fewer window is visible"
     view = list(self.display.root["IG_VIEW_DESKTOP_VIEW"])

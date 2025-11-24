@@ -142,7 +142,7 @@ class EventPattern(object):
         # a in b means all flags set by a are also set by b
         return self.contained_by(other)
             
-    def __equal__(self, other):
+    def __eq__(self, other):
         if isinstance(other, str):
             other = EventPattern(other, self.display)
         return self.equal(other)

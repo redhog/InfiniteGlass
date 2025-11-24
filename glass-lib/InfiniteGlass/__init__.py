@@ -8,10 +8,12 @@ from . import window
 from . import eventmask
 from . import coords
 from . import windows
+from . import action
 from .keymap import *
 from .valueencoding import *
 from .debug import *
 from .profile import *
+from .utils import *
 from .event import EventPattern
 from Xlib.display import Display
 

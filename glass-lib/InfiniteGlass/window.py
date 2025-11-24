@@ -6,6 +6,8 @@ import struct
 from . import eventmask
 from . import valueencoding
 from . import framing
+from . import utils
+import re
 import sys
 
 def window_str(self):
@@ -150,3 +152,171 @@ def window_send(self, window, client_type, *arg, **kw):
 Xlib.xobject.drawable.Window.send = window_send
 
 Xlib.xobject.drawable.Window.find_client_window = framing.find_client_window
+
+def window_generate_key(self, use):
+    return utils.generate_key(self, use)
+Xlib.xobject.drawable.Window.generate_key = window_generate_key
+
+orig_window_eq = Xlib.xobject.drawable.Window.__eq__
+def window_eq(self, other):
+    if isinstance(other, int):
+        return self.id == other
+    if isinstance(other, str):
+        try:
+            other = WindowPattern(other, self.display.real_display)
+        except ValueError:
+            pass
+    if isinstance(other, WindowPattern):
+        return other.equal(self)
+    return orig_window_eq(self, other)
+Xlib.xobject.drawable.Window.__eq__ = window_eq
+
+window_attribute_names = [f.name for f in Xlib.protocol.request.GetWindowAttributes._reply.static_fields]
+
+class WindowPatternAST(object):
+    def __init__(self, pattern):
+        if isinstance(pattern, str):
+            pattern = pattern.split(",")
+        if not isinstance(pattern, (list, tuple)):
+            raise ValueError(type(pattern))
+        self.pattern = pattern
+        self.keys = []
+        self.properties = []
+        self.attributes = []
+        for item in pattern:
+            if "=" not in item:
+                include = True
+                if item.startswith("!"):
+                    item = item[1:]
+                    include = False
+                self.keys.append((include, item))
+            else:
+                name, value = item.split("=")
+                include = True
+                op = "eq"
+                if value.startswith("~"):
+                    op = "re"
+                    value = value[1:]
+                if name.endswith("!"):
+                    include = False
+                    name = name[:-1]
+                if name in window_attribute_names:
+                    self.attributes.append((include, name, value))
+                else:
+                    self.properties.append((include, op, name, value))
+            
+    def __str__(self):
+        return ",".join(self.pattern)
+
+GenericEvent = 35
+
+def mostly_equal(a, b):
+    if isinstance(a, tuple):
+        a = a[1]
+    if isinstance(b, tuple):
+        b = b[1]
+    if isinstance(a, bytes) and isinstance(b, str):
+        b = b.encode("UTF-8")
+    if isinstance(a, str) and isinstance(b, bytes):
+        a = a.encode("UTF-8")
+    if not isinstance(a, str) and isinstance(b, str):
+        try:
+            b = type(a)(b)
+        except:
+            return False
+    if isinstance(a, str) and not isinstance(b, str):
+        try:
+            a = type(b)(a)
+        except:
+            return False
+    return a == b
+
+def to_str(a):
+    if isinstance(a, tuple):
+        a = a[1]
+    if isinstance(a, bytes):
+        return a.decode("UTF-8")
+    return str(a)
+
+class WindowPattern(object):
+    def __init__(self, pattern, display = None, key_use=[], **context):
+        self.display = display
+        self.key_use = key_use
+        self.context = context
+        self.parsed = WindowPatternAST(pattern)
+        self.pattern = self.parsed.pattern
+        self.keys = [(include, lambda key: not not re.compile(pattern).search(key)) for include, pattern in self.parsed.keys]
+        def compile_property(name, op, value):
+            if op == "re":
+                return lambda win: not not re.compile(value).match(to_str(win[name]))
+            elif op == "eq":
+                items = [res for item in value.split(",") for res in valueencoding.parse_string_value(self.display, item, **self.context)]
+                return lambda win: mostly_equal(win[name], value)
+            assert False, "Invalid op: " + op
+        self.properties = [(include, compile_property(name, op, value)) for include, op, name, value in self.parsed.properties]
+
+        xinput_opcode = display.query_extension('XInputExtension').major_opcode
+
+        def compile_attribute_value(value):
+            if hasattr(Xlib.X, value):
+                return getattr(Xlib.X, value)
+            elif hasattr(Xlib.ext.ge, value):
+                return getattr(Xlib.ext.ge, value)
+            elif hasattr(Xlib.ext.xinput, value):
+                return (GenericEvent, xinput_opcode, getattr(Xlib.ext.xinput, value))
+            try:
+                if value[0] in '0123456789-':
+                    if "." in value:
+                        return (float(value),)
+                    else:
+                        return (int(value),)
+            except:
+                return value
+
+        def compile_attribute(name, value):
+            value = [compile_attribute_value(item) for item in value.split(",")]
+            if "mask" in name:
+                value = functools.reduce(lambda x, y: x | y, value, 0)
+                return lambda attrs: getattr(attrs, name) & value == value
+            else:
+                value = value[0]
+                return lambda attrs: getattr(attrs, name) == value
+            
+        self.attributes = [(include, compile_attribute(name, value)) for include, name, value in self.parsed.attributes]
+
+    def keys_eq(self, key): 
+        for i, k in self.keys:
+            if i != k(key):
+                return False
+        return True
+    
+    def properties_eq(self, win): 
+        for i, p in self.properties:
+            if i != p(win):
+                return False
+        return True
+
+    def attributes_eq(self, atts): 
+        for i, a in self.attributes:
+            if i != a(attrs):
+                return False
+        return True
+
+    def equal(self, window):
+        if isinstance(window, WindowPattern):
+            pass
+        else:
+            key = window.generate_key(self.key_use) if self.keys else None
+            attrs = window.get_attributes() if self.attributes else None
+            print("XXXXXXXXXXXX", key, self.pattern)
+            return (self.keys_eq(key)
+                    and self.properties_eq(window)
+                    and self.attributes_eq(attrs))
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            other = WindowPattern(other, self.display)
+        return self.equal(other)
+    
+    def __str__(self):
+        return ",".join(self.pattern)
