@@ -30,7 +30,7 @@ modes:
         # Comment out the next line to have
         # WIN+ALT+CTRL+RightClick to focus, and navigate focus
         # with the keyboard with WIN+ALT+CTRL+ArrowKey
-        "GenericEventCode": focus_follows_mouse
+        "RawMotion": focus_follows_mouse
         "ButtonPress,MainKey": grabbed_mode
         "KeyPress,MainKey": grabbed_mode
         "KeyPress,XK_Super_L": grabbed_mode
@@ -46,10 +46,10 @@ modes:
         "ButtonRelease": pop
 
         # "ButtonPress,ItemKey,MainKey,3": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Up": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Down": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Left": focus_mode
-        # "KeyPress,ItemKey,MainKey,XK_Right": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Up": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Down": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Left": focus_mode
+        "KeyPress,ItemKey,MainKey,XK_Right": focus_mode
 
         "KeyPress,XK_R": reload
 
