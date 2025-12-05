@@ -304,24 +304,27 @@ void item_draw(Rendering *rendering) {
   }
   if (item->prop_coords
       && (   !item->prop_coords->data
-          || !((PropertyCoords *) item->prop_coords->data)->coords
-          || ((PropertyCoords *) item->prop_coords->data)->coords[2] <= 0.0
-          || ((PropertyCoords *) item->prop_coords->data)->coords[3] <= 0.0)) {
-    if (item->prop_coords->data && ((PropertyCoords *) item->prop_coords->data)->coords) {
+          || !((PropertyCoords *) item->prop_coords->data)->ccoords
+          || ((PropertyCoords *) item->prop_coords->data)->ccoords[2] <= 0.0
+          || ((PropertyCoords *) item->prop_coords->data)->ccoords[3] <= 0.0)) {
+    if (item->prop_coords->data && ((PropertyCoords *) item->prop_coords->data)->ccoords) {
       PropertyCoords *coords = (PropertyCoords *) item->prop_coords->data;
-      DEBUG("item_draw_failure", "%ld: IG_COORDS defined but invalid: %f,%f,%f,%f\n", item->window, coords[0], coords[1], coords[2], coords[3]);
+      DEBUG("item_draw_failure", "%ld: IG_COORDS defined but invalid: %f,%f,%f,%f\n",
+            item->window, coords->ccoords[0], coords->ccoords[1], coords->ccoords[2], coords->ccoords[3]);
     } else {
       DEBUG("item_draw_failure", "%ld: IG_COORDS defined but not yet loaded.\n", item->window);
     }
     return;
-  }  
+  }
 
   if (item->prop_coords && item->prop_coords->data) {
     Bool is_visible;
     Bool is_fullscreen;
     item_display(item, rendering->view, &is_visible, &is_fullscreen);
     if (!is_visible) {
-      DEBUG("item_draw_failure", "%ld: Not visible", item->window);
+      PropertyCoords *coords = (PropertyCoords *) item->prop_coords->data;
+      DEBUG("item_draw_failure", "%ld: Not visible: %f,%f,%f,%f\n",
+            item->window, coords->ccoords[0], coords->ccoords[1], coords->ccoords[2], coords->ccoords[3]);
       return;
     }
   }
