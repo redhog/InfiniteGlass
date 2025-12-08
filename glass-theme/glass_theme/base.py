@@ -81,7 +81,9 @@ class ThemeBase(object):
     def activate_properties(self):
         for name in dir(self):
             if name.startswith("root_"):
-                self.display.root[name[len("root_"):]] = getattr(self, name)
+                value = getattr(self, name)
+                if value is not None:
+                    self.display.root[name[len("root_"):]] = value
 
     def activate(self):
         self.activate_shaders()

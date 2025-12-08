@@ -21,6 +21,9 @@ setuptools.setup(
         'console_scripts': [
             'glass-theme = glass_theme:main',
         ],
+        'InfiniteGlass.actions': [
+            "splash_zoom_in = glass_theme.actions:splash_zoom_in",
+        ]
     },
     package_data={'glass_theme': ['*.glsl']},
     include_package_data=True
