@@ -1,3 +1,4 @@
+import InfiniteGlass.utils
 import importlib
 import pkg_resources
 import os.path
@@ -18,17 +19,6 @@ def instantiate_config(display, cls, args):
     if args is None: args = {}    
     return cls(display, **args)
 
-@contextlib.contextmanager
-def open_file(name):
-    name = os.path.expanduser(name)
-    if name.startswith("resource://"):
-        pkg, name = name.split("://")[1].split("/", 1)
-        with pkg_resources.resource_stream(pkg, name) as f:
-            yield f
-    else:
-        with open(name) as f:
-            yield f
-
-def read_file(name):
-    with open_file(name) as f:
-        return f.read()
+# FIXME: replaces usages of these
+open_file = InfiniteGlass.utils.open_file
+read_file = InfiniteGlass.utils.read_file

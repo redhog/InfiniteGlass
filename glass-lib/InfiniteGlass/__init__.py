@@ -9,6 +9,7 @@ from . import eventmask
 from . import coords
 from . import windows
 from . import action
+from . import shader
 from .keymap import *
 from .valueencoding import *
 from .debug import *

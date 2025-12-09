@@ -30,25 +30,11 @@ class ThemeBase(object):
     shaders_parts = ("GEOMETRY", "VERTEX", "FRAGMENT")
     
     def load_shader(self, name):
-        defines = ''.join(
-            "#define %s %s\n" %(name[len("define_"):], getattr(self, name))
-            for name in dir(self)
-            if name.startswith("define_")).encode("utf-8")
-        preamble = ""
-        src = self._load_shader(name)
-        if b"#version" in src:
-            vi = src.index(b"#version")
-            pi = vi + src[vi:].index(b"\n") + 1
-            preamble = src[:pi]
-            src = src[pi:]
-        return preamble + defines + src
-        
-    def _load_shader(self, name):
-        src = read_file(name)
-        includes = re.findall(rb'^#include  *"(.*)"', src, re.MULTILINE)
-        for name in includes:
-            src = re.sub(rb'#include  *"%s"' % (name,), self._load_shader(name.decode("utf-8")), src, re.MULTILINE)
-        return src
+        return InfiniteGlass.shader.load_shader(
+            name,
+            {name[len("define_"):]: getattr(self, name)
+             for name in dir(self)
+             if name.startswith("define_")})
 
     def get_shader(self, SHADER, PART):
         part_name = "shader_%s__%s" % (SHADER, PART)
