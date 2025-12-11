@@ -9,7 +9,6 @@ import json
 import click
 import sys
 import sqlite3
-import yaml
 
 import glass_action.main
 import glass_action.window_tools
@@ -115,7 +114,7 @@ def key(ctx, window):
 
             configpath = os.path.expanduser(os.environ.get("GLASS_GHOSTS_CONFIG", "~/.config/glass/ghosts.yml"))
             with open(configpath) as f:
-                config = yaml.load(f, Loader=yaml.SafeLoader)
+                config = InfiniteGlass.load_yaml(f)
 
             print(glass_ghosts.helpers.ghost_key(win, config["match"]))
             sys.exit(0)
