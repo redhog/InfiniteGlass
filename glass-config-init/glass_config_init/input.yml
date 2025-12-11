@@ -53,7 +53,10 @@ modes:
 
         "KeyPress,XK_R": reload
 
+        "KeyPress,ItemKey,XK_U": splash_unlock
+        "KeyPress,ItemKey,XK_L": splash_lock
         "KeyPress,XK_space": rofi_mode
+        
         "KeyPress,XK_Escape": toggle_overlay
         "MainKey,KeyPress,XK_F1": send_debug
         "MainKey,KeyPress,XK_F4": send_close

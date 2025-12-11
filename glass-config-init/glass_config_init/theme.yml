@@ -1,4 +1,3 @@
 glass_theme.splash.SplashAnimation:
-  latlon: [70., 18.]
   theme:
     glass_theme.default.Theme:

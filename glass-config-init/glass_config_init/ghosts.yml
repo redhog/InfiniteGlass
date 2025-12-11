@@ -20,6 +20,8 @@ ignore:
   - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_UTILITY"]
   - ["_NET_WM_WINDOW_TYPE", "_NET_WM_WINDOW_TYPE_SPLASH"]
   - ["WM_WINDOW_ROLE", !string "GtkFileChooserDialog"]
+  - ["WM_NAME", !string "splash"]
+  - ["WM_NAME", !string "splash-background"]
 
 # Use these properties to match a window to an existing ghost
 match:

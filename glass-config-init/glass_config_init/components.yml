@@ -12,6 +12,7 @@ components:
       exited: exit
       failed: exit
     requires: []
+  glass-world-splash:  {"command": ["glass-world-splash"]}
   glass-focus-manager: {"command": ["glass-focus-manager"]}
   glass-input:         {"command": ["glass-input"]}
   glass-theme:         {"command": ["glass-theme"]}
