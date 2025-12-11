@@ -120,29 +120,52 @@ def key(ctx, window):
             print(glass_ghosts.helpers.ghost_key(win, config["match"]))
             sys.exit(0)
 
+
 @inspect.command()
 @click.option('--window', default="click")
-@click.option('--name')
+@click.option('--name', multiple=True)
 @click.option('--limit', default=0)
+@click.option('--watch', is_flag=True, default=False)
 @click.pass_context
-def props(ctx, window, name, limit):
+def props(ctx, window, name, limit, watch):
     with InfiniteGlass.Display() as display:
         @glass_action.window_tools.str_to_win(display, window)
         def inspect(win):
-            try:
-                if name is not None:
-                    items = [(name, win[name])]
+            def collect_items():
+                if name:
+                    out = []
+                    for n in name:
+                        try:
+                            out.append((n, win[n]))
+                        except KeyError:
+                            out.append((n, "<missing>"))
+                    return out
                 else:
-                    items = win.items()
+                    return win.items()
+
+            def print_items(items):
                 for key, value in items:
                     value = str(value)
                     if limit > 0:
                         value = value[:limit]
-                    print("%s=%s" % (key, value))
-            except Exception as e:
-                print(e)
-            finally:
+                    line = f"{key}={value}\x1b[K"
+                    print(line)
+                return len(items)
+            
+            context = {}
+            items = collect_items()
+            context["printed"] = print_items(items)
+
+            if not watch:
                 sys.exit(0)
+
+            @win.on()
+            def PropertyNotify(win, event):
+                if not name or display.get_atom_name(event.atom) in name:
+                    items = collect_items()
+                    sys.stdout.write(f"\x1b[{context['printed']}A")
+                    context['printed'] = print_items(items)
+                    sys.stdout.flush()
             
 
 @window.command()
