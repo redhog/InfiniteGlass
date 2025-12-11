@@ -40,9 +40,9 @@ class Manager(object):
         self.last_user_timestamp = 0
         
         # Claim WM_S0 selection (ICCCM requirement)
-        root.set_selection_owner(display.intern_atom("WM_S0"), Xlib.X.CurrentTime)
-        owner = display.get_selection_owner(display.intern_atom("WM_S0"))
-        print("WM_S0 owner:", owner.id if owner else None)
+        # root.set_selection_owner(display.intern_atom("WM_S0"), Xlib.X.CurrentTime)
+        # owner = display.get_selection_owner(display.intern_atom("WM_S0"))
+        # print("WM_S0 owner:", owner.id if owner else None)
 
         # Supporting WM check window (EWMH requirement)
         support_win = root.create_window(0, 0, 1, 1, 0, Xlib.X.CopyFromParent)
@@ -56,12 +56,10 @@ class Manager(object):
 
         @root.on(mask="SubstructureNotifyMask", client_type="_NET_ACTIVE_WINDOW")
         def ClientMessage(win, event):
-            print("XXXXXXXXXXX", event)
             self.handle_net_active_window(event)
 
         @root.on(atom="_NET_WM_USER_TIME")
         def PropertyNotify(win, event):
-            print("AAAAAAAAAAA", event)
             try:
                 self.update_last_user_timestamp(int(self["_NET_WM_USER_TIME"]))
             except Exception:
