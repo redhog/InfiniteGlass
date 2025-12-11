@@ -20,7 +20,9 @@ class SplashAnimation(Base):
         base.ThemeBase.activate(self)
         self.theme.activate()
 
-        action_runner = InfiniteGlass.action.ActionRunner(
-            self.display
-        ).run({
-            "splash_unlock": {}})
+        @self.display.root.require("IG_WORLD_SPLASH_WINDOWS")
+        def with_splash(w, v):
+            action_runner = InfiniteGlass.action.ActionRunner(
+                self.display
+            ).run({
+                "splash_unlock": {}})
