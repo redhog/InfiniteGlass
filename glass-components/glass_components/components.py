@@ -121,7 +121,11 @@ class Components(object):
             @self.display.root.require(*spec["requires"], name=name)
             def value_set(root, *values):
                 for name, value in zip(spec["requires"], values):
-                    os.environ[name] = value.decode("UTF-8")
+                    if isinstance(value, bytes):
+                        value = value.decode("UTF-8")
+                    else:
+                        value = str(value)
+                    os.environ[name] = value
                 self.start_component_immediate(spec)
         else:
             self.start_component_immediate(spec)
