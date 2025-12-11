@@ -14,6 +14,8 @@ class NoSplash(Base):
         self.theme.activate()
         
 class SplashAnimation(Base):
+    root_IG_WORLD_COORDS: [70., 18.]
+
     def activate(self):
         base.ThemeBase.activate(self)
         self.theme.activate()
