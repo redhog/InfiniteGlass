@@ -171,6 +171,12 @@ def window_eq(self, other):
     return orig_window_eq(self, other)
 Xlib.xobject.drawable.Window.__eq__ = window_eq
 
+@property
+def window_aspect_ratio(self):
+    geom = self.get_geometry()
+    return float(geom.height) / float(geom.width)
+Xlib.xobject.drawable.Window.aspect_ratio = window_aspect_ratio
+
 window_attribute_names = [f.name for f in Xlib.protocol.request.GetWindowAttributes._reply.static_fields]
 
 class WindowPatternAST(object):

@@ -269,7 +269,7 @@ void view_update(View *view) {
       *(float *) (arr + i) = view->screen[i];
       view->_screen[i] = view->screen[i];
     }
-    XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
+    //XChangeProperty(display, root, view->attr_view, XA_FLOAT, 32, PropModeReplace, (void *) arr, 4);
   }
 }
 

@@ -10,23 +10,33 @@ class Theme(base.ThemeBase):
     shader_DEFAULT = None
     shader_DECORATION = None
     shader_ROOT = "root-fractal-julia"
+    shader_SPLASH = None
+    shader_SPLASH_BACKGROUND = None
 
     root_IG_SHADER = "IG_SHADER_ROOT"
     
     root_IG_VIEW_MENU_LAYER = "IG_LAYER_MENU"
-    root_IG_VIEW_MENU_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_MENU_VIEW = [0.0, 0.0, 1.0, "eq://$.root.aspect_ratio"]
     root_IG_VIEW_OVERLAY_LAYER = "IG_LAYER_OVERLAY"
-    root_IG_VIEW_OVERLAY_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_OVERLAY_VIEW = [0.0, 0.0, 1.0, "eq://$.root.aspect_ratio"]
     root_IG_VIEW_DESKTOP_LAYER = ["IG_LAYER_ISLAND", "IG_LAYER_DESKTOP"]
-    root_IG_VIEW_DESKTOP_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_DESKTOP_VIEW = [0.0, 0.0, 1.0, "eq://$.root.aspect_ratio"]
 
     root_IG_VIEW_ROOT_LAYER = "IG_LAYER_ROOT"
-    root_IG_VIEW_ROOT_VIEW = [0.0, 0.0, 1.0, 0.0]
+    root_IG_VIEW_ROOT_VIEW = [0.0, 0.0, 1.0, "eq://$.root.aspect_ratio"]
 
+    root_IG_VIEW_SPLASH_LAYER = "IG_LAYER_SPLASH"
+    root_IG_VIEW_SPLASH_VIEW = [0.0, 0.0, 1.0, "eq://$.root.aspect_ratio"]
+    root_IG_VIEW_SPLASH_BACKGROUND_LAYER = "IG_LAYER_SPLASH_BACKGROUND"
+    root_IG_VIEW_SPLASH_BACKGROUND_VIEW = [0.0, 0.0, 1.0, "eq://$.root.aspect_ratio"]
+
+    
     root_IG_VIEWS = ["IG_VIEW_ROOT",
                      "IG_VIEW_DESKTOP",
                      "IG_VIEW_OVERLAY",
-                     "IG_VIEW_MENU"]
+                     "IG_VIEW_MENU",
+                     "IG_VIEW_SPLASH_BACKGROUND",
+                     "IG_VIEW_SPLASH"]
     
     root_IG_COLOR_TRANSFORM = 1
     
