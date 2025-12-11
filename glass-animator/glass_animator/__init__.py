@@ -30,7 +30,7 @@ def start_animation(animationid, animation):
 def animate_anything(display, **kw):
     window = kw.get("window", None)
     atom = kw.get("atom", None)
-    if window and atom:
+    if window and atom and "dst" not in kw:
         dst = window.get(atom + "_ANIMATE", None)
         if dst is not None:
             if isinstance(dst, dict):
