@@ -66,10 +66,12 @@ def parse_value(display, value, **context):
         items = value.split(" ")
     else:
         items = [value]
-
+        
     if isinstance(items, list):
         items = [res for item in items for res in parse_string_value(display, item, **context)]
-                
+        if isinstance(items[0], list):
+            items = [j for i in items for j in i]
+
     if isinstance(value, array.array):
         if value.typecode == 'b':
             itemtype = display.get_atom("STRING")
