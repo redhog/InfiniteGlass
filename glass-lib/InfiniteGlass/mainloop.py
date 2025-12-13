@@ -3,6 +3,19 @@ import time
 import traceback
 import math
 import select
+import os
+import ctypes
+
+libc = ctypes.CDLL("libc.so.6")
+pidfd_open = libc.pidfd_open
+pidfd_open.argtypes = [ctypes.c_int, ctypes.c_uint]
+pidfd_open.restype = ctypes.c_int
+
+def pidfd(pid):
+    fd = pidfd_open(pid, 0)
+    if fd == -1:
+        raise OSError(ctypes.get_errno())
+    return fd
 
 class MainLoop(object):
     def __init__(self):
@@ -86,4 +99,79 @@ class MainLoop(object):
                 sys.stderr.write("%s\n" % e)
                 traceback.print_exc(file=sys.stderr)
                 sys.stderr.flush()
-            
+
+    def add_lines(self, fd, handler=None):
+        """
+        Decorator: invoke the wrapped callback whenever a *full line*
+        is read from the given file object.
+
+        Handles:
+        - registering FD with display.mainloop
+        - buffering partial reads
+        - non-blocking multi-byte draining of FD
+        """
+
+        if handler is None:
+            def wrapper(handler):
+                self.add_lines(fd, handler)
+            return wrapper
+        
+        buffer = bytearray()
+
+        @self.add(fd)
+        def reader(_):
+            nonlocal buffer
+
+            try:
+                chunk = os.read(fd, 4096)
+            except BlockingIOError:
+                self.remove(fd)
+                return
+            except OSError:
+                self.remove(fd)
+                return
+
+            if not chunk:
+                if buffer:
+                    try:
+                        line = buffer.decode(errors="replace")
+                        handler(fileobj, line)
+                    except Exception:
+                        pass
+                self.remove(fd)
+                return
+
+            buffer.extend(chunk)
+
+            while len(buffer):
+                nl = buffer.find(b"\n")
+                if nl == -1:
+                    break
+                line = buffer[:nl+1]
+                buffer = buffer[nl+1:]
+                handler(fileobj, line.decode(errors="replace"))
+        return reader
+
+    def add_process(self, pid, handler=None):
+        """
+        Wait for a process to exit using its PID and pidfd_open (Linux 5.3+).
+        The handler is called with the process exit code.
+        """
+
+        if handler is None:
+            def wrapper(handler):
+                return self.add_process(pid, handler)
+            return wrapper
+        
+        fd = pidfd(pid)
+
+        @self.add(fd)
+        def on_exit(fd_ready):
+            try:
+                retcode, _ = os.waitpid(pid, os.WNOHANG)
+            finally:
+                self.remove(fd)
+                os.close(fd)
+            handler(retcode)
+
+        return fd
