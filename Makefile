@@ -80,7 +80,7 @@ $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS)):
 clean: clean-python clean-docker
 
 clean-python:
-	rm -rf $(shell find . -name __pycache__) $(shell find . -name .eggs) $(shell find . -name dist) $(shell find . -name build | grep /glass)
+	rm -rf $(shell find . -name __pycache__) $(shell find . -name .eggs) $(shell find . -name *.egg-info) $(patsubst %,%/build,$(PYTHONAPPS_SUBDIRS)) $(patsubst %,%/dist,$(PYTHONAPPS_SUBDIRS))
 
 clean-docker:
 	scripts/run-in-docker.sh clean
