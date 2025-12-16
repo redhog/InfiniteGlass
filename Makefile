@@ -39,7 +39,7 @@ $(PYTHONAPPS): $(BINDIR)/activate
 all: $(SCRIPTS) $(PYTHONAPPS)
 
 run: all
-	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" BUILD="$(BUILD)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
+	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
 
 run-in-docker:
 	scripts/run-in-docker.sh
@@ -77,10 +77,7 @@ $(patsubst %,devinstall-%,$(PYTHONAPPS_SUBDIRS)):
 $(patsubst %,uninstall-%,$(PYTHONAPPS_SUBDIRS)):
 	pip3 uninstall $(patsubst uninstall-%,%,$@)
 
-clean: clean-build clean-python clean-docker
-
-clean-build:
-	rm -rf $(BUILD)
+clean: clean-python clean-docker
 
 clean-python:
 	rm -rf $(shell find . -name __pycache__) $(shell find . -name .eggs) $(shell find . -name dist) $(shell find . -name build | grep /glass)
