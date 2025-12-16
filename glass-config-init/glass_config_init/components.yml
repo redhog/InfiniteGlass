@@ -20,6 +20,7 @@ components:
   glass-animator:      {"command": ["glass-animator"]}
   glass-renderer:      {"command": ["glass-renderer-wrapper.sh"], requires: [IG_WORLD_ALPHA]}
   glass-islands:       {"command": ["glass-islands"]}
+  glass-lock:          {"command": ["glass-lock"]}
   xkb:                 {"command": ["setxkbmap", "-model", "pc101", "-layout", "us"]}
   root-cursor:         {"command": ["xsetroot", "-cursor_name", "arrow"]}
   panelterm:
