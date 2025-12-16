@@ -149,7 +149,7 @@ class MainLoop(object):
                     break
                 line = buffer[:nl+1]
                 buffer = buffer[nl+1:]
-                handler(fileobj, line.decode(errors="replace"))
+                handler(fd, line.decode(errors="replace"))
         return reader
 
     def add_process(self, pid, handler=None):

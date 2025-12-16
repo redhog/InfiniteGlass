@@ -53,8 +53,10 @@ modes:
 
         "KeyPress,XK_R": reload
 
-        "KeyPress,ItemKey,XK_U": {splash_unlock: {timeframe: 2.}}
-        "KeyPress,ItemKey,XK_L": {splash_lock: {timeframe: 2.}}
+        "KeyPress,ItemKey,XK_L": screen_lock
+
+        "KeyPress,ItemKey,XK_I": {splash_unlock: {timeframe: 2.}}
+        "KeyPress,ItemKey,XK_O": {splash_lock: {timeframe: 2.}}
         "KeyPress,XK_space": rofi_mode
         
         "KeyPress,XK_Escape": toggle_overlay

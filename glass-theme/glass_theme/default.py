@@ -34,9 +34,9 @@ class Theme(base.ThemeBase):
     root_IG_VIEWS = ["IG_VIEW_ROOT",
                      "IG_VIEW_DESKTOP",
                      "IG_VIEW_OVERLAY",
-                     "IG_VIEW_MENU",
                      "IG_VIEW_SPLASH_BACKGROUND",
-                     "IG_VIEW_SPLASH"]
+                     "IG_VIEW_SPLASH",
+                     "IG_VIEW_MENU"]
     
     root_IG_COLOR_TRANSFORM = 1
     

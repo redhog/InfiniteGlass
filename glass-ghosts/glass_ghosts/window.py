@@ -20,7 +20,10 @@ class Window(object):
         self.override_redirect = self.window.get_attributes().override_redirect
 
         for name in self.window.keys():
-            self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
+            try:
+                self.properties.update(glass_ghosts.helpers.expand_property(self.window, name))
+            except Exception as e:
+                InfiniteGlass.DEBUG("property-disappeared", "Property disappeared: %s" % name)
 
         self.under_deletion = False
             

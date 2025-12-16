@@ -1,0 +1,36 @@
+locker:
+  # Example configurations. Only one of these can be used at a time.
+  # All parameters are optional and here the default values are shown.
+  #
+  # i3:
+  #   cmd: ["i3lock"]
+  # xscreensaver:
+  #   cmd_daemon: ["xscreensaver", "-no-splash"]
+  #   cmd_watch: ["xscreensaver-command", "--watch"]
+  #   cmd_lock: ["xscreensaver-command", "-lock"]
+  # gnome:
+  #   cmd: ["gnome-screensaver"]
+  #   bus_name: "org.gnome.ScreenSaver"
+  #   obj_path: "/org/gnome/ScreenSaver"
+  # mate:
+  #   cmd: ["mate-screensaver"]
+  #   bus_name: "org.gnome.ScreenSaver"
+  #   obj_path: "/org/gnome/ScreenSaver"
+  # xfce:
+  #   cmd: ["xfce4-screensaver"]
+  #   bus_name: "org.xfce.ScreenSaver"
+  #   obj_path: "/org/xfce/ScreenSaver"
+  # light:
+  #   cmd: ["gnome-screensaver"]
+  #   bus_name: "org.freedesktop.ScreenSaver"
+  #   obj_path: "/org/freedesktop/ScreenSaver"
+
+  xscreensaver:
+
+animation:
+  lock:
+    splash_lock:
+      timeframe: 2.
+  unlock:
+    splash_unlock:
+      timeframe: 2.
