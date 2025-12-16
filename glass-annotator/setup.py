@@ -13,27 +13,22 @@ class BuildWithMake(build_py):
                 ["make", f"BUILD={build_temp}", f"BINDIR={build_temp}"],
                 cwd=pathlib.Path(__file__).parent)
 
-            pkg_src = pathlib.Path(__file__).parent / "glass_renderer"
-            (pkg_src / "bin").mkdir(parents=True, exist_ok=True)
-            shutil.copy2(pathlib.Path(build_temp) / "glass-renderer", pkg_src / "bin" / "glass-renderer")
+            pkg_src = pathlib.Path(__file__).parent / "glass_annotator"
+            (pkg_src / "lib").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(pathlib.Path(build_temp) / "glass-annotator", pkg_src / "lib" / "glass-annotator")
 
         super().run()
 
 setup(
-    name="glass-renderer",
+    name="glass-annotator",
     version='0.1',
-    description='The renderer process for InfiniteGlass',
-    long_description='A compositor, that is, the opengl rendering pipeline for InfiniteGlass',
+    description='Application and group ID:s for X application windows',
+    long_description='Adds application and group ID:s for X application windows using LD_PRELOAD',
     long_description_content_type="text/markdown",
     author='Egil Moeller',
     author_email='redhog@redhog.org',
     url='https://github.com/redhog/InfiniteGlass',
-    packages=["glass_renderer"],
+    packages=["glass_annotator"],
     cmdclass={"build_py": BuildWithMake},
-    package_data={"glass_renderer": ["bin/*"]},
-    entry_points={
-        "console_scripts": [
-            "glass-renderer = glass_renderer:main"
-        ]
-    },
+    package_data={"glass_annotator": ["lib/*"]},
 )
