@@ -15,25 +15,25 @@ endif
 
 XSERVERPATH=$(shell whereis -b $(XSERVER) | cut -f2 -d' ')
 
-BUILD=build
-BINDIR=build/env/bin
+ENVDIR=env
+BINDIR=$(ENVDIR)/bin
 PREFIX=/usr/local
 
 PYTHONAPPS_SUBDIRS := $(patsubst %/setup.py,%,$(wildcard */setup.py))
-PYTHONAPPS := $(patsubst %,$(BUILD)/env/bin/%,$(PYTHONAPPS_SUBDIRS))
+PYTHONAPPS := $(patsubst %,$(BINDIR)/%,$(PYTHONAPPS_SUBDIRS))
 
 SCRIPTS := $(patsubst scripts/%,$(BINDIR)/%,$(wildcard scripts/*))
 
-$(BUILD)/env/bin/activate: 
-	virtualenv --python=$(PYTHON) $(BUILD)/env
-	. $(BUILD)/env/bin/activate; pip install setuptools
-	. $(BUILD)/env/bin/activate; cd glass-lib; pip install -e .
+$(BINDIR)/activate: 
+	virtualenv --python=$(PYTHON) $(ENVDIR)
+	. $(BINDIR)/activate; pip install setuptools
+	. $(BINDIR)/activate; cd glass-lib; pip install -e .
 
-$(SCRIPTS): $(BUILD)/env/bin/activate
+$(SCRIPTS): $(BINDIR)/activate
 	cp scripts/* $(BINDIR)
 
-$(PYTHONAPPS): $(BUILD)/env/bin/activate
-	. $(BUILD)/env/bin/activate; cd $(notdir $@); pip install -e .
+$(PYTHONAPPS): $(BINDIR)/activate
+	. $(BINDIR)/activate; cd $(notdir $@); pip install -e .
 
 .PHONY: all run run-in-docker install devinstall uninstall install-binaries uninstall-binaries
 all: $(SCRIPTS) $(PYTHONAPPS)

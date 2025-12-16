@@ -7,7 +7,7 @@ if [ "$GLASS_DMALLOC" ]; then
   eval "$(dmalloc -l ./logfile -i 100 high)"
 fi
   
-. ./build/env/bin/activate
+. ./env/bin/activate
 
 ulimit -c unlimited
 

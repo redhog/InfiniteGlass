@@ -1,5 +1,6 @@
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
 import pathlib
 import subprocess
 import shutil
@@ -19,6 +20,11 @@ class BuildWithMake(build_py):
 
         super().run()
 
+class DevelopWithMake(develop):
+    def run(self):
+        self.run_command("build_py")
+        super().run()
+
 setup(
     name="glass-annotator",
     version='0.1',
@@ -29,6 +35,8 @@ setup(
     author_email='redhog@redhog.org',
     url='https://github.com/redhog/InfiniteGlass',
     packages=["glass_annotator"],
-    cmdclass={"build_py": BuildWithMake},
+    cmdclass={
+        "build_py": BuildWithMake,
+        "develop": DevelopWithMake},
     package_data={"glass_annotator": ["lib/*"]},
 )
