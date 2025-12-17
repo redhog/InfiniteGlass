@@ -73,3 +73,5 @@ xterm
 zsh
 xfonts-base
 iproute2
+x11-xserver-utils
+xscreensaver

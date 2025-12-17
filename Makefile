@@ -1,19 +1,10 @@
 .PHONY: default
 default: run
 
-XSERVER=Xephyr
+XSERVER=
+XSERVEROPTS=
 GLASS_DEBUGGER=
 PYTHON=python3
-
-ifeq ($(XSERVEROPTS),)
-  ifeq ($(XSERVER),Xephyr)
-    XSERVEROPTS= :100 -ac -screen 1280x768x24 -host-cursor -extension MIT-SHM -nolisten tcp
-  else
-    XSERVEROPTS= :100 -ac
-  endif
-endif
-
-XSERVERPATH=$(shell whereis -b $(XSERVER) | cut -f2 -d' ')
 
 ENVDIR=env
 BINDIR=$(ENVDIR)/bin
@@ -39,7 +30,7 @@ $(PYTHONAPPS): $(BINDIR)/activate
 all: $(SCRIPTS) $(PYTHONAPPS)
 
 run: all
-	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" XSERVERPATH="$(XSERVERPATH)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
+	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
 
 run-in-docker:
 	scripts/run-in-docker.sh

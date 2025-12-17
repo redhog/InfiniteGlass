@@ -6,4 +6,4 @@ echo "######################################################"
 export | grep GLASS
 echo "######################################################"
 
-su -c "bash -c 'cd /InfiniteGlass; make run'" glass
+su -c "bash -c 'cd /InfiniteGlass; scripts/xstartup.sh'" glass
