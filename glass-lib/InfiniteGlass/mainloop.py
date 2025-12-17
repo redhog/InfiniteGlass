@@ -5,17 +5,7 @@ import math
 import select
 import os
 import ctypes
-
-libc = ctypes.CDLL("libc.so.6")
-pidfd_open = libc.pidfd_open
-pidfd_open.argtypes = [ctypes.c_int, ctypes.c_uint]
-pidfd_open.restype = ctypes.c_int
-
-def pidfd(pid):
-    fd = pidfd_open(pid, 0)
-    if fd == -1:
-        raise OSError(ctypes.get_errno())
-    return fd
+from .utils import pidfd
 
 class MainLoop(object):
     def __init__(self):
