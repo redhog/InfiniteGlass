@@ -6,9 +6,9 @@ if [ "$GLASS_DEBUGGER" = "valgrind" ]; then
 else
   if [ "$GLASS_DEBUGGER" = "gdb" ]; then
     echo "Debugging using GDB..."
-    exec gdb ./build/env/bin/glass-renderer 0<&3 1>&4 2>&5
+    exec gdb ./env/bin/glass-renderer 0<&3 1>&4 2>&5
   else
     echo "Starting renderer without debugger"
-    exec ./build/env/bin/glass-renderer
+    exec ./env/bin/glass-renderer
   fi
 fi

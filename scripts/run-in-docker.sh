@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -x
+
 [ "$DOCKEROS" != "" ] || DOCKEROS=ubuntu
 IMAGE=redhogorg/glass-$DOCKEROS:0.0.2
 
