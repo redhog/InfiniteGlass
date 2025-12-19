@@ -6,4 +6,8 @@ echo "######################################################"
 export | grep GLASS
 echo "######################################################"
 
-su -c "bash -c 'cd /InfiniteGlass; scripts/xstartup.sh'" glass
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+dbus-daemon --session --fork --print-address > /tmp/dbus_address
+export DBUS_SESSION_BUS_ADDRESS=$(cat /tmp/dbus_address)
+
+su -c "bash -c 'cd /InfiniteGlass; ENVDIR=/env scripts/xstartup.sh'" glass

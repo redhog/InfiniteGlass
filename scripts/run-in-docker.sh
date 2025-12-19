@@ -34,9 +34,12 @@ docker run \
        --ipc=host \
        --user id -u root \
        --cap-add=ALL \
+       -v $(pwd):/InfiniteGlass \
        -v ~/.config/glass:/home/glass/.config/glass \
        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
        -v /tmp/.ICE-unix:/tmp/.ICE-unix:rw \
+       -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket \
+       -v $(pwd):/host \
        -v "$XAUTH:$XAUTH" \
        -e "XAUTHORITY=$XAUTH" \
        -e DISPLAY \
