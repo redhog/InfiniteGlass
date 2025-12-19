@@ -2,49 +2,49 @@ widgets:
   Zoom in:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.2 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.25 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/circle-plus.fl.svg
     action: zoom_to_fewer_windows
     
   Zoom out:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.3 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.35 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/circle-minus.fl.svg
     action: zoom_to_more_windows
 
   Zoom home:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.4 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.45 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/home.fl.svg
     action: zoom_home
 
   Group:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.5 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.55 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/group.fl.svg
     action: send_island_create
 
   Tile:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.6 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.65 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/th-list.fl.svg
     action: tile_visible_to_1_1
 
   Exit:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.7 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.75 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/eject.fl.svg
     action: send_exit
 
   Debug:
     properties:
       IG_COLOR_TRANSFORM: 1
-      IG_COORDS: [0.01, "eq://0.8 * apply($.root.get_geometry).height/apply($.root.get_geometry).width", 0.05, 0.05]
+      IG_COORDS: [0.01, "eq://0.85 * $.root.aspect_ratio", 0.05, 0.05]
       IG_CONTENT: !IG_SVG resource://glass_widgets/icons/bug.fl.svg
     action: send_debug
 

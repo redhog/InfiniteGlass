@@ -22,14 +22,17 @@ WORKDIR /InfiniteGlass
 
 RUN sed -e '/PyGObject/d' glass-action/setup.py -i
 
-RUN make all
-RUN make devinstall
+RUN rm -rf /InfiniteGlass/env
+RUN make ENVDIR=/env all
+RUN make ENVDIR=/env devinstall
 
 RUN useradd glass
 RUN mkdir -p /home/glass
 RUN mkdir -p /home/glass/.config/session-state
 RUN mkdir -p /home/glass/.config/dconf
 RUN chown -R glass:users /home/glass
+RUN mkdir -p /run/user/$(id -u glass)
+RUN chown glass /run/user/$(id -u glass)
 RUN chmod -R ugo+rw /InfiniteGlass
 RUN sed -e "s+\(sudo:.*\)+\1glass+g" /etc/group -i
 RUN sed -e "s+ALL$+NOPASSWD: ALL+g" /etc/sudoers -i

@@ -81,10 +81,23 @@ ghosts:
       - !string XTerm
       - !string ""
     WM_NAME: !string panelterm
-    IG_COORDS: [0.0, "eq://apply($.root.get_geometry).height/apply($.root.get_geometry).width", 1.0, 0.0576171875]
+    IG_COORDS: [0.0, "eq://$.root.aspect_ratio", 1.0, 0.0576171875]
     IG_SIZE: ["eq://apply($.root.get_geometry).width", "eq://int(apply($.root.get_geometry).width*0.0576171875)"]
     IG_LAYER: IG_LAYER_OVERLAY
 
+  - IG_APP_ID: !string trayer
+    WM_CLASS:
+    - !string panel
+    - !string trayer
+    - !string ""
+    WM_NAME: !string panel
+    IG_SIZE: ["eq://int(apply($.root.get_geometry).width * 0.05)", "eq://int(apply($.root.get_geometry).height * 0.05)"]
+    IG_COORDS: [
+      0.01,
+      "eq://0.13 * $.root.aspect_ratio",
+      0.05,
+      "eq://0.05 * $.root.aspect_ratio"]
+    IG_LAYER: IG_LAYER_OVERLAY
 
 # Match new windows when they first appear against these patterns and
 # run the corresponding actions on them.

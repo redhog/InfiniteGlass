@@ -26,3 +26,15 @@ components:
   panelterm:
     command: ["xterm", "-title", "panelterm", "-xrm", "XTerm.vt100.allowTitleOps: false"]
     environment: { "IG_APP_ID": "panelterm" }
+  trayer:
+    command: ["trayer",
+    "--transparent", "true",
+    "--alpha", "0",
+    "--padding", "10",
+    "--iconspacing", "10",
+    "--SetDockType", "false",
+    "--width", "400",
+    "--widthtype", "pixel"]
+    environment: { "IG_APP_ID": "trayer" }
+  nm-applet:
+    command: ["nm-applet", "--sm-disable"]
