@@ -87,40 +87,99 @@ char** svg_use_manager_list_urls(SvgUseManager *mgr) {
     return urls;
 }
 
+static void lookup_add(SvgUseManager *mgr, const char *url, xmlNodePtr g_node) {
+    mgr->lookup = realloc(mgr->lookup, sizeof(*mgr->lookup) * (mgr->lookup_count + 1));
+    mgr->lookup[mgr->lookup_count].url = strdup(url);
+    mgr->lookup[mgr->lookup_count].g_node = g_node;
+    mgr->lookup_count++;
+}
 
-int svg_use_manager_replace(SvgUseManager *mgr, const char *url, const char *new_svg) {
+static void lookup_compact(SvgUseManager *mgr) {
+    int wr = 0;
     for (int i = 0; i < mgr->lookup_count; i++) {
-        if (strcmp(mgr->lookup[i].url, url) == 0) {
-            // Wrap the fragment in a temporary root
-            char *wrapped_svg = malloc(strlen(new_svg) + 20);
-            if (!wrapped_svg) return -1;
-            sprintf(wrapped_svg, "<root>%s</root>", new_svg);
-
-            xmlDocPtr new_doc = xmlParseMemory(wrapped_svg, strlen(wrapped_svg));
-            free(wrapped_svg);
-
-            if (!new_doc) return -1;
-            xmlNodePtr new_root = xmlDocGetRootElement(new_doc); // this is <root>
-
-            // Remove existing children of g_node
-            xmlNodePtr child, next;
-            for (child = mgr->lookup[i].g_node->children; child; child = next) {
-                next = child->next;
-                xmlUnlinkNode(child);
-                xmlFreeNode(child);
-            }
-
-            // Import each child of <root> into the g_node
-            for (child = new_root->children; child; child = child->next) {
-                xmlNodePtr imported = xmlDocCopyNode(child, mgr->doc, 1);
-                xmlAddChild(mgr->lookup[i].g_node, imported);
-            }
-
-            xmlFreeDoc(new_doc);
-            return 0;
+        if (mgr->lookup[i].g_node && mgr->lookup[i].g_node->parent) {
+            mgr->lookup[wr++] = mgr->lookup[i];
+        } else {
+            free(mgr->lookup[i].url);
         }
     }
-    return -1; // URL not found
+    mgr->lookup_count = wr;
+    mgr->lookup = realloc(mgr->lookup, sizeof(*mgr->lookup) * mgr->lookup_count);
+}
+
+static void scan_use_nodes_recursive(SvgUseManager *mgr, xmlNodePtr parent) {
+    for (xmlNodePtr cur = parent->children; cur; cur = cur->next) {
+        if (cur->type == XML_ELEMENT_NODE && xmlStrEqual(cur->name, (xmlChar*)"use")) {
+
+            xmlChar *href = xmlGetProp(cur, (xmlChar*)"xlink:href");
+            if (!href) href = xmlGetProp(cur, (xmlChar*)"href");
+            if (!href) continue;
+
+            xmlNodePtr g_node = xmlNewNode(NULL, (xmlChar*)"g");
+
+            for (xmlAttrPtr attr = cur->properties; attr; attr = attr->next) {
+                if (xmlStrcmp(attr->name, (xmlChar*)"xlink:href") != 0 &&
+                    xmlStrcmp(attr->name, (xmlChar*)"href") != 0) {
+                    xmlSetProp(g_node, attr->name, attr->children->content);
+                }
+            }
+
+            xmlReplaceNode(cur, g_node);
+            xmlFreeNode(cur);
+
+            lookup_add(mgr, (char*)href, g_node);
+            xmlFree(href);
+
+            // recurse into this new g-node
+            scan_use_nodes_recursive(mgr, g_node);
+        }
+
+        // Recurse into children normally
+        if (cur->children)
+            scan_use_nodes_recursive(mgr, cur);
+    }
+}
+
+int svg_use_manager_replace(SvgUseManager *mgr, const char *url, const char *new_svg) {
+    int found = 0;
+
+    for (int i = 0; i < mgr->lookup_count; i++) {
+        if (strcmp(mgr->lookup[i].url, url) == 0) {
+            found = 1;
+            xmlNodePtr g = mgr->lookup[i].g_node;
+
+            // parse wrapped fragment
+            char *wrapped = malloc(strlen(new_svg) + 20);
+            sprintf(wrapped, "<root>%s</root>", new_svg);
+            xmlDocPtr tmp = xmlParseMemory(wrapped, strlen(wrapped));
+            free(wrapped);
+            if (!tmp) continue;
+            xmlNodePtr tmp_root = xmlDocGetRootElement(tmp);
+
+            // delete all old children
+            xmlNodePtr c, nxt;
+            for (c = g->children; c; c = nxt) {
+                nxt = c->next;
+                xmlUnlinkNode(c);
+                xmlFreeNode(c);
+            }
+
+            // import new children
+            for (c = tmp_root->children; c; c = c->next) {
+                xmlNodePtr imported = xmlDocCopyNode(c, mgr->doc, 1);
+                xmlAddChild(g, imported);
+            }
+            xmlFreeDoc(tmp);
+
+            // recursively scan newly added nodes, add more lookup entries
+            scan_use_nodes_recursive(mgr, g);
+        }
+    }
+
+    // cleanup dead entries now (AFTER replacing all matches)
+    lookup_compact(mgr);
+
+    return found ? 0 : -1;
 }
 
 char* svg_use_manager_render(SvgUseManager *mgr) {
