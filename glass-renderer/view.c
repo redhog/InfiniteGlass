@@ -59,7 +59,6 @@ void view_from_space(View *view, float spacex, float spacey, float *screenx, flo
 }
 
 void view_abstract_draw(Rendering *rendering, List *items, ItemFilter *filter) {
-  View *view = rendering->view;
   rendering->shader = NULL;
   rendering->array_length = 1;
   int indent = rendering->indent;
@@ -292,7 +291,7 @@ void view_get_fullscreen(View *view, List *items, ItemFilter *filter, size_t *vi
   Item *item;
   *fullscreen_item = NULL;
   *visible = 0;
-  if (!items) return NULL;
+  if (!items) return;
   for (size_t idx = 0; idx < items->count; idx++) {
     item = (Item *) items->entries[idx];
     if (filter && !filter(item)) continue;
