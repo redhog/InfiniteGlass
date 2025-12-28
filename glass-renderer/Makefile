@@ -1,5 +1,5 @@
 CC=gcc
-PACKAGES=librsvg-2.0 pangocairo cairo xi x11 x11-xcb xcb xcb-icccm xcb-damage gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
+PACKAGES=librsvg-2.0 libxml-2.0 pangocairo cairo xi x11 x11-xcb xcb xcb-icccm xcb-damage gl glu glew xrender xcomposite xtst xdamage xext xfixes xrandr
 
 ifeq ($(GLASS_PROFILE),1)
   PROFILE_CFLAGS:=-pg
@@ -30,7 +30,11 @@ $(BUILD)/%.o: %.c *.h
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BINDIR)/glass-renderer: $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c))
+$(BINDIR)/glass-renderer: $(patsubst %.c,$(BUILD)/%.o, $(filter-out svg_templating_test.c, $(wildcard *.c)))
 	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -o $@ $(patsubst %.c,$(BUILD)/%.o, $(wildcard *.c)) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+
+$(BINDIR)/svg-templating-test: $(BUILD)/svg_templating.o $(BUILD)/svg_templating_test.o
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 

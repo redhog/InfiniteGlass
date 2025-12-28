@@ -7,16 +7,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-struct SvgTemplating {
-    xmlDocPtr doc;
-    xmlNodePtr root;
-    struct LookupEntry {
-        char *url;
-        xmlNodePtr g_node;
-    } *lookup;
-    int lookup_count;
-};
-
 static void process_use_nodes(SvgTemplating *mgr) {
     xmlXPathContextPtr xpathCtx = xmlXPathNewContext(mgr->doc);
     xmlXPathRegisterNs(xpathCtx, (const xmlChar *)"svg", (const xmlChar *)"http://www.w3.org/2000/svg");
@@ -25,8 +15,8 @@ static void process_use_nodes(SvgTemplating *mgr) {
 
     if(xpathObj && xpathObj->nodesetval) {
         int count = xpathObj->nodesetval->nodeNr;
-        mgr->lookup = calloc(count, sizeof(*mgr->lookup));
-        mgr->lookup_count = 0;
+        mgr->bindings = calloc(count, sizeof(*mgr->bindings));
+        mgr->bindings_count = 0;
 
         for(int i = 0; i < count; i++) {
             xmlNodePtr use_node = xpathObj->nodesetval->nodeTab[i];
@@ -46,9 +36,9 @@ static void process_use_nodes(SvgTemplating *mgr) {
             xmlReplaceNode(use_node, g_node);
             xmlFreeNode(use_node);
 
-            mgr->lookup[mgr->lookup_count].url = strdup((const char*)href);
-            mgr->lookup[mgr->lookup_count].g_node = g_node;
-            mgr->lookup_count++;
+            mgr->bindings[mgr->bindings_count].url = strdup((const char*)href);
+            mgr->bindings[mgr->bindings_count].g_node = g_node;
+            mgr->bindings_count++;
 
             xmlFree(href);
         }
@@ -71,40 +61,48 @@ SvgTemplating* svg_templating_create(const char *svg_content) {
 
 void svg_templating_free(SvgTemplating *mgr) {
     if(!mgr) return;
-    for(int i = 0; i < mgr->lookup_count; i++) {
-        free(mgr->lookup[i].url);
+    for(int i = 0; i < mgr->bindings_count; i++) {
+        free(mgr->bindings[i].url);
     }
-    free(mgr->lookup);
+    free(mgr->bindings);
     if(mgr->doc) xmlFreeDoc(mgr->doc);
     free(mgr);
 }
 
-char** svg_templating_list_urls(SvgTemplating *mgr) {
-    char **urls = calloc(mgr->lookup_count + 1, sizeof(char*));
-    for(int i = 0; i < mgr->lookup_count; i++)
-        urls[i] = strdup(mgr->lookup[i].url);
-    urls[mgr->lookup_count] = NULL;
-    return urls;
+static void bindings_add(SvgTemplating *mgr, const char *url, xmlNodePtr g_node) {
+    mgr->bindings = realloc(mgr->bindings, sizeof(*mgr->bindings) * (mgr->bindings_count + 1));
+    mgr->bindings[mgr->bindings_count].url = strdup(url);
+    mgr->bindings[mgr->bindings_count].g_node = g_node;
+    mgr->bindings[mgr->bindings_count].data = NULL;
+    mgr->bindings_count++;
 }
 
-static void lookup_add(SvgTemplating *mgr, const char *url, xmlNodePtr g_node) {
-    mgr->lookup = realloc(mgr->lookup, sizeof(*mgr->lookup) * (mgr->lookup_count + 1));
-    mgr->lookup[mgr->lookup_count].url = strdup(url);
-    mgr->lookup[mgr->lookup_count].g_node = g_node;
-    mgr->lookup_count++;
-}
-
-static void lookup_compact(SvgTemplating *mgr) {
+void svg_templating_gc(SvgTemplating *mgr) {
     int wr = 0;
-    for (int i = 0; i < mgr->lookup_count; i++) {
-        if (mgr->lookup[i].g_node && mgr->lookup[i].g_node->parent) {
-            mgr->lookup[wr++] = mgr->lookup[i];
+    for (int i = 0; i < mgr->bindings_count; i++) {
+        if (mgr->bindings[i].g_node && mgr->bindings[i].g_node->parent) {
+            if (wr != i) {
+                mgr->bindings[wr] = mgr->bindings[i];
+            }
+            wr++;
         } else {
-            free(mgr->lookup[i].url);
+            free(mgr->bindings[i].url);
         }
     }
-    mgr->lookup_count = wr;
-    mgr->lookup = realloc(mgr->lookup, sizeof(*mgr->lookup) * mgr->lookup_count);
+
+    mgr->bindings_count = wr;
+
+    if (wr > 0) {
+        void *tmp = realloc(mgr->bindings, sizeof(*mgr->bindings) * wr);
+        if (tmp) {
+            mgr->bindings = tmp;
+        } else {
+            // realloc failed, we keep old pointer (no shrink)
+        }
+    } else {
+        free(mgr->bindings);
+        mgr->bindings = NULL;
+    }
 }
 
 static void scan_use_nodes_recursive(SvgTemplating *mgr, xmlNodePtr parent) {
@@ -127,7 +125,7 @@ static void scan_use_nodes_recursive(SvgTemplating *mgr, xmlNodePtr parent) {
             xmlReplaceNode(cur, g_node);
             xmlFreeNode(cur);
 
-            lookup_add(mgr, (char*)href, g_node);
+            bindings_add(mgr, (char*)href, g_node);
             xmlFree(href);
 
             // recurse into this new g-node
@@ -140,45 +138,57 @@ static void scan_use_nodes_recursive(SvgTemplating *mgr, xmlNodePtr parent) {
     }
 }
 
-int svg_templating_replace(SvgTemplating *mgr, const char *url, const char *new_svg) {
-    int found = 0;
+void svg_templating_replace_by_index(SvgTemplating *mgr, size_t index, const char *new_svg, void *data) {
+    xmlNodePtr g = mgr->bindings[index].g_node;
+    mgr->bindings[index].data = data;
+    
+    // parse wrapped fragment
+    char *wrapper = "<root xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>%s</root>";
+    char *wrapped = malloc(strlen(new_svg) + strlen(wrapper) + 1);
+    sprintf(wrapped, wrapper, new_svg);
+    xmlDocPtr tmp = xmlParseMemory(wrapped, strlen(wrapped));
+    free(wrapped);
+    if (!tmp) return;
+    xmlNodePtr tmp_root = xmlDocGetRootElement(tmp);
 
-    for (int i = 0; i < mgr->lookup_count; i++) {
-        if (strcmp(mgr->lookup[i].url, url) == 0) {
-            found = 1;
-            xmlNodePtr g = mgr->lookup[i].g_node;
-
-            // parse wrapped fragment
-            char *wrapped = malloc(strlen(new_svg) + 20);
-            sprintf(wrapped, "<root>%s</root>", new_svg);
-            xmlDocPtr tmp = xmlParseMemory(wrapped, strlen(wrapped));
-            free(wrapped);
-            if (!tmp) continue;
-            xmlNodePtr tmp_root = xmlDocGetRootElement(tmp);
-
-            // delete all old children
-            xmlNodePtr c, nxt;
-            for (c = g->children; c; c = nxt) {
-                nxt = c->next;
-                xmlUnlinkNode(c);
-                xmlFreeNode(c);
-            }
-
-            // import new children
-            for (c = tmp_root->children; c; c = c->next) {
-                xmlNodePtr imported = xmlDocCopyNode(c, mgr->doc, 1);
-                xmlAddChild(g, imported);
-            }
-            xmlFreeDoc(tmp);
-
-            // recursively scan newly added nodes, add more lookup entries
-            scan_use_nodes_recursive(mgr, g);
-        }
+    // delete all old children
+    xmlNodePtr c, nxt;
+    for (c = g->children; c; c = nxt) {
+        nxt = c->next;
+        xmlUnlinkNode(c);
+        xmlFreeNode(c);
     }
 
-    // cleanup dead entries now (AFTER replacing all matches)
-    lookup_compact(mgr);
+    // import new children
+    for (c = tmp_root->children; c; c = c->next) {
+        xmlNodePtr imported = xmlDocCopyNode(c, mgr->doc, 1);
+        xmlAddChild(g, imported);
+    }
+    xmlFreeDoc(tmp);
 
+    // recursively scan newly added nodes, add more bindings entries
+    scan_use_nodes_recursive(mgr, g);
+}
+
+int svg_templating_replace_by_url(SvgTemplating *mgr, const char *url, const char *new_svg, void *data) {
+    int found = 0;
+    for (int i = 0; i < mgr->bindings_count; i++) {
+        if (strcmp(mgr->bindings[i].url, url) == 0) {
+            found = 1;
+            svg_templating_replace_by_index(mgr, i, new_svg, data);
+        }
+    }
+    return found ? 0 : -1;
+}
+
+int svg_templating_replace_by_data(SvgTemplating *mgr, void *data, const char *new_svg) {
+    int found = 0;
+    for (int i = 0; i < mgr->bindings_count; i++) {
+        if (mgr->bindings[i].data == data) {
+            found = 1;
+            svg_templating_replace_by_index(mgr, i, new_svg, data);
+        }
+    }
     return found ? 0 : -1;
 }
 

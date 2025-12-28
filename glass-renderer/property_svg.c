@@ -1,4 +1,5 @@
 #include "property_svg.h"
+#include "svg_templating.h"
 #include "property_coords.h"
 #include "texture.h"
 #include "rendering.h"
@@ -20,6 +21,8 @@ typedef struct {
   int itemwidth;
   int itemheight;
 
+  SvgTemplating *template;
+  char *templated_source;
   RsvgHandle *rsvg;
   RsvgDimensionData dimension;
  
@@ -45,7 +48,11 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   int pixelwidth, pixelheight;
 
   if(!rendering->item->prop_coords) {
-    DEBUG("window.svg.error", "Property coords not set\n");   
+    DEBUG("window.svg.error", "Property coords not set\n");
+    return;
+  }
+  if (!data->rsvg) {
+    DEBUG("window.svg.error", "prop->rsvg = NULL: Calculate not called before to_gl.\n");
     return;
   }
 
@@ -173,29 +180,24 @@ void property_svg_load(Property *prop) {
     prop->data = malloc(sizeof(SvgPropertyData));
     data = (SvgPropertyData *) prop->data;
 
+    data->template = NULL;
+    data->templated_source = NULL;
     data->surface = NULL;
     data->cairo_ctx = NULL;
     data->rsvg = NULL;
 
     texture_initialize(&data->texture);
-  } else {
-    if (data->rsvg) g_object_unref(data->rsvg);
-    data->rsvg = NULL;
   }
-    
-  GError *error = NULL;
-  data->rsvg = rsvg_handle_new_from_data((unsigned char *) prop->values.bytes, prop->nitems, &error);
-  if (!data->rsvg) {
-    DEBUG("window.svg.error", "Unable to load svg: %s: %.*s, len=%ld\n",  error->message, prop->nitems, (unsigned char *) prop->values.bytes, prop->nitems);
-    fflush(stdout);
-    return;
-  }
-  rsvg_handle_get_dimensions(data->rsvg, &data->dimension);  
+
+  if (data->template) svg_templating_free(data->template);
+  data->template = svg_templating_create(prop->values.bytes);
 }
 
 void property_svg_free(Property *prop) {
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   if (!data) return;
+  if (data->template) svg_templating_free(data->template);
+  if (data->templated_source) free(data->templated_source);
   if (data->cairo_ctx) cairo_destroy(data->cairo_ctx);
   if (data->surface) cairo_surface_destroy(data->surface);
   texture_destroy(&data->texture);
@@ -276,6 +278,52 @@ void property_svg_free_program(Property *prop, size_t index) {
   free(program_data);
   prop_cache->data = NULL;
 }
+
+uint64_t property_svg_calculate(Property *prop, Rendering *rendering) {
+  if (!prop || !prop->data) return prop->version;  
+  SvgPropertyData *data = (SvgPropertyData *) prop->data;
+  if (!data || !data->template) return prop->version;
+  uint64_t required_version = 0;
+
+  if (data->templated_source) free(data->templated_source);
+
+  for (size_t binding_idx = 0; binding_idx < data->template->bindings_count; binding_idx++) {
+    BindingEntry *entry = &data->template->bindings[binding_idx];
+    if (entry->data) {
+      Property *entryprop = (Property *) entry->data;
+      if (entryprop->version > prop->calculated_version) {
+        svg_templating_replace_by_data(data->template, (void *) entryprop, entryprop->values.bytes);
+      }
+      required_version = MAX(required_version, entryprop->version);
+    } else {
+      if (strncmp(entry->url, "property://", 8) != 0) continue;
+      for (size_t pathprop_idx = 0; pathprop_idx < rendering->item->properties->properties->count; pathprop_idx++) {
+        Property *pathprop = (Property *) rendering->item->properties->properties->entries[pathprop_idx];
+        if (strcmp(entry->url + 8, pathprop->name_str) == 0) {
+          svg_templating_replace_by_index(data->template, binding_idx, pathprop->values.bytes, (void *) pathprop);
+          required_version = MAX(required_version, pathprop->version);
+          break;
+        }
+      }
+    }
+  }
+  svg_templating_gc(data->template);
+  data->templated_source = svg_templating_render(data->template);
+
+  GError *error = NULL;
+  if (data->rsvg) g_object_unref(data->rsvg);
+  data->rsvg = rsvg_handle_new_from_data((unsigned char *) data->templated_source, strlen(data->templated_source), &error);
+  if (!data->rsvg) {
+    DEBUG("window.svg.error", "Unable to load svg: %s: %s, len=%ld\n",
+          error->message, (unsigned char *) data->templated_source, strlen(data->templated_source));
+    fflush(stdout);
+    return required_version;
+  }
+  rsvg_handle_get_dimensions(data->rsvg, &data->dimension);  
+  
+  return required_version;
+}
+
 PropertyTypeHandler property_svg = {
   .init=&property_svg_init,
   .load=&property_svg_load,
@@ -283,5 +331,6 @@ PropertyTypeHandler property_svg = {
   .to_gl=&property_svg_to_gl,
   .print=&property_svg_print,
   .load_program=&property_svg_load_program,
-  .free_program=&property_svg_free_program
+  .free_program=&property_svg_free_program,
+  .calculate=&property_svg_calculate
 };

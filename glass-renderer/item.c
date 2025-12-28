@@ -236,8 +236,11 @@ void item_initialize(Item *item, Window window) {
 }
 
 void item_destructor(Item *item) {
+  if (item->properties) properties_free(item->properties);
   if (item->attr) free(item->attr);
   if (item->geom) free(item->geom);
+  // FIXME: WHat about damage
+  // FIXME: What about window_pixmap
   texture_destroy(&item->window_texture);
 }
 void item_draw_subs(Rendering *rendering) {
