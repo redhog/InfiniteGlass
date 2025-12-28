@@ -59,6 +59,7 @@ void coord_type_error(Rendering *rendering, Atom type, char *type_name, char *er
 
 uint64_t property_coords_calculate(Property *prop, Rendering *rendering) {
   PropertyCoords *data = (PropertyCoords *) prop->data;
+  if (!data) return prop->version;
   float *ccoords = data->ccoords;
   float *coords = data->coords;
   ccoords[0] = 0.0;
