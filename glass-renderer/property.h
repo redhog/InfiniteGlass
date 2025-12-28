@@ -7,6 +7,12 @@
 #include "rendering.h"
 #include "shader.h"
 #include <stdio.h>
+#include <stdint.h>
+
+#define MAX(a, b) \
+({ __typeof__(a) _a = (a); \
+   __typeof__(b) _b = (b); \
+   _a > _b ? _a : _b; })
 
 #define PROGRAM_CACHE_SIZE 10
 
@@ -42,6 +48,8 @@ struct PropertyStruct {
   Window window;
   Atom name;
   char *name_str;
+  uint64_t version;
+  uint64_t calculated_version;
   Atom type;
   int format;
   unsigned long nitems;
@@ -91,7 +99,7 @@ typedef void PropertyFree(Property *prop);
 typedef void PropertyLoadProgram(Property *prop, Rendering *rendering);
 typedef void PropertyFreeProgram(Property *prop, size_t index);
 typedef void PropertyToGl(Property *prop, Rendering *rendering);
-typedef void PropertyCalculate(Property *prop, Rendering *rendering);
+typedef uint64_t PropertyCalculate(Property *prop, Rendering *rendering);
 typedef void PropertyDraw(Property *prop, Rendering *rendering);
 typedef void PropertyPrint(Property *prop, int indent, FILE *fp, int detail);
 
@@ -110,6 +118,8 @@ struct PropertyTypeHandlerT {
   Atom type;
   Atom name;
 };
+
+extern uint64_t next_version;
 
 extern void property_type_register(PropertyTypeHandler *handler);
 extern PropertyTypeHandler *property_type_get(Property *prop);
