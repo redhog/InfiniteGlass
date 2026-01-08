@@ -4,6 +4,9 @@ from . import mode
 from . import utils
 import Xlib.X
 
+def write(self, *args, **kw):
+    return self.write(*args, **kw)
+
 class TitleSearchMode(mode.Mode):        
     def query(self, query=""):
         for win in self.windows:
@@ -19,7 +22,7 @@ class TitleSearchMode(mode.Mode):
 
     def bbox_view(self, query=""):
         res = self.bbox(query)
-        if not res: return res
+        if not res: return self.orig_view
         return utils.bbox_view(res, self.orig_view)
         
     def enter(self):
@@ -27,14 +30,15 @@ class TitleSearchMode(mode.Mode):
 
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.aspect_ratio = self.orig_view[2] / self.orig_view[3]
-        
+
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
         self.windows = list(self.get_all_windows())
         print("All windows:", ",".join(w["name"] for w in self.windows))
-        
+
         self.input = ""
-        
+
         self.label_window = self.display.root.create_window(map=False)
+        self.label_window["WM_NAME"] = b"BBOX label"
         self.label_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = self.bbox_view()
         self.generate_overlay()
@@ -42,16 +46,19 @@ class TitleSearchMode(mode.Mode):
 
         self.orig_menu_view = self.display.root["IG_VIEW_MENU_VIEW"]
         self.input_window = self.display.root.create_window(map=False)
+        self.input_window["WM_NAME"] = b"Title search"
         self.input_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
 
         self.update_input()
+        self.input_window["IG_SIZE"] = [500, 500]
+
         self.input_window["IG_COORDS"] = [self.orig_menu_view[0], self.orig_menu_view[1] + self.orig_menu_view[3], self.orig_menu_view[2], self.orig_menu_view[3]]
         self.input_window["IG_LAYER"] = "IG_LAYER_MENU"
-        
+
         self.input_window.map()
 
         self.display.flush()
-        
+            
         return True
 
     def exit(self):
@@ -118,6 +125,13 @@ class TitleSearchMode(mode.Mode):
         
     def generate_overlay(self):
         bbox = self.bbox()
+
+        if not bbox:
+            bbox = [self.orig_view[0],
+                    self.orig_view[1] - self.orig_view[3],
+                    self.orig_view[2],
+                    self.orig_view[3]]
+        
         bbox[0] -= bbox[2] * 0.1
         bbox[1] += bbox[3] * 0.1
         bbox[2] *= 1.2
