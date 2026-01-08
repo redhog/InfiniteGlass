@@ -134,7 +134,6 @@ void property_to_gl(Property *prop, Rendering *rendering) {
 
 void property_calculate(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
-  prop->calculated_version = prop->version;
   if (!type) return;
   if (!type->calculate) return;
   prop->calculated_version = type->calculate(prop, rendering);
