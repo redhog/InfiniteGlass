@@ -21,6 +21,8 @@ typedef struct {
   int itemwidth;
   int itemheight;
 
+ uint64_t rendered_version;
+ 
   SvgTemplating *template;
   char *templated_source;
   RsvgHandle *rsvg;
@@ -118,7 +120,8 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
       && data->x == px1
       && data->y == py1
       && data->itemwidth == itempixelwidth
-      && data->itemheight == itempixelheight) return;
+      && data->itemheight == itempixelheight
+      && data->rendered_version == prop->calculated_version) return;
   
   // Check if current surface size is wrong before recreating...
   if (!data->surface || pixelwidth != data->width || pixelheight != data->height) {
@@ -139,7 +142,8 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
   data->y = py1;
   data->itemwidth = itempixelwidth;
   data->itemheight = itempixelheight;
-
+  data->rendered_version = prop->calculated_version;
+ 
   rsvg_handle_get_dimensions(data->rsvg, &dimension);
   
   DEBUG("window.svg", "RENDER %d,%d[%f,%f] = [%d,%d]\n",
@@ -180,6 +184,7 @@ void property_svg_load(Property *prop) {
     prop->data = malloc(sizeof(SvgPropertyData));
     data = (SvgPropertyData *) prop->data;
 
+    data->rendered_version = 0;
     data->template = NULL;
     data->templated_source = NULL;
     data->surface = NULL;
@@ -319,7 +324,7 @@ uint64_t property_svg_calculate(Property *prop, Rendering *rendering) {
     fflush(stdout);
     return required_version;
   }
-  rsvg_handle_get_dimensions(data->rsvg, &data->dimension);  
+  rsvg_handle_get_dimensions(data->rsvg, &data->dimension);
   
   return required_version;
 }
