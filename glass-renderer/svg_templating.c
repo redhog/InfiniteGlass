@@ -7,48 +7,83 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+static int parent_is_text_container(xmlNodePtr parent) {
+    if (!parent || parent->type != XML_ELEMENT_NODE)
+        return 0;
+
+    return xmlStrEqual(parent->name, (xmlChar*)"text") ||
+           xmlStrEqual(parent->name, (xmlChar*)"tspan") ||
+           xmlStrEqual(parent->name, (xmlChar*)"textPath");
+}
+
 static void process_use_nodes(SvgTemplating *mgr) {
     xmlXPathContextPtr xpathCtx = xmlXPathNewContext(mgr->doc);
-    xmlXPathRegisterNs(xpathCtx, (const xmlChar *)"svg", (const xmlChar *)"http://www.w3.org/2000/svg");
-    xmlXPathRegisterNs(xpathCtx, (const xmlChar *)"xlink", (const xmlChar *)"http://www.w3.org/1999/xlink");
-    xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression((const xmlChar*)"//svg:use", xpathCtx);
+    xmlXPathRegisterNs(xpathCtx, (const xmlChar *)"svg",
+                      (const xmlChar *)"http://www.w3.org/2000/svg");
+    xmlXPathRegisterNs(xpathCtx, (const xmlChar *)"xlink",
+                      (const xmlChar *)"http://www.w3.org/1999/xlink");
 
-    if(xpathObj && xpathObj->nodesetval) {
+    xmlXPathObjectPtr xpathObj =
+        xmlXPathEvalExpression((const xmlChar*)"//svg:use", xpathCtx);
+
+    if (xpathObj && xpathObj->nodesetval) {
         int count = xpathObj->nodesetval->nodeNr;
         mgr->bindings = calloc(count, sizeof(*mgr->bindings));
         mgr->bindings_count = 0;
 
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             xmlNodePtr use_node = xpathObj->nodesetval->nodeTab[i];
+
             xmlChar *href = xmlGetProp(use_node, (const xmlChar*)"xlink:href");
-            if(!href) href = xmlGetProp(use_node, (const xmlChar*)"href");
-            if(!href) continue;
+            if (!href)
+                href = xmlGetProp(use_node, (const xmlChar*)"href");
+            if (!href)
+                continue;
 
-            // Create a <g> node to replace <use>
-            xmlNodePtr g_node = xmlNewNode(NULL, (const xmlChar*)"g");
+            xmlNodePtr parent = use_node->parent;
 
-            // Copy attributes (except href)
-            for(xmlAttrPtr attr = use_node->properties; attr; attr = attr->next) {
-                if(strcmp((const char*)attr->name, "xlink:href") != 0 && strcmp((const char*)attr->name, "href") != 0)
-                    xmlSetProp(g_node, attr->name, attr->children->content);
+            /* Decide replacement element */
+            const xmlChar *new_name =
+                parent_is_text_container(parent)
+                ? (const xmlChar*)"tspan"
+                : (const xmlChar*)"g";
+
+            xmlNodePtr new_node = xmlNewNode(NULL, new_name);
+
+            /* Copy attributes except href */
+            for (xmlAttrPtr attr = use_node->properties; attr; attr = attr->next) {
+                if (!xmlStrEqual(attr->name, (xmlChar*)"xlink:href") &&
+                    !xmlStrEqual(attr->name, (xmlChar*)"href")) {
+
+                    xmlChar *value = xmlNodeGetContent((xmlNodePtr)attr);
+                    if (value) {
+                        xmlSetProp(new_node, attr->name, value);
+                        xmlFree(value);
+                    }
+                }
             }
 
-            xmlReplaceNode(use_node, g_node);
+            xmlReplaceNode(use_node, new_node);
             xmlFreeNode(use_node);
 
-            mgr->bindings[mgr->bindings_count].url = strdup((const char*)href);
-            mgr->bindings[mgr->bindings_count].g_node = g_node;
+            mgr->bindings[mgr->bindings_count].url =
+                strdup((const char*)href);
+            mgr->bindings[mgr->bindings_count].g_node = new_node;
             mgr->bindings_count++;
 
             xmlFree(href);
         }
     }
-    if(xpathObj) xmlXPathFreeObject(xpathObj);
-    if(xpathCtx) xmlXPathFreeContext(xpathCtx);
+
+    if (xpathObj)
+        xmlXPathFreeObject(xpathObj);
+    if (xpathCtx)
+        xmlXPathFreeContext(xpathCtx);
 }
 
-SvgTemplating* svg_templating_create(const char *svg_content) {
-    xmlDocPtr doc = xmlParseMemory(svg_content, strlen(svg_content));
+SvgTemplating* svg_templating_create_from_bytes(const char *svg_content, size_t len) {
+    xmlDocPtr doc = xmlParseMemory(svg_content, len);
     if(!doc) return NULL;
 
     SvgTemplating *mgr = calloc(1, sizeof(SvgTemplating));
@@ -57,6 +92,10 @@ SvgTemplating* svg_templating_create(const char *svg_content) {
 
     process_use_nodes(mgr);
     return mgr;
+}
+
+SvgTemplating* svg_templating_create(const char *svg_content) {
+    return svg_templating_create_from_bytes(svg_content, strlen(svg_content));
 }
 
 void svg_templating_free(SvgTemplating *mgr) {
@@ -106,46 +145,69 @@ void svg_templating_gc(SvgTemplating *mgr) {
 }
 
 static void scan_use_nodes_recursive(SvgTemplating *mgr, xmlNodePtr parent) {
-    for (xmlNodePtr cur = parent->children; cur; cur = cur->next) {
-        if (cur->type == XML_ELEMENT_NODE && xmlStrEqual(cur->name, (xmlChar*)"use")) {
+    for (xmlNodePtr cur = parent->children; cur; ) {
+        xmlNodePtr next = cur->next;  // save next because cur may be replaced
+
+        if (cur->type == XML_ELEMENT_NODE &&
+            xmlStrEqual(cur->name, (xmlChar*)"use")) {
 
             xmlChar *href = xmlGetProp(cur, (xmlChar*)"xlink:href");
-            if (!href) href = xmlGetProp(cur, (xmlChar*)"href");
-            if (!href) continue;
+            if (!href)
+                href = xmlGetProp(cur, (xmlChar*)"href");
+            if (!href) {
+                cur = next;
+                continue;
+            }
 
-            xmlNodePtr g_node = xmlNewNode(NULL, (xmlChar*)"g");
+            // Decide replacement element
+            const xmlChar *new_name =
+                parent_is_text_container(parent)
+                ? (xmlChar*)"tspan"
+                : (xmlChar*)"g";
 
+            xmlNodePtr new_node = xmlNewNode(NULL, new_name);
+
+            // Copy attributes except href
             for (xmlAttrPtr attr = cur->properties; attr; attr = attr->next) {
-                if (xmlStrcmp(attr->name, (xmlChar*)"xlink:href") != 0 &&
-                    xmlStrcmp(attr->name, (xmlChar*)"href") != 0) {
-                    xmlSetProp(g_node, attr->name, attr->children->content);
+                if (!xmlStrEqual(attr->name, (xmlChar*)"xlink:href") &&
+                    !xmlStrEqual(attr->name, (xmlChar*)"href")) {
+
+                    xmlChar *value = xmlNodeGetContent((xmlNodePtr)attr);
+                    if (value) {
+                        xmlSetProp(new_node, attr->name, value);
+                        xmlFree(value);
+                    }
                 }
             }
 
-            xmlReplaceNode(cur, g_node);
+            xmlReplaceNode(cur, new_node);
             xmlFreeNode(cur);
 
-            bindings_add(mgr, (char*)href, g_node);
+            bindings_add(mgr, (char*)href, new_node);
             xmlFree(href);
 
-            // recurse into this new g-node
-            scan_use_nodes_recursive(mgr, g_node);
+            // Recurse into replacement node
+            scan_use_nodes_recursive(mgr, new_node);
+        } else if (cur->children) {
+            scan_use_nodes_recursive(mgr, cur);
         }
 
-        // Recurse into children normally
-        if (cur->children)
-            scan_use_nodes_recursive(mgr, cur);
+        cur = next;
     }
 }
 
 void svg_templating_replace_by_index(SvgTemplating *mgr, size_t index, const char *new_svg, void *data) {
+    svg_templating_replace_by_index_from_bytes(mgr, index, new_svg, strlen(new_svg), data);
+}
+
+void svg_templating_replace_by_index_from_bytes(SvgTemplating *mgr, size_t index, const char *new_svg, size_t new_svg_len, void *data) {
     xmlNodePtr g = mgr->bindings[index].g_node;
     mgr->bindings[index].data = data;
     
     // parse wrapped fragment
-    char *wrapper = "<root xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>%s</root>";
-    char *wrapped = malloc(strlen(new_svg) + strlen(wrapper) + 1);
-    sprintf(wrapped, wrapper, new_svg);
+    char *wrapper = "<root xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>%.*s</root>";
+    char *wrapped = malloc(new_svg_len + strlen(wrapper) + 1);
+    sprintf(wrapped, wrapper, (int)new_svg_len, new_svg);
     xmlDocPtr tmp = xmlParseMemory(wrapped, strlen(wrapped));
     free(wrapped);
     if (!tmp) return;
@@ -182,11 +244,15 @@ int svg_templating_replace_by_url(SvgTemplating *mgr, const char *url, const cha
 }
 
 int svg_templating_replace_by_data(SvgTemplating *mgr, void *data, const char *new_svg) {
+    return svg_templating_replace_by_data_from_bytes(mgr, data, new_svg, strlen(new_svg));
+}
+
+int svg_templating_replace_by_data_from_bytes(SvgTemplating *mgr, void *data, const char *new_svg, size_t new_svg_len) {
     int found = 0;
     for (int i = 0; i < mgr->bindings_count; i++) {
         if (mgr->bindings[i].data == data) {
             found = 1;
-            svg_templating_replace_by_index(mgr, i, new_svg, data);
+            svg_templating_replace_by_index_from_bytes(mgr, i, new_svg, new_svg_len, data);
         }
     }
     return found ? 0 : -1;

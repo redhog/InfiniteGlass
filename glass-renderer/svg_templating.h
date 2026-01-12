@@ -24,6 +24,7 @@ typedef struct {
   int bindings_count;
 } SvgTemplating;
 
+SvgTemplating* svg_templating_create_from_bytes(const char *svg_content, size_t len);
 SvgTemplating* svg_templating_create(const char *svg_content);
 void svg_templating_free(SvgTemplating *mgr);
 
@@ -31,8 +32,10 @@ void svg_templating_free(SvgTemplating *mgr);
 // data will be set on BindingEntry.data. Note that some other data
 // strcuture must own this data as binding entries can be deleted at
 // any time, and no callback is called to free this data. 
+void svg_templating_replace_by_index_from_bytes(SvgTemplating *mgr, size_t index, const char *new_svg, size_t new_svg_len, void *data);
 void svg_templating_replace_by_index(SvgTemplating *mgr, size_t index, const char *new_svg, void *data);
 int svg_templating_replace_by_url(SvgTemplating *mgr, const char *url, const char *new_svg, void *data);
+int svg_templating_replace_by_data_from_bytes(SvgTemplating *mgr, void *data, const char *new_svg, size_t new_svg_len);
 int svg_templating_replace_by_data(SvgTemplating *mgr, void *data, const char *new_svg);
 
 // Remove invalidated bindings (call this once after calling the replace-functions above)

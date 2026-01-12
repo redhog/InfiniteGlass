@@ -121,7 +121,9 @@ void property_svg_update_drawing(Property *prop, Rendering *rendering) {
       && data->y == py1
       && data->itemwidth == itempixelwidth
       && data->itemheight == itempixelheight
-      && data->rendered_version == prop->calculated_version) return;
+      && data->rendered_version == prop->calculated_version)  {
+   return;
+ }
   
   // Check if current surface size is wrong before recreating...
   if (!data->surface || pixelwidth != data->width || pixelheight != data->height) {
@@ -195,7 +197,8 @@ void property_svg_load(Property *prop) {
   }
 
   if (data->template) svg_templating_free(data->template);
-  data->template = svg_templating_create(prop->values.bytes);
+
+  data->template = svg_templating_create_from_bytes(prop->values.bytes, prop->nitems);
 }
 
 void property_svg_free(Property *prop) {
@@ -288,7 +291,7 @@ uint64_t property_svg_calculate(Property *prop, Rendering *rendering) {
   if (!prop || !prop->data) return prop->version;  
   SvgPropertyData *data = (SvgPropertyData *) prop->data;
   if (!data || !data->template) return prop->version;
-  uint64_t required_version = 0;
+  uint64_t required_version = prop->version;
 
   if (data->templated_source) free(data->templated_source);
 
@@ -297,24 +300,25 @@ uint64_t property_svg_calculate(Property *prop, Rendering *rendering) {
     if (entry->data) {
       Property *entryprop = (Property *) entry->data;
       if (entryprop->version > prop->calculated_version) {
-        svg_templating_replace_by_data(data->template, (void *) entryprop, entryprop->values.bytes);
+        svg_templating_replace_by_data_from_bytes(data->template, (void *) entryprop, entryprop->values.bytes, entryprop->nitems);
       }
       required_version = MAX(required_version, entryprop->version);
     } else {
       if (strncmp(entry->url, "property://", 8) != 0) continue;
       for (size_t pathprop_idx = 0; pathprop_idx < rendering->item->properties->properties->count; pathprop_idx++) {
         Property *pathprop = (Property *) rendering->item->properties->properties->entries[pathprop_idx];
-        if (strcmp(entry->url + 8, pathprop->name_str) == 0) {
-          svg_templating_replace_by_index(data->template, binding_idx, pathprop->values.bytes, (void *) pathprop);
+        if (strcmp(entry->url + 11, pathprop->name_str) == 0) {
+          svg_templating_replace_by_index_from_bytes(data->template, binding_idx, pathprop->values.bytes, pathprop->nitems, (void *) pathprop);
           required_version = MAX(required_version, pathprop->version);
           break;
         }
       }
     }
   }
+  
   svg_templating_gc(data->template);
   data->templated_source = svg_templating_render(data->template);
-
+   
   GError *error = NULL;
   if (data->rsvg) g_object_unref(data->rsvg);
   data->rsvg = rsvg_handle_new_from_data((unsigned char *) data->templated_source, strlen(data->templated_source), &error);
