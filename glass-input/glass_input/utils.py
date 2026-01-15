@@ -5,7 +5,7 @@ def bbox(window_coords=None):
     ys = [y for coords in window_coords for y in (coords[1], coords[1] - coords[3])]
     return [min(*xs), max(*ys), max(*xs) - min(*xs), max(*ys) - min(*ys)]
 
-def bbox_view(self, bbox, orig_view):
+def bbox_view(bbox, orig_view):
     aspect_ratio = orig_view[2] / orig_view[3]
     bbox = list(bbox)
     

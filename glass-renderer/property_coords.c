@@ -57,26 +57,17 @@ void coord_type_error(Rendering *rendering, Atom type, char *type_name, char *er
   }
 }
 
-void property_coords_calculate(Property *prop, Rendering *rendering) {
+uint64_t property_coords_calculate(Property *prop, Rendering *rendering) {
   PropertyCoords *data = (PropertyCoords *) prop->data;
+  if (!data) return prop->version;
   float *ccoords = data->ccoords;
   float *coords = data->coords;
-  ccoords[0] = 0.0;
-  ccoords[1] = 0.0;
-  // Just an invalid value that's different from the one set for
-  // coords in load() so we can trace where this came from
-  ccoords[2] = -2.0;
-  ccoords[3] = -2.0;
-
-  if (prop->nitems < 4 || prop->nitems % 4 != 0) { DEBUG("invalid", "%ld.prop->nitems == %d\n", prop->window, prop->nitems); return; };
-
-  // Set these to 0 now, so we can add values below according to IG_COORD_TYPES
-  ccoords[2] = 0.0;
-  ccoords[3] = 0.0;
 
   PropertyCoords *parent_data = NULL;
+  uint32_t required_version = prop->version;
   if (rendering->parent_item && rendering->parent_item->prop_coords) {
     parent_data = (PropertyCoords *) rendering->parent_item->prop_coords->data;
+    required_version = MAX(required_version, rendering->parent_item->prop_coords->version);
   }
   
   int types_nitems = 0;
@@ -84,7 +75,28 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
   if (rendering->source_item->prop_coord_types) {
     types_nitems = rendering->source_item->prop_coord_types->nitems;
     types = rendering->source_item->prop_coord_types->values.dwords;
+    required_version = MAX(required_version, rendering->source_item->prop_coord_types->version);
   }
+
+  if (required_version == prop->calculated_version) {
+     return prop->calculated_version;
+  }
+
+  ccoords[0] = 0.0;
+  ccoords[1] = 0.0;
+  // Just an invalid value that's different from the one set for
+  // coords in load() so we can trace where this came from
+  ccoords[2] = -2.0;
+  ccoords[3] = -2.0;
+
+  if (prop->nitems < 4 || prop->nitems % 4 != 0) {
+    DEBUG("invalid", "%ld.prop->nitems == %d\n", prop->window, prop->nitems);
+    return prop->version;
+  };
+
+  // Set these to 0 now, so we can add values below according to IG_COORD_TYPES
+  ccoords[2] = 0.0;
+  ccoords[3] = 0.0;
 
   for (int i = 0; i < prop->nitems; i += 4) {
     Atom type = ATOM("IG_COORD_DESKTOP");
@@ -169,6 +181,7 @@ void property_coords_calculate(Property *prop, Rendering *rendering) {
         ccoords[0], ccoords[1], ccoords[2], ccoords[3], prop->nitems, types_nitems,
         coords[0], coords[1], coords[2], coords[3]
         );
+  return required_version;
 }
 
 void property_coords_to_gl(Property *prop, Rendering *rendering) {

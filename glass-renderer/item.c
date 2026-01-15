@@ -236,8 +236,11 @@ void item_initialize(Item *item, Window window) {
 }
 
 void item_destructor(Item *item) {
+  if (item->properties) properties_free(item->properties);
   if (item->attr) free(item->attr);
   if (item->geom) free(item->geom);
+  // FIXME: WHat about damage
+  // FIXME: What about window_pixmap
   texture_destroy(&item->window_texture);
 }
 void item_draw_subs(Rendering *rendering) {
@@ -304,10 +307,10 @@ void item_draw(Rendering *rendering) {
   }
   if (item->prop_coords
       && (   !item->prop_coords->data
-          || !((PropertyCoords *) item->prop_coords->data)->ccoords
+          // || !((PropertyCoords *) item->prop_coords->data)->ccoords (not a pointer for now, so no need)
           || ((PropertyCoords *) item->prop_coords->data)->ccoords[2] <= 0.0
           || ((PropertyCoords *) item->prop_coords->data)->ccoords[3] <= 0.0)) {
-    if (item->prop_coords->data && ((PropertyCoords *) item->prop_coords->data)->ccoords) {
+    if (item->prop_coords->data) { //  && ((PropertyCoords *) item->prop_coords->data)->ccoords (not a pointer for now so no need)
       PropertyCoords *coords = (PropertyCoords *) item->prop_coords->data;
       DEBUG("item_draw_failure", "%ld: IG_COORDS defined but invalid: %f,%f,%f,%f\n",
             item->window, coords->ccoords[0], coords->ccoords[1], coords->ccoords[2], coords->ccoords[3]);
@@ -528,7 +531,7 @@ void item_print_meta(Item *item, int indent, FILE *fp) {
             indentstr,
             item->is_mapped ? "true" : "false");
   }
-  fprintf(fp, "%s  loaded: {attrs: %s, geom: %s, glxpixmap: %s, texture: %s}\n",
+  fprintf(fp, "%s  loaded: {attrs: %s, geom: %s, pixmap: %s, glxpixmap: %s, texture: %s}\n",
           indentstr,
           item->attr ? "Y" : "N",
           item->geom ? "Y" : "N",

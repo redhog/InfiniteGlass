@@ -30,7 +30,7 @@ $(PYTHONAPPS): $(BINDIR)/activate
 all: $(SCRIPTS) $(PYTHONAPPS)
 
 run: all
-	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" XSERVEROPTS="$(XSERVEROPTS)" scripts/xstartup.sh
+	GLASS_DEBUGGER="$(GLASS_DEBUGGER)" XSERVEROPTS="$(XSERVEROPTS)" ENVDIR="$(ENVDIR)" scripts/xstartup.sh
 
 run-in-docker:
 	scripts/run-in-docker.sh

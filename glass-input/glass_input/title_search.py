@@ -4,7 +4,26 @@ from . import mode
 from . import utils
 import Xlib.X
 
-class TitleSearchMode(mode.Mode):        
+def write(self, *args, **kw):
+    return self.write(*args, **kw)
+
+class TitleSearchMode(mode.Mode):
+    svg = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    id="svg8"
+    version="1.1"
+    viewBox="0 0 %(w)s %(h)s"
+    width="%(w)smm"
+    height="%(h)smm">
+    <rect x="%(bx2)s" y="%(by2)s" width="%(bw2)s" height="%(bh2)s" style="fill-opacity:0;stroke-width:2;stroke:#000000;" />
+    <rect x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s" style="fill:#ffffff;stroke-width:1;stroke:#000000;" />
+    <svg x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s">
+      <text x="%(tx)s" y="%(ty)s" style="font-size: %(th)s; fill:#000000;" xml:space="preserve"><use xlink:href="property://IG_INPUT" />|</text>
+    </svg>
+</svg>"""
+    
     def query(self, query=""):
         for win in self.windows:
             if query in win["name"]:
@@ -19,7 +38,7 @@ class TitleSearchMode(mode.Mode):
 
     def bbox_view(self, query=""):
         res = self.bbox(query)
-        if not res: return res
+        if not res: return self.orig_view
         return utils.bbox_view(res, self.orig_view)
         
     def enter(self):
@@ -27,58 +46,28 @@ class TitleSearchMode(mode.Mode):
 
         self.orig_view = self.display.root["IG_VIEW_DESKTOP_VIEW"]
         self.aspect_ratio = self.orig_view[2] / self.orig_view[3]
-        
+
         self.size = self.display.root["IG_VIEW_DESKTOP_SIZE"]
         self.windows = list(self.get_all_windows())
         print("All windows:", ",".join(w["name"] for w in self.windows))
-        
+
         self.input = ""
-        
+
         self.label_window = self.display.root.create_window(map=False)
+        self.label_window["WM_NAME"] = b"BBOX label"
         self.label_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
+        self.label_window["IG_SIZE"] = self.size
         self.display.root["IG_VIEW_DESKTOP_VIEW"] = self.bbox_view()
         self.generate_overlay()
         self.label_window.map()
 
         self.orig_menu_view = self.display.root["IG_VIEW_MENU_VIEW"]
         self.input_window = self.display.root.create_window(map=False)
+        self.input_window["WM_NAME"] = b"Title search"
         self.input_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
-
-        self.update_input()
         self.input_window["IG_COORDS"] = [self.orig_menu_view[0], self.orig_menu_view[1] + self.orig_menu_view[3], self.orig_menu_view[2], self.orig_menu_view[3]]
+        self.input_window["IG_SIZE"] = self.size
         self.input_window["IG_LAYER"] = "IG_LAYER_MENU"
-        
-        self.input_window.map()
-
-        self.display.flush()
-        
-        return True
-
-    def exit(self):
-        self.label_window.destroy()
-        self.input_window.destroy()
-
-    def write(self, event):
-        if (event.state & ~Xlib.X.ShiftMask & ~Xlib.X.Mod1Mask) != 0:
-            return
-        keycode = self.display.keycode_to_keysym(event.detail, event.state)
-        s = self.display.lookup_string(keycode)
-        if s is not None:
-            if s == "\b":
-                self.input = self.input[:-1]
-            else:
-                self.input += s
-            self.update_input()
-
-        self.display.flush()
-        
-        bbox = self.bbox_view(self.input)
-        if bbox is not None:
-            self.display.root["IG_VIEW_DESKTOP_VIEW"] = bbox
-
-        self.display.flush()
-            
-    def update_input(self):
         
         w = self.size[0]
         h = self.size[1]
@@ -94,78 +83,118 @@ class TitleSearchMode(mode.Mode):
         bw2 = bw + 6
         bh2 = bh + 6
         
-        svg = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    id="svg8"
-                    version="1.1"
-                    viewBox="0 0 %(w)s %(h)s"
-                    width="%(w)smm"
-                    height="%(h)smm">
-                    <rect x="%(bx2)s" y="%(by2)s" width="%(bw2)s" height="%(bh2)s" style="fill-opacity:0;stroke-width:2;stroke:#000000;" />
-                    <rect x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s" style="fill:#ffffff;stroke-width:1;stroke:#000000;" />
-                    <svg x="%(bx)s" y="%(by)s" width="%(bw)s" height="%(bh)s">
-                      <text x="%(tx)s" y="%(ty)s" style="font-size: %(th)s; fill:#000000;">%(content)s|</text>
-                    </svg>
-                  </svg>""" % {
-                      "w": w, "h": h,
-                      "bw": bw, "bh": bh, "bx": bx, "by": by,
-                      "bw2": bw2, "bh2": bh2, "bx2": bx2, "by2": by2, 
-                      "th": th, "tx": tx, "ty": ty,
-                      "content": self.input}
+        svg = self.svg % {
+            "w": w, "h": h,
+            "bw": bw, "bh": bh, "bx": bx, "by": by,
+            "bw2": bw2, "bh2": bh2, "bx2": bx2, "by2": by2, 
+            "th": th, "tx": tx, "ty": ty}
 
         self.input_window["IG_CONTENT"] = ("IG_SVG", svg.encode("UTF-8"))
+        self.input_window["IG_INPUT"] = self.input.encode("UTF-8")
+
+        self.input_window.map()
+
+        self.display.flush()
+            
+        return True
+
+    def exit(self):
+        self.label_window.destroy()
+        self.input_window.destroy()
+
+    def write(self, event):
+        index = 1 if event.state & Xlib.X.ShiftMask else 0
+        keycode = self.display.keycode_to_keysym(event.detail, index)
+        s = self.display.lookup_string(keycode)
+        if s is not None:
+            if s == "\b":
+                self.input = self.input[:-1]
+            else:
+                self.input += s
+            self.input_window["IG_INPUT"] = self.input.encode("UTF-8")
+            
+        self.display.flush()
+        
+        bbox = self.bbox_view(self.input)
+        if bbox is not None:
+            self.display.root["IG_VIEW_DESKTOP_VIEW"] = bbox
+
+        self.generate_overlay()
+            
+        self.display.flush()
+
+    def coords_to_px(self, coords):
+        return [self.size[0] * (coords[0] - self.view[0]) / self.view[2],
+                self.size[1] * (coords[1] - self.view[1]) / self.view[3],
+                self.size[0] * coords[2] / self.view[2],
+                self.size[1] * coords[3] / self.view[3]]        
         
     def generate_overlay(self):
-        bbox = self.bbox()
-        bbox[0] -= bbox[2] * 0.1
-        bbox[1] += bbox[3] * 0.1
-        bbox[2] *= 1.2
-        bbox[3] *= 1.2
+        self.view = view = self.bbox_view(self.input)
 
-        self.label_window["IG_COORDS"] = bbox
-        
-        window_svg = [
-            """
-              <rect x="%(x)s" y="%(y)s" width="%(w)s" height="%(h)s" style="fill: #ffffff; opacity: 1.0;" />
-              <svg x="%(x)s" y="%(y)s" width="%(w)s" height="%(h)s">
+        if not view:
+            view = [
+                self.orig_view[0],
+                self.orig_view[1],
+                self.orig_view[2],
+                self.orig_view[3],
+            ]
+
+        self.label_window["IG_COORDS"] = [view[0], view[1] + view[3], view[2], view[3]]
+
+        window_elements = []
+
+        for window in self.query(self.input):
+            left, top, width, height = self.coords_to_px(window["coords"])
+
+            # window-space geometry
+            rect_w = width
+            rect_h = height * 0.18
+            rect_x = left
+            rect_y = -top
+
+            font_size = height * 0.12
+            text_x = left + width * 0.05
+            text_y = -top + font_size
+
+            window_elements.append(
+                f"""
+                <rect
+                  x="{rect_x}"
+                  y="{rect_y}"
+                  width="{rect_w}"
+                  height="{rect_h}"
+                  fill="#ffffff"
+                  opacity="1.0"/>
+
                 <text
-                  xml:space="preserve"
-                  style="font-size:%(fontsize)spx;font-family:'Times New Roman';fill:#000000;"
-                  x="%(tx)s"
-                  y="%(ty)s">%(name)s</text>
-              </svg>
+                  x="{text_x}"
+                  y="{text_y}"
+                  font-size="{font_size}"
+                  font-family="serif"
+                  fill="#000000">
+                  {window["name"].strip()}
+                </text>
+                """
+            )
 
-            """ % {
-                "fontsize": window["coords"][3] * 0.1,
-                "x": window["coords"][0],
-                "y": -window["coords"][1],
-                "tx": window["coords"][2] * 0.05, 
-                "ty": window["coords"][3] * 0.1, 
-                "w": window["coords"][2],
-                "h": window["coords"][3] * 0.15,
-                "name": window["name"].strip()
-            } for window in self.windows
-        ]
-        
-        svg = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                id="svg8"
-                version="1.1"
-                viewBox="%(x)s %(y)s %(width)s %(height)s"
-                width="%(widthx)smm"
-                height="%(heightx)smm">
-                <!-- rect x="%(x)s" y="%(y)s" width="%(width)s" height="%(height)s" fill="#0000ff" style="opacity: 0.5;" / -->
-                %(content)s
-              </svg>""" % {
-                  "widthx": 1000.,
-                  "heightx": 1000. * bbox[3] / bbox[2],
-                  "width": bbox[2],
-                  "height": bbox[3],
-                  "x": bbox[0],
-                  "y": -bbox[1],
-                  "content": "\n".join(window_svg)}
+        svg = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 {-self.size[1]} {self.size[0]} {self.size[1]}"
+      preserveAspectRatio="none">
+
+      <!-- rect
+       x="0"
+       y="{-self.size[1]}"
+       width="{self.size[0]}"
+       height="{self.size[1]}"
+       fill="#0000ff"
+       opacity="0.5"/ -->
+      {''.join(window_elements)}
+
+    </svg>
+    """
 
         self.label_window["IG_CONTENT"] = ("IG_SVG", svg.encode("UTF-8"))
 

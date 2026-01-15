@@ -46,6 +46,7 @@ libxcb-xvmc0-dev
 libxcomposite-dev
 libxdamage-dev
 libxi-dev
+libxml2-dev
 libxrandr-dev
 libxrender-dev
 libxtst-dev

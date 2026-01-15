@@ -6,6 +6,8 @@
 #include "wm.h"
 #include "debug.h"
 
+uint64_t next_version = 1;
+
 Property *property_allocate(Properties *properties, Atom name) {
   Property *prop = malloc(sizeof(Property));
   prop->window = properties->window;
@@ -25,6 +27,8 @@ Property *property_allocate(Properties *properties, Atom name) {
   prop->data = NULL;
   prop->type_handler = NULL;
   prop->property_get_reply = NULL;
+  prop->version = 0;
+  prop->calculated_version = 0;
   return prop;
 }
 
@@ -59,6 +63,7 @@ void property_load_parse(void *data, xcb_get_property_reply_t *reply, xcb_generi
 
   if (old_type != prop->type) prop->type_handler = property_type_get(prop);
   if (prop->type_handler && prop->type_handler->load) prop->type_handler->load(prop);
+  prop->version = next_version++;
 
   trigger_draw();
   
@@ -130,7 +135,8 @@ void property_to_gl(Property *prop, Rendering *rendering) {
 void property_calculate(Property *prop, Rendering *rendering) {
   PropertyTypeHandler *type = prop->type_handler;
   if (!type) return;
-  if (type->calculate) type->calculate(prop, rendering);
+  if (!type->calculate) return;
+  prop->calculated_version = type->calculate(prop, rendering);
 }
 
 void property_draw(Property *prop, Rendering *rendering) {

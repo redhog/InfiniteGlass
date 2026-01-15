@@ -108,7 +108,7 @@ modes:
       keymap:
         "KeyPress,XK_Escape": pop
         "KeyPress,XK_Return": pop
-        "KeyPress,!XK_Escape,!XK_Return": write
+        "KeyPress,!XK_Escape,!XK_Return": title_search_write
 
   focus_mode:
     Mode:
