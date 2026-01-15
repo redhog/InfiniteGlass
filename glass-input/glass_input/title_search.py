@@ -65,9 +65,8 @@ class TitleSearchMode(mode.Mode):
         self.input_window = self.display.root.create_window(map=False)
         self.input_window["WM_NAME"] = b"Title search"
         self.input_window["_NET_WM_WINDOW_TYPE"] = "_NET_WM_WINDOW_TYPE_DESKTOP"
-        self.input_window["IG_SIZE"] = [500, 500]
-
         self.input_window["IG_COORDS"] = [self.orig_menu_view[0], self.orig_menu_view[1] + self.orig_menu_view[3], self.orig_menu_view[2], self.orig_menu_view[3]]
+        self.input_window["IG_SIZE"] = self.size
         self.input_window["IG_LAYER"] = "IG_LAYER_MENU"
         
         w = self.size[0]
