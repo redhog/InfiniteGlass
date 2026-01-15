@@ -125,21 +125,17 @@ class TitleSearchMode(mode.Mode):
         self.display.flush()
 
     def generate_overlay(self):
-        bbox = self.bbox(self.input)
+        view = self.bbox_view(self.input)
 
-        if not bbox:
-            bbox = [
+        if not view:
+            view = [
                 self.orig_view[0],
-                self.orig_view[1] - self.orig_view[3],
+                self.orig_view[1],
                 self.orig_view[2],
                 self.orig_view[3],
             ]
 
-        # pad bbox
-        bbox[0] -= bbox[2] * 0.1
-        bbox[1] += bbox[3] * 0.1
-        bbox[2] *= 1.2
-        bbox[3] *= 1.2
+        bbox = [view[0], view[1] + view[3], view[2], view[3]]
 
         self.label_window["IG_COORDS"] = bbox
 
@@ -177,7 +173,7 @@ class TitleSearchMode(mode.Mode):
                   width="{rect_w}"
                   height="{rect_h}"
                   fill="#ffffff"
-                  opacity="0.9"/>
+                  opacity="1.0"/>
 
                 <text
                   x="{text_x}"
@@ -196,14 +192,13 @@ class TitleSearchMode(mode.Mode):
       viewBox="{bbox[0]} {-bbox[1]} {bbox[2]} {bbox[3]}"
       preserveAspectRatio="none">
 
-      <!-- flip Y once so SVG Y+ == world Y+ -->
-      <rect
+      <!-- rect
        x="{bbox[0]}"
        y="{-bbox[1]}"
        width="{bbox[2]}"
        height="{bbox[3]}"
        fill="#0000ff"
-       opacity="0.5"/>
+       opacity="0.5"/ -->
       {''.join(window_elements)}
 
     </svg>
