@@ -123,8 +123,14 @@ class TitleSearchMode(mode.Mode):
             
         self.display.flush()
 
+    def coords_to_px(self, coords):
+        return [self.size[0] * (coords[0] - self.view[0]) / self.view[2],
+                self.size[1] * (coords[1] - self.view[1]) / self.view[3],
+                self.size[0] * coords[2] / self.view[2],
+                self.size[1] * coords[3] / self.view[3]]        
+        
     def generate_overlay(self):
-        view = self.bbox_view(self.input)
+        self.view = view = self.bbox_view(self.input)
 
         if not view:
             view = [
@@ -134,41 +140,28 @@ class TitleSearchMode(mode.Mode):
                 self.orig_view[3],
             ]
 
-        bbox = [view[0], view[1] + view[3], view[2], view[3]]
+        self.label_window["IG_COORDS"] = [view[0], view[1] + view[3], view[2], view[3]]
 
-        self.label_window["IG_COORDS"] = bbox
-
-        scale = 1000. / bbox[2]
-
-        bbox[0] *= scale
-        bbox[1] *= scale
-        bbox[2] *= scale
-        bbox[3] *= scale
-        
         window_elements = []
 
         for window in self.query(self.input):
-            left, top, width, height = window["coords"]
-            left *= scale
-            top *= scale
-            width *= scale
-            height *= scale
+            left, top, width, height = self.coords_to_px(window["coords"])
 
             # window-space geometry
             rect_w = width
             rect_h = height * 0.18
             rect_x = left
-            rect_y = top
+            rect_y = -top
 
             font_size = height * 0.12
             text_x = left + width * 0.05
-            text_y = top - font_size
+            text_y = -top + font_size
 
             window_elements.append(
                 f"""
                 <rect
                   x="{rect_x}"
-                  y="{-rect_y}"
+                  y="{rect_y}"
                   width="{rect_w}"
                   height="{rect_h}"
                   fill="#ffffff"
@@ -176,7 +169,7 @@ class TitleSearchMode(mode.Mode):
 
                 <text
                   x="{text_x}"
-                  y="{-text_y}"
+                  y="{text_y}"
                   font-size="{font_size}"
                   font-family="serif"
                   fill="#000000">
@@ -188,14 +181,14 @@ class TitleSearchMode(mode.Mode):
         svg = f"""<?xml version="1.0" encoding="UTF-8"?>
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="{bbox[0]} {-bbox[1]} {bbox[2]} {bbox[3]}"
+      viewBox="0 {-self.size[1]} {self.size[0]} {self.size[1]}"
       preserveAspectRatio="none">
 
       <!-- rect
-       x="{bbox[0]}"
-       y="{-bbox[1]}"
-       width="{bbox[2]}"
-       height="{bbox[3]}"
+       x="0"
+       y="{-self.size[1]}"
+       width="{self.size[0]}"
+       height="{self.size[1]}"
        fill="#0000ff"
        opacity="0.5"/ -->
       {''.join(window_elements)}
